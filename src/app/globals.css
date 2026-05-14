@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ════════════════════════════════════════════════════════════════════
+   🎨  POLA-INSPIRED PALETTE  —  Warm Elegance · Trust · Emotion
+
+   Inspired by POLA 2029 Vision (Awwwards SOTD):
+   clean white surfaces, warm parchment backdrop, organic warmth.
+
+   ┌─────────────────────────────────────────────────────────────────┐
+   │  BACKGROUND  #F5F3EE  Warm Parchment  — depth without coldness │
+   │  SURFACE     #FFFFFF  Pure White      — clarity, cleanliness   │
+   │  PRIMARY     #4A7FA5  Cornflower Blue — trust, sky, stability  │
+   │  ACCENT      #E87450  Warm Coral      — emotion, warmth, hope  │
+   │  TEXT        #1C1A2E  Deep Indigo     — sophisticated, readable │
+   └─────────────────────────────────────────────────────────────────┘
+
+   Cornflower Blue = the psychological anchor of trust used across
+   mental-health apps, banking and healthcare — calm, stable, safe.
+   Warm Coral = human warmth, optimism, forward motion — never alarm.
+   ════════════════════════════════════════════════════════════════════ */
+
+:root {
+  color-scheme: light;
+
+  /* ── Page & surfaces ─────────────────────────────────────────── */
+  --color-bg-page:      #F5F3EE;   /* warm parchment backdrop        */
+  --color-bg-dots:      #E8E4D8;   /* dot-grid — slightly darker     */
+  --color-bg-card:      #FFFFFF;   /* pure white cards               */
+  --color-bg-card-2:    #FAF9F6;   /* secondary / nested surfaces    */
+
+  /* ── Borders ─────────────────────────────────────────────────── */
+  --color-border:       #EAE6DC;   /* warm beige border              */
+  --color-border-2:     #D4CCBC;   /* stronger warm border / hover   */
+
+  /* ── Primary — Cornflower Blue (trust, calm, sky) ────────────── */
+  --color-primary:      #4A7FA5;
+  --color-primary-dark: #3A6385;   /* hover / pressed                */
+  --color-primary-tint: #EAF2F8;   /* selected background tint       */
+  --color-primary-mid:  #6AA3C8;   /* lighter stop for gradients     */
+  --color-primary-ring: rgba(74, 127, 165, 0.22);
+
+  /* ── Accent — Warm Coral (emotion, warmth, action) ───────────── */
+  --color-accent:       #E87450;
+  --color-accent-dark:  #CC5C3A;
+  --color-accent-tint:  #FDF1EC;
+
+  /* ── Text ────────────────────────────────────────────────────── */
+  --color-text:         #1C1A2E;   /* deep indigo — sophisticated    */
+  --color-text-body:    #4A4A6A;   /* medium indigo — body copy      */
+  --color-text-muted:   #9B9BB5;   /* light indigo-gray — captions   */
+
+  /* ── Semantic helpers ────────────────────────────────────────── */
+  --color-selected-bg:    var(--color-primary-tint);
+  --color-selected-ring:  var(--color-primary);
+  --color-star:           #E87450;   /* use coral for stars — warmth  */
+  --color-progress-start: #6AA3C8;   /* bar gradient start            */
+  --color-progress-end:   #4A7FA5;   /* bar gradient end              */
+
+  /* ── Shadows (warm-tinted, not cold gray) ────────────────────── */
+  --shadow-card:
+    0 1px 3px  rgba(28, 26, 46, 0.05),
+    0 16px 48px rgba(28, 26, 46, 0.08);
+
+  --shadow-card-hover:
+    0 2px 6px  rgba(28, 26, 46, 0.07),
+    0 24px 64px rgba(28, 26, 46, 0.12);
+
+  /* Blue shadow for primary teal/blue buttons */
+  --shadow-btn-primary: 0 4px 22px rgba(74, 127, 165, 0.38);
+  /* Coral shadow for accent / paywall CTA */
+  --shadow-btn-accent:  0 4px 22px rgba(232, 116, 80, 0.40);
+
+  /* Selected ring on option buttons */
+  --shadow-sel:
+    0 0 0 2.5px #4A7FA5,
+    0 4px 16px rgba(74, 127, 165, 0.18);
+
+  /* Legacy alias */
+  --shadow-btn: var(--shadow-btn-primary);
+}
+
+/* ── Tailwind theme ──────────────────────────────────────────────── */
+@theme {
+  --color-page:         var(--color-bg-page);
+  --color-card:         var(--color-bg-card);
+  --color-blue:         #4A7FA5;
+  --color-blue-mid:     #6AA3C8;
+  --color-coral:        #E87450;
+  --color-indigo:       #1C1A2E;
+}
+
+/* ── Reset ───────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { color-scheme: light; }
+
+html, body {
+  height: 100%;
+  background-color: var(--color-bg-page);
+  color: var(--color-text);
+  font-family: var(--font-jakarta, "Inter", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", sans-serif);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Warm dot-grid on parchment — POLA-like texture */
+body {
+  background-image: radial-gradient(
+    circle, var(--color-bg-dots) 1px, transparent 1px
+  );
+  background-size: 28px 28px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar            { width: 4px; }
+::-webkit-scrollbar-track      { background: var(--color-bg-card-2); }
+::-webkit-scrollbar-thumb      { background: var(--color-border-2); border-radius: 2px; }
+
+h1, h2, h3 { color: var(--color-text); line-height: 1.25; letter-spacing: -0.02em; }

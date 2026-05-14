@@ -1,0 +1,275 @@
+"use client";
+
+import { useEffect, useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Star, CheckCircle2 } from "lucide-react";
+import { useQuizStore } from "@/store/quizStore";
+
+const PHASES = [
+  { label: "Analyzing your responses",    end: 22 },
+  { label: "Calculating your profile",    end: 55 },
+  { label: "Generating your report",      end: 78 },
+  { label: "Preparing your ADHD guide",   end: 100 },
+];
+
+const TOTAL_MS = 7000;
+const MODAL_AT = 38;
+
+const REVIEWS = [
+  {
+    stars: 5, author: "by Cherrysue7",
+    title: "Super accurate and eye-opening results",
+    text: "The test identified exactly the areas I needed to work on. The guide is practical and straight to the point — in 2 weeks I already felt a real difference in my focus and organization.",
+  },
+];
+
+export function LoadingScreen() {
+  const setStep = useQuizStore((s) => s.setStep);
+
+  const [progress,  setProgress]  = useState(0);
+  const [showModal, setShowModal] = useState(false);
+
+  const pausedRef    = useRef(false);
+  const pauseMs      = useRef(0);
+  const pauseStart   = useRef(0);
+  const modalDoneRef = useRef(false);
+
+  useEffect(() => {
+    let frame: number;
+    const start = Date.now();
+
+    const tick = () => {
+      if (pausedRef.current) {
+        if (pauseStart.current === 0) pauseStart.current = Date.now();
+        frame = requestAnimationFrame(tick);
+        return;
+      }
+      if (pauseStart.current > 0) {
+        pauseMs.current   += Date.now() - pauseStart.current;
+        pauseStart.current = 0;
+      }
+
+      const elapsed = Date.now() - start - pauseMs.current;
+      const pct     = Math.min((elapsed / TOTAL_MS) * 100, 100);
+      setProgress(pct);
+
+      if (pct >= MODAL_AT && !modalDoneRef.current) {
+        modalDoneRef.current = true;
+        pausedRef.current    = true;
+        setShowModal(true);
+      }
+
+      if (pct < 100) {
+        frame = requestAnimationFrame(tick);
+      } else {
+        setTimeout(() => setStep("email"), 500);
+      }
+    };
+
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const answerModal = () => {
+    setShowModal(false);
+    pausedRef.current = false;
+  };
+
+  const currentPhaseIdx = PHASES.findIndex((p) => progress < p.end);
+  const activeIdx       = currentPhaseIdx === -1 ? PHASES.length - 1 : currentPhaseIdx;
+  const activePhase     = PHASES[activeIdx];
+  const prevEnd         = activeIdx === 0 ? 0 : PHASES[activeIdx - 1].end;
+  const phaseProgress   = Math.min(((progress - prevEnd) / (activePhase.end - prevEnd)) * 100, 100);
+
+  return (
+    <>
+      <div style={{
+        minHeight: "100vh",
+        display: "flex", flexDirection: "column", alignItems: "center",
+        padding: "0 24px",
+      }}>
+
+        {/* Title */}
+        <div style={{ paddingTop: 68, paddingBottom: 36, textAlign: "center" }}>
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <h1 style={{ fontSize: 28, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.2, marginBottom: 2 }}>
+              Calculating your
+            </h1>
+            <h1 style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.2, color: "var(--color-primary)" }}>
+              results...
+            </h1>
+          </motion.div>
+        </div>
+
+        {/* Phases */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.15 }}
+          style={{ width: "100%", maxWidth: 560, display: "flex", flexDirection: "column", gap: 18 }}
+        >
+          {PHASES.map((phase, i) => {
+            const done   = progress >= phase.end;
+            const active = i === activeIdx && !done;
+            return (
+              <div key={phase.label}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: active ? 8 : 0 }}>
+                  <span style={{
+                    fontSize: 14, fontWeight: 600,
+                    color: done ? "var(--color-text)" : active ? "var(--color-text-body)" : "var(--color-text-muted)",
+                    transition: "color 0.3s",
+                  }}>
+                    {phase.label}
+                  </span>
+                  {done ? (
+                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500 }}>
+                      <CheckCircle2 size={18} color="var(--color-primary)" />
+                    </motion.div>
+                  ) : active ? (
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "var(--color-primary)", fontVariantNumeric: "tabular-nums" }}>
+                      {Math.round(phaseProgress)}%
+                    </span>
+                  ) : null}
+                </div>
+                {active && (
+                  <div style={{ height: 6, borderRadius: 99, background: "var(--color-border)", overflow: "hidden" }}>
+                    <motion.div
+                      animate={{ width: `${phaseProgress}%` }}
+                      transition={{ duration: 0.12, ease: "linear" }}
+                      style={{
+                        height: "100%", borderRadius: 99,
+                        background: "linear-gradient(90deg, var(--color-progress-start), var(--color-progress-end))",
+                        boxShadow: "0 0 8px rgba(74,127,165,0.35)",
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </motion.div>
+
+        <div style={{ flex: 1 }} />
+
+        {/* Social proof */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          style={{
+            display: "flex", flexDirection: "column", alignItems: "center",
+            paddingBottom: 52, width: "100%", maxWidth: 520,
+          }}
+        >
+          <p style={{ fontSize: 26, fontWeight: 800, color: "var(--color-primary)", textAlign: "center" }}>
+            +200,000 people
+          </p>
+          <p style={{ fontSize: 15, color: "var(--color-text-body)", marginTop: 4, marginBottom: 18 }}>
+            have already discovered their ADHD profile with FocusRoute
+          </p>
+
+          <div style={{
+            width: "100%", borderRadius: 20, padding: "20px 22px",
+            background: "var(--color-bg-card)", boxShadow: "var(--shadow-card)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+              <div style={{ display: "flex", gap: 3 }}>
+                {Array.from({ length: REVIEWS[0].stars }).map((_, i) => (
+                  <Star key={i} size={14} style={{ fill: "var(--color-star)", color: "var(--color-star)" }} />
+                ))}
+              </div>
+              <span style={{ fontSize: 12, color: "var(--color-text-muted)" }}>{REVIEWS[0].author}</span>
+            </div>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "var(--color-text)", marginBottom: 6 }}>{REVIEWS[0].title}</p>
+            <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.65 }}>{REVIEWS[0].text}</p>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Modal — outside page div to avoid Framer Motion transform containment */}
+      <AnimatePresence>
+        {showModal && (
+          <>
+            <motion.div
+              key="bd"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              style={{ position: "fixed", inset: 0, zIndex: 40, background: "rgba(13,33,55,0.45)", backdropFilter: "blur(5px)" }}
+            />
+
+            <div style={{
+              position: "fixed", inset: 0, zIndex: 50,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              padding: "0 24px", pointerEvents: "none",
+            }}>
+              <motion.div
+                key="mc"
+                initial={{ opacity: 0, scale: 0.88 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.88 }}
+                transition={{ type: "spring", stiffness: 340, damping: 28 }}
+                style={{
+                  width: "100%", maxWidth: 440,
+                  background: "var(--color-bg-card)",
+                  borderRadius: 24, padding: "28px 28px 24px",
+                  boxShadow: "0 24px 64px rgba(13,33,55,0.22)",
+                  pointerEvents: "auto",
+                }}
+              >
+                <p style={{
+                  fontSize: 11, fontWeight: 700, color: "var(--color-text-muted)",
+                  textTransform: "uppercase", letterSpacing: "0.1em",
+                  textAlign: "center", marginBottom: 10,
+                }}>
+                  Before we continue, tell us
+                </p>
+                <h2 style={{
+                  fontSize: 17, fontWeight: 800, color: "var(--color-text)",
+                  textAlign: "center", lineHeight: 1.4, marginBottom: 22,
+                }}>
+                  Did you know that understanding your ADHD profile is the first step to managing it?
+                </h2>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  {["No", "Yes"].map((opt) => (
+                    <button
+                      key={opt}
+                      onClick={answerModal}
+                      style={{
+                        padding: "14px 20px", borderRadius: 14,
+                        fontSize: 15, fontWeight: 700,
+                        border: "1.5px solid var(--color-border)",
+                        cursor: "pointer",
+                        background: "var(--color-bg-card)",
+                        color: "var(--color-text-body)",
+                        transition: "background 0.15s, color 0.15s, border-color 0.15s",
+                      }}
+                      onMouseEnter={(e) => {
+                        const el = e.currentTarget;
+                        el.style.background  = "var(--color-primary)";
+                        el.style.color       = "#fff";
+                        el.style.borderColor = "var(--color-primary)";
+                      }}
+                      onMouseLeave={(e) => {
+                        const el = e.currentTarget;
+                        el.style.background  = "var(--color-bg-card)";
+                        el.style.color       = "var(--color-text-body)";
+                        el.style.borderColor = "var(--color-border)";
+                      }}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
