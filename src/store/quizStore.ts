@@ -21,7 +21,7 @@ interface QuizState {
 }
 
 /* Step order after loading */
-const POST_LOADING: FunnelStep[] = ["email", "name", "chart", "paywall"];
+const POST_LOADING: FunnelStep[] = ["email", "name", "chart", "paywall", "upsell", "subscription", "success"];
 
 export const useQuizStore = create<QuizState>((set, get) => ({
   currentStep: "quiz",

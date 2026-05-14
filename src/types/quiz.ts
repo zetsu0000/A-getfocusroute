@@ -23,7 +23,7 @@ export interface QuizQuestion {
   statement?: string;       /* the quoted statement text */
 }
 
-export type FunnelStep = "quiz" | "loading" | "email" | "name" | "chart" | "paywall";
+export type FunnelStep = "quiz" | "loading" | "email" | "name" | "chart" | "paywall" | "upsell" | "subscription" | "success";
 
 export interface QuizAnswer {
   questionId: string;
