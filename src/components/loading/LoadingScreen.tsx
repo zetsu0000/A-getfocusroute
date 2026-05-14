@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Star, CheckCircle2 } from "lucide-react";
 import { useQuizStore } from "@/store/quizStore";
 
@@ -62,7 +62,10 @@ export function LoadingScreen() {
       if (pct < 100) {
         frame = requestAnimationFrame(tick);
       } else {
-        setTimeout(() => setStep("email"), 500);
+        setTimeout(() => {
+          const { retakeMode } = useQuizStore.getState();
+          setStep(retakeMode ? "chart" : "email");
+        }, 500);
       }
     };
 
@@ -92,7 +95,7 @@ export function LoadingScreen() {
 
         {/* Title */}
         <div style={{ paddingTop: 68, paddingBottom: 36, textAlign: "center" }}>
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
@@ -103,11 +106,11 @@ export function LoadingScreen() {
             <h1 style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.2, color: "var(--color-primary)" }}>
               results...
             </h1>
-          </motion.div>
+          </m.div>
         </div>
 
         {/* Phases */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.15 }}
@@ -127,9 +130,9 @@ export function LoadingScreen() {
                     {phase.label}
                   </span>
                   {done ? (
-                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500 }}>
+                    <m.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500 }}>
                       <CheckCircle2 size={18} color="var(--color-primary)" />
-                    </motion.div>
+                    </m.div>
                   ) : active ? (
                     <span style={{ fontSize: 13, fontWeight: 700, color: "var(--color-primary)", fontVariantNumeric: "tabular-nums" }}>
                       {Math.round(phaseProgress)}%
@@ -138,7 +141,7 @@ export function LoadingScreen() {
                 </div>
                 {active && (
                   <div style={{ height: 6, borderRadius: 99, background: "var(--color-border)", overflow: "hidden" }}>
-                    <motion.div
+                    <m.div
                       animate={{ width: `${phaseProgress}%` }}
                       transition={{ duration: 0.12, ease: "linear" }}
                       style={{
@@ -152,12 +155,12 @@ export function LoadingScreen() {
               </div>
             );
           })}
-        </motion.div>
+        </m.div>
 
         <div style={{ flex: 1 }} />
 
         {/* Social proof */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
@@ -188,14 +191,14 @@ export function LoadingScreen() {
             <p style={{ fontSize: 13, fontWeight: 700, color: "var(--color-text)", marginBottom: 6 }}>{REVIEWS[0].title}</p>
             <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.65 }}>{REVIEWS[0].text}</p>
           </div>
-        </motion.div>
+        </m.div>
       </div>
 
       {/* Modal — outside page div to avoid Framer Motion transform containment */}
       <AnimatePresence>
         {showModal && (
           <>
-            <motion.div
+            <m.div
               key="bd"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
@@ -207,7 +210,7 @@ export function LoadingScreen() {
               display: "flex", alignItems: "center", justifyContent: "center",
               padding: "0 24px", pointerEvents: "none",
             }}>
-              <motion.div
+              <m.div
                 key="mc"
                 initial={{ opacity: 0, scale: 0.88 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -265,7 +268,7 @@ export function LoadingScreen() {
                     </button>
                   ))}
                 </div>
-              </motion.div>
+              </m.div>
             </div>
           </>
         )}

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { loadStripe } from "@stripe/stripe-js";
+import { m } from "framer-motion";
+import { loadStripe } from "@stripe/stripe-js/pure";
 import {
   Elements,
   PaymentElement,
@@ -12,7 +12,11 @@ import {
 import { CheckCircle2, Clock, Zap, Calendar, Target } from "lucide-react";
 import { useQuizStore } from "@/store/quizStore";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+let _stripePromise: ReturnType<typeof loadStripe> | null = null;
+function getStripePromise() {
+  if (!_stripePromise) _stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+  return _stripePromise;
+}
 const PRICE_ID = process.env.NEXT_PUBLIC_PRICE_ROADMAP!;
 
 /* 15-minute countdown */
@@ -63,7 +67,7 @@ function UpsellCheckoutForm({ onSuccess, onDecline }: { onSuccess: () => void; o
       <PaymentElement options={{ layout: "tabs" }} />
       {error && <p style={{ fontSize: 13, color: "#E87450", textAlign: "center" }}>{error}</p>}
 
-      <motion.button
+      <m.button
         type="submit"
         disabled={!stripe || loading}
         animate={loading ? {} : { scale: [1, 1.015, 1], transition: { repeat: Infinity, duration: 2.4, ease: "easeInOut" } }}
@@ -77,7 +81,7 @@ function UpsellCheckoutForm({ onSuccess, onDecline }: { onSuccess: () => void; o
         }}
       >
         {loading ? "Processing..." : "Yes! Add the 28-Day Roadmap — $67"}
-      </motion.button>
+      </m.button>
 
       <button
         type="button"
@@ -114,7 +118,7 @@ export function UpsellScreen() {
   const handleDecline = () => setStep("subscription");
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, x: 40 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3 }}
@@ -137,7 +141,7 @@ export function UpsellScreen() {
       <div style={{ padding: "28px 16px", maxWidth: 480, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
 
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+        <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
             <div style={{ background: "var(--color-primary-tint)", borderRadius: 8, padding: "4px 10px" }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--color-primary)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
@@ -152,10 +156,10 @@ export function UpsellScreen() {
           <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.65 }}>
             Your Assessment revealed your specific ADHD patterns. The 28-Day Roadmap gives you the exact daily actions to rewire those patterns — personalized to your subtype.
           </p>
-        </motion.div>
+        </m.div>
 
         {/* What's inside */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.10 }}
+        <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.10 }}
           style={{ background: "var(--color-bg-card)", borderRadius: 22, padding: "20px 22px", boxShadow: "var(--shadow-card)" }}>
           <p style={{ fontSize: 13, fontWeight: 700, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>
             What&apos;s inside the 28-Day Roadmap
@@ -178,10 +182,10 @@ export function UpsellScreen() {
               </div>
             ))}
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Price anchor */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+        <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
           style={{ background: "var(--color-bg-card)", borderRadius: 22, padding: "18px 20px", boxShadow: "var(--shadow-card)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
             <div>
@@ -202,7 +206,7 @@ export function UpsellScreen() {
             </div>
           ) : clientSecret ? (
             <Elements
-              stripe={stripePromise}
+              stripe={getStripePromise()}
               options={{
                 clientSecret,
                 appearance: {
@@ -216,18 +220,18 @@ export function UpsellScreen() {
           ) : (
             <p style={{ fontSize: 13, color: "#E87450", textAlign: "center" }}>Could not load payment. Please refresh.</p>
           )}
-        </motion.div>
+        </m.div>
 
         {/* Social proof */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.20 }}
+        <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.20 }}
           style={{ background: "var(--color-bg-card)", borderRadius: 22, padding: "20px 22px", boxShadow: "var(--shadow-card)" }}>
           <p style={{ fontSize: 14, fontStyle: "italic", color: "var(--color-text-body)", lineHeight: 1.7, marginBottom: 8 }}>
             &quot;You have to take this quiz. The report literally read my mind and explained exactly why I procrastinate the way I do. It proved I&apos;m not just lazy, and the 28-day plan is the only thing that has actually worked for my brain.&quot;
           </p>
           <p style={{ fontSize: 13, color: "var(--color-text-muted)" }}>— Sarah M., verified customer</p>
-        </motion.div>
+        </m.div>
 
       </div>
-    </motion.div>
+    </m.div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { QuizQuestion } from "@/types/quiz";
 import { OptionButton } from "./OptionButton";
 import { useQuizStore } from "@/store/quizStore";
@@ -32,11 +32,11 @@ export function QuestionCard({ question }: QuestionCardProps) {
         width: "100%",
       }}>
         <h2 style={{
-          fontSize: 22,
-          fontWeight: 800,
+          fontSize: "clamp(18px, 4.5vw, 22px)",
+          fontWeight: 700,
           color: "var(--color-text)",
           lineHeight: 1.28,
-          letterSpacing: "-0.01em",
+          letterSpacing: "-0.02em",
         }}>
           {question.question}
         </h2>
@@ -66,7 +66,7 @@ export function QuestionCard({ question }: QuestionCardProps) {
         gap: 8,
       }}>
         {question.options.map((option, i) => (
-          <motion.div
+          <m.div
             key={option.id}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -80,13 +80,13 @@ export function QuestionCard({ question }: QuestionCardProps) {
                 selectOption(option.id, question.inputType as "single" | "multiple")
               }
             />
-          </motion.div>
+          </m.div>
         ))}
 
         {/* ── Continue button (multiple-choice only) ─────────── */}
         <AnimatePresence>
           {isMultiple && (
-            <motion.button
+            <m.button
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
@@ -116,7 +116,7 @@ export function QuestionCard({ question }: QuestionCardProps) {
               }}
             >
               Continue
-            </motion.button>
+            </m.button>
           )}
         </AnimatePresence>
       </div>

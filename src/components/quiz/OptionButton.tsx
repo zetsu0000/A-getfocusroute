@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { QuizOption } from "@/types/quiz";
 
 interface OptionButtonProps {
@@ -12,7 +12,7 @@ interface OptionButtonProps {
 
 export function OptionButton({ option, isSelected, inputType, onClick }: OptionButtonProps) {
   return (
-    <motion.button
+    <m.button
       onClick={onClick}
       whileHover={{ y: -1 }}
       whileTap={{ scale: 0.982, y: 0 }}
@@ -47,7 +47,7 @@ export function OptionButton({ option, isSelected, inputType, onClick }: OptionB
 
       {/* ── Multiple-choice checkbox ──────────────────────────── */}
       {inputType === "multiple" && (
-        <motion.div
+        <m.div
           animate={{
             backgroundColor: isSelected ? "var(--color-primary)" : "transparent",
             borderColor:     isSelected ? "var(--color-primary)" : "rgba(28,26,46,0.22)",
@@ -61,7 +61,7 @@ export function OptionButton({ option, isSelected, inputType, onClick }: OptionB
           }}
         >
           {isSelected && (
-            <motion.svg
+            <m.svg
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 600, damping: 24 }}
@@ -69,14 +69,14 @@ export function OptionButton({ option, isSelected, inputType, onClick }: OptionB
             >
               <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2.2"
                 strokeLinecap="round" strokeLinejoin="round" />
-            </motion.svg>
+            </m.svg>
           )}
-        </motion.div>
+        </m.div>
       )}
 
       {/* ── Single-choice: only show indicator when SELECTED ─── */}
       {inputType === "single" && isSelected && (
-        <motion.div
+        <m.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 500, damping: 22 }}
@@ -90,8 +90,8 @@ export function OptionButton({ option, isSelected, inputType, onClick }: OptionB
             <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2.2"
               strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-        </motion.div>
+        </m.div>
       )}
-    </motion.button>
+    </m.button>
   );
 }

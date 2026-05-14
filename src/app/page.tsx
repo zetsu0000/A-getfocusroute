@@ -1,20 +1,35 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import dynamic                      from "next/dynamic";
+import { AnimatePresence, m }  from "framer-motion";
 import { useQuizStore }             from "@/store/quizStore";
 import { QuizEngine }               from "@/components/quiz/QuizEngine";
-import { LoadingScreen }            from "@/components/loading/LoadingScreen";
-import { EmailScreen }              from "@/components/email/EmailScreen";
-import { NameScreen }               from "@/components/name/NameScreen";
-import { ChartScreen }              from "@/components/chart/ChartScreen";
-import { PaywallScreen }            from "@/components/paywall/PaywallScreen";
-import { UpsellScreen }             from "@/components/upsell/UpsellScreen";
-import { SubscriptionScreen }       from "@/components/subscription/SubscriptionScreen";
-import { SuccessScreen }            from "@/components/success/SuccessScreen";
 
-const fade = (key: string) => ({
+function ScreenSkeleton() {
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ width: 48, height: 48, borderRadius: "50%", border: "3px solid var(--color-border)", borderTopColor: "var(--color-primary)", animation: "spin 0.8s linear infinite" }} />
+    </div>
+  );
+}
+
+// LoadingScreen, EmailScreen, NameScreen are not on the landing critical path:
+// they only render after the user finishes the quiz (~20 questions in). Defer
+// them with next/dynamic so they don't ship in the initial page chunk.
+const LoadingScreen      = dynamic(() => import("@/components/loading/LoadingScreen").then(m => ({ default: m.LoadingScreen })), { ssr: false, loading: () => <ScreenSkeleton /> });
+const EmailScreen        = dynamic(() => import("@/components/email/EmailScreen").then(m => ({ default: m.EmailScreen })), { ssr: false, loading: () => <ScreenSkeleton /> });
+const NameScreen         = dynamic(() => import("@/components/name/NameScreen").then(m => ({ default: m.NameScreen })), { ssr: false, loading: () => <ScreenSkeleton /> });
+const ChartScreen        = dynamic(() => import("@/components/chart/ChartScreen").then(m => ({ default: m.ChartScreen })), { ssr: false, loading: () => <ScreenSkeleton /> });
+const PaywallScreen      = dynamic(() => import("@/components/paywall/PaywallScreen").then(m => ({ default: m.PaywallScreen })), { ssr: false, loading: () => <ScreenSkeleton /> });
+const UpsellScreen       = dynamic(() => import("@/components/upsell/UpsellScreen").then(m => ({ default: m.UpsellScreen })), { ssr: false, loading: () => <ScreenSkeleton /> });
+const SubscriptionScreen = dynamic(() => import("@/components/subscription/SubscriptionScreen").then(m => ({ default: m.SubscriptionScreen })), { ssr: false, loading: () => <ScreenSkeleton /> });
+const SuccessScreen      = dynamic(() => import("@/components/success/SuccessScreen").then(m => ({ default: m.SuccessScreen })), { ssr: false, loading: () => <ScreenSkeleton /> });
+
+// The quiz step uses opacity:0.01 (not 0) so the browser can measure LCP
+// immediately on first paint instead of waiting for the animation to complete.
+const fade = (key: string, isFirst = false) => ({
   key,
-  initial:    { opacity: 0, x: 30  } as const,
+  initial:    { opacity: isFirst ? 0.01 : 0, x: isFirst ? 0 : 30  } as const,
   animate:    { opacity: 1, x: 0   } as const,
   exit:       { opacity: 0, x: -30 } as const,
   transition: { duration: 0.26 },
@@ -24,60 +39,62 @@ export default function Home() {
   const step = useQuizStore((s) => s.currentStep);
 
   return (
+    <main>
     <AnimatePresence mode="wait">
       {step === "quiz" && (
-        <motion.div {...fade("quiz")}>
+        <m.div {...fade("quiz", true)}>
           <QuizEngine />
-        </motion.div>
+        </m.div>
       )}
 
       {step === "loading" && (
-        <motion.div {...fade("loading")}>
+        <m.div {...fade("loading")}>
           <LoadingScreen />
-        </motion.div>
+        </m.div>
       )}
 
       {step === "email" && (
-        <motion.div {...fade("email")}>
+        <m.div {...fade("email")}>
           <EmailScreen />
-        </motion.div>
+        </m.div>
       )}
 
       {step === "name" && (
-        <motion.div {...fade("name")}>
+        <m.div {...fade("name")}>
           <NameScreen />
-        </motion.div>
+        </m.div>
       )}
 
       {step === "chart" && (
-        <motion.div {...fade("chart")}>
+        <m.div {...fade("chart")}>
           <ChartScreen />
-        </motion.div>
+        </m.div>
       )}
 
       {step === "paywall" && (
-        <motion.div {...fade("paywall")}>
+        <m.div {...fade("paywall")}>
           <PaywallScreen />
-        </motion.div>
+        </m.div>
       )}
 
       {step === "upsell" && (
-        <motion.div {...fade("upsell")}>
+        <m.div {...fade("upsell")}>
           <UpsellScreen />
-        </motion.div>
+        </m.div>
       )}
 
       {step === "subscription" && (
-        <motion.div {...fade("subscription")}>
+        <m.div {...fade("subscription")}>
           <SubscriptionScreen />
-        </motion.div>
+        </m.div>
       )}
 
       {step === "success" && (
-        <motion.div {...fade("success")}>
+        <m.div {...fade("success")}>
           <SuccessScreen />
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
+    </main>
   );
 }

@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
-import { CheckCircle2, Mail } from "lucide-react";
+import Link from "next/link";
+import { m } from "framer-motion";
+import { CheckCircle2, Mail, LayoutDashboard } from "lucide-react";
 import { useQuizStore } from "@/store/quizStore";
+import { safeName } from "@/lib/personalization";
 
 function ConfettiCanvas() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -64,10 +66,10 @@ function ConfettiCanvas() {
 
 export function SuccessScreen() {
   const { name, email } = useQuizStore();
-  const displayName = name || "there";
+  const displayName = safeName(name, "there");
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
@@ -75,35 +77,35 @@ export function SuccessScreen() {
     >
       <ConfettiCanvas />
 
-      <motion.div
+      <m.div
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.15 }}
         style={{ width: 84, height: 84, borderRadius: 24, background: "linear-gradient(135deg, var(--color-primary), #6AA3C8)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 28, boxShadow: "0 8px 32px rgba(74,127,165,0.35)" }}
       >
         <CheckCircle2 size={44} color="white" strokeWidth={2.2} />
-      </motion.div>
+      </m.div>
 
-      <motion.h1
+      <m.h1
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.30 }}
         style={{ fontSize: 28, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.25, marginBottom: 12 }}
       >
         You&apos;re all set, {displayName}! 🎉
-      </motion.h1>
+      </m.h1>
 
-      <motion.p
+      <m.p
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.40 }}
         style={{ fontSize: 15, color: "var(--color-text-body)", lineHeight: 1.7, maxWidth: 340, marginBottom: 36 }}
       >
         Your ADHD Assessment results and personalized guide are on their way. Check your inbox — this is the clarity you&apos;ve been looking for.
-      </motion.p>
+      </m.p>
 
       {email && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.50 }}
@@ -113,10 +115,31 @@ export function SuccessScreen() {
           <p style={{ fontSize: 13, color: "var(--color-text-body)" }}>
             Sent to <span style={{ fontWeight: 700, color: "var(--color-primary)" }}>{email}</span>
           </p>
-        </motion.div>
+        </m.div>
       )}
 
-      <motion.div
+      <m.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.55 }}
+        style={{ maxWidth: 380, width: "100%", marginBottom: 8 }}
+      >
+        <Link
+          href="/dashboard"
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+            width: "100%", padding: "16px 24px", borderRadius: 16,
+            background: "var(--color-primary)", color: "#fff",
+            fontSize: 15, fontWeight: 700, textDecoration: "none",
+            boxShadow: "var(--shadow-btn-primary)",
+          }}
+        >
+          <LayoutDashboard size={18} />
+          Acessar minha conta
+        </Link>
+      </m.div>
+
+      <m.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.60 }}
@@ -139,7 +162,7 @@ export function SuccessScreen() {
             </div>
           ))}
         </div>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

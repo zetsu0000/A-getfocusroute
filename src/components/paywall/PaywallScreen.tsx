@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Shield, Star, Lock, Check, BadgeCheck, CreditCard } from "lucide-react";
-import { loadStripe } from "@stripe/stripe-js";
+import { loadStripe } from "@stripe/stripe-js/pure";
 import {
   Elements,
   PaymentElement,
@@ -11,42 +11,53 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { useQuizStore } from "@/store/quizStore";
+import { saveSession } from "@/lib/session";
+import { safeName } from "@/lib/personalization";
+import { scoreFromAnswers, getSymptomLevel } from "@/lib/symptom-level";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
-const PRICE_ID      = process.env.NEXT_PUBLIC_PRICE_ASSESSMENT!;
+// Lazy singleton — loadStripe (and the Stripe.js download) only fires
+// when the PaywallScreen first renders, not when the chunk is prefetched.
+let _stripePromise: ReturnType<typeof loadStripe> | null = null;
+function getStripePromise() {
+  if (!_stripePromise) _stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+  return _stripePromise;
+}
+const PRICE_ID = process.env.NEXT_PUBLIC_PRICE_ASSESSMENT!;
 
-/* ── Countdown ── */
+/* ── Countdown — persisted in sessionStorage ── */
+const COUNTDOWN_KEY = "focusroute_countdown_end";
+
 function useCountdown(initial = 600) {
-  const [secs, setSecs] = useState(initial);
+  const [secs, setSecs] = useState<number>(() => {
+    if (typeof window === "undefined") return initial;
+    const stored = sessionStorage.getItem(COUNTDOWN_KEY);
+    if (stored) {
+      const remaining = Math.round((Number(stored) - Date.now()) / 1000);
+      if (remaining > 0) return remaining;
+    }
+    const end = Date.now() + initial * 1000;
+    sessionStorage.setItem(COUNTDOWN_KEY, String(end));
+    return initial;
+  });
+
   useEffect(() => {
-    const t = setInterval(() => setSecs((s) => Math.max(0, s - 1)), 1000);
+    const t = setInterval(() =>
+      setSecs((s) => {
+        if (s <= 1) { clearInterval(t); return 0; }
+        return s - 1;
+      }), 1000);
     return () => clearInterval(t);
   }, []);
+
   const m = String(Math.floor(secs / 60)).padStart(2, "0");
   const s = String(secs % 60).padStart(2, "0");
   return { display: `${m}:${s}`, urgent: secs < 120 };
 }
 
-/* ── Score helpers ── */
-const SCORE_MAP: Record<string, number> = {
-  never: 18, rarely: 34, sometimes: 57, often: 74, always: 91,
-};
-function getScore(answers: { questionId: string; selectedOptions: string[] }[]) {
-  const id = answers.find((a) => a.questionId === "distraction")?.selectedOptions[0] ?? "sometimes";
-  return SCORE_MAP[id] ?? 57;
-}
-function toLevel(score: number) {
-  if (score < 35) return { label: "Low",      color: "#4A7FA5", bg: "#EAF2F8", pct: 20  };
-  if (score < 50) return { label: "Mild",     color: "#6AA3C8", bg: "#E8F4FB", pct: 38  };
-  if (score < 70) return { label: "Moderate", color: "#F07000", bg: "#FEF0DC", pct: 62  };
-  if (score < 85) return { label: "High",     color: "#CC5C3A", bg: "#FDEEE8", pct: 80  };
-  return               { label: "Very High", color: "#A82E2E", bg: "#FCDEDE", pct: 95  };
-}
-
 /* ── Locked result card ── */
 function LockedCard() {
   const answers = useQuizStore((s) => s.answers);
-  const level   = toLevel(getScore(answers));
+  const level   = getSymptomLevel(scoreFromAnswers(answers));
 
   const rows = [
     { label: "ADHD Subtype",          value: "Inattentive-C" },
@@ -77,7 +88,7 @@ function LockedCard() {
           <span style={{ fontSize: 11, fontWeight: 700, color: level.color }}>{level.label}</span>
         </div>
         <div style={{ height: 8, borderRadius: 99, background: "linear-gradient(to right,#EAF2F8,#6AA3C8,#F5C17A,#E87450,#A82E2E)", position: "relative" }}>
-          <motion.div
+          <m.div
             initial={{ left: "0%" }}
             animate={{ left: `${level.pct}%` }}
             transition={{ delay: 0.5, duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
@@ -86,7 +97,7 @@ function LockedCard() {
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
           {["Low","Mild","Moderate","High","Very High"].map((l) => (
-            <span key={l} style={{ fontSize: 9, color: "#9B9BB5" }}>{l}</span>
+            <span key={l} style={{ fontSize: 11, color: "var(--color-text-muted)" }}>{l}</span>
           ))}
         </div>
       </div>
@@ -104,13 +115,13 @@ function LockedCard() {
 
         {/* Lock overlay */}
         <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
-          <motion.div
+          <m.div
             animate={{ scale: [1, 1.07, 1] }}
             transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
             style={{ width: 50, height: 50, borderRadius: 15, background: "linear-gradient(135deg,#E87450,#CC5C3A)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(232,116,80,0.45)" }}
           >
             <Lock size={22} color="white" strokeWidth={2.5} />
-          </motion.div>
+          </m.div>
           <p style={{ fontSize: 13, fontWeight: 800, color: "#1C1A2E", textAlign: "center", lineHeight: 1.3 }}>
             Unlock to reveal<br />your full profile
           </p>
@@ -156,16 +167,16 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
       />
 
       {error && (
-        <motion.p
+        <m.p
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
           style={{ marginTop: 12, fontSize: 13, color: "#E87450", textAlign: "center", background: "#FDF1EC", borderRadius: 10, padding: "8px 14px" }}
         >
           ⚠️ {error}
-        </motion.p>
+        </m.p>
       )}
 
-      <motion.button
+      <m.button
         type="submit"
         disabled={!stripe || loading}
         whileTap={{ scale: 0.975 }}
@@ -190,7 +201,7 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
       >
         {loading ? (
           <>
-            <motion.span
+            <m.span
               animate={{ rotate: 360 }}
               transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
               style={{ display: "inline-block", width: 16, height: 16, border: "2px solid #9B9BB5", borderTopColor: "transparent", borderRadius: "50%" }}
@@ -203,7 +214,7 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
             Unlock my results — $27
           </>
         )}
-      </motion.button>
+      </m.button>
 
       {/* Trust row */}
       <div style={{ marginTop: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 18 }}>
@@ -242,7 +253,13 @@ function PaymentSkeleton() {
 export function PaywallScreen() {
   const { name, email, setStep } = useQuizStore();
   const { display, urgent }     = useCountdown(600);
-  const displayName              = name || "You";
+  const displayName              = safeName(name, "You");
+
+  const handlePaywallSuccess = () => {
+    const { email: e, name: n, answers } = useQuizStore.getState();
+    saveSession({ email: e, name: n, planType: "assessment", purchasedAt: new Date().toISOString(), answers });
+    setStep("upsell");
+  };
 
   const [clientSecret,  setClientSecret]  = useState<string | null>(null);
   const [loadingSecret, setLoadingSecret] = useState(true);
@@ -316,30 +333,30 @@ export function PaywallScreen() {
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
+    <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
 
       {/* ── Urgency bar ── */}
-      <motion.div
+      <m.div
         animate={{ backgroundColor: urgent ? ["#CC5C3A", "#A82E2E", "#CC5C3A"] : ["#1C1A2E", "#1C1A2E"] }}
         transition={{ repeat: urgent ? Infinity : 0, duration: 1.2 }}
         style={{ padding: "11px 20px", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}
       >
-        <motion.span
+        <m.span
           animate={{ opacity: [1, 0.4, 1] }}
           transition={{ repeat: Infinity, duration: 1.4 }}
           style={{ fontSize: 12 }}
-        >🔴</motion.span>
+        >🔴</m.span>
         <p style={{ fontSize: 13, fontWeight: 700, color: "#fff", letterSpacing: "0.01em" }}>
           Offer reserved for <span style={{ fontVariantNumeric: "tabular-nums", fontWeight: 900 }}>{display}</span>
         </p>
-      </motion.div>
+      </m.div>
 
       {/* ── Page body ── */}
-      <div style={{ padding: "24px 16px 64px" }}>
-        <div style={{ maxWidth: 460, margin: "0 auto", display: "flex", flexDirection: "column", gap: 22 }}>
+      <div style={{ padding: "24px 16px 64px", overflowX: "hidden" }}>
+        <div style={{ maxWidth: 460, margin: "0 auto", display: "flex", flexDirection: "column", gap: 22, minWidth: 0 }}>
 
           {/* ── Headline ── */}
-          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }}>
+          <m.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }}>
             <h1 style={{ fontSize: 26, fontWeight: 900, color: "#1C1A2E", lineHeight: 1.2, letterSpacing: "-0.02em" }}>
               <span style={{ color: "#4A7FA5" }}>{displayName}</span>, your ADHD profile is ready —{" "}
               <span style={{ color: "#E87450" }}>but still locked</span>
@@ -347,15 +364,15 @@ export function PaywallScreen() {
             <p style={{ marginTop: 10, fontSize: 14, color: "#4A4A6A", lineHeight: 1.65 }}>
               Unlock your full profile for a one-time payment of <strong style={{ color: "#1C1A2E" }}>$27</strong>. No subscription. Instant access.
             </p>
-          </motion.div>
+          </m.div>
 
           {/* ── Locked card ── */}
-          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.10 }}>
+          <m.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.10 }}>
             <LockedCard />
-          </motion.div>
+          </m.div>
 
           {/* ── What's included ── */}
-          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }}
+          <m.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }}
             style={{ background: "#fff", borderRadius: 22, padding: "20px 22px", boxShadow: "var(--shadow-card)", border: "1px solid var(--color-border)" }}>
             <p style={{ fontSize: 11, fontWeight: 700, color: "#9B9BB5", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>
               What you unlock
@@ -376,11 +393,11 @@ export function PaywallScreen() {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </m.div>
 
           {/* ── Price + Payment form ── */}
-          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}
-            style={{ background: "#fff", borderRadius: 24, boxShadow: "var(--shadow-card)", border: "1px solid var(--color-border)", overflow: "hidden" }}>
+          <m.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}
+            style={{ background: "#fff", borderRadius: 24, boxShadow: "var(--shadow-card)", border: "1px solid var(--color-border)", overflow: "hidden", minWidth: 0 }}>
 
             {/* Price header */}
             <div style={{ padding: "20px 22px 18px", borderBottom: "1px solid #EAE6DC" }}>
@@ -403,32 +420,32 @@ export function PaywallScreen() {
             </div>
 
             {/* Payment form */}
-            <div style={{ padding: "22px 22px 22px" }}>
+            <div style={{ padding: "22px 22px 22px", overflowX: "hidden", minWidth: 0 }}>
               <AnimatePresence mode="wait">
                 {loadingSecret ? (
-                  <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <m.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                     <PaymentSkeleton />
-                  </motion.div>
+                  </m.div>
                 ) : clientSecret ? (
-                  <motion.div key="form" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
+                  <m.div key="form" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
                     <Elements
-                      stripe={stripePromise}
+                      stripe={getStripePromise()}
                       options={{ clientSecret, appearance: stripeAppearance }}
                     >
-                      <CheckoutForm onSuccess={() => setStep("upsell")} />
+                      <CheckoutForm onSuccess={handlePaywallSuccess} />
                     </Elements>
-                  </motion.div>
+                  </m.div>
                 ) : (
-                  <motion.p key="error" style={{ fontSize: 13, color: "#E87450", textAlign: "center", padding: "16px 0" }}>
+                  <m.p key="error" style={{ fontSize: 13, color: "#E87450", textAlign: "center", padding: "16px 0" }}>
                     Failed to load payment. Please refresh the page.
-                  </motion.p>
+                  </m.p>
                 )}
               </AnimatePresence>
             </div>
-          </motion.div>
+          </m.div>
 
           {/* ── Social proof bar ── */}
-          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}
+          <m.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}
             style={{ background: "#fff", borderRadius: 18, padding: "14px 18px", boxShadow: "var(--shadow-card)", border: "1px solid var(--color-border)", display: "flex", alignItems: "center", gap: 14 }}>
             <div style={{ display: "flex" }}>
               {["🧑‍💻","👩‍🎓","👨‍🏫","👩‍⚕️","🧑‍🎨"].map((e, i) => (
@@ -444,10 +461,10 @@ export function PaywallScreen() {
               </div>
               <p style={{ fontSize: 12, color: "#9B9BB5" }}>+200,000 people have discovered their profile</p>
             </div>
-          </motion.div>
+          </m.div>
 
           {/* ── Testimonials ── */}
-          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.26 }}
+          <m.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.26 }}
             style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {[
               { quote: "The report was eye-opening. I finally understood why I struggle so much with focus — and the guide gave me tools that actually fit my brain.", author: "Rafael T.", role: "Systems Analyst" },
@@ -473,10 +490,10 @@ export function PaywallScreen() {
                 </div>
               </div>
             ))}
-          </motion.div>
+          </m.div>
 
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

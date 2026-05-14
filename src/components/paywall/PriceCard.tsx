@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Check } from "lucide-react";
 
 interface PriceCardProps {
@@ -20,7 +20,7 @@ export function PriceCard({ plan, isSelected, onSelect }: PriceCardProps) {
   const isAnnual = plan === "annual";
 
   return (
-    <motion.button
+    <m.button
       onClick={onSelect}
       whileTap={{ scale: 0.982 }}
       whileHover={{ y: -2 }}
@@ -81,7 +81,7 @@ export function PriceCard({ plan, isSelected, onSelect }: PriceCardProps) {
             transition: "border-color 0.15s",
           }}>
             {isSelected && (
-              <motion.div
+              <m.div
                 initial={{ scale: 0 }} animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 500, damping: 25 }}
                 style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--color-primary)" }}
@@ -112,6 +112,6 @@ export function PriceCard({ plan, isSelected, onSelect }: PriceCardProps) {
           </ul>
         )}
       </div>
-    </motion.button>
+    </m.button>
   );
 }

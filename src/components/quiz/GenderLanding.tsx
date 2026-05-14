@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { User, Menu } from "lucide-react";
 import { useQuizStore } from "@/store/quizStore";
 
@@ -11,12 +11,12 @@ function MaleCharacter() {
     <svg width="250" height="250" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg"
       preserveAspectRatio="xMidYMin slice"
       style={{ width: "100%", height: "100%", display: "block" }}>
-      <rect x="10" y="10" width="280" height="280" rx="20" fill="white" stroke="#008075" strokeWidth="2" />
+      <rect x="10" y="10" width="280" height="280" rx="20" fill="white" stroke="#4A7FA5" strokeWidth="2" />
       <path d="M60 280 C 60 220, 90 190, 150 190 C 210 190, 240 220, 240 280" fill="#5C6BC0" stroke="#2C3E50" strokeWidth="2" />
       <rect x="135" y="175" width="30" height="25" fill="#FFAB91" stroke="#2C3E50" strokeWidth="2" />
       <path d="M110 120 C 110 80, 190 80, 190 120 C 190 160, 180 185, 150 185 C 120 185, 110 160, 110 120 Z" fill="#FFAB91" stroke="#2C3E50" strokeWidth="2" />
       <circle cx="192" cy="135" r="10" fill="#FFAB91" stroke="#2C3E50" strokeWidth="2" />
-      <path d="M105 105 C 105 60, 195 60, 195 105 Z" fill="#008075" stroke="#2C3E50" strokeWidth="2" />
+      <path d="M105 105 C 105 60, 195 60, 195 105 Z" fill="#4A7FA5" stroke="#2C3E50" strokeWidth="2" />
       <path d="M95 105 Q 150 90 205 105" fill="none" stroke="#2C3E50" strokeWidth="4" strokeLinecap="round" />
       <path d="M105 105 L 105 125 C 115 115, 110 105, 110 105 Z" fill="#263238" />
       <circle cx="138" cy="125" r="2.5" fill="#2C3E50" />
@@ -33,7 +33,7 @@ function FemaleCharacter() {
     <svg width="250" height="250" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg"
       preserveAspectRatio="xMidYMin slice"
       style={{ width: "100%", height: "100%", display: "block" }}>
-      <rect x="10" y="10" width="280" height="280" rx="20" fill="white" stroke="#008075" strokeWidth="2" />
+      <rect x="10" y="10" width="280" height="280" rx="20" fill="white" stroke="#4A7FA5" strokeWidth="2" />
       <path d="M 100 60 C 40 60, 20 130, 30 190 C 35 220, 20 260, 45 285 C 75 295, 95 260, 105 230 L 125 150 L 175 150 L 195 230 C 205 260, 225 295, 255 285 C 280 260, 265 220, 270 190 C 280 130, 260 60, 200 60 Z" fill="#A04E4E" stroke="#2C3E50" strokeWidth="2" strokeLinejoin="round" />
       <path d="M 50 280 C 60 210, 90 180, 120 170 L 150 190 L 180 170 C 210 180, 240 210, 250 280 Z" fill="#FF8C00" stroke="#2C3E50" strokeWidth="2" />
       <path d="M 120 170 L 140 210 L 150 190 Z" fill="#FF8C00" stroke="#2C3E50" strokeWidth="2" />
@@ -54,17 +54,26 @@ function FemaleCharacter() {
 }
 
 /* ── Gender Card ─────────────────────────────────────────────────── */
+type GenderId = "male" | "female" | "other";
+
 interface GenderCardProps {
-  gender: "male" | "female";
+  gender: GenderId;
   label: string;
   isSelected: boolean;
   onSelect: () => void;
 }
 
 function GenderCard({ gender, label, isSelected, onSelect }: GenderCardProps) {
+  const isOther = gender === "other";
+  const ariaLabel =
+    gender === "male"   ? "Start ADHD test for males" :
+    gender === "female" ? "Start ADHD test for females" :
+                          "Start ADHD test for non-binary / prefer not to say";
   return (
-    <motion.button
+    <m.button
       onClick={onSelect}
+      aria-label={ariaLabel}
+      aria-pressed={isSelected}
       whileTap={{ scale: 0.97 }}
       whileHover={{ y: -2 }}
       transition={{ type: "spring", stiffness: 420, damping: 26 }}
@@ -87,14 +96,20 @@ function GenderCard({ gender, label, isSelected, onSelect }: GenderCardProps) {
         textAlign: "left",
       }}
     >
-      {/* Illustration — bust / half-body crop */}
+      {/* Illustration */}
       <div style={{
         width: "100%",
-        /* landscape aspect shows only the top ~60% of the SVG (head + torso) */
         aspectRatio: "4 / 3",
         overflow: "hidden",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: isOther ? "var(--color-primary-tint)" : undefined,
       }}>
-        {gender === "male" ? <MaleCharacter /> : <FemaleCharacter />}
+        {gender === "male"   ? <MaleCharacter />   :
+         gender === "female" ? <FemaleCharacter /> :
+         /* Non-binary placeholder emoji */
+         <span style={{ fontSize: 72, lineHeight: 1 }}>🧑</span>}
       </div>
 
       {/* Label button */}
@@ -109,19 +124,19 @@ function GenderCard({ gender, label, isSelected, onSelect }: GenderCardProps) {
         <span style={{ fontSize: 14, fontWeight: 800, color: "#ffffff" }}>
           {label}
         </span>
-        <span style={{ fontSize: 16, color: "rgba(255,255,255,0.9)", lineHeight: 1 }}>→</span>
+        <span aria-hidden="true" style={{ fontSize: 16, color: "rgba(255,255,255,0.9)", lineHeight: 1 }}>→</span>
       </div>
-    </motion.button>
+    </m.button>
   );
 }
 
 /* ── Main Landing Component ──────────────────────────────────────── */
 export function GenderLanding() {
   const { selectOption, submitAnswer } = useQuizStore();
-  const [selected, setSelected] = useState<"male" | "female" | null>(null);
+  const [selected, setSelected] = useState<GenderId | null>(null);
 
-  const handleSelect = (id: "male" | "female") => {
-    if (selected) return;           // prevent double-tap
+  const handleSelect = (id: GenderId) => {
+    if (selected) return;
     setSelected(id);
     selectOption(id, "single");
     setTimeout(() => submitAnswer(), 380);
@@ -160,10 +175,10 @@ export function GenderLanding() {
             </svg>
           </div>
           <div style={{ lineHeight: 1.1 }}>
-            <p style={{ fontSize: 13, fontWeight: 800, color: "var(--color-text)", letterSpacing: "0.02em" }}>
-              FOCUSROUTE
+            <p style={{ fontSize: 13, fontWeight: 800, color: "var(--color-text)", letterSpacing: "-0.01em" }}>
+              FocusRoute
             </p>
-            <p style={{ fontSize: 10, color: "var(--color-text-muted)", letterSpacing: "0.1em", fontWeight: 500 }}>
+            <p style={{ fontSize: 11, color: "var(--color-text-muted)", letterSpacing: "0.08em", fontWeight: 500 }}>
               ADHD TEST
             </p>
           </div>
@@ -171,9 +186,9 @@ export function GenderLanding() {
 
         {/* Navigation icons */}
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          {[User, Menu].map((Icon, i) => (
-            <button key={i} style={{
-              width: 38, height: 38, borderRadius: 10,
+          {([["Account", User], ["Menu", Menu]] as const).map(([label, Icon]) => (
+            <button key={label} aria-label={label} style={{
+              width: 44, height: 44, borderRadius: 10,
               background: "transparent",
               border: "1.5px solid var(--color-border)",
               display: "flex", alignItems: "center", justifyContent: "center",
@@ -198,7 +213,7 @@ export function GenderLanding() {
       }}>
 
         {/* Text block */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.36, ease: "easeOut" }}
@@ -230,57 +245,101 @@ export function GenderLanding() {
           </p>
 
           {/* Badge */}
-          <motion.span
+          <m.span
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1, duration: 0.28 }}
             style={{
-              display: "inline-block",
-              color: "var(--color-primary)",
-              fontSize: 12, fontWeight: 800,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              background: "var(--color-accent-tint)",
+              color: "var(--color-accent-dark)",
+              fontSize: 11, fontWeight: 800,
               letterSpacing: "0.1em",
               textTransform: "uppercase",
+              padding: "5px 14px",
+              borderRadius: 99,
+              border: "1px solid rgba(232,116,80,0.22)",
             }}
           >
-            Free test · 3 minutes
-          </motion.span>
-        </motion.div>
+            ✦ FREE TEST · 3 MINUTES
+          </m.span>
+        </m.div>
 
-        {/* Gender cards — compact, matching Impulse proportions */}
-        <motion.div
+        {/* Gender cards */}
+        <m.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.12, duration: 0.34, ease: "easeOut" }}
           style={{
             display: "flex",
-            gap: 12,
+            flexDirection: "column",
+            gap: 10,
             width: "100%",
             maxWidth: 420,
           }}
+          role="group"
+          aria-label="Select your gender"
         >
-          <GenderCard
-            gender="male"
-            label="Male"
-            isSelected={selected === "male"}
-            onSelect={() => handleSelect("male")}
-          />
-          <GenderCard
-            gender="female"
-            label="Female"
-            isSelected={selected === "female"}
-            onSelect={() => handleSelect("female")}
-          />
-        </motion.div>
+          {/* Male + Female side by side */}
+          <div style={{ display: "flex", gap: 10 }}>
+            <GenderCard
+              gender="male"
+              label="Male"
+              isSelected={selected === "male"}
+              onSelect={() => handleSelect("male")}
+            />
+            <GenderCard
+              gender="female"
+              label="Female"
+              isSelected={selected === "female"}
+              onSelect={() => handleSelect("female")}
+            />
+          </div>
+          {/* Non-binary / prefer not to say — full width, shorter */}
+          <m.button
+            onClick={() => handleSelect("other")}
+            aria-label="Start ADHD test for non-binary / prefer not to say"
+            aria-pressed={selected === "other"}
+            whileTap={{ scale: 0.98 }}
+            whileHover={{ y: -1 }}
+            transition={{ type: "spring", stiffness: 420, damping: 26 }}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              borderRadius: 14,
+              border: selected === "other"
+                ? "2.5px solid var(--color-primary)"
+                : "1.5px solid var(--color-border)",
+              background: selected === "other" ? "var(--color-primary-tint)" : "var(--color-bg-card)",
+              boxShadow: selected === "other" ? "var(--shadow-sel)" : "0 1px 3px rgba(28,26,46,0.06)",
+              padding: "14px 18px",
+              cursor: "pointer",
+              transition: "border-color 0.18s, background 0.18s, box-shadow 0.18s",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <span style={{ fontSize: 20 }}>🏳️‍🌈</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: selected === "other" ? "var(--color-primary)" : "var(--color-text)" }}>
+                Non-binary / Prefer not to say
+              </span>
+            </div>
+            <span aria-hidden="true" style={{ fontSize: 15, color: selected === "other" ? "var(--color-primary)" : "var(--color-text-muted)" }}>→</span>
+          </m.button>
+        </m.div>
 
         {/* Footer note */}
-        <motion.p
+        <m.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.28 }}
           style={{ fontSize: 11, color: "var(--color-text-muted)", textAlign: "center", marginTop: 20 }}
         >
           Your data is 100% private and secure 🔒
-        </motion.p>
+        </m.p>
       </div>
     </div>
   );

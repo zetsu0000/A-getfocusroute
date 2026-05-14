@@ -51,6 +51,7 @@ export const questions: QuizQuestion[] = [
     options: [
       { id: "male",   label: "Male" },
       { id: "female", label: "Female" },
+      { id: "other",  label: "Non-binary / Prefer not to say" },
     ],
   },
 

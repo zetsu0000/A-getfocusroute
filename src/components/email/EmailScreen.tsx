@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { useQuizStore } from "@/store/quizStore";
 
 export function EmailScreen() {
   const { setEmail, setStep } = useQuizStore();
   const [local, setLocal]     = useState("");
-  const valid = local.includes("@") && local.includes(".");
+  const [touched, setTouched] = useState(false);
+  const valid   = local.includes("@") && local.includes(".");
+  const hasError = touched && local.length > 0 && !valid;
 
   const handleContinue = () => {
     if (!valid) return;
@@ -16,7 +18,7 @@ export function EmailScreen() {
   };
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, x: 40 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -40 }}
@@ -64,24 +66,32 @@ export function EmailScreen() {
             value={local}
             onChange={(e) => setLocal(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleContinue()}
+            onBlur={() => setTouched(true)}
             style={{
               width: "100%", padding: "16px 16px 16px 44px",
               borderRadius: 14,
-              background: "var(--color-bg-card)",
-              border: "1.5px solid var(--color-border)",
+              background: hasError ? "var(--color-error-tint)" : "var(--color-bg-card)",
+              border: `1.5px solid ${hasError ? "var(--color-error)" : "var(--color-border)"}`,
               color: "var(--color-primary)",
               fontSize: 15, outline: "none",
-              transition: "border-color 0.15s, box-shadow 0.15s",
+              transition: "border-color 0.15s, box-shadow 0.15s, background 0.15s",
             }}
             onFocus={(e) => {
-              e.currentTarget.style.borderColor = "#CBC0D3";
-              e.currentTarget.style.boxShadow   = "0 0 0 3px rgba(203,192,211,0.22)";
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = "var(--color-border)";
-              e.currentTarget.style.boxShadow   = "none";
+              if (!hasError) {
+                e.currentTarget.style.borderColor = "var(--color-primary)";
+                e.currentTarget.style.boxShadow   = "0 0 0 3px var(--color-primary-ring)";
+              }
             }}
           />
+          {hasError && (
+            <m.p
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{ marginTop: 6, fontSize: 12, color: "var(--color-error)", paddingLeft: 4 }}
+            >
+              Please enter a valid email address
+            </m.p>
+          )}
         </div>
 
         {/* Legal */}
@@ -135,6 +145,6 @@ export function EmailScreen() {
         </div>
 
       </div>
-    </motion.div>
+    </m.div>
   );
 }

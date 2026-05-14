@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Check, Star, Shield, RotateCcw } from "lucide-react";
-import { loadStripe } from "@stripe/stripe-js";
+import { loadStripe } from "@stripe/stripe-js/pure";
 import {
   Elements,
   PaymentElement,
@@ -11,8 +11,14 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { useQuizStore } from "@/store/quizStore";
+import { saveSession } from "@/lib/session";
+import { safeName } from "@/lib/personalization";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+let _stripePromise: ReturnType<typeof loadStripe> | null = null;
+function getStripePromise() {
+  if (!_stripePromise) _stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+  return _stripePromise;
+}
 
 const PLANS = {
   annual: {
@@ -88,7 +94,7 @@ function SubCheckoutForm({ priceId, email, onSuccess }: { priceId: string; email
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <PaymentElement options={{ layout: "tabs" }} />
       {error && <p style={{ fontSize: 13, color: "#E87450", textAlign: "center" }}>{error}</p>}
-      <motion.button
+      <m.button
         type="submit"
         disabled={!stripe || loading}
         animate={loading ? {} : { scale: [1, 1.015, 1], transition: { repeat: Infinity, duration: 2.6, ease: "easeInOut" } }}
@@ -102,7 +108,7 @@ function SubCheckoutForm({ priceId, email, onSuccess }: { priceId: string; email
         }}
       >
         {loading ? "Processing..." : "Start my plan →"}
-      </motion.button>
+      </m.button>
       <p style={{ fontSize: 11, color: "var(--color-text-muted)", textAlign: "center" }}>
         Cancel anytime · No hidden fees
       </p>
@@ -114,7 +120,7 @@ function SubCheckoutForm({ priceId, email, onSuccess }: { priceId: string; email
 function PlanCard({ planKey, isSelected, onSelect }: { planKey: "annual" | "monthly"; isSelected: boolean; onSelect: () => void }) {
   const plan = PLANS[planKey];
   return (
-    <motion.button
+    <m.button
       onClick={onSelect}
       whileTap={{ scale: 0.982 }}
       whileHover={{ y: -2 }}
@@ -153,7 +159,7 @@ function PlanCard({ planKey, isSelected, onSelect }: { planKey: "annual" | "mont
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
             {isSelected && (
-              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500, damping: 25 }}
+              <m.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500, damping: 25 }}
                 style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--color-primary)" }} />
             )}
           </div>
@@ -172,25 +178,35 @@ function PlanCard({ planKey, isSelected, onSelect }: { planKey: "annual" | "mont
           </ul>
         )}
       </div>
-    </motion.button>
+    </m.button>
   );
 }
 
 /* Main SubscriptionScreen */
 export function SubscriptionScreen() {
   const { name, email, setStep } = useQuizStore();
-  const displayName = name || "you";
+  const displayName = safeName(name, "you");
 
   const [selected, setSelected] = useState<"annual" | "monthly">("annual");
   const [showPayment, setShowPayment] = useState(false);
 
   const plan = PLANS[selected];
 
-  const handleSuccess = () => setStep("success");
-  const handleSkip    = () => setStep("success");
+  const handleSuccess = () => {
+    const { email: e, name: n, answers } = useQuizStore.getState();
+    saveSession({
+      email: e,
+      name: n,
+      planType: selected === "annual" ? "annual" : "monthly",
+      purchasedAt: new Date().toISOString(),
+      answers,
+    });
+    setStep("success");
+  };
+  const handleSkip = () => setStep("success");
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, x: 40 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3 }}
@@ -199,7 +215,7 @@ export function SubscriptionScreen() {
       <div style={{ maxWidth: 480, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
 
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+        <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <h1 style={{ fontSize: 24, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.25, marginBottom: 8 }}>
             Keep your momentum,{" "}
             <span style={{ color: "var(--color-primary)" }}>{displayName}</span>
@@ -207,21 +223,21 @@ export function SubscriptionScreen() {
           <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.65 }}>
             Lock in continuous access with monthly check-ins, updated strategies, and priority support — so you never lose progress.
           </p>
-        </motion.div>
+        </m.div>
 
         {/* Plan cards */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.10 }} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.10 }} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <PlanCard planKey="annual"  isSelected={selected === "annual"}  onSelect={() => { setSelected("annual");  setShowPayment(false); }} />
           <PlanCard planKey="monthly" isSelected={selected === "monthly"} onSelect={() => { setSelected("monthly"); setShowPayment(false); }} />
-        </motion.div>
+        </m.div>
 
         {/* CTA or Payment form */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+        <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
           style={{ background: "var(--color-bg-card)", borderRadius: 22, padding: "22px 22px", boxShadow: "var(--shadow-card)" }}>
 
           {!showPayment ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <motion.button
+              <m.button
                 onClick={() => setShowPayment(true)}
                 animate={{ scale: [1, 1.016, 1], transition: { repeat: Infinity, duration: 2.6, ease: "easeInOut" } }}
                 style={{
@@ -232,7 +248,7 @@ export function SubscriptionScreen() {
                 }}
               >
                 Start {selected === "annual" ? "Annual" : "Monthly"} Plan — {plan.price}
-              </motion.button>
+              </m.button>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24 }}>
                 {[
                   { icon: Shield,    label: "SSL Secure" },
@@ -241,14 +257,14 @@ export function SubscriptionScreen() {
                 ].map(({ icon: Icon, label }) => (
                   <div key={label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
                     <Icon size={16} color="var(--color-primary)" />
-                    <span style={{ fontSize: 10, color: "var(--color-text-muted)" }}>{label}</span>
+                    <span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>{label}</span>
                   </div>
                 ))}
               </div>
             </div>
           ) : (
             <Elements
-              stripe={stripePromise}
+              stripe={getStripePromise()}
               options={{
                 mode: "subscription",
                 amount: selected === "annual" ? 11900 : 1900,
@@ -262,7 +278,7 @@ export function SubscriptionScreen() {
               <SubCheckoutForm priceId={plan.priceId} email={email} onSuccess={handleSuccess} />
             </Elements>
           )}
-        </motion.div>
+        </m.div>
 
         {/* Skip */}
         <button
@@ -273,6 +289,6 @@ export function SubscriptionScreen() {
         </button>
 
       </div>
-    </motion.div>
+    </m.div>
   );
 }

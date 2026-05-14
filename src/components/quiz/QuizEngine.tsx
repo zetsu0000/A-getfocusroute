@@ -1,15 +1,26 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import dynamic from "next/dynamic";
+import { AnimatePresence, m } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { useQuizStore } from "@/store/quizStore";
 import { questions } from "@/data/questions";
 import { ProgressBar } from "./ProgressBar";
 import { QuestionCard } from "./QuestionCard";
-import { ScaleQuestion } from "./ScaleQuestion";
-import { InfoCard } from "./InfoCard";
 import { GenderLanding } from "./GenderLanding";
+
+// InfoCard only renders for `info`-type questions (first one appears after Q10),
+// and ScaleQuestion only renders for `scale`-type questions (first one at Q11).
+// Defer both so the landing-page chunk doesn't carry them.
+const ScaleQuestion = dynamic(
+  () => import("./ScaleQuestion").then(m => ({ default: m.ScaleQuestion })),
+  { ssr: false },
+);
+const InfoCard = dynamic(
+  () => import("./InfoCard").then(m => ({ default: m.InfoCard })),
+  { ssr: false },
+);
 
 const slideVariants = {
   enter:  (d: number) => ({ x: d > 0 ? "100%" : "-100%", opacity: 0 }),
@@ -27,6 +38,12 @@ export function QuizEngine() {
   const isScale    = question.inputType === "scale";
   const isMultiple = question.inputType === "multiple";
   const isLanding  = currentQuestionIndex === 0;   // gender question → special landing
+
+  /* Numeric progress indicator */
+  const answeredCount = questions
+    .slice(0, currentQuestionIndex + 1)
+    .filter((q) => q.inputType !== "info").length;
+  const totalCount = questions.filter((q) => q.inputType !== "info").length;
 
   useEffect(() => {
     setDirection(currentQuestionIndex >= prevIndex.current ? 1 : -1);
@@ -53,7 +70,7 @@ export function QuizEngine() {
         className="flex-shrink-0 flex items-center gap-3 w-full"
         style={{ padding: "20px 20px 14px" }}
       >
-        <motion.button
+        <m.button
           onClick={goBack}
           whileTap={{ scale: 0.88 }}
           className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
@@ -75,17 +92,22 @@ export function QuizEngine() {
           aria-label="Voltar"
         >
           <ArrowLeft size={20} />
-        </motion.button>
+        </m.button>
 
-        <div className="flex-1">
+        <div className="flex-1 flex flex-col gap-1">
           {!isInfo && <ProgressBar currentIndex={currentQuestionIndex} />}
+          {!isInfo && (
+            <p style={{ fontSize: 11, fontWeight: 600, color: "var(--color-text-muted)", textAlign: "right", letterSpacing: "0.04em" }}>
+              {answeredCount} / {totalCount}
+            </p>
+          )}
         </div>
       </div>
 
       {/* ── Slide stage ────────────────────────────────────── */}
       <div className="flex-1" style={{ position: "relative", overflow: "hidden" }}>
         <AnimatePresence mode="wait" custom={direction}>
-          <motion.div
+          <m.div
             key={question.id}
             custom={direction}
             variants={slideVariants}
@@ -102,7 +124,7 @@ export function QuizEngine() {
              isScale   ? <ScaleQuestion  question={question} /> :
                          <QuestionCard   question={question} />
             }
-          </motion.div>
+          </m.div>
         </AnimatePresence>
       </div>
 

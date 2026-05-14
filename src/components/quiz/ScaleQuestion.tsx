@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { QuizQuestion } from "@/types/quiz";
 import { useQuizStore } from "@/store/quizStore";
 
@@ -10,11 +10,11 @@ interface ScaleQuestionProps {
 }
 
 const SCALE = [
-  { id: "1", emoji: "👎", label: "1" },
-  { id: "2", emoji: "👎", label: "2", dim: true },
-  { id: "3", emoji: "🤷", label: "3" },
-  { id: "4", emoji: "👍", label: "4", dim: true },
-  { id: "5", emoji: "👍", label: "5" },
+  { id: "1", emoji: "😣", label: "1", desc: "Not at all" },
+  { id: "2", emoji: "😕", label: "2", desc: "Rarely"     },
+  { id: "3", emoji: "😐", label: "3", desc: "Sometimes"  },
+  { id: "4", emoji: "😟", label: "4", desc: "Often"      },
+  { id: "5", emoji: "😩", label: "5", desc: "Always"     },
 ];
 
 export function ScaleQuestion({ question }: ScaleQuestionProps) {
@@ -41,16 +41,16 @@ export function ScaleQuestion({ question }: ScaleQuestionProps) {
         width: "100%",
       }}>
         <h2 style={{
-          fontSize: 22, fontWeight: 800,
+          fontSize: "clamp(18px, 4.5vw, 22px)", fontWeight: 700,
           color: "var(--color-text)",
-          lineHeight: 1.28, letterSpacing: "-0.01em",
+          lineHeight: 1.28, letterSpacing: "-0.02em",
         }}>
           {question.question}
         </h2>
       </div>
 
-      {/* ── Spacer ─────────────────────────────────────────────── */}
-      <div style={{ flex: 1, minHeight: 24 }} />
+      {/* ── Spacer — capped so desktop doesn't get too much gap ── */}
+      <div style={{ flex: 1, minHeight: 16, maxHeight: 80 }} />
 
       {/* ── Statement card + scale ─────────────────────────────── */}
       <div style={{
@@ -64,7 +64,7 @@ export function ScaleQuestion({ question }: ScaleQuestionProps) {
       }}>
 
         {/* Quote card */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.24 }}
@@ -90,7 +90,7 @@ export function ScaleQuestion({ question }: ScaleQuestionProps) {
           }}>
             {question.statement}
           </p>
-        </motion.div>
+        </m.div>
 
         {/* Scale labels */}
         <div style={{ display: "flex", justifyContent: "space-between", paddingLeft: 4, paddingRight: 4 }}>
@@ -108,7 +108,7 @@ export function ScaleQuestion({ question }: ScaleQuestionProps) {
             const isSelected = chosen === item.id;
             const isAny = chosen !== null;
             return (
-              <motion.button
+              <m.button
                 key={item.id}
                 onClick={() => handleSelect(item.id)}
                 initial={{ opacity: 0, y: 8 }}
@@ -117,7 +117,7 @@ export function ScaleQuestion({ question }: ScaleQuestionProps) {
                 whileTap={{ scale: 0.92 }}
                 whileHover={!chosen ? { y: -3 } : {}}
                 style={{
-                  padding: "12px 4px",
+                  padding: "14px 4px 12px",
                   borderRadius: 14,
                   border: `1.5px solid ${isSelected ? "var(--color-primary)" : "rgba(28,26,46,0.09)"}`,
                   background: isSelected
@@ -128,18 +128,24 @@ export function ScaleQuestion({ question }: ScaleQuestionProps) {
                   alignItems: "center",
                   gap: 6,
                   cursor: chosen ? "default" : "pointer",
-                  opacity: isAny && !isSelected ? 0.45 : 1,
+                  opacity: isAny && !isSelected ? 0.38 : 1,
                   transition: "background 0.15s, border-color 0.15s, opacity 0.2s",
                   boxShadow: isSelected ? "var(--shadow-sel)" : "0 1px 3px rgba(28,26,46,0.04)",
                 }}
               >
-                <span style={{
-                  fontSize: 28,
-                  filter: item.dim && !isSelected ? "grayscale(0.3) opacity(0.8)" : "none",
-                }}>
+                <span style={{ fontSize: 30, lineHeight: 1 }}>
                   {item.emoji}
                 </span>
-              </motion.button>
+                <span style={{
+                  fontSize: 11,
+                  fontWeight: isSelected ? 700 : 500,
+                  color: isSelected ? "var(--color-primary)" : "var(--color-text-muted)",
+                  textAlign: "center",
+                  lineHeight: 1.2,
+                }}>
+                  {item.desc}
+                </span>
+              </m.button>
             );
           })}
         </div>

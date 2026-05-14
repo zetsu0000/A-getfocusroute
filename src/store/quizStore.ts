@@ -9,6 +9,7 @@ interface QuizState {
   selectedOptions: string[];
   email: string;
   name: string;
+  retakeMode: boolean;
 
   selectOption: (optionId: string, inputType: "single" | "multiple") => void;
   submitAnswer: () => void;
@@ -18,6 +19,7 @@ interface QuizState {
   goBack: () => void;
   setStep: (step: FunnelStep) => void;
   resetQuiz: () => void;
+  startRetake: (email: string, name: string) => void;
 }
 
 /* Step order after loading */
@@ -30,6 +32,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
   selectedOptions: [],
   email: "",
   name: "",
+  retakeMode: false,
 
   selectOption: (optionId, inputType) => {
     const { selectedOptions } = get();
@@ -108,5 +111,17 @@ export const useQuizStore = create<QuizState>((set, get) => ({
       selectedOptions: [],
       email: "",
       name: "",
+      retakeMode: false,
+    }),
+
+  startRetake: (email, name) =>
+    set({
+      retakeMode: true,
+      currentStep: "quiz",
+      currentQuestionIndex: 0,
+      answers: [],
+      selectedOptions: [],
+      email,
+      name,
     }),
 }));

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { questions, progressQuestions } from "@/data/questions";
 
 interface ProgressBarProps { currentIndex: number }
@@ -17,7 +17,7 @@ export function ProgressBar({ currentIndex }: ProgressBarProps) {
     <div className="flex-1 rounded-full overflow-hidden"
       style={{ height: 8, background: "var(--color-border)" }}
     >
-      <motion.div
+      <m.div
         className="h-full rounded-full"
         style={{
           background: "linear-gradient(90deg, var(--color-progress-start), var(--color-progress-end))",

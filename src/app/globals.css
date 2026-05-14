@@ -49,14 +49,22 @@
   /* ── Text ────────────────────────────────────────────────────── */
   --color-text:         #1C1A2E;   /* deep indigo — sophisticated    */
   --color-text-body:    #4A4A6A;   /* medium indigo — body copy      */
-  --color-text-muted:   #9B9BB5;   /* light indigo-gray — captions   */
+  --color-text-muted:   #6B6B8A;   /* mid indigo-gray — captions (WCAG AA on white) */
 
   /* ── Semantic helpers ────────────────────────────────────────── */
   --color-selected-bg:    var(--color-primary-tint);
   --color-selected-ring:  var(--color-primary);
   --color-star:           #E87450;   /* use coral for stars — warmth  */
-  --color-progress-start: #6AA3C8;   /* bar gradient start            */
-  --color-progress-end:   #4A7FA5;   /* bar gradient end              */
+  --color-progress-start: #E87450;   /* accent coral start            */
+  --color-progress-end:   #CC5C3A;   /* accent coral end              */
+
+  /* ── Status tokens ────────────────────────────────────────────── */
+  --color-success:        #3DA06A;
+  --color-success-tint:   #E6F7EF;
+  --color-error:          #D94F4F;
+  --color-error-tint:     #FDEAEA;
+  --color-warning:        #F07000;
+  --color-warning-tint:   #FEF0DC;
 
   /* ── Shadows (warm-tinted, not cold gray) ────────────────────── */
   --shadow-card:
@@ -121,4 +129,8 @@ body {
 ::-webkit-scrollbar-track      { background: var(--color-bg-card-2); }
 ::-webkit-scrollbar-thumb      { background: var(--color-border-2); border-radius: 2px; }
 
-h1, h2, h3 { color: var(--color-text); line-height: 1.25; letter-spacing: -0.02em; }
+h1 { color: var(--color-text); line-height: 1.22; letter-spacing: -0.03em; font-weight: 800; }
+h2 { color: var(--color-text); line-height: 1.28; letter-spacing: -0.02em; font-weight: 700; }
+h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-weight: 600; }
+
+@keyframes spin { to { transform: rotate(360deg); } }

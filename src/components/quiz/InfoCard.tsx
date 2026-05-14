@@ -1,63 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { QuizQuestion } from "@/types/quiz";
 import { useQuizStore } from "@/store/quizStore";
+import { scoreFromAnswers, getSymptomLevel, LevelInfo } from "@/lib/symptom-level";
 
 interface InfoCardProps {
   question: QuizQuestion;
 }
 
-/* ─────────────────────────────────────────────────────────────────
-   Score map: distraction answer → ADHD symptom score (0-100)
-───────────────────────────────────────────────────────────────── */
-const SCORE_MAP: Record<string, number> = {
-  never:     18,
-  rarely:    34,
-  sometimes: 57,
-  often:     74,
-  always:    91,
+const LEVEL_DESCRIPTIONS: Record<string, string> = {
+  "Low":       "You show few inattention symptoms. Light maintenance training will keep your brain sharp for years.",
+  "Mild":      "Mild symptoms emerge in high-demand situations. A 28-day program will close those attention gaps.",
+  "Moderate":  "Noticeable symptoms (forgetfulness, frequent distractions) are impacting your activities. 10 minutes of daily training is recommended to reverse this.",
+  "High":      "Constant focus and organization difficulties affect your daily life. Our intensive 28-day program was built exactly for you.",
+  "Very High": "Intense symptoms that require attention. With the right plan and consistency, you can transform your focus in just a few weeks.",
 };
 
-function getAdhdScore(answers: { questionId: string; selectedOptions: string[] }[]) {
-  const d = answers.find((a) => a.questionId === "distraction");
-  const id = d?.selectedOptions[0] ?? "sometimes";
-  return SCORE_MAP[id] ?? 57;
-}
-
-type AdhdLevel = { label: string; color: string; bg: string; pct: number; description: string };
-
-function scoreToLevel(score: number): AdhdLevel {
-  if (score < 35)
-    return {
-      label: "Low Level",   color: "#4A7FA5",
-      bg: "rgba(234,242,248,0.7)", pct: 20,
-      description: "You show few inattention symptoms. Light maintenance training will keep your brain sharp for years.",
-    };
-  if (score < 50)
-    return {
-      label: "Mild Level",   color: "#6AA3C8",
-      bg: "rgba(234,242,248,0.5)", pct: 40,
-      description: "Mild symptoms emerge in high-demand situations. A 28-day program will close those attention gaps.",
-    };
-  if (score < 70)
-    return {
-      label: "Moderate Level", color: "#F07000",
-      bg: "rgba(253,241,236,0.8)", pct: 62,
-      description: "Noticeable symptoms (forgetfulness, frequent distractions) are impacting your activities. 10 minutes of daily training is recommended to reverse this.",
-    };
-  if (score < 85)
-    return {
-      label: "High Level",   color: "#CC5C3A",
-      bg: "rgba(253,241,236,0.9)", pct: 80,
-      description: "Constant focus and organization difficulties affect your daily life. Our intensive 28-day program was built exactly for you.",
-    };
-  return {
-    label: "Very High Level", color: "#A82E2E",
-    bg: "rgba(252,224,218,0.88)", pct: 95,
-    description: "Intense symptoms that require attention. With the right plan and consistency, you can transform your focus in just a few weeks.",
-  };
+function getLevelWithDescription(score: number): LevelInfo & { description: string } {
+  const level = getSymptomLevel(score);
+  return { ...level, description: LEVEL_DESCRIPTIONS[level.label] ?? "" };
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -65,8 +28,8 @@ function scoreToLevel(score: number): AdhdLevel {
 ───────────────────────────────────────────────────────────────── */
 function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
   const answers = useQuizStore((s) => s.answers);
-  const score   = getAdhdScore(answers);
-  const level   = scoreToLevel(score);
+  const score   = scoreFromAnswers(answers);
+  const level   = getLevelWithDescription(score);
 
   const metrics = [
     {
@@ -122,7 +85,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
             </h2>
           </div>
           {/* Score pill */}
-          <motion.div
+          <m.div
             initial={{ scale: 0.6, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 300, damping: 20 }}
@@ -136,10 +99,10 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
             <p style={{ fontSize: 26, fontWeight: 800, color: "#fff", lineHeight: 1 }}>
               {score.toFixed(0)}
             </p>
-            <p style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", fontWeight: 600, marginTop: 2 }}>
+            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", fontWeight: 600, marginTop: 2 }}>
               / 100
             </p>
-          </motion.div>
+          </m.div>
         </div>
 
         {/* ── Spectrum section ──────────────────────────────── */}
@@ -148,7 +111,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
             <p style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text-body)" }}>
               Symptom level
             </p>
-            <motion.span
+            <m.span
               initial={{ opacity: 0, x: 8 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5 }}
@@ -161,7 +124,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
               }}
             >
               {level.label}
-            </motion.span>
+            </m.span>
           </div>
 
           {/* Gradient track */}
@@ -170,7 +133,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
             background: "linear-gradient(to right, #6AA3C8, #4A7FA5, #F5C17A, #E87450, #A82E2E)",
             marginBottom: 8,
           }}>
-            <motion.div
+            <m.div
               initial={{ left: "0%" }}
               animate={{ left: `${level.pct}%` }}
               transition={{ delay: 0.35, duration: 1.0, ease: [0.34, 1.56, 0.64, 1] }}
@@ -188,13 +151,13 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
           {/* Axis labels */}
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
             {["Low", "Mild", "Moderate", "High", "Very high"].map((l) => (
-              <span key={l} style={{ fontSize: 9, color: "var(--color-text-muted)", fontWeight: 500 }}>{l}</span>
+              <span key={l} style={{ fontSize: 11, color: "var(--color-text-muted)", fontWeight: 500 }}>{l}</span>
             ))}
           </div>
         </div>
 
         {/* ── Description callout ───────────────────────────── */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.55, duration: 0.3 }}
@@ -209,7 +172,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
           <p style={{ fontSize: 12, color: "var(--color-text-body)", lineHeight: 1.6 }}>
             {level.description}
           </p>
-        </motion.div>
+        </m.div>
 
         {/* ── Metrics grid ──────────────────────────────────── */}
         <div style={{
@@ -219,9 +182,9 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
           borderRadius: 14, overflow: "hidden",
           border: "1px solid var(--color-border)",
         }}>
-          {metrics.map((m, i) => (
-            <motion.div
-              key={m.label}
+          {metrics.map((metric, i) => (
+            <m.div
+              key={metric.label}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 + i * 0.08, duration: 0.25 }}
@@ -233,15 +196,15 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
               }}
             >
               <p style={{ fontSize: 14, fontWeight: 800, color: "var(--color-primary)", lineHeight: 1.1, marginBottom: 3 }}>
-                {m.value}
+                {metric.value}
               </p>
-              <p style={{ fontSize: 10, fontWeight: 700, color: "var(--color-text)", marginBottom: 2 }}>
-                {m.label}
+              <p style={{ fontSize: 11, fontWeight: 700, color: "var(--color-text)", marginBottom: 2 }}>
+                {metric.label}
               </p>
-              <p style={{ fontSize: 9, color: "var(--color-text-muted)", lineHeight: 1.3 }}>
-                {m.sub}
+              <p style={{ fontSize: 11, color: "var(--color-text-muted)", lineHeight: 1.3 }}>
+                {metric.sub}
               </p>
-            </motion.div>
+            </m.div>
           ))}
         </div>
 
@@ -250,9 +213,10 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
           <button onClick={onContinue} style={{
             width: "100%", padding: "16px 20px",
             borderRadius: 16, fontSize: 15, fontWeight: 700,
-            background: "var(--color-primary)", color: "#ffffff",
+            background: "linear-gradient(135deg, var(--color-accent), var(--color-accent-dark))",
+            color: "#ffffff",
             border: "none", cursor: "pointer",
-            boxShadow: "var(--shadow-btn-primary)",
+            boxShadow: "var(--shadow-btn-accent)",
             letterSpacing: "0.01em",
           }}>
             See my full results →
@@ -307,7 +271,7 @@ function BrainComparisonCard({ onContinue }: { onContinue: () => void }) {
           gap: 16, padding: "20px 16px",
         }}>
           {/* Left — stressed */}
-          <motion.div
+          <m.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.1, duration: 0.4 }}
@@ -320,23 +284,23 @@ function BrainComparisonCard({ onContinue }: { onContinue: () => void }) {
             }}
           >
             <span style={{ fontSize: 34 }}>🧠</span>
-            <p style={{ fontSize: 10, fontWeight: 700, color: "#CC5C3A", marginTop: 4 }}>With ADHD</p>
-          </motion.div>
+            <p style={{ fontSize: 11, fontWeight: 700, color: "#CC5C3A", marginTop: 4 }}>With ADHD</p>
+          </m.div>
 
           {/* Arrow */}
-          <motion.div
+          <m.div
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.35, duration: 0.25 }}
           >
             <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
               <path d="M4 16h18M22 16l-6-6M22 16l-6 6" stroke="#C4BDB5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M26 16h2" stroke="#9B9BB5" strokeWidth="2.5" strokeLinecap="round" />
+              <path d="M26 16h2" stroke="#6B6B8A" strokeWidth="2.5" strokeLinecap="round" />
             </svg>
-          </motion.div>
+          </m.div>
 
           {/* Right — calm */}
-          <motion.div
+          <m.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.22, duration: 0.4 }}
@@ -349,13 +313,13 @@ function BrainComparisonCard({ onContinue }: { onContinue: () => void }) {
             }}
           >
             <span style={{ fontSize: 34, filter: "hue-rotate(190deg) saturate(1.1)" }}>🧠</span>
-            <p style={{ fontSize: 10, fontWeight: 700, color: "#4A7FA5", marginTop: 4 }}>Normal brain</p>
-          </motion.div>
+            <p style={{ fontSize: 11, fontWeight: 700, color: "#4A7FA5", marginTop: 4 }}>Normal brain</p>
+          </m.div>
         </div>
       </div>
 
       {/* ── Text card ────────────────────────────────────── */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.25 }}
@@ -375,15 +339,16 @@ function BrainComparisonCard({ onContinue }: { onContinue: () => void }) {
         <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.65 }}>
           Based on your responses, we've generated a complete report with your ADHD profile and a personalized guide of strategies for your daily life.
         </p>
-      </motion.div>
+      </m.div>
 
       {/* ── CTA ──────────────────────────────────────────── */}
       <button onClick={onContinue} style={{
         width: "100%", padding: "15px 20px",
         borderRadius: 16, fontSize: 15, fontWeight: 700,
-        background: "var(--color-primary)", color: "#ffffff",
+        background: "linear-gradient(135deg, var(--color-accent), var(--color-accent-dark))",
+        color: "#ffffff",
         border: "none", cursor: "pointer",
-        boxShadow: "var(--shadow-btn)",
+        boxShadow: "var(--shadow-btn-accent)",
       }}>
         Continue
       </button>
@@ -410,7 +375,7 @@ function EmailInputCard({ onContinue }: { onContinue: (email: string) => void })
     <div style={{ width: "100%", maxWidth: 480, display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Icon */}
       <div style={{ textAlign: "center" }}>
-        <motion.div
+        <m.div
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
@@ -423,7 +388,7 @@ function EmailInputCard({ onContinue }: { onContinue: (email: string) => void })
           }}
         >
           ✉️
-        </motion.div>
+        </m.div>
         <h2 style={{ fontSize: 20, fontWeight: 800, color: "var(--color-primary)", lineHeight: 1.35 }}>
           Your ADHD results are almost ready!
         </h2>
@@ -564,7 +529,7 @@ function GenericInfoCard({
     }}>
 
       {/* ── Illustration ─────────────────────────────────────── */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.36, ease: "easeOut" }}
@@ -584,6 +549,8 @@ function GenericInfoCard({
           <img
             src="/illustrations/people-group.png"
             alt=""
+            loading="eager"
+            fetchPriority="high"
             style={{ width: "100%", maxWidth: 320, height: "auto", objectFit: "contain" }}
           />
         ) : (
@@ -598,7 +565,7 @@ function GenericInfoCard({
             {question.infoEmoji}
           </div>
         )}
-      </motion.div>
+      </m.div>
 
       {/* ── Text + CTA — centered ────────────────────────────── */}
       <div style={{
@@ -611,7 +578,7 @@ function GenericInfoCard({
         textAlign: "center",
         gap: 0,
       }}>
-        <motion.h2
+        <m.h2
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.26 }}
@@ -626,9 +593,9 @@ function GenericInfoCard({
             stat={question.infoStat ?? ""}
             highlight={question.infoHighlight}
           />
-        </motion.h2>
+        </m.h2>
 
-        <motion.p
+        <m.p
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.16, duration: 0.26 }}
@@ -638,9 +605,9 @@ function GenericInfoCard({
           }}
         >
           {question.infoBody}
-        </motion.p>
+        </m.p>
 
-        <motion.button
+        <m.button
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.22, duration: 0.24 }}
@@ -649,13 +616,14 @@ function GenericInfoCard({
             width: "100%",
             padding: "16px 24px", borderRadius: 14,
             fontSize: 15, fontWeight: 700,
-            background: "var(--color-primary)", color: "#ffffff",
+            background: "linear-gradient(135deg, var(--color-accent), var(--color-accent-dark))",
+            color: "#ffffff",
             border: "none", cursor: "pointer",
-            boxShadow: "var(--shadow-btn)",
+            boxShadow: "var(--shadow-btn-accent)",
           }}
         >
           Continue
-        </motion.button>
+        </m.button>
       </div>
     </div>
   );

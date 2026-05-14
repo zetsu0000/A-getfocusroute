@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { SchemaMarkup } from "@/components/seo/SchemaMarkup";
+import { MotionProvider } from "@/components/providers/MotionProvider";
 
 /*
  * Plus Jakarta Sans — a modern, friendly, highly legible sans-serif.
@@ -14,30 +16,53 @@ const jakarta = Plus_Jakarta_Sans({
   display: "swap",
 });
 
+const BASE_URL = "https://getfocusroute.com";
+const TITLE    = "FocusRoute – Free ADHD Assessment";
+const DESC     = "Discover your ADHD profile in 3 minutes and receive a personalized management guide. 100% free · Science-backed · Instant results.";
+
 export const metadata: Metadata = {
-  title: "FocusRoute – Free ADHD Test",
-  description: "Discover your ADHD profile in 3 minutes and receive a personalized management guide.",
-  metadataBase: new URL("https://getfocusroute.com"),
-  alternates: { canonical: "/" },
+  title: {
+    default:  TITLE,
+    template: "%s · FocusRoute",
+  },
+  description: DESC,
+  metadataBase: new URL(BASE_URL),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
-    title: "FocusRoute – Free ADHD Test",
-    description: "Discover your ADHD profile in 3 minutes and receive a personalized management guide.",
-    url: "https://getfocusroute.com",
-    siteName: "FocusRoute",
-    locale: "en_US",
-    type: "website",
+    title:       TITLE,
+    description: DESC,
+    url:         BASE_URL,
+    siteName:    "FocusRoute",
+    locale:      "en_US",
+    type:        "website",
+    images: [
+      {
+        url:    "/opengraph-image",
+        width:  1200,
+        height: 630,
+        alt:    "FocusRoute – Free ADHD Assessment",
+      },
+    ],
   },
   twitter: {
-    card: "summary_large_image",
-    title: "FocusRoute – Free ADHD Test",
-    description: "Discover your ADHD profile in 3 minutes and receive a personalized management guide.",
+    card:        "summary_large_image",
+    title:       TITLE,
+    description: DESC,
+    images:      ["/opengraph-image"],
+  },
+  robots: {
+    index:  true,
+    follow: true,
+    googleBot: { index: true, follow: true },
   },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`light ${jakarta.variable}`}>
-      <body className={jakarta.className}>{children}</body>
+    <html lang="pt-BR" className={`light ${jakarta.variable}`}>
+      <body className={jakarta.className}><SchemaMarkup /><MotionProvider>{children}</MotionProvider></body>
     </html>
   );
 }

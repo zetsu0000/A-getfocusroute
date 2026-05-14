@@ -1,22 +1,32 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { m } from "framer-motion";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ReferenceDot, ResponsiveContainer } from "recharts";
 import { useQuizStore } from "@/store/quizStore";
+import { updateSessionAnswers } from "@/lib/session";
+import { safeName } from "@/lib/personalization";
 
 const data = [
-  { week: "Wk 1", score: 78 },
-  { week: "Wk 2", score: 60 },
-  { week: "Wk 3", score: 38 },
-  { week: "Wk 4", score: 17 },
+  { week: "Now",  score: 82 },
+  { week: "Wk 1", score: 65 },
+  { week: "Wk 2", score: 48 },
+  { week: "Wk 3", score: 30 },
+  { week: "Wk 4", score: 16 },
 ];
 
 export function ChartScreen() {
-  const { name, setStep } = useQuizStore();
-  const displayName = name || "you";
+  const { name, setStep, retakeMode, answers } = useQuizStore();
+  const router = useRouter();
+  const displayName = safeName(name, "you");
+
+  const handleRetakeDone = () => {
+    updateSessionAnswers(answers);
+    router.push("/dashboard");
+  };
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, x: 40 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -40 }}
@@ -41,15 +51,6 @@ export function ChartScreen() {
           </p>
 
           <div style={{ position: "relative" }}>
-            {/* Now label */}
-            <div style={{
-              position: "absolute", top: 4, left: 28, zIndex: 10,
-              background: "var(--color-accent-tint)", borderRadius: 8,
-              padding: "3px 10px",
-              fontSize: 12, fontWeight: 700, color: "var(--color-accent-dark)",
-            }}>
-              Now
-            </div>
             {/* After label */}
             <div style={{
               position: "absolute", bottom: 32, right: 12, zIndex: 10,
@@ -78,8 +79,8 @@ export function ChartScreen() {
                   type="monotone" dataKey="score"
                   stroke="url(#lineGrad)" strokeWidth={3} dot={false}
                 />
-                <ReferenceDot x="Wk 1" y={78} r={6} fill="#FDF1EC" stroke="#E87450" strokeWidth={2} />
-                <ReferenceDot x="Wk 4" y={17} r={6} fill="var(--color-primary-tint)" stroke="var(--color-primary)" strokeWidth={2} />
+                <ReferenceDot x="Now"  y={82} r={6} fill="#FDF1EC" stroke="#E87450" strokeWidth={2} />
+                <ReferenceDot x="Wk 4" y={16} r={6} fill="var(--color-primary-tint)" stroke="var(--color-primary)" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -90,30 +91,48 @@ export function ChartScreen() {
         </div>
 
         {/* Personalized message */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+        <m.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
             <p style={{ fontSize: 18, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.4 }}>
             <span style={{ color: "var(--color-primary)" }}>{displayName},</span>
             {" "}your results are ready — unlock now and start your transformation!
           </p>
-        </motion.div>
+        </m.div>
 
         {/* CTA */}
-        <motion.button
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          onClick={() => setStep("paywall")}
-          style={{
-            width: "100%", padding: "18px",
-            borderRadius: 16, fontSize: 16, fontWeight: 700,
-            border: "none", cursor: "pointer",
-            background: "var(--color-primary)", color: "#fff",
-            boxShadow: "var(--shadow-btn-primary)",
-          }}
-        >
-          See my results →
-        </motion.button>
+        {retakeMode ? (
+          <m.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            onClick={handleRetakeDone}
+            style={{
+              width: "100%", padding: "18px",
+              borderRadius: 16, fontSize: 16, fontWeight: 700,
+              border: "none", cursor: "pointer",
+              background: "var(--color-primary)", color: "#fff",
+              boxShadow: "var(--shadow-btn-primary)",
+            }}
+          >
+            Salvar novo resultado →
+          </m.button>
+        ) : (
+          <m.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            onClick={() => setStep("paywall")}
+            style={{
+              width: "100%", padding: "18px",
+              borderRadius: 16, fontSize: 16, fontWeight: 700,
+              border: "none", cursor: "pointer",
+              background: "var(--color-primary)", color: "#fff",
+              boxShadow: "var(--shadow-btn-primary)",
+            }}
+          >
+            See my results →
+          </m.button>
+        )}
       </div>
-    </motion.div>
+    </m.div>
   );
 }
