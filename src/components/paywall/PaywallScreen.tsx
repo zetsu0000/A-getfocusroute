@@ -14,6 +14,7 @@ import { useQuizStore } from "@/store/quizStore";
 import { saveSession } from "@/lib/session";
 import { safeName } from "@/lib/personalization";
 import { scoreFromAnswers, getSymptomLevel } from "@/lib/symptom-level";
+import { BRAIN_OS } from "@/lib/positioning";
 
 // Lazy singleton — loadStripe (and the Stripe.js download) only fires
 // when the PaywallScreen first renders, not when the chunk is prefetched.
@@ -211,7 +212,7 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
         ) : (
           <>
             <Lock size={17} color="white" strokeWidth={2.5} />
-            Unlock my results — $27
+            Unlock my profile — {BRAIN_OS.price.paywall}
           </>
         )}
       </m.button>
@@ -231,7 +232,7 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
       </div>
 
       <p style={{ marginTop: 10, fontSize: 11, color: "#9B9BB5", textAlign: "center" }}>
-        One-time · No subscription · No hidden fees
+        One-time access · Backed by a 7-day guarantee
       </p>
     </form>
   );
@@ -358,11 +359,14 @@ export function PaywallScreen() {
           {/* ── Headline ── */}
           <m.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }}>
             <h1 style={{ fontSize: 26, fontWeight: 900, color: "#1C1A2E", lineHeight: 1.2, letterSpacing: "-0.02em" }}>
-              <span style={{ color: "#4A7FA5" }}>{displayName}</span>, your ADHD profile is ready —{" "}
+              <span style={{ color: "#4A7FA5" }}>{displayName}</span>, your {BRAIN_OS.brainProfile} is ready —{" "}
               <span style={{ color: "#E87450" }}>but still locked</span>
             </h1>
             <p style={{ marginTop: 10, fontSize: 14, color: "#4A4A6A", lineHeight: 1.65 }}>
-              Unlock your full profile for a one-time payment of <strong style={{ color: "#1C1A2E" }}>$27</strong>. No subscription. Instant access.
+              Unlock your full system for a one-time payment of <strong style={{ color: "#1C1A2E" }}>{BRAIN_OS.price.paywall}</strong>. Map first, then run your personalized 28-day protocol.
+            </p>
+            <p style={{ marginTop: 8, fontSize: 12, color: "#6B6B8A", lineHeight: 1.55 }}>
+              {BRAIN_OS.mechanismTagline}
             </p>
           </m.div>
 
@@ -378,13 +382,7 @@ export function PaywallScreen() {
               What you unlock
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
-              {[
-                "Full ADHD type & symptom breakdown",
-                "Personalized cognitive profile analysis",
-                "28-day action guide for your subtype",
-                "Science-backed focus & procrastination tools",
-                "Executive function strategy toolkit",
-              ].map((item) => (
+              {BRAIN_OS.paywallUnlockBullets.map((item) => (
                 <div key={item} style={{ display: "flex", alignItems: "center", gap: 11 }}>
                   <div style={{ width: 22, height: 22, borderRadius: "50%", background: "#EAF2F8", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <Check size={12} color="#4A7FA5" strokeWidth={3} />
@@ -403,19 +401,19 @@ export function PaywallScreen() {
             <div style={{ padding: "20px 22px 18px", borderBottom: "1px solid #EAE6DC" }}>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
                 <div>
-                  <p style={{ fontSize: 15, fontWeight: 800, color: "#1C1A2E" }}>FocusRoute ADHD Assessment</p>
-                  <p style={{ fontSize: 12, color: "#9B9BB5", marginTop: 3 }}>One-time · Lifetime access</p>
+                  <p style={{ fontSize: 15, fontWeight: 800, color: "#1C1A2E" }}>{BRAIN_OS.lineTm}</p>
+                  <p style={{ fontSize: 12, color: "#9B9BB5", marginTop: 3 }}>{BRAIN_OS.assessment} · One-time access</p>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <p style={{ fontSize: 12, color: "#9B9BB5", textDecoration: "line-through" }}>$189</p>
-                  <p style={{ fontSize: 34, fontWeight: 900, color: "#E87450", lineHeight: 1, letterSpacing: "-0.03em" }}>$27</p>
+                  <p style={{ fontSize: 12, color: "#9B9BB5", textDecoration: "line-through" }}>{BRAIN_OS.price.paywallAnchor}</p>
+                  <p style={{ fontSize: 34, fontWeight: 900, color: "#E87450", lineHeight: 1, letterSpacing: "-0.03em" }}>{BRAIN_OS.price.paywall}</p>
                 </div>
               </div>
 
               {/* Savings badge */}
               <div style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, background: "linear-gradient(135deg,#EAF2F8,#E8F4FB)", padding: "7px 14px", borderRadius: 99, border: "1px solid #C4DFEE" }}>
                 <BadgeCheck size={14} color="#4A7FA5" />
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#4A7FA5" }}>85% below the cheapest clinical evaluation ($189)</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#4A7FA5" }}>{BRAIN_OS.clinicalContrastShort}</span>
               </div>
             </div>
 
@@ -444,7 +442,7 @@ export function PaywallScreen() {
             </div>
           </m.div>
 
-          {/* ── Social proof bar ── */}
+          {/* ── Guarantee / trust bar ── */}
           <m.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}
             style={{ background: "#fff", borderRadius: 18, padding: "14px 18px", boxShadow: "var(--shadow-card)", border: "1px solid var(--color-border)", display: "flex", alignItems: "center", gap: 14 }}>
             <div style={{ display: "flex" }}>
@@ -457,9 +455,11 @@ export function PaywallScreen() {
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star key={i} size={11} style={{ fill: "#E87450", color: "#E87450" }} />
                 ))}
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#E87450", marginLeft: 4 }}>4.9</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#E87450", marginLeft: 4 }}>7-day</span>
               </div>
-              <p style={{ fontSize: 12, color: "#9B9BB5" }}>+200,000 people have discovered their profile</p>
+              <p style={{ fontSize: 12, color: "#9B9BB5" }}>
+                <strong style={{ color: "#4A4A6A" }}>{BRAIN_OS.guaranteeTitle}.</strong> If it doesn&apos;t feel like your brain, get a full refund.
+              </p>
             </div>
           </m.div>
 

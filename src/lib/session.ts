@@ -41,7 +41,7 @@ export function canRetake(planType: PlanType): boolean {
 export function planLabel(planType: PlanType): string {
   if (planType === "monthly") return "Monthly Plan";
   if (planType === "annual") return "Annual Plan";
-  return "ADHD Assessment";
+  return "Brain OS Profile";
 }
 
 export function planColor(planType: PlanType): string {

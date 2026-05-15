@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { BRAIN_OS } from "@/lib/positioning";
 
 type Article = {
   title: string;
@@ -173,7 +174,7 @@ export async function generateMetadata({
   const article = ARTICLES[slug];
   if (!article) return {};
   return {
-    title: `${article.title} · FocusRoute`,
+    title: `${article.title} · ${BRAIN_OS.lineTm}`,
     description: article.description,
   };
 }
@@ -305,7 +306,7 @@ export default async function ArticlePage({
               FocusRoute
             </p>
             <p style={{ fontSize: 11, color: "var(--color-text-muted)", letterSpacing: "0.08em", fontWeight: 500 }}>
-              ADHD TEST
+              {BRAIN_OS.headerEyebrow}
             </p>
           </div>
         </a>
@@ -313,7 +314,7 @@ export default async function ArticlePage({
           href="/"
           style={{ fontSize: 13, color: "var(--color-primary)", textDecoration: "none", fontWeight: 600 }}
         >
-          ← Take the test
+          ← Start Brain OS
         </a>
       </header>
 
@@ -346,7 +347,7 @@ export default async function ArticlePage({
           }}
         >
           <p style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 16 }}>
-            Curious whether your symptoms match ADHD?
+            Curious whether your profile matches ADHD patterns?
           </p>
           <a
             href="/"
@@ -361,7 +362,7 @@ export default async function ArticlePage({
               textDecoration: "none",
             }}
           >
-            Take the Free Assessment →
+            Start {BRAIN_OS.lineTm} →
           </a>
         </div>
 

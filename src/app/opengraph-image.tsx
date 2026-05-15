@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
+import { BRAIN_OS } from "@/lib/positioning";
 
-export const alt = "FocusRoute – Free ADHD Assessment";
+export const alt = `${BRAIN_OS.lineTm} · Personalized ADHD Profile`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -125,9 +126,9 @@ export default function Image() {
               flexDirection: "column",
             }}
           >
-            <span>Discover your</span>
-            <span style={{ color: "#4A7FA5" }}>ADHD profile</span>
-            <span>in 3 minutes</span>
+            <span>{BRAIN_OS.heroTitleBefore}</span>
+            <span style={{ color: "#4A7FA5" }}>{BRAIN_OS.heroTitleAccent}</span>
+            <span>Map in ~12 minutes</span>
           </div>
 
           {/* Subline */}
@@ -140,7 +141,7 @@ export default function Image() {
               marginBottom: "36px",
             }}
           >
-            Free diagnostic assessment · Personalized guide · Instant results
+            Cognitive Mapping Assessment™ · Brain Profile™ · 28-Day Protocol™
           </p>
 
           {/* Pill badges */}
@@ -151,7 +152,7 @@ export default function Image() {
               alignItems: "center",
             }}
           >
-            {["🆓 Free", "⏱ 3 min", "🧠 Science-backed", "📊 +200K people"].map(
+            {["🧠 Brain-first", "⏱ ~12 min", "📘 Personalized profile", "🛡 7-day guarantee"].map(
               (label) => (
                 <div
                   key={label}

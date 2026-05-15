@@ -11,6 +11,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { CheckCircle2, Clock, Zap, Calendar, Target } from "lucide-react";
 import { useQuizStore } from "@/store/quizStore";
+import { BRAIN_OS } from "@/lib/positioning";
 
 let _stripePromise: ReturnType<typeof loadStripe> | null = null;
 function getStripePromise() {
@@ -80,7 +81,7 @@ function UpsellCheckoutForm({ onSuccess, onDecline }: { onSuccess: () => void; o
           boxShadow: loading ? "none" : "var(--shadow-btn-accent)",
         }}
       >
-        {loading ? "Processing..." : "Yes! Add the 28-Day Roadmap — $67"}
+        {loading ? "Processing..." : `Yes! Add the ${BRAIN_OS.protocol} — ${BRAIN_OS.price.upsell}`}
       </m.button>
 
       <button
@@ -150,11 +151,11 @@ export function UpsellScreen() {
             </div>
           </div>
           <h1 style={{ fontSize: 24, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.25, marginBottom: 10 }}>
-            {displayName}, you just validated your ADHD.{" "}
+            {displayName}, you just mapped your brain.{" "}
             <span style={{ color: "var(--color-accent)" }}>Now let&apos;s fix it.</span>
           </h1>
           <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.65 }}>
-            Your Assessment revealed your specific ADHD patterns. The 28-Day Roadmap gives you the exact daily actions to rewire those patterns — personalized to your subtype.
+            Your {BRAIN_OS.assessment} revealed your specific ADHD patterns. The {BRAIN_OS.protocol} gives you the exact daily actions to rewire those patterns — personalized to your subtype.
           </p>
         </m.div>
 
@@ -162,7 +163,7 @@ export function UpsellScreen() {
         <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.10 }}
           style={{ background: "var(--color-bg-card)", borderRadius: 22, padding: "20px 22px", boxShadow: "var(--shadow-card)" }}>
           <p style={{ fontSize: 13, fontWeight: 700, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>
-            What&apos;s inside the 28-Day Roadmap
+            What&apos;s inside the {BRAIN_OS.protocol}
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {[
@@ -189,12 +190,12 @@ export function UpsellScreen() {
           style={{ background: "var(--color-bg-card)", borderRadius: 22, padding: "18px 20px", boxShadow: "var(--shadow-card)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
             <div>
-              <p style={{ fontSize: 14, fontWeight: 700, color: "var(--color-text)" }}>28-Day ADHD Action Roadmap</p>
+              <p style={{ fontSize: 14, fontWeight: 700, color: "var(--color-text)" }}>{BRAIN_OS.protocol}</p>
               <p style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 2 }}>One-time purchase · Instant access</p>
             </div>
             <div style={{ textAlign: "right" }}>
-              <p style={{ fontSize: 12, color: "var(--color-text-muted)", textDecoration: "line-through" }}>$97</p>
-              <p style={{ fontSize: 28, fontWeight: 800, color: "var(--color-accent)", lineHeight: 1 }}>$67</p>
+              <p style={{ fontSize: 12, color: "var(--color-text-muted)", textDecoration: "line-through" }}>{BRAIN_OS.price.upsellAnchor}</p>
+              <p style={{ fontSize: 28, fontWeight: 800, color: "var(--color-accent)", lineHeight: 1 }}>{BRAIN_OS.price.upsell}</p>
             </div>
           </div>
 

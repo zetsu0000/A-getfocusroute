@@ -13,6 +13,7 @@ import {
 import { useQuizStore } from "@/store/quizStore";
 import { saveSession } from "@/lib/session";
 import { safeName } from "@/lib/personalization";
+import { BRAIN_OS } from "@/lib/positioning";
 
 let _stripePromise: ReturnType<typeof loadStripe> | null = null;
 function getStripePromise() {
@@ -23,18 +24,22 @@ function getStripePromise() {
 const PLANS = {
   annual: {
     priceId:    process.env.NEXT_PUBLIC_PRICE_ANNUAL!,
-    label:      "Annual Plan",
-    price:      "$119",
-    sub:        "~$9.92/mo · billed once a year",
-    oldPrice:   "$228",
-    savings:    "Save 48%",
-    badge:      "⭐ MOST POPULAR",
+    label:      "Membership Annual",
+    price:      BRAIN_OS.price.membershipAnnual,
+    amount:     Math.round(BRAIN_OS.price.membershipAnnualValue * 100),
+    sub:        `~$${(BRAIN_OS.price.membershipAnnualValue / 12).toFixed(2)}/mo · billed yearly`,
+    oldPrice:   BRAIN_OS.price.membershipMonthlyValue > 0 ? `$${(BRAIN_OS.price.membershipMonthlyValue * 12).toFixed(0)}` : null,
+    savings:    BRAIN_OS.price.membershipMonthlyValue > 0
+      ? `Save ${Math.max(0, Math.round(((BRAIN_OS.price.membershipMonthlyValue * 12 - BRAIN_OS.price.membershipAnnualValue) / (BRAIN_OS.price.membershipMonthlyValue * 12)) * 100))}%`
+      : null,
+    badge:      "⭐ BEST VALUE",
     highlight:  true,
   },
   monthly: {
     priceId:    process.env.NEXT_PUBLIC_PRICE_MONTHLY!,
-    label:      "Monthly Plan",
-    price:      "$19",
+    label:      "Membership Monthly",
+    price:      BRAIN_OS.price.membershipMonthly,
+    amount:     Math.round(BRAIN_OS.price.membershipMonthlyValue * 100),
     sub:        "per month · cancel anytime",
     oldPrice:   null,
     savings:    null,
@@ -44,10 +49,10 @@ const PLANS = {
 };
 
 const FEATURES = [
-  "Continuous access to your ADHD report",
-  "Monthly check-ins and progress tracking",
-  "Updated strategies and content",
-  "Priority support",
+  "Keep access to your Brain Profile and protocol library",
+  "Body-doubling sessions and accountability structure",
+  "Profile-based weekly check-ins and updated strategies",
+  "Priority support from the FocusRoute team",
 ];
 
 /* Checkout form for subscriptions */
@@ -107,10 +112,10 @@ function SubCheckoutForm({ priceId, email, onSuccess }: { priceId: string; email
           boxShadow: loading ? "none" : "var(--shadow-btn-primary)",
         }}
       >
-        {loading ? "Processing..." : "Start my plan →"}
+        {loading ? "Processing..." : "Continue with membership →"}
       </m.button>
       <p style={{ fontSize: 11, color: "var(--color-text-muted)", textAlign: "center" }}>
-        Cancel anytime · No hidden fees
+        Day-7 momentum offer · cancel anytime
       </p>
     </form>
   );
@@ -133,9 +138,9 @@ function PlanCard({ planKey, isSelected, onSelect }: { planKey: "annual" | "mont
         transition: "box-shadow 0.2s, border-color 0.2s",
       }}
     >
-      {plan.badge && (
+          {plan.badge && (
         <div style={{ padding: "8px 20px", background: "var(--color-primary)", color: "#fff", fontSize: 11, fontWeight: 700, textAlign: "center", letterSpacing: "0.05em" }}>
-          {plan.badge} — SAVE 48%
+          {plan.badge}{plan.savings ? ` — ${plan.savings}` : ""}
         </div>
       )}
       <div style={{ padding: "18px 20px" }}>
@@ -217,11 +222,11 @@ export function SubscriptionScreen() {
         {/* Header */}
         <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <h1 style={{ fontSize: 24, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.25, marginBottom: 8 }}>
-            Keep your momentum,{" "}
+            Keep your Brain OS active,{" "}
             <span style={{ color: "var(--color-primary)" }}>{displayName}</span>
           </h1>
           <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.65 }}>
-            Lock in continuous access with monthly check-ins, updated strategies, and priority support — so you never lose progress.
+            This is your Day-7 momentum window: keep support, structure, and accountability so your 28-day protocol actually sticks.
           </p>
         </m.div>
 
@@ -247,7 +252,7 @@ export function SubscriptionScreen() {
                   boxShadow: "var(--shadow-btn-primary)",
                 }}
               >
-                Start {selected === "annual" ? "Annual" : "Monthly"} Plan — {plan.price}
+                Start {selected === "annual" ? "Annual" : "Monthly"} Membership — {plan.price}
               </m.button>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24 }}>
                 {[
@@ -267,7 +272,7 @@ export function SubscriptionScreen() {
               stripe={getStripePromise()}
               options={{
                 mode: "subscription",
-                amount: selected === "annual" ? 11900 : 1900,
+                amount: plan.amount,
                 currency: "usd",
                 appearance: {
                   theme: "flat",

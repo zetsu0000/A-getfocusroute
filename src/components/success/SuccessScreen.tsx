@@ -6,6 +6,7 @@ import { m } from "framer-motion";
 import { CheckCircle2, Mail, LayoutDashboard } from "lucide-react";
 import { useQuizStore } from "@/store/quizStore";
 import { safeName } from "@/lib/personalization";
+import { BRAIN_OS } from "@/lib/positioning";
 
 function ConfettiCanvas() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -101,7 +102,7 @@ export function SuccessScreen() {
         transition={{ delay: 0.40 }}
         style={{ fontSize: 15, color: "var(--color-text-body)", lineHeight: 1.7, maxWidth: 340, marginBottom: 36 }}
       >
-        Your ADHD Assessment results and personalized guide are on their way. Check your inbox — this is the clarity you&apos;ve been looking for.
+        Your {BRAIN_OS.brainProfile} and personalized protocol are on their way. Check your inbox — this is the clarity you&apos;ve been looking for.
       </m.p>
 
       {email && (
@@ -150,9 +151,9 @@ export function SuccessScreen() {
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, textAlign: "left" }}>
           {[
-            { step: "1", text: "Check your email for your full ADHD report and profile." },
-            { step: "2", text: "Read your personalized analysis and cognitive insights." },
-            { step: "3", text: "Start Day 1 of your action plan — even 10 minutes counts." },
+            { step: "1", text: `Check your email for your full ${BRAIN_OS.brainProfile}.` },
+            { step: "2", text: `Review your ${BRAIN_OS.radar} and ${BRAIN_OS.signature}.` },
+            { step: "3", text: `Start Day 1 of your ${BRAIN_OS.protocol} — even 10 minutes counts.` },
           ].map(({ step, text }) => (
             <div key={step} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
               <div style={{ width: 28, height: 28, borderRadius: 8, background: "var(--color-primary-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>

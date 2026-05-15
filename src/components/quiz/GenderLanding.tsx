@@ -4,6 +4,7 @@ import { useState } from "react";
 import { m } from "framer-motion";
 import { User, Menu } from "lucide-react";
 import { useQuizStore } from "@/store/quizStore";
+import { BRAIN_OS } from "@/lib/positioning";
 
 /* ── Male SVG character ──────────────────────────────────────────── */
 function MaleCharacter() {
@@ -179,7 +180,7 @@ export function GenderLanding() {
               FocusRoute
             </p>
             <p style={{ fontSize: 11, color: "var(--color-text-muted)", letterSpacing: "0.08em", fontWeight: 500 }}>
-              ADHD TEST
+              {BRAIN_OS.headerEyebrow}
             </p>
           </div>
         </div>
@@ -227,11 +228,8 @@ export function GenderLanding() {
             marginBottom: 10,
             letterSpacing: "-0.02em",
           }}>
-            Discover your{" "}
-            <span style={{ color: "var(--color-primary)" }}>
-              ADHD profile
-            </span>{" "}
-            in 3 minutes
+            {BRAIN_OS.heroTitleBefore}{" "}
+            <span style={{ color: "var(--color-primary)" }}>{BRAIN_OS.heroTitleAccent}</span>
           </h1>
 
           <p style={{
@@ -241,7 +239,7 @@ export function GenderLanding() {
             maxWidth: 360,
             margin: "0 auto 12px",
           }}>
-            Take the free diagnostic assessment and receive your personalized result with a guide on how to manage ADHD.
+            {BRAIN_OS.heroSub}
           </p>
 
           {/* Badge */}
@@ -263,7 +261,7 @@ export function GenderLanding() {
               border: "1px solid rgba(232,116,80,0.22)",
             }}
           >
-            ✦ FREE TEST · 3 MINUTES
+            ✦ {BRAIN_OS.landingBadge}
           </m.span>
         </m.div>
 
@@ -338,7 +336,7 @@ export function GenderLanding() {
           transition={{ delay: 0.28 }}
           style={{ fontSize: 11, color: "var(--color-text-muted)", textAlign: "center", marginTop: 20 }}
         >
-          Your data is 100% private and secure 🔒
+          Your profile is private and secure 🔒
         </m.p>
       </div>
     </div>

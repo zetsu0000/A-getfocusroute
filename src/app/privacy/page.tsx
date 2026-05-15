@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { BRAIN_OS } from "@/lib/positioning";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy · FocusRoute",
-  description: "Learn how FocusRoute collects, uses, and protects your data when you take our free ADHD assessment.",
+  title: "Privacy Policy · FocusRoute Brain OS",
+  description: "Learn how FocusRoute handles Brain OS profile data, payment data, and privacy requests.",
 };
 
 export default function PrivacyPage() {
@@ -33,12 +34,12 @@ export default function PrivacyPage() {
               FocusRoute
             </p>
             <p style={{ fontSize: 11, color: "var(--color-text-muted)", letterSpacing: "0.08em", fontWeight: 500 }}>
-              ADHD TEST
+              {BRAIN_OS.headerEyebrow}
             </p>
           </div>
         </a>
         <a href="/" style={{ fontSize: 13, color: "var(--color-primary)", textDecoration: "none", fontWeight: 600 }}>
-          ← Take the test
+          ← Start Brain OS
         </a>
       </header>
 
@@ -55,10 +56,9 @@ export default function PrivacyPage() {
             Data We Collect
           </h2>
           <p style={{ fontSize: 15, color: "var(--color-text-body)", lineHeight: 1.7 }}>
-            FocusRoute collects only the information necessary to provide our ADHD assessment service. This includes
-            your quiz responses, the gender selection you make at the start, and your result score. If you purchase
-            a detailed report, we also collect your email address to deliver the report. We do not collect your name,
-            phone number, or any government-issued identification.
+            FocusRoute collects only the information required to deliver {BRAIN_OS.lineTm}. This includes your
+            response data, profile outputs, and (if you purchase) the contact details needed to deliver access.
+            We do not require government ID or unrelated personal documents.
           </p>
         </section>
 
@@ -67,10 +67,8 @@ export default function PrivacyPage() {
             How We Use It
           </h2>
           <p style={{ fontSize: 15, color: "var(--color-text-body)", lineHeight: 1.7 }}>
-            Your quiz responses are used solely to calculate your ADHD symptom profile and display your result.
-            We use anonymized, aggregated response data to improve the quality and accuracy of our assessment.
-            We do not sell, rent, or share your individual data with third parties for marketing purposes.
-            If you opt in, we may send you a single follow-up email with resources related to ADHD management.
+            Your responses are used to generate your profile and protocol outputs. We may use anonymized aggregate
+            patterns to improve model quality and user experience. We do not sell individual personal data for ad targeting.
           </p>
         </section>
 
@@ -79,7 +77,7 @@ export default function PrivacyPage() {
             Stripe &amp; Third Parties
           </h2>
           <p style={{ fontSize: 15, color: "var(--color-text-body)", lineHeight: 1.7 }}>
-            Payments for the detailed report are processed securely by Stripe. FocusRoute never sees or stores
+            Payments for paid Brain OS products are processed securely by Stripe. FocusRoute never sees or stores
             your full credit card number. Stripe's privacy policy governs all payment data and is available at
             stripe.com/privacy. We use Vercel for hosting and may use analytics tools that process anonymized
             usage data. All third-party providers are bound by data processing agreements.
@@ -91,10 +89,10 @@ export default function PrivacyPage() {
             Data Retention
           </h2>
           <p style={{ fontSize: 15, color: "var(--color-text-body)", lineHeight: 1.7 }}>
-            Quiz response data stored in your browser (via localStorage) is not transmitted to our servers unless
-            you purchase a report. Email addresses collected for report delivery are retained for up to 12 months
-            or until you request deletion. Anonymized aggregate statistics are retained indefinitely for product
-            improvement purposes.
+            Session data stored in your browser (via localStorage/sessionStorage) remains client-side unless needed
+            for paid fulfillment workflows. Contact and transaction-related records are retained only as long as
+            operationally necessary, legal requirements permitting. Aggregate anonymized metrics may be retained
+            for product improvement.
           </p>
         </section>
 
@@ -137,7 +135,7 @@ export default function PrivacyPage() {
             textDecoration: "none",
             fontWeight: 600,
           }}>
-            ← Back to the ADHD Assessment
+            ← Back to FocusRoute Brain OS
           </a>
         </div>
       </main>

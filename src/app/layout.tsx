@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { SchemaMarkup } from "@/components/seo/SchemaMarkup";
 import { MotionProvider } from "@/components/providers/MotionProvider";
+import { BRAIN_OS } from "@/lib/positioning";
 
 /*
  * Plus Jakarta Sans — a modern, friendly, highly legible sans-serif.
@@ -17,8 +18,8 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 const BASE_URL = "https://getfocusroute.com";
-const TITLE    = "FocusRoute – Free ADHD Assessment";
-const DESC     = "Discover your ADHD profile in 3 minutes and receive a personalized management guide. 100% free · Science-backed · Instant results.";
+const TITLE    = `${BRAIN_OS.lineTm} · Personalized ADHD Profile`;
+const DESC     = "You're not lazy. Your brain needs a different operating system. Map your cognitive profile and unlock a personalized 28-day protocol.";
 
 export const metadata: Metadata = {
   title: {
@@ -42,7 +43,7 @@ export const metadata: Metadata = {
         url:    "/opengraph-image",
         width:  1200,
         height: 630,
-        alt:    "FocusRoute – Free ADHD Assessment",
+        alt:    `${BRAIN_OS.lineTm} · Personalized ADHD Profile`,
       },
     ],
   },

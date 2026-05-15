@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { BRAIN_OS } from "@/lib/positioning";
 
 export const metadata: Metadata = {
-  title: "ADHD Articles & Guides · FocusRoute",
+  title: "Brain OS Guides · FocusRoute",
   description:
-    "Evidence-based articles about ADHD types, symptoms in adults, and how ADHD is assessed — from the FocusRoute team.",
+    "Educational ADHD guides from FocusRoute: symptom patterns, assessment pathways, and profile-based strategy design.",
 };
 
 const ARTICLES = [
@@ -72,7 +73,7 @@ export default function LearnIndexPage() {
               FocusRoute
             </p>
             <p style={{ fontSize: 11, color: "var(--color-text-muted)", letterSpacing: "0.08em", fontWeight: 500 }}>
-              ADHD TEST
+              {BRAIN_OS.headerEyebrow}
             </p>
           </div>
         </a>
@@ -80,17 +81,16 @@ export default function LearnIndexPage() {
           href="/"
           style={{ fontSize: 13, color: "var(--color-primary)", textDecoration: "none", fontWeight: 600 }}
         >
-          ← Take the test
+          ← Start Brain OS
         </a>
       </header>
 
       <main style={{ maxWidth: 720, margin: "0 auto", padding: "48px 24px 0" }}>
         <h1 style={{ fontSize: "clamp(26px, 5vw, 36px)", marginBottom: 8, color: "var(--color-text)" }}>
-          ADHD Articles &amp; Guides
+          Brain OS Articles &amp; Guides
         </h1>
         <p style={{ fontSize: 15, color: "var(--color-text-body)", lineHeight: 1.65, marginBottom: 40 }}>
-          Evidence-based articles to help you understand ADHD — what it is, how it presents in adults,
-          and what to do if you think you might have it.
+          Practical, evidence-informed writing to help you understand ADHD patterns and turn insight into an execution system that fits your brain.
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -155,7 +155,7 @@ export default function LearnIndexPage() {
             href="/"
             style={{ fontSize: 14, color: "var(--color-primary)", textDecoration: "none", fontWeight: 600 }}
           >
-            ← Back to the ADHD Assessment
+            ← Back to FocusRoute Brain OS
           </a>
         </div>
       </main>
