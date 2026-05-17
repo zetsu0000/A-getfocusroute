@@ -11,7 +11,6 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { useQuizStore } from "@/store/quizStore";
-import { saveSession } from "@/lib/session";
 import { safeName } from "@/lib/personalization";
 import { scoreFromAnswers, getSymptomLevel } from "@/lib/symptom-level";
 
@@ -256,8 +255,6 @@ export function PaywallScreen() {
   const displayName              = safeName(name, "You");
 
   const handlePaywallSuccess = () => {
-    const { email: e, name: n, answers } = useQuizStore.getState();
-    saveSession({ email: e, name: n, planType: "assessment", purchasedAt: new Date().toISOString(), answers });
     setStep("upsell");
   };
 
@@ -268,12 +265,18 @@ export function PaywallScreen() {
     fetch("/api/create-payment-intent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ priceId: PRICE_ID, email }),
+      body: JSON.stringify({
+        priceId: PRICE_ID,
+        email,
+        product_key: "brain_profile",
+        funnel_step: "paywall",
+        user_name: name,
+      }),
     })
       .then((r) => r.json())
       .then((d) => { if (d.clientSecret) setClientSecret(d.clientSecret); })
       .finally(() => setLoadingSecret(false));
-  }, [email]);
+  }, [email, name]);
 
   const stripeAppearance = {
     theme: "flat" as const,
