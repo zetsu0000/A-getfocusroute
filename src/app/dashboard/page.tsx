@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getCurrentUser, logout } from "@/lib/supabaseAuth";
 
@@ -11,7 +11,6 @@ type DashboardUser = {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [user, setUser] = useState<DashboardUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -47,7 +46,7 @@ export default function DashboardPage() {
     return () => {
       isMounted = false;
     };
-  }, [router, searchParams]);
+  }, [router]);
 
   async function handleLogout() {
     setIsLoading(true);
