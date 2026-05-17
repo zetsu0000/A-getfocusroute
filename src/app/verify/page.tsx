@@ -2,15 +2,13 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { signInWithOtp, verifyOtp } from "@/lib/supabaseAuth";
 
 export default function VerifyPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const next = searchParams.get("next") ?? "/dashboard";
-
-  const [email, setEmail] = useState(searchParams.get("email") ?? "");
+  const [next, setNext] = useState("/dashboard");
+  const [email, setEmail] = useState("");
   const [token, setToken] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -18,9 +16,10 @@ export default function VerifyPage() {
   const [isResending, setIsResending] = useState(false);
 
   useEffect(() => {
-    const emailFromUrl = searchParams.get("email");
-    if (emailFromUrl) setEmail(emailFromUrl);
-  }, [searchParams]);
+    const params = new URLSearchParams(window.location.search);
+    setEmail(params.get("email") ?? "");
+    setNext(params.get("next") ?? "/dashboard");
+  }, []);
 
   async function handleVerify(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
