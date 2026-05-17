@@ -1,19 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { signInWithOtp } from "@/lib/supabaseAuth";
 
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const next = searchParams.get("next") ?? "/dashboard";
-
+  const [next, setNext] = useState("/dashboard");
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setNext(params.get("next") ?? "/dashboard");
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -32,6 +35,10 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   }
+
+  const verifyHref = email
+    ? `/verify?email=${encodeURIComponent(email)}&next=${encodeURIComponent(next)}`
+    : "/verify";
 
   return (
     <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 24, background: "#f7f4ef" }}>
@@ -72,7 +79,7 @@ export default function LoginPage() {
         </form>
 
         <p style={{ margin: "20px 0 0", color: "#66594b" }}>
-          Already have a code? <Link href={`/verify${email ? `?email=${encodeURIComponent(email)}&next=${encodeURIComponent(next)}` : ""}`}>Verify it</Link>
+          Already have a code? <Link href={verifyHref}>Verify it</Link>
         </p>
       </section>
     </main>
