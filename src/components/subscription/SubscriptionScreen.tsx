@@ -11,7 +11,6 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { useQuizStore } from "@/store/quizStore";
-import { saveSession } from "@/lib/session";
 import { safeName } from "@/lib/personalization";
 
 let _stripePromise: ReturnType<typeof loadStripe> | null = null;
@@ -23,6 +22,7 @@ function getStripePromise() {
 const PLANS = {
   annual: {
     priceId:    process.env.NEXT_PUBLIC_PRICE_ANNUAL!,
+    productKey: "membership_annual",
     label:      "Annual Plan",
     price:      "$119",
     sub:        "~$9.92/mo · billed once a year",
@@ -33,6 +33,7 @@ const PLANS = {
   },
   monthly: {
     priceId:    process.env.NEXT_PUBLIC_PRICE_MONTHLY!,
+    productKey: "membership_monthly",
     label:      "Monthly Plan",
     price:      "$19",
     sub:        "per month · cancel anytime",
@@ -41,7 +42,7 @@ const PLANS = {
     badge:      null,
     highlight:  false,
   },
-};
+} as const;
 
 const FEATURES = [
   "Continuous access to your ADHD report",
@@ -51,7 +52,7 @@ const FEATURES = [
 ];
 
 /* Checkout form for subscriptions */
-function SubCheckoutForm({ priceId, email, onSuccess }: { priceId: string; email: string; onSuccess: () => void }) {
+function SubCheckoutForm({ priceId, productKey, email, userName, onSuccess }: { priceId: string; productKey: string; email: string; userName: string; onSuccess: () => void }) {
   const stripe   = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -72,7 +73,14 @@ function SubCheckoutForm({ priceId, email, onSuccess }: { priceId: string; email
     const res  = await fetch("/api/create-subscription", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ priceId, email, paymentMethodId: paymentMethod.id }),
+      body: JSON.stringify({
+        priceId,
+        email,
+        paymentMethodId: paymentMethod.id,
+        product_key: productKey,
+        funnel_step: "subscription",
+        user_name: userName,
+      }),
     });
     const data = await res.json();
 
@@ -193,14 +201,6 @@ export function SubscriptionScreen() {
   const plan = PLANS[selected];
 
   const handleSuccess = () => {
-    const { email: e, name: n, answers } = useQuizStore.getState();
-    saveSession({
-      email: e,
-      name: n,
-      planType: selected === "annual" ? "annual" : "monthly",
-      purchasedAt: new Date().toISOString(),
-      answers,
-    });
     setStep("success");
   };
   const handleSkip = () => setStep("success");
@@ -275,7 +275,7 @@ export function SubscriptionScreen() {
                 },
               }}
             >
-              <SubCheckoutForm priceId={plan.priceId} email={email} onSuccess={handleSuccess} />
+              <SubCheckoutForm priceId={plan.priceId} productKey={plan.productKey} email={email} userName={name} onSuccess={handleSuccess} />
             </Elements>
           )}
         </m.div>
