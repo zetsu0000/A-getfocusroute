@@ -107,12 +107,18 @@ export function UpsellScreen() {
     fetch("/api/create-payment-intent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ priceId: PRICE_ID, email }),
+      body: JSON.stringify({
+        priceId: PRICE_ID,
+        email,
+        product_key: "roadmap_28_day",
+        funnel_step: "upsell",
+        user_name: name,
+      }),
     })
       .then((r) => r.json())
       .then((data) => { if (data.clientSecret) setClientSecret(data.clientSecret); })
       .finally(() => setLoadingSecret(false));
-  }, [email]);
+  }, [email, name]);
 
   const handleSuccess = () => setStep("subscription");
   const handleDecline = () => setStep("subscription");
