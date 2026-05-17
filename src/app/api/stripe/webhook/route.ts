@@ -12,6 +12,10 @@ import { assertProductKey, productKeyForPriceId } from "@/lib/access/products";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
+type InvoiceWithSubscription = Stripe.Invoice & {
+  subscription?: string | Stripe.Subscription | null;
+};
+
 function requiredEnv(name: string) {
   const value = process.env[name];
   if (!value) throw new Error(`Missing ${name}.`);
@@ -136,10 +140,11 @@ async function handleSubscriptionEvent(subscription: Stripe.Subscription) {
 }
 
 async function handleInvoicePaid(invoice: Stripe.Invoice) {
+  const invoiceWithSubscription = invoice as InvoiceWithSubscription;
   const subscriptionId =
-    typeof invoice.subscription === "string"
-      ? invoice.subscription
-      : invoice.subscription?.id ?? null;
+    typeof invoiceWithSubscription.subscription === "string"
+      ? invoiceWithSubscription.subscription
+      : invoiceWithSubscription.subscription?.id ?? null;
 
   if (!subscriptionId) return;
 
