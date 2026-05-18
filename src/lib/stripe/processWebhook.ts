@@ -192,9 +192,7 @@ async function handlePaymentIntentSucceeded(event: Stripe.Event): Promise<void> 
     return;
   }
 
-  if (await hasEmailGrantForPaymentIntent(admin, pi.id)) {
-    return;
-  }
+  const hasExistingGrant = await hasEmailGrantForPaymentIntent(admin, pi.id);
 
   const email = parseEmailFromMetadata(pi.metadata);
   const productKey = parseProductKeyFromMetadata(pi.metadata);
@@ -217,26 +215,31 @@ async function handlePaymentIntentSucceeded(event: Stripe.Event): Promise<void> 
       ? pi.amount_received
       : pi.amount;
 
-  await grantProductByEmail(email, productKey, {
-    stripe_payment_intent_id: pi.id,
-    stripe_event_id: event.id,
-    funnel_step: fm.funnel_step,
-    quiz_result_id: fm.quiz_result_id,
-    user_name: fm.user_name,
-  });
+  if (!hasExistingGrant) {
+    await grantProductByEmail(email, productKey, {
+      stripe_payment_intent_id: pi.id,
+      stripe_event_id: event.id,
+      funnel_step: fm.funnel_step,
+      quiz_result_id: fm.quiz_result_id,
+      user_name: fm.user_name,
+    });
+  }
+
+  const stripeCustomerId =
+    typeof pi.customer === "string"
+      ? pi.customer
+      : pi.customer?.id ?? null;
 
   const { error: insErr } = await admin.from("purchases").insert({
     user_id: null,
+    email,
+    stripe_customer_id: stripeCustomerId,
     stripe_payment_intent_id: pi.id,
     stripe_checkout_session_id: null,
-    amount_cents: amount,
+    product_key: productKey,
+    amount,
     currency: pi.currency ?? "usd",
     status: "succeeded",
-    metadata: {
-      ...fm,
-      product_key: productKey,
-      stripe_event_id: event.id,
-    },
   });
 
   if (insErr?.code === "23505") {
@@ -315,9 +318,6 @@ async function handleCheckoutSessionCompleted(
       if (existingPi) {
         return;
       }
-      if (await hasEmailGrantForPaymentIntent(admin, piId)) {
-        return;
-      }
     }
 
     const sessionMetaFlat = piMetadataAsRecord(meta);
@@ -329,24 +329,32 @@ async function handleCheckoutSessionCompleted(
       return;
     }
 
-    await grantProductByEmail(email, productKey, {
-      ...baseGrantMeta,
-      stripe_payment_intent_id: piId ?? undefined,
-    });
+    const hasExistingGrant = piId
+      ? await hasEmailGrantForPaymentIntent(admin, piId)
+      : false;
+
+    if (!hasExistingGrant) {
+      await grantProductByEmail(email, productKey, {
+        ...baseGrantMeta,
+        stripe_payment_intent_id: piId ?? undefined,
+      });
+    }
+
+    const stripeCustomerId =
+      typeof session.customer === "string"
+        ? session.customer
+        : session.customer?.id ?? null;
 
     const { error: insErr } = await admin.from("purchases").insert({
       user_id: null,
+      email,
+      stripe_customer_id: stripeCustomerId,
       stripe_payment_intent_id: piId ?? null,
       stripe_checkout_session_id: session.id,
-      amount_cents: session.amount_total ?? null,
+      product_key: productKey,
+      amount: session.amount_total ?? null,
       currency: session.currency ?? "usd",
       status: "succeeded",
-      metadata: {
-        ...fm,
-        product_key: productKey,
-        stripe_event_id: event.id,
-        checkout_session_id: session.id,
-      },
     });
 
     if (insErr?.code === "23505") {
