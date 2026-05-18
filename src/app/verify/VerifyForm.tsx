@@ -248,7 +248,7 @@ export function VerifyForm() {
                 maxLength={12}
                 value={token}
                 onChange={(ev) =>
-                  setToken(ev.target.value.replace(/[^\d\s]/g, ""))
+                  setToken(ev.target.value)
                 }
                 disabled={status === "loading"}
                 style={{

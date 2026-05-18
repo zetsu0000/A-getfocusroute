@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 
 import { DashboardMembershipSummary } from "@/components/dashboard/DashboardMembershipSummary";
 import { DashboardRetakeSection } from "@/components/dashboard/DashboardRetakeSection";
@@ -88,7 +88,7 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
             marginBottom: 12,
           }}
         >
-          Your library
+          Your FocusRoute access
         </p>
         <div style={{ display: "grid", gap: 12 }}>
           <FeatureCard
@@ -133,7 +133,7 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
       </section>
 
       <p style={{ fontSize: 11, color: "var(--color-text-muted)", lineHeight: 1.5, textAlign: "center" }}>
-        Access is enforced on the server from your account entitlements — not from browser storage.
+        Your access is managed securely on your account.
       </p>
     </div>
   );

@@ -1,4 +1,4 @@
-﻿import type { CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
@@ -9,7 +9,6 @@ import {
   hasMembershipAccess,
   hasRoadmapAccess,
 } from "@/lib/dashboard/unlock";
-import { safeName } from "@/lib/personalization";
 
 const navLink: CSSProperties = {
   fontSize: 13,
@@ -51,7 +50,7 @@ export function DashboardNav({
   snap: LoggedInDashboardSnapshot;
   pathname: string;
 }) {
-  const display = safeName(snap.profile?.full_name ?? "", "there");
+  const firstName = snap.profile?.full_name?.trim() || snap.user.email.split("@")[0] || "";
   const u = snap.entitlementSet;
 
   return (
@@ -103,7 +102,7 @@ export function DashboardNav({
           marginBottom: 4,
         }}
       >
-        Welcome back, <span style={{ color: "var(--color-primary)" }}>{display}</span>
+        {firstName ? (<>Welcome back, <span style={{ color: "var(--color-primary)" }}>{firstName}</span></>) : "Welcome back"}
       </h1>
       <p style={{ fontSize: 13, color: "var(--color-text-muted)", marginBottom: 20, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>{snap.user.email}</p>
 

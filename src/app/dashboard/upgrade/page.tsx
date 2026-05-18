@@ -12,23 +12,38 @@ export const metadata = {
   title: "Upgrade · FocusRoute",
 };
 
-const COPY: Record<string, { title: string; body: string }> = {
+const COPY: Record<string, { title: string; body: string; cta: string; href: string }> = {
   brain_profile: {
-    title: "Brain Profile",
-    body: "Unlock the full assessment readout and signature summary with the Brain OS profile purchase.",
+    title: "Your Brain Profile is locked",
+    body: "Complete checkout to unlock your personalized cognitive profile, Executive Function Radar, and bonus resources.",
+    cta: "Unlock Brain Profile",
+    href: "/",
   },
   roadmap_28_day: {
     title: "28-Day Protocol",
-    body: "Add the roadmap product to get structured daily steps aligned to your map.",
+    body: "Add the 28-Day Protocol to get structured daily micro-actions calibrated to your Brain Profile.",
+    cta: "Unlock 28-Day Protocol",
+    href: "/",
   },
   bonus_toolkit: {
     title: "Bonuses",
-    body: "Bonuses ship with qualifying bundles (toolkit, audio, or explain scripts). Upgrade from checkout when offered.",
+    body: "Bonus resources are included with qualifying purchases — toolkit, audio guides, and explain scripts.",
+    cta: "View upgrade options",
+    href: "/",
   },
   membership: {
-    title: "Membership",
-    body: "Subscribe for ongoing access, retakes, and billing portal tools.",
+    title: "FocusRoute Membership",
+    body: "Membership keeps your Brain OS active — with monthly resets, retakes when your context shifts, and protocol updates built around how your brain changes over time.",
+    cta: "View membership options",
+    href: "/",
   },
+};
+
+const DEFAULT = {
+  title: "Unlock your Brain Profile",
+  body: "Complete the assessment checkout to access your personalized Brain Profile, 28-Day Protocol, and bonus library. Access syncs to your account automatically after payment.",
+  cta: "Unlock Brain Profile",
+  href: "/",
 };
 
 export default async function DashboardUpgradePage({
@@ -38,12 +53,15 @@ export default async function DashboardUpgradePage({
 }) {
   const snap = await requireDashboardLogin();
   const { need } = await searchParams;
-  const hint = (need && COPY[need]) || {
-    title: "Choose your next unlock",
-    body: "Browse the funnel checkout to add Brain Profile, roadmap, bonuses, or membership — access syncs to this email automatically after payment.",
-  };
+  const hint = (need && COPY[need]) || DEFAULT;
 
   const u = snap.entitlementSet;
+  const hasAny =
+    hasBrainProfileAccess(u) ||
+    hasRoadmapAccess(u) ||
+    hasBonusesAccess(u) ||
+    hasMembershipAccess(u);
+
   const status = [
     { label: "Brain Profile", ok: hasBrainProfileAccess(u) },
     { label: "28-Day Protocol", ok: hasRoadmapAccess(u) },
@@ -53,46 +71,63 @@ export default async function DashboardUpgradePage({
 
   return (
     <div style={{ maxWidth: 560, margin: "0 auto", display: "flex", flexDirection: "column", gap: 18 }}>
-      <h2 style={{ fontSize: 20, fontWeight: 800, color: "var(--color-text)" }}>{hint.title}</h2>
-      <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.65 }}>{hint.body}</p>
-
       <div
         style={{
-          borderRadius: 16,
-          padding: "16px 18px",
-          background: "var(--color-bg-card)",
+          borderRadius: "var(--radius-lg)",
+          padding: "24px 22px",
+          background: "linear-gradient(135deg, var(--color-primary-tint), var(--color-cognitive-tint))",
           border: "1px solid var(--color-border)",
         }}
       >
-        <p style={{ fontSize: 12, fontWeight: 800, color: "var(--color-text-muted)", marginBottom: 10 }}>
-          Current server entitlements
+        <h2 style={{ fontSize: 20, fontWeight: 800, color: "var(--color-text)", marginBottom: 8 }}>
+          {hint.title}
+        </h2>
+        <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.65, marginBottom: 20 }}>
+          {hint.body}
         </p>
-        <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.7 }}>
-          {status.map((row) => (
-            <li key={row.label}>
-              {row.label}: {row.ok ? "unlocked" : "locked"}
-            </li>
-          ))}
-        </ul>
+        <Link
+          href={hint.href}
+          prefetch={false}
+          style={{
+            display: "inline-flex",
+            padding: "13px 24px",
+            borderRadius: "var(--radius-md)",
+            background: "var(--color-accent)",
+            color: "#fff",
+            fontSize: 14,
+            fontWeight: 700,
+            textDecoration: "none",
+            boxShadow: "var(--shadow-btn-accent)",
+          }}
+        >
+          {hint.cta}
+        </Link>
       </div>
 
-      <Link
-        href="/"
-        prefetch={false}
-        style={{
-          display: "inline-flex",
-          alignSelf: "flex-start",
-          padding: "12px 22px",
-          borderRadius: 12,
-          background: "var(--color-primary)",
-          color: "#fff",
-          fontSize: 14,
-          fontWeight: 700,
-          textDecoration: "none",
-        }}
-      >
-        Go to checkout funnel
-      </Link>
+      {hasAny && (
+        <div
+          style={{
+            borderRadius: "var(--radius-md)",
+            padding: "16px 18px",
+            background: "var(--color-bg-card)",
+            border: "1px solid var(--color-border)",
+          }}
+        >
+          <p style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--color-text-muted)", marginBottom: 10 }}>
+            Your access
+          </p>
+          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.7 }}>
+            {status.map((row) => (
+              <li key={row.label}>
+                {row.label}:{" "}
+                <span style={{ color: row.ok ? "var(--color-success)" : "var(--color-text-muted)", fontWeight: row.ok ? 700 : 400 }}>
+                  {row.ok ? "unlocked" : "locked"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
