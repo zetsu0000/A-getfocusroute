@@ -112,7 +112,9 @@ export function LoginForm() {
             }}
           >
             We&apos;ll email you a login code and a magic link. Paid access is
-            tied to your account on our servers, not browser storage.
+            tied to your account on our servers, not browser storage. On this
+            device, you&apos;ll stay signed in while your secure Supabase session
+            remains valid.
           </p>
 
           {(errorParam === "auth" || status === "error") && (
