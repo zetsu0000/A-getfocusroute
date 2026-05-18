@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { m } from "framer-motion";
@@ -11,7 +11,6 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { useQuizStore } from "@/store/quizStore";
-import { saveSession } from "@/lib/session";
 import { safeName } from "@/lib/personalization";
 import { BRAIN_OS } from "@/lib/positioning";
 
@@ -49,14 +48,26 @@ const PLANS = {
 };
 
 const FEATURES = [
-  "Keep access to your Brain Profile and protocol library",
+  "Keep access to your FocusRoute Brain Profile™ and protocol library",
   "Body-doubling sessions and accountability structure",
   "Profile-based weekly check-ins and updated strategies",
   "Priority support from the FocusRoute team",
 ];
 
 /* Checkout form for subscriptions */
-function SubCheckoutForm({ priceId, email, onSuccess }: { priceId: string; email: string; onSuccess: () => void }) {
+function SubCheckoutForm({
+  priceId,
+  email,
+  userName,
+  quizResultId,
+  onSuccess,
+}: {
+  priceId: string;
+  email: string;
+  userName: string;
+  quizResultId: string | null;
+  onSuccess: () => void;
+}) {
   const stripe   = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -77,7 +88,14 @@ function SubCheckoutForm({ priceId, email, onSuccess }: { priceId: string; email
     const res  = await fetch("/api/create-subscription", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ priceId, email, paymentMethodId: paymentMethod.id }),
+      body: JSON.stringify({
+        priceId,
+        email,
+        paymentMethodId: paymentMethod.id,
+        funnel_step: "subscription",
+        quiz_result_id: quizResultId ?? "",
+        user_name: userName.trim(),
+      }),
     });
     const data = await res.json();
 
@@ -98,7 +116,7 @@ function SubCheckoutForm({ priceId, email, onSuccess }: { priceId: string; email
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <PaymentElement options={{ layout: "tabs" }} />
-      {error && <p style={{ fontSize: 13, color: "#E87450", textAlign: "center" }}>{error}</p>}
+      {error && <p style={{ fontSize: 13, color: "var(--color-accent)", textAlign: "center" }}>{error}</p>}
       <m.button
         type="submit"
         disabled={!stripe || loading}
@@ -189,7 +207,7 @@ function PlanCard({ planKey, isSelected, onSelect }: { planKey: "annual" | "mont
 
 /* Main SubscriptionScreen */
 export function SubscriptionScreen() {
-  const { name, email, setStep } = useQuizStore();
+  const { name, email, setStep, quizResultId } = useQuizStore();
   const displayName = safeName(name, "you");
 
   const [selected, setSelected] = useState<"annual" | "monthly">("annual");
@@ -198,14 +216,6 @@ export function SubscriptionScreen() {
   const plan = PLANS[selected];
 
   const handleSuccess = () => {
-    const { email: e, name: n, answers } = useQuizStore.getState();
-    saveSession({
-      email: e,
-      name: n,
-      planType: selected === "annual" ? "annual" : "monthly",
-      purchasedAt: new Date().toISOString(),
-      answers,
-    });
     setStep("success");
   };
   const handleSkip = () => setStep("success");
@@ -215,14 +225,14 @@ export function SubscriptionScreen() {
       initial={{ opacity: 0, x: 40 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3 }}
-      style={{ minHeight: "100vh", padding: "32px 16px 64px" }}
+      style={{ minHeight: "100dvh", padding: "32px 16px 64px" }}
     >
       <div style={{ maxWidth: 480, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
 
         {/* Header */}
         <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <h1 style={{ fontSize: 24, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.25, marginBottom: 8 }}>
-            Keep your Brain OS active,{" "}
+            Keep your FocusRoute Brain OS™ active,{" "}
             <span style={{ color: "var(--color-primary)" }}>{displayName}</span>
           </h1>
           <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.65 }}>
@@ -276,11 +286,17 @@ export function SubscriptionScreen() {
                 currency: "usd",
                 appearance: {
                   theme: "flat",
-                  variables: { colorPrimary: "#4A7FA5", colorBackground: "var(--color-bg-card)", colorText: "#1C1A2E", colorDanger: "#E87450", fontFamily: "inherit", borderRadius: "12px" },
+                  variables: { colorPrimary: "var(--color-primary)", colorBackground: "var(--color-bg-card)", colorText: "var(--color-text)", colorDanger: "var(--color-accent)", fontFamily: "inherit", borderRadius: "12px" },
                 },
               }}
             >
-              <SubCheckoutForm priceId={plan.priceId} email={email} onSuccess={handleSuccess} />
+              <SubCheckoutForm
+                priceId={plan.priceId}
+                email={email}
+                userName={name}
+                quizResultId={quizResultId}
+                onSuccess={handleSuccess}
+              />
             </Elements>
           )}
         </m.div>

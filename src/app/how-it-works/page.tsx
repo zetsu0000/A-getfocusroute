@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { BRAIN_OS } from "@/lib/positioning";
 
 export const metadata: Metadata = {
   title: `How ${BRAIN_OS.lineTm} Works`,
-  description: "See how FocusRoute maps your cognitive profile and turns it into a personalized 28-day ADHD protocol.",
+  description: "See how FocusRoute maps your cognitive profile and turns it into a personalized 28-Day Protocol™.",
 };
 
 const STEPS = [
@@ -23,24 +24,24 @@ const STEPS = [
     number: "03",
     title: "Unlock your protocol",
     description:
-      `Unlock your personalized ${BRAIN_OS.protocol} with practical daily actions designed for your profile instead of generic ADHD productivity advice.`,
+      `Unlock your personalized ${BRAIN_OS.protocol} with practical daily actions designed for your profile instead of generic productivity advice.`,
   },
   {
     number: "04",
     title: "Run your Brain OS",
     description:
-      "Apply your profile-based plan one micro-step at a time and build momentum that matches your cognitive style. You can also share your profile with a clinician for professional follow-up.",
+      "Apply your profile-based plan one micro-step at a time and build momentum that matches your cognitive style. You can share your profile summary with your support team if helpful.",
   },
 ];
 
 const FAQ = [
   {
     q: "Is FocusRoute a medical diagnosis?",
-    a: "No. FocusRoute is a screening tool, not a diagnostic instrument. It can identify symptom patterns consistent with ADHD, but a formal diagnosis requires evaluation by a licensed mental health professional or physician.",
+    a: "No. FocusRoute is an educational profiling tool, not a medical diagnostic instrument. For diagnosis, treatment, or medical advice, consult a licensed clinician.",
   },
   {
-    q: "What criteria does the assessment use?",
-    a: "Our questions are based on the DSM-5 criteria for ADHD, the same framework used by clinicians worldwide. We assess all three presentations: Predominantly Inattentive, Predominantly Hyperactive-Impulsive, and Combined.",
+    q: "What does the assessment measure?",
+    a: "The Cognitive Mapping Assessment™ measures self-reported patterns across focus consistency, task initiation, planning friction, and emotional load. Results are used to build your ADHD Signature™ and protocol preview.",
   },
   {
     q: "Can I take the test more than once?",
@@ -48,11 +49,11 @@ const FAQ = [
   },
   {
     q: "Who is the assessment designed for?",
-    a: "FocusRoute is designed primarily for adults aged 18 and older who are curious about ADHD symptoms or have been experiencing persistent difficulties with focus, organization, or impulse control.",
+    a: "FocusRoute is designed primarily for adults aged 18 and older who want practical insight into focus, planning, and execution patterns.",
   },
   {
     q: "How is the detailed report different from the free results?",
-    a: "The free result shows your symptom score and presentation type. The detailed report includes a full breakdown by dimension, science-backed coping strategies, a daily structure template, and a summary you can share with a healthcare provider.",
+    a: "The free result shows a partial signature reveal. The full report includes a complete Executive Function Radar™, ADHD Signature™, and the Profile-to-Protocol™ Engine output with a day-by-day 28-Day Protocol™.",
   },
 ];
 
@@ -67,7 +68,7 @@ export default function HowItWorksPage() {
         alignItems: "center",
         justifyContent: "space-between",
       }}>
-        <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
           <div style={{
             width: 38, height: 38, borderRadius: 10,
             background: "var(--color-primary)",
@@ -87,10 +88,10 @@ export default function HowItWorksPage() {
               {BRAIN_OS.headerEyebrow}
             </p>
           </div>
-        </a>
-        <a href="/" style={{ fontSize: 13, color: "var(--color-primary)", textDecoration: "none", fontWeight: 600 }}>
+        </Link>
+        <Link href="/" style={{ fontSize: 13, color: "var(--color-primary)", textDecoration: "none", fontWeight: 600 }}>
           ← Start Brain OS
-        </a>
+        </Link>
       </header>
 
       <main style={{ maxWidth: 720, margin: "0 auto", padding: "48px 24px 0" }}>
@@ -195,7 +196,7 @@ export default function HowItWorksPage() {
           <p style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 16 }}>
             Ready to map your Brain Profile?
           </p>
-          <a href="/" style={{
+          <Link href="/" style={{
             display: "inline-block",
             background: "#fff",
             color: "var(--color-primary)",
@@ -206,7 +207,7 @@ export default function HowItWorksPage() {
             textDecoration: "none",
           }}>
             Start {BRAIN_OS.lineTm} →
-          </a>
+          </Link>
         </div>
 
         <div style={{
@@ -216,14 +217,14 @@ export default function HowItWorksPage() {
           display: "flex",
           justifyContent: "center",
         }}>
-          <a href="/" style={{
+          <Link href="/" style={{
             fontSize: 14,
             color: "var(--color-primary)",
             textDecoration: "none",
             fontWeight: 600,
           }}>
             ← Back to FocusRoute Brain OS
-          </a>
+          </Link>
         </div>
       </main>
     </div>

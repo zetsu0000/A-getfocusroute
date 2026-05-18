@@ -1,18 +1,19 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { BRAIN_OS } from "@/lib/positioning";
 
 export const metadata: Metadata = {
   title: "Brain OS Guides · FocusRoute",
   description:
-    "Educational ADHD guides from FocusRoute: symptom patterns, assessment pathways, and profile-based strategy design.",
+    "Educational FocusRoute guides: profile patterns, assessment walkthroughs, and strategy design.",
 };
 
 const ARTICLES = [
   {
     slug: "types-of-adhd",
-    title: "The 3 Types of ADHD Explained",
+    title: "5 ADHD Signature™ Patterns Explained",
     description:
-      "Learn the differences between Inattentive, Hyperactive-Impulsive, and Combined ADHD presentations.",
+      "Learn the Sprinter, Archivist, Spark, Reactor, and Drifter profile signatures used inside FocusRoute Brain OS™.",
     readTime: "4 min read",
   },
   {
@@ -24,9 +25,9 @@ const ARTICLES = [
   },
   {
     slug: "adhd-assessment-guide",
-    title: "How ADHD Is Assessed: From Screening to Diagnosis",
+    title: "How Cognitive Mapping Assessment™ Works",
     description:
-      "Understand the difference between an online ADHD screening and a clinical diagnosis, and what to do next.",
+      "Understand the flow from quick assessment to partial reveal and full Profile-to-Protocol™ output.",
     readTime: "5 min read",
   },
 ];
@@ -44,7 +45,7 @@ export default function LearnIndexPage() {
           justifyContent: "space-between",
         }}
       >
-        <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
           <div
             style={{
               width: 38,
@@ -76,13 +77,13 @@ export default function LearnIndexPage() {
               {BRAIN_OS.headerEyebrow}
             </p>
           </div>
-        </a>
-        <a
+        </Link>
+        <Link
           href="/"
           style={{ fontSize: 13, color: "var(--color-primary)", textDecoration: "none", fontWeight: 600 }}
         >
           ← Start Brain OS
-        </a>
+        </Link>
       </header>
 
       <main style={{ maxWidth: 720, margin: "0 auto", padding: "48px 24px 0" }}>
@@ -92,10 +93,13 @@ export default function LearnIndexPage() {
         <p style={{ fontSize: 15, color: "var(--color-text-body)", lineHeight: 1.65, marginBottom: 40 }}>
           Practical, evidence-informed writing to help you understand ADHD patterns and turn insight into an execution system that fits your brain.
         </p>
+        <p style={{ fontSize: 12, color: "var(--color-text-muted)", lineHeight: 1.7, marginBottom: 26 }}>
+          Educational content only. FocusRoute does not provide medical diagnosis.
+        </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {ARTICLES.map((article) => (
-            <a
+            <Link
               key={article.slug}
               href={`/learn/${article.slug}`}
               style={{ textDecoration: "none" }}
@@ -138,7 +142,7 @@ export default function LearnIndexPage() {
                   <span style={{ fontSize: 20, color: "var(--color-primary)", flexShrink: 0, marginTop: 2 }}>→</span>
                 </div>
               </div>
-            </a>
+            </Link>
           ))}
         </div>
 
@@ -151,12 +155,12 @@ export default function LearnIndexPage() {
             justifyContent: "center",
           }}
         >
-          <a
+          <Link
             href="/"
             style={{ fontSize: 14, color: "var(--color-primary)", textDecoration: "none", fontWeight: 600 }}
           >
             ← Back to FocusRoute Brain OS
-          </a>
+          </Link>
         </div>
       </main>
     </div>

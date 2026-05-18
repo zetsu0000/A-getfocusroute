@@ -1,10 +1,12 @@
-import { UserDashboard } from "@/components/dashboard/UserDashboard";
+import { DashboardHomeView } from "@/components/dashboard/DashboardHomeView";
+import { requireDashboardLogin } from "@/lib/dashboard/require-dashboard";
 
 export const metadata = {
-  title: "My Account · FocusRoute",
-  description: "View your ADHD assessment results and manage your plan.",
+  title: "Dashboard · FocusRoute",
+  description: "Your Brain Profile, protocol, bonuses, and membership — tied to your account.",
 };
 
-export default function DashboardPage() {
-  return <UserDashboard />;
+export default async function DashboardPage() {
+  const snap = await requireDashboardLogin();
+  return <DashboardHomeView snap={snap} />;
 }

@@ -40,9 +40,9 @@ export function CognitiveChart() {
       <ResponsiveContainer width="100%" height={148}>
         <AreaChart data={data} margin={{ top: 4, right: 4, left: -26, bottom: 0 }}>
           <defs>
-            <linearGradient id="cgGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"   stopColor="#4A7FA5" stopOpacity={0.22} />
-              <stop offset="100%" stopColor="#4A7FA5" stopOpacity={0} />
+            <linearGradient id="cgGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%"   stopColor="var(--color-primary)" stopOpacity={0.22} />
+              <stop offset="100%" stopColor="var(--color-cognitive)" stopOpacity={0.12} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
@@ -64,10 +64,10 @@ export function CognitiveChart() {
           />
           <Area
             type="monotone" dataKey="score"
-            stroke="var(--color-primary)" strokeWidth={2.5}
+            stroke="var(--color-cognitive)" strokeWidth={2.5}
             fill="url(#cgGrad)"
             dot={{ fill: "var(--color-primary)", r: 3.5, strokeWidth: 0 }}
-            activeDot={{ r: 6, fill: "var(--color-primary-mid)", filter: "drop-shadow(0 0 5px rgba(74,127,165,0.5))" }}
+            activeDot={{ r: 6, fill: "var(--color-cognitive)", filter: "drop-shadow(0 0 5px rgba(107,92,165,0.45))" }}
           />
         </AreaChart>
       </ResponsiveContainer>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
@@ -25,7 +25,7 @@ function ConfettiCanvas() {
       y:   Math.random() * -canvas.height,
       r:   Math.random() * 7 + 3,
       d:   Math.random() * 80 + 20,
-      color: ["#4A7FA5","#6AA3C8","#E87450","#F5C17A","#A3D9A5"][Math.floor(Math.random() * 5)],
+      color: ["#3F6F8F", "#6F9FBB", "#6B5CA5", "#5C8A5E", "#3D936A"][Math.floor(Math.random() * 5)],
       tilt: Math.random() * 10 - 10,
       tiltAngleIncrementDenum: Math.random() * 0.07 + 0.05,
       tiltAngle: 0,
@@ -82,7 +82,7 @@ export function SuccessScreen() {
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.15 }}
-        style={{ width: 84, height: 84, borderRadius: 24, background: "linear-gradient(135deg, var(--color-primary), #6AA3C8)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 28, boxShadow: "0 8px 32px rgba(74,127,165,0.35)" }}
+        style={{ width: 84, height: 84, borderRadius: 24, background: "linear-gradient(135deg, var(--color-primary), var(--color-cognitive))", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 28, boxShadow: "0 8px 32px rgba(54,96,122,0.32)" }}
       >
         <CheckCircle2 size={44} color="white" strokeWidth={2.2} />
       </m.div>
@@ -104,6 +104,9 @@ export function SuccessScreen() {
       >
         Your {BRAIN_OS.brainProfile} and personalized protocol are on their way. Check your inbox — this is the clarity you&apos;ve been looking for.
       </m.p>
+      <p style={{ fontSize: 11, color: "var(--color-text-muted)", lineHeight: 1.6, maxWidth: 360, marginBottom: 20 }}>
+        FocusRoute provides educational profiling and does not provide medical diagnosis.
+      </p>
 
       {email && (
         <m.div
@@ -136,7 +139,7 @@ export function SuccessScreen() {
           }}
         >
           <LayoutDashboard size={18} />
-          Acessar minha conta
+          Access My Account
         </Link>
       </m.div>
 

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { BRAIN_OS } from "@/lib/positioning";
 
 export const metadata: Metadata = {
   title: "About FocusRoute Brain OS",
-  description: "Learn why FocusRoute was built around a map-first ADHD approach: profile first, protocol second.",
+  description: "Learn why FocusRoute was built around a map-first approach: profile first, protocol second.",
 };
 
 export default function AboutPage() {
@@ -17,7 +18,7 @@ export default function AboutPage() {
         alignItems: "center",
         justifyContent: "space-between",
       }}>
-        <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
           <div style={{
             width: 38, height: 38, borderRadius: 10,
             background: "var(--color-primary)",
@@ -37,10 +38,10 @@ export default function AboutPage() {
               {BRAIN_OS.headerEyebrow}
             </p>
           </div>
-        </a>
-        <a href="/" style={{ fontSize: 13, color: "var(--color-primary)", textDecoration: "none", fontWeight: 600 }}>
+        </Link>
+        <Link href="/" style={{ fontSize: 13, color: "var(--color-primary)", textDecoration: "none", fontWeight: 600 }}>
           ← Start Brain OS
-        </a>
+        </Link>
       </header>
 
       <main style={{ maxWidth: 720, margin: "0 auto", padding: "48px 24px 0" }}>
@@ -68,7 +69,7 @@ export default function AboutPage() {
             FocusRoute guides you through a structured mapping flow that captures attention style,
             executive-function friction, emotional regulation patterns, and day-to-day behavior loops.
             The output is not generic “tips”; it is your {BRAIN_OS.brainProfile} with a concrete next-step plan
-            via the {BRAIN_OS.protocol}.
+            via the {BRAIN_OS.engine} and {BRAIN_OS.protocol}.
           </p>
         </section>
 
@@ -77,9 +78,9 @@ export default function AboutPage() {
             Clinical Positioning (Important)
           </h2>
           <p style={{ fontSize: 15, color: "var(--color-text-body)", lineHeight: 1.7 }}>
-            FocusRoute is a profiling and screening experience — not a medical diagnosis. We use established
-            ADHD frameworks to identify symptom patterns and behavior signatures, but formal diagnosis must come
-            from a licensed clinician. If your profile flags significant impairment, we recommend clinical follow-up.
+            FocusRoute is an educational profiling experience — not a medical diagnosis. We map self-reported
+            behavior patterns and provide practical planning guidance. If you need medical advice, diagnosis, or treatment,
+            consult a licensed clinician.
           </p>
         </section>
 
@@ -113,7 +114,7 @@ export default function AboutPage() {
           <p style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 16 }}>
             Ready to map your brain profile?
           </p>
-          <a href="/" style={{
+          <Link href="/" style={{
             display: "inline-block",
             background: "#fff",
             color: "var(--color-primary)",
@@ -124,7 +125,7 @@ export default function AboutPage() {
             textDecoration: "none",
           }}>
             Start {BRAIN_OS.lineTm} →
-          </a>
+          </Link>
         </div>
 
         <div style={{
@@ -134,14 +135,14 @@ export default function AboutPage() {
           display: "flex",
           justifyContent: "center",
         }}>
-          <a href="/" style={{
+          <Link href="/" style={{
             fontSize: 14,
             color: "var(--color-primary)",
             textDecoration: "none",
             fontWeight: 600,
           }}>
             ← Back to FocusRoute Brain OS
-          </a>
+          </Link>
         </div>
       </main>
     </div>

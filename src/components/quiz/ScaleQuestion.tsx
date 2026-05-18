@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { m } from "framer-motion";
@@ -71,8 +71,8 @@ export function ScaleQuestion({ question }: ScaleQuestionProps) {
           style={{
             padding: "20px 20px",
             borderRadius: 16,
-            background: "rgba(74,127,165,0.09)",
-            border: "1px solid rgba(74,127,165,0.15)",
+            background: "var(--color-primary-tint)",
+            border: "1px solid var(--color-primary-ring)",
             position: "relative",
           }}
         >
@@ -82,7 +82,7 @@ export function ScaleQuestion({ question }: ScaleQuestionProps) {
             fontSize: 22, fontWeight: 800,
             color: "var(--color-primary)",
             lineHeight: 1, opacity: 0.7,
-          }}>"</span>
+          }}>&ldquo;</span>
           <p style={{
             fontSize: 15, color: "var(--color-text-body)",
             lineHeight: 1.65,

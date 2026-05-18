@@ -1,0 +1,207 @@
+import "server-only";
+
+import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
+import {
+  PRODUCT_TO_ENTITLEMENTS,
+  type ProductKey,
+  isProductKey,
+} from "./products";
+
+export const ENTITLEMENT_KEYS = [
+  "brain_profile",
+  "roadmap_28_day",
+  "bonus_toolkit",
+  "bonus_audio",
+  "bonus_explain_script",
+  "membership",
+  "retake_quiz",
+  "billing_portal",
+] as const;
+
+export type EntitlementKey = (typeof ENTITLEMENT_KEYS)[number];
+
+export function isEntitlementKey(value: string): value is EntitlementKey {
+  return (ENTITLEMENT_KEYS as readonly string[]).includes(value);
+}
+
+export function entitlementsGrantedByProduct(
+  product: ProductKey,
+): readonly EntitlementKey[] {
+  return PRODUCT_TO_ENTITLEMENTS[product] as readonly EntitlementKey[];
+}
+
+export function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+/** Active = active row and (no ends_at or ends_at in the future). */
+export async function getActiveEntitlementKindsForUser(
+  userId: string,
+): Promise<Set<EntitlementKey>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("entitlements")
+    .select("kind, ends_at")
+    .eq("user_id", userId)
+    .eq("active", true);
+
+  if (error || !data) {
+    return new Set();
+  }
+
+  const nowMs = Date.now();
+  const out = new Set<EntitlementKey>();
+  for (const row of data) {
+    if (row.ends_at != null && new Date(row.ends_at).getTime() <= nowMs) {
+      continue;
+    }
+    if (row.kind && isEntitlementKey(row.kind)) {
+      out.add(row.kind);
+    }
+  }
+  return out;
+}
+
+export async function userHasEntitlement(
+  userId: string,
+  kind: EntitlementKey,
+): Promise<boolean> {
+  const kinds = await getActiveEntitlementKindsForUser(userId);
+  return kinds.has(kind);
+}
+
+export async function userHasAnyEntitlement(
+  userId: string,
+  kinds: readonly EntitlementKey[],
+): Promise<boolean> {
+  const active = await getActiveEntitlementKindsForUser(userId);
+  return kinds.some((k) => active.has(k));
+}
+
+/**
+ * Record a product purchase for an email before the user account exists.
+ * Call from trusted server code only (e.g. Stripe webhook with service role).
+ */
+export async function grantProductByEmail(
+  email: string,
+  productKey: ProductKey,
+  metadata: Record<string, unknown> = {},
+): Promise<void> {
+  const admin = createAdminClient();
+  const normalized = normalizeEmail(email);
+  const { error } = await admin.from("email_product_grants").insert({
+    email: normalized,
+    product_key: productKey,
+    metadata,
+  });
+  if (error) {
+    throw new Error(`grantProductByEmail: ${error.message}`);
+  }
+}
+
+/**
+ * Move pending email grants into `entitlements` for this user. Idempotent per kind.
+ */
+export async function claimEmailProductGrantsForUser(
+  userId: string,
+  email: string,
+): Promise<void> {
+  const admin = createAdminClient();
+  const normalized = normalizeEmail(email);
+
+  const { data: grants, error: fetchError } = await admin
+    .from("email_product_grants")
+    .select("id, product_key, metadata")
+    .eq("email", normalized)
+    .is("claimed_user_id", null);
+
+  if (fetchError) {
+    throw new Error(`claimEmailProductGrantsForUser fetch: ${fetchError.message}`);
+  }
+
+  if (grants?.length) {
+    for (const grant of grants) {
+      if (!grant.id || typeof grant.product_key !== "string") continue;
+      if (!isProductKey(grant.product_key)) continue;
+
+      const kinds = entitlementsGrantedByProduct(grant.product_key);
+
+      for (const kind of kinds) {
+        const { data: existing } = await admin
+          .from("entitlements")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("kind", kind)
+          .eq("active", true)
+          .maybeSingle();
+
+        if (existing) continue;
+
+        const grantMeta =
+          grant.metadata &&
+          typeof grant.metadata === "object" &&
+          !Array.isArray(grant.metadata)
+            ? (grant.metadata as Record<string, unknown>)
+            : {};
+
+        const { error: insErr } = await admin.from("entitlements").insert({
+          user_id: userId,
+          kind,
+          active: true,
+          metadata: {
+            source: "email_product_grant",
+            grant_id: grant.id,
+            product_key: grant.product_key,
+            ...grantMeta,
+          },
+        });
+        if (insErr) {
+          throw new Error(`claimEmailProductGrantsForUser insert: ${insErr.message}`);
+        }
+      }
+
+      const { error: updErr } = await admin
+        .from("email_product_grants")
+        .update({
+          claimed_at: new Date().toISOString(),
+          claimed_user_id: userId,
+        })
+        .eq("id", grant.id)
+        .is("claimed_user_id", null);
+
+      if (updErr) {
+        throw new Error(`claimEmailProductGrantsForUser update: ${updErr.message}`);
+      }
+    }
+  }
+
+  await linkAnonymousQuizResultsToUser(userId, email);
+}
+
+/**
+ * Attach anonymous quiz rows (saved before login) to the user account by normalized email.
+ */
+export async function linkAnonymousQuizResultsToUser(
+  userId: string,
+  email: string,
+): Promise<void> {
+  const admin = createAdminClient();
+  const normalized = normalizeEmail(email);
+  const { error } = await admin
+    .from("quiz_results")
+    .update({ user_id: userId })
+    .is("user_id", null)
+    .eq("email", normalized);
+
+  if (error) {
+    console.error("[entitlements] linkAnonymousQuizResultsToUser", error.message);
+  }
+}
+
+/** Any of these counts as paid access to the account dashboard. */
+export const DASHBOARD_ENTITLEMENTS: readonly EntitlementKey[] = [
+  "brain_profile",
+  "roadmap_28_day",
+  "membership",
+];

@@ -1,0 +1,1 @@
+Update the FocusRoute dashboard to use real Supabase entitlements. Do not use localStorage as proof of purchase. Read active entitlements from public.entitlements. Protect dashboard pages server-side. Show locked and unlocked cards. Do not change Stripe webhook logic. Run npm run lint and npm run build.

@@ -1,27 +1,134 @@
-"use client";
+﻿"use client";
 
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { m } from "framer-motion";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ReferenceDot, ResponsiveContainer } from "recharts";
 import { useQuizStore } from "@/store/quizStore";
-import { updateSessionAnswers } from "@/lib/session";
 import { safeName } from "@/lib/personalization";
-
-const data = [
-  { week: "Now",  score: 82 },
-  { week: "Wk 1", score: 65 },
-  { week: "Wk 2", score: 48 },
-  { week: "Wk 3", score: 30 },
-  { week: "Wk 4", score: 16 },
-];
+import { getSignatureFromAnswers } from "@/lib/signature";
+import { setPersistedQuizResultId } from "@/lib/quizResultId";
+import { createClient } from "@/lib/supabase/client";
 
 export function ChartScreen() {
-  const { name, setStep, retakeMode, answers } = useQuizStore();
+  const {
+    name,
+    email,
+    setEmail,
+    setStep,
+    retakeMode,
+    answers,
+    quizResultId,
+    setQuizResultId,
+  } = useQuizStore();
   const router = useRouter();
   const displayName = safeName(name, "you");
+  const signature = getSignatureFromAnswers(answers);
+  const saveStarted = useRef(false);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [saveEmail, setSaveEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (cancelled) return;
+
+        const authEmail =
+          typeof user?.email === "string" && user.email.includes("@")
+            ? user.email
+            : null;
+        const funnelEmail = email?.includes("@") ? email : null;
+        const resolved = authEmail ?? funnelEmail;
+
+        if (authEmail && authEmail !== email) {
+          setEmail(authEmail);
+        }
+
+        if (process.env.NODE_ENV === "development") {
+          console.info("[ChartScreen] quiz-result email resolve", {
+            authenticated: Boolean(authEmail),
+            submittedEmailPresent: Boolean(funnelEmail),
+            finalEmail: resolved ?? null,
+          });
+        }
+
+        setSaveEmail(resolved);
+        setAuthChecked(true);
+      } catch (e) {
+        if (!cancelled) {
+          console.warn("[ChartScreen] auth check failed", e);
+          setSaveEmail(email?.includes("@") ? email : null);
+          setAuthChecked(true);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [email, setEmail]);
+
+  useEffect(() => {
+    if (!authChecked) {
+      return;
+    }
+    if (quizResultId) {
+      return;
+    }
+    if (!saveEmail?.includes("@") || answers.length === 0) {
+      return;
+    }
+    if (saveStarted.current) {
+      return;
+    }
+    saveStarted.current = true;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/quiz-result", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: saveEmail,
+            name,
+            answers,
+          }),
+        });
+        const data = (await res.json()) as {
+          quiz_result_id?: string;
+          error?: string;
+        };
+        if (!res.ok || !data.quiz_result_id) {
+          console.warn(
+            "[ChartScreen] quiz-result save failed",
+            data.error ?? res.status,
+          );
+          saveStarted.current = false;
+          return;
+        }
+        if (!cancelled) {
+          setQuizResultId(data.quiz_result_id);
+          setPersistedQuizResultId(data.quiz_result_id);
+        }
+      } catch (e) {
+        console.warn("[ChartScreen] quiz-result save error", e);
+        saveStarted.current = false;
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authChecked, saveEmail, name, answers, quizResultId, setQuizResultId]);
 
   const handleRetakeDone = () => {
-    updateSessionAnswers(answers);
     router.push("/dashboard");
   };
 
@@ -32,73 +139,185 @@ export function ChartScreen() {
       exit={{ opacity: 0, x: -40 }}
       transition={{ duration: 0.28 }}
       style={{
-        minHeight: "100vh",
-        display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center",
+        minHeight: "100dvh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
         padding: "40px 24px",
       }}
     >
-      <div style={{ width: "100%", maxWidth: 520, display: "flex", flexDirection: "column", gap: 24 }}>
-
-        {/* Chart card */}
-        <div style={{
-          background: "var(--color-bg-card)",
-          borderRadius: 28, padding: "24px 20px 16px",
-          boxShadow: "var(--shadow-card)",
-        }}>
-          <p style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text)", textAlign: "center", marginBottom: 20 }}>
-            Projection: your ADHD symptom progression
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 520,
+          display: "flex",
+          flexDirection: "column",
+          gap: 24,
+        }}
+      >
+        <div
+          style={{
+            background: "var(--color-bg-card)",
+            borderRadius: "var(--radius-xl)",
+            padding: "24px 20px 20px",
+            boxShadow: "var(--shadow-card)",
+          }}
+        >
+          <p
+            style={{
+              fontSize: 11,
+              color: "var(--color-text-muted)",
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              fontWeight: 700,
+              marginBottom: 8,
+            }}
+          >
+            Partial profile reveal
+          </p>
+          <h2
+            style={{
+              fontSize: 24,
+              fontWeight: 900,
+              color: "var(--color-text)",
+              lineHeight: 1.2,
+              marginBottom: 8,
+            }}
+          >
+            {displayName}, your Cognitive Signature™ is{" "}
+            <span style={{ color: "var(--color-cognitive)" }}>
+              {signature.signature}
+            </span>
+          </h2>
+          <p
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: "var(--color-cognitive)",
+              marginBottom: 8,
+            }}
+          >
+            {signature.title}
+          </p>
+          <p
+            style={{
+              fontSize: 14,
+              color: "var(--color-text-body)",
+              lineHeight: 1.65,
+            }}
+          >
+            {signature.preview}
           </p>
 
-          <div style={{ position: "relative" }}>
-            {/* After label */}
-            <div style={{
-              position: "absolute", bottom: 32, right: 12, zIndex: 10,
-              background: "var(--color-primary-tint)", borderRadius: 8,
-              padding: "3px 10px",
-              fontSize: 12, fontWeight: 700, color: "var(--color-primary)",
-              textAlign: "center", lineHeight: 1.4,
-            }}>
-              After<br />4 weeks
-            </div>
-
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={data} margin={{ top: 28, right: 16, left: -24, bottom: 4 }}>
-                <defs>
-                  <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%"   stopColor="#E87450" />
-                    <stop offset="100%" stopColor="#4A7FA5" />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis dataKey="week"
-                  tick={{ fill: "var(--color-text-muted)", fontSize: 12 }}
-                  axisLine={false} tickLine={false} />
-                <YAxis hide domain={[0, 100]} />
-                <Line
-                  type="monotone" dataKey="score"
-                  stroke="url(#lineGrad)" strokeWidth={3} dot={false}
+          <div
+            style={{
+              marginTop: 16,
+              display: "flex",
+              flexDirection: "column",
+              gap: 10,
+            }}
+          >
+            {signature.strengths.map((bullet) => (
+              <div
+                key={bullet}
+                style={{ display: "flex", alignItems: "flex-start", gap: 10 }}
+              >
+                <span
+                  style={{
+                    marginTop: 4,
+                    width: 8,
+                    height: 8,
+                    borderRadius: "var(--radius-pill)",
+                    background: "var(--color-cognitive)",
+                  }}
                 />
-                <ReferenceDot x="Now"  y={82} r={6} fill="#FDF1EC" stroke="#E87450" strokeWidth={2} />
-                <ReferenceDot x="Wk 4" y={16} r={6} fill="var(--color-primary-tint)" stroke="var(--color-primary)" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
+                <p
+                  style={{
+                    fontSize: 13,
+                    color: "var(--color-text-body)",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {bullet}
+                </p>
+              </div>
+            ))}
           </div>
+        </div>
 
-          <p style={{ fontSize: 11, color: "var(--color-text-muted)", textAlign: "center", marginTop: 8 }}>
-            This chart is for illustration purposes only
+        <div
+          style={{
+            background: "var(--color-bg-card)",
+            borderRadius: 24,
+            padding: "18px 18px",
+            boxShadow: "var(--shadow-card)",
+            border: "1px solid var(--color-border)",
+          }}
+        >
+          <p
+            style={{
+              fontSize: 13,
+              fontWeight: 800,
+              color: "var(--color-text)",
+              marginBottom: 10,
+            }}
+          >
+            Unlock your full FocusRoute Brain Profile™
+          </p>
+          <div
+            style={{
+              filter: "blur(0.3px)",
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}
+          >
+            {signature.unlockTeaser.map((line) => (
+              <div
+                key={line}
+                style={{
+                  borderRadius: "var(--radius-sm)",
+                  background: "var(--color-cognitive-tint)",
+                  border: "1px solid var(--color-border)",
+                  padding: "10px 12px",
+                }}
+              >
+                <p style={{ fontSize: 12, color: "var(--color-text-body)" }}>
+                  {line}
+                </p>
+              </div>
+            ))}
+          </div>
+          <p
+            style={{
+              fontSize: 11,
+              color: "var(--color-text-muted)",
+              marginTop: 10,
+            }}
+          >
+            This preview is educational and not a medical diagnosis.
           </p>
         </div>
 
-        {/* Personalized message */}
-        <m.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-            <p style={{ fontSize: 18, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.4 }}>
-            <span style={{ color: "var(--color-primary)" }}>{displayName},</span>
-            {" "}your results are ready — unlock now and start your transformation!
+        <m.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <p
+            style={{
+              fontSize: 18,
+              fontWeight: 800,
+              color: "var(--color-text)",
+              lineHeight: 1.4,
+            }}
+          >
+            <span style={{ color: "var(--color-cognitive)" }}>{displayName},</span>{" "}
+            your full Profile-to-Protocol™ plan is ready to unlock.
           </p>
         </m.div>
 
-        {/* CTA */}
         {retakeMode ? (
           <m.button
             initial={{ opacity: 0, y: 10 }}
@@ -106,14 +325,19 @@ export function ChartScreen() {
             transition={{ delay: 0.3 }}
             onClick={handleRetakeDone}
             style={{
-              width: "100%", padding: "18px",
-              borderRadius: 16, fontSize: 16, fontWeight: 700,
-              border: "none", cursor: "pointer",
-              background: "var(--color-primary)", color: "#fff",
+              width: "100%",
+              padding: "18px",
+              borderRadius: "var(--radius-md)",
+              fontSize: 16,
+              fontWeight: 700,
+              border: "none",
+              cursor: "pointer",
+              background: "var(--color-primary)",
+              color: "#fff",
               boxShadow: "var(--shadow-btn-primary)",
             }}
           >
-            Salvar novo resultado →
+            Save New Profile Preview
           </m.button>
         ) : (
           <m.button
@@ -122,17 +346,23 @@ export function ChartScreen() {
             transition={{ delay: 0.3 }}
             onClick={() => setStep("paywall")}
             style={{
-              width: "100%", padding: "18px",
-              borderRadius: 16, fontSize: 16, fontWeight: 700,
-              border: "none", cursor: "pointer",
-              background: "var(--color-primary)", color: "#fff",
+              width: "100%",
+              padding: "18px",
+              borderRadius: "var(--radius-md)",
+              fontSize: 16,
+              fontWeight: 700,
+              border: "none",
+              cursor: "pointer",
+              background: "var(--color-primary)",
+              color: "#fff",
               boxShadow: "var(--shadow-btn-primary)",
             }}
           >
-            See my results →
+            Unlock My Full Profile-to-Protocol™ Plan
           </m.button>
         )}
       </div>
     </m.div>
   );
 }
+

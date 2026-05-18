@@ -1,144 +1,258 @@
-import type { Metadata } from "next";
-import { BRAIN_OS } from "@/lib/positioning";
+﻿import type { Metadata } from "next";
+
+import { LegalLayout } from "@/components/legal/LegalLayout";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy · FocusRoute Brain OS",
-  description: "Learn how FocusRoute handles Brain OS profile data, payment data, and privacy requests.",
+  title: "Privacy Policy · FocusRoute",
+  description:
+    "How FocusRoute collects, uses, and protects your quiz data, account information, and payment details.",
+};
+
+const h2: React.CSSProperties = {
+  fontSize: 20,
+  fontWeight: 800,
+  color: "var(--color-text)",
+  marginBottom: 12,
+  marginTop: 0,
+  letterSpacing: "-0.01em",
+};
+
+const p: React.CSSProperties = {
+  fontSize: 15,
+  color: "var(--color-text-body)",
+  lineHeight: 1.75,
+  marginBottom: 12,
+};
+
+const section: React.CSSProperties = { marginBottom: 44 };
+
+const ul: React.CSSProperties = {
+  fontSize: 15,
+  color: "var(--color-text-body)",
+  lineHeight: 1.75,
+  paddingLeft: 22,
+  marginBottom: 12,
 };
 
 export default function PrivacyPage() {
   return (
-    <div style={{ minHeight: "100vh", background: "var(--color-bg-page)", padding: "0 0 80px" }}>
-      <header style={{
-        background: "var(--color-bg-card)",
-        borderBottom: "1px solid var(--color-border)",
-        padding: "14px 24px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-      }}>
-        <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-          <div style={{
-            width: 38, height: 38, borderRadius: 10,
-            background: "var(--color-primary)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            flexShrink: 0,
-          }}>
-            <svg width="22" height="16" viewBox="0 0 22 16" fill="none">
-              <path d="M1 8 Q3 3 5 8 Q7 13 9 8 Q11 3 13 8 Q15 13 17 8 Q19 3 21 8"
-                stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-            </svg>
-          </div>
-          <div style={{ lineHeight: 1.1 }}>
-            <p style={{ fontSize: 13, fontWeight: 800, color: "var(--color-text)", letterSpacing: "-0.01em" }}>
-              FocusRoute
-            </p>
-            <p style={{ fontSize: 11, color: "var(--color-text-muted)", letterSpacing: "0.08em", fontWeight: 500 }}>
-              {BRAIN_OS.headerEyebrow}
-            </p>
-          </div>
-        </a>
-        <a href="/" style={{ fontSize: 13, color: "var(--color-primary)", textDecoration: "none", fontWeight: 600 }}>
-          ← Start Brain OS
-        </a>
-      </header>
+    <LegalLayout title="Privacy Policy" lastUpdated="May 17, 2026">
 
-      <main style={{ maxWidth: 720, margin: "0 auto", padding: "48px 24px 0" }}>
-        <h1 style={{ fontSize: "clamp(26px, 5vw, 36px)", marginBottom: 8, color: "var(--color-text)" }}>
-          Privacy Policy
-        </h1>
-        <p style={{ fontSize: 13, color: "var(--color-text-muted)", marginBottom: 48 }}>
-          Last updated: May 2026
+      <div
+        style={{
+          borderRadius: 14,
+          padding: "16px 18px",
+          background: "var(--color-primary-tint)",
+          border: "1px solid var(--color-border)",
+          marginBottom: 44,
+        }}
+      >
+        <p style={{ ...p, marginBottom: 0, fontWeight: 600 }}>
+          FocusRoute is not a medical provider, healthcare organisation, or clinical service. The
+          information we collect is used to deliver a self-understanding and productivity support
+          product — not to diagnose, treat, or provide medical advice.
+        </p>
+      </div>
+
+      <section style={section}>
+        <h2 style={h2}>1. Information We Collect</h2>
+
+        <p style={{ ...p, fontWeight: 700, color: "var(--color-text)" }}>
+          Quiz answers and focus-pattern data
+        </p>
+        <p style={p}>
+          When you complete the FocusRoute assessment, we collect your self-reported answers about
+          focus patterns, attention, energy, executive function, and related experiences. These
+          answers are used to generate your Brain Profile, ADHD Signature™, and Executive Function
+          Radar™. This data is sensitive by nature — we treat it with care, store it securely, and
+          do not use it for advertising profiling or sell it to third parties.
         </p>
 
-        <section style={{ marginBottom: 40 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--color-text)", marginBottom: 12 }}>
-            Data We Collect
-          </h2>
-          <p style={{ fontSize: 15, color: "var(--color-text-body)", lineHeight: 1.7 }}>
-            FocusRoute collects only the information required to deliver {BRAIN_OS.lineTm}. This includes your
-            response data, profile outputs, and (if you purchase) the contact details needed to deliver access.
-            We do not require government ID or unrelated personal documents.
-          </p>
-        </section>
+        <p style={{ ...p, fontWeight: 700, color: "var(--color-text)" }}>
+          Account and login data
+        </p>
+        <p style={p}>
+          If you create an account, we collect your email address and optional display name.
+          Authentication is handled by Supabase, which manages session tokens and login state.
+          We do not store passwords in plain text. Account data is linked to your quiz results
+          and purchased entitlements so your Brain Profile and library are accessible when you
+          sign in.
+        </p>
 
-        <section style={{ marginBottom: 40 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--color-text)", marginBottom: 12 }}>
-            How We Use It
-          </h2>
-          <p style={{ fontSize: 15, color: "var(--color-text-body)", lineHeight: 1.7 }}>
-            Your responses are used to generate your profile and protocol outputs. We may use anonymized aggregate
-            patterns to improve model quality and user experience. We do not sell individual personal data for ad targeting.
-          </p>
-        </section>
+        <p style={{ ...p, fontWeight: 700, color: "var(--color-text)" }}>
+          Payment data handled by Stripe
+        </p>
+        <p style={p}>
+          All payments are processed by Stripe. FocusRoute never sees, receives, or stores your
+          full card number, CVV, or bank account details. We receive a payment confirmation event
+          from Stripe (via webhook) that includes your email address, the amount paid, and the
+          product purchased. Stripe&apos;s own Privacy Policy governs how they handle your payment
+          data and is available at stripe.com/privacy.
+        </p>
 
-        <section style={{ marginBottom: 40 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--color-text)", marginBottom: 12 }}>
-            Stripe &amp; Third Parties
-          </h2>
-          <p style={{ fontSize: 15, color: "var(--color-text-body)", lineHeight: 1.7 }}>
-            Payments for paid Brain OS products are processed securely by Stripe. FocusRoute never sees or stores
-            your full credit card number. Stripe's privacy policy governs all payment data and is available at
-            stripe.com/privacy. We use Vercel for hosting and may use analytics tools that process anonymized
-            usage data. All third-party providers are bound by data processing agreements.
-          </p>
-        </section>
+        <p style={{ ...p, fontWeight: 700, color: "var(--color-text)" }}>
+          Automatic usage data
+        </p>
+        <p style={p}>
+          We may collect basic, anonymised usage information such as page visits and feature
+          interactions to understand how the product is being used. This data does not identify
+          individual users. We do not currently run advertising analytics or cross-site tracking.
+        </p>
+      </section>
 
-        <section style={{ marginBottom: 40 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--color-text)", marginBottom: 12 }}>
-            Data Retention
-          </h2>
-          <p style={{ fontSize: 15, color: "var(--color-text-body)", lineHeight: 1.7 }}>
-            Session data stored in your browser (via localStorage/sessionStorage) remains client-side unless needed
-            for paid fulfillment workflows. Contact and transaction-related records are retained only as long as
-            operationally necessary, legal requirements permitting. Aggregate anonymized metrics may be retained
-            for product improvement.
-          </p>
-        </section>
+      <section style={section}>
+        <h2 style={h2}>2. How We Use Your Information</h2>
+        <p style={p}>We use the information we collect to:</p>
+        <ul style={ul}>
+          <li>Generate and display your Brain Profile, protocol, and bonus library</li>
+          <li>Deliver the content you have purchased and manage your account entitlements</li>
+          <li>Send transactional emails (purchase confirmation, login links)</li>
+          <li>Improve the product using aggregated, anonymised usage patterns</li>
+          <li>Respond to support requests and account inquiries</li>
+        </ul>
+        <p style={p}>
+          We do not sell your personal data. We do not use your quiz answers for advertising
+          targeting. We do not share your individual data with third parties except as described in
+          the Third-Party Services section below.
+        </p>
+      </section>
 
-        <section style={{ marginBottom: 40 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--color-text)", marginBottom: 12 }}>
-            Your Rights
-          </h2>
-          <p style={{ fontSize: 15, color: "var(--color-text-body)", lineHeight: 1.7 }}>
-            You have the right to access, correct, or delete any personal data we hold about you. You may also
-            withdraw consent for email communications at any time by clicking the unsubscribe link in any message
-            we send. To exercise any of these rights, contact us at the address below. We will respond to all
-            requests within 30 days.
-          </p>
-        </section>
+      <section style={section}>
+        <h2 style={h2}>3. How We Store and Protect Data</h2>
+        <p style={p}>
+          Your account data and quiz results are stored in a Supabase-managed PostgreSQL database
+          with row-level security enabled, meaning your data is scoped to your account. All data
+          is transmitted over HTTPS. Access to production data is restricted to authorised team
+          members only.
+        </p>
+        <p style={p}>
+          FocusRoute is not a healthcare provider and is not covered by HIPAA or equivalent medical
+          privacy regulations. We are not able to guarantee any specific level of healthcare-grade
+          data protection. If you have serious concerns about the sensitivity of your information,
+          please consider that before submitting it.
+        </p>
+      </section>
 
-        <section style={{ marginBottom: 40 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--color-text)", marginBottom: 12 }}>
-            Contact
-          </h2>
-          <p style={{ fontSize: 15, color: "var(--color-text-body)", lineHeight: 1.7 }}>
-            For privacy-related questions or data requests, please email{" "}
-            <a href="mailto:privacy@getfocusroute.com" style={{ color: "var(--color-primary)", fontWeight: 600 }}>
-              privacy@getfocusroute.com
-            </a>
-            . FocusRoute is operated independently and takes your privacy seriously. We are committed to handling
-            your information with care and transparency.
-          </p>
-        </section>
+      <section style={section}>
+        <h2 style={h2}>4. Third-Party Services</h2>
+        <ul style={ul}>
+          <li>
+            <strong>Stripe</strong> — processes all payments. Stripe&apos;s privacy policy applies to
+            payment data: stripe.com/privacy
+          </li>
+          <li>
+            <strong>Supabase</strong> — provides database, authentication, and row-level data
+            security. Supabase&apos;s privacy policy applies: supabase.com/privacy
+          </li>
+          <li>
+            <strong>Vercel</strong> — hosts the FocusRoute application. Basic server logs may be
+            retained per Vercel&apos;s standard practices: vercel.com/legal/privacy-policy
+          </li>
+          <li>
+            <strong>Analytics</strong> — we may add privacy-respecting analytics in the future and
+            will update this policy accordingly. No advertising trackers are currently in use.
+          </li>
+        </ul>
+        <p style={p}>
+          All third-party providers are selected for their data security standards. We do not use
+          providers that sell your data for advertising.
+        </p>
+      </section>
 
-        <div style={{
-          marginTop: 56,
-          paddingTop: 24,
-          borderTop: "1px solid var(--color-border)",
-          display: "flex",
-          justifyContent: "center",
-        }}>
-          <a href="/" style={{
-            fontSize: 14,
-            color: "var(--color-primary)",
-            textDecoration: "none",
-            fontWeight: 600,
-          }}>
-            ← Back to FocusRoute Brain OS
+      <section style={section}>
+        <h2 style={h2}>5. Cookies and Local Storage</h2>
+        <p style={p}>
+          FocusRoute uses the following limited browser storage:
+        </p>
+        <ul style={ul}>
+          <li>
+            <strong>Authentication cookies</strong> — Supabase sets session cookies to keep you
+            logged in. These are necessary for the dashboard to function.
+          </li>
+          <li>
+            <strong>Session storage</strong> — used to recover an in-progress quiz if your browser
+            session ends unexpectedly. This data is cleared when the tab is closed.
+          </li>
+        </ul>
+        <p style={p}>
+          We do not use advertising cookies, third-party tracking pixels, or cross-site identifiers.
+          Paid access and entitlements are verified server-side — not from browser storage.
+        </p>
+      </section>
+
+      <section style={section}>
+        <h2 style={h2}>6. Data Retention</h2>
+        <p style={p}>
+          We retain your account data and quiz results for as long as your account is active or as
+          needed to provide the services you have purchased. If you request account deletion, we
+          will remove your personal data within 30 days, except where retention is required by law
+          (for example, payment records for tax purposes).
+        </p>
+        <p style={p}>
+          Aggregated, anonymised data (with no individual identifiers) may be retained indefinitely
+          for product improvement purposes.
+        </p>
+      </section>
+
+      <section style={section}>
+        <h2 style={h2}>7. Your Rights and Deletion Requests</h2>
+        <p style={p}>Depending on your location, you may have the right to:</p>
+        <ul style={ul}>
+          <li>Access a copy of the personal data we hold about you</li>
+          <li>Correct inaccurate data</li>
+          <li>Request deletion of your account and personal data</li>
+          <li>Withdraw consent for email communications (unsubscribe link in any email we send)</li>
+          <li>Object to or restrict certain processing of your data</li>
+        </ul>
+        <p style={p}>
+          To exercise any of these rights, email{" "}
+          <a
+            href="mailto:privacy@getfocusroute.com"
+            style={{ color: "var(--color-primary)", fontWeight: 600 }}
+          >
+            privacy@getfocusroute.com
           </a>
-        </div>
-      </main>
-    </div>
+          . We will respond within 30 days.
+        </p>
+      </section>
+
+      <section style={section}>
+        <h2 style={h2}>8. Children&apos;s Privacy</h2>
+        <p style={p}>
+          FocusRoute is not intended for use by anyone under the age of 13. We do not knowingly
+          collect personal information from children under 13. If we become aware that a child
+          under 13 has provided us with personal data, we will delete it promptly. If you believe
+          a child has submitted data to our service, please contact us at privacy@getfocusroute.com.
+        </p>
+      </section>
+
+      <section style={section}>
+        <h2 style={h2}>9. Changes to This Policy</h2>
+        <p style={p}>
+          We may update this Privacy Policy from time to time. When we do, we will update the
+          &ldquo;Last updated&rdquo; date at the top of this page. Continued use of FocusRoute after changes
+          are posted constitutes acceptance of the revised policy. For significant changes, we may
+          send a notice to the email address on your account.
+        </p>
+      </section>
+
+      <section style={section}>
+        <h2 style={h2}>10. Contact</h2>
+        <p style={p}>
+          For privacy-related questions, data access requests, or deletion requests, contact us at:{" "}
+          <a
+            href="mailto:privacy@getfocusroute.com"
+            style={{ color: "var(--color-primary)", fontWeight: 600 }}
+          >
+            privacy@getfocusroute.com
+          </a>
+        </p>
+        <p style={p}>
+          FocusRoute is operated as an independent product. We take your privacy seriously and are
+          committed to handling your information with care and transparency.
+        </p>
+      </section>
+
+    </LegalLayout>
   );
 }

@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FocusRoute Brain OS™
 
-## Getting Started
+FocusRoute is a Next.js funnel product that maps self-reported focus and execution patterns, reveals a partial ADHD Signature™, and converts it into a paid Profile-to-Protocol™ experience with Stripe checkout.
 
-First, run the development server:
+## Funnel Flow
+
+The primary journey is:
+
+`Landing -> Quiz -> Loading -> Email -> Name -> Partial Profile Reveal -> Paywall -> Upsell -> Subscription -> Success`
+
+Key positioning terms used throughout the product:
+
+- FocusRoute Brain Profile™
+- FocusRoute Brain OS™
+- Cognitive Mapping Assessment™
+- ADHD Signature™
+- Executive Function Radar™
+- Profile-to-Protocol™ Engine
+- 28-Day Protocol™
+- "This Is Me" 7-Day Guarantee
+
+## Tech Stack
+
+- Next.js (App Router)
+- React + TypeScript
+- Supabase Auth + Postgres (`@supabase/ssr`, `@supabase/supabase-js`)
+- Framer Motion
+- Zustand for funnel state
+- Stripe Elements for payment and subscription flows
+
+## Local Setup
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Configure environment variables in `.env.local` (see `.env.example`):
+
+**Supabase (required for login + dashboard)**
+
+Production project: **focusroute** · ref **`xhzpmeplpsgnhfzgleaz`** · URL **`https://xhzpmeplpsgnhfzgleaz.supabase.co`** (region `us-west-2`).
+
+- `NEXT_PUBLIC_SUPABASE_URL` — must equal the project URL above for FocusRoute
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — anon/public key from the dashboard (never commit real values)
+- `SUPABASE_SERVICE_ROLE_KEY` — service role key (server-only; never `NEXT_PUBLIC_*`; never import `@/lib/supabase/admin` from Client Components)
+- Recommended: `NEXT_PUBLIC_SUPABASE_PROJECT_REF=xhzpmeplpsgnhfzgleaz` — runtime validates hostname matches this ref when set
+
+**Stripe**
+
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+- `STRIPE_SECRET_KEY`
+- `NEXT_PUBLIC_PRICE_ASSESSMENT`
+- `NEXT_PUBLIC_PRICE_ROADMAP`
+- `NEXT_PUBLIC_PRICE_MONTHLY`
+- `NEXT_PUBLIC_PRICE_ANNUAL`
+
+**Vercel / production:** add the same variables in the project’s Environment Variables UI (no secrets in the repo).
+
+Optional UI pricing overrides:
+
+- `NEXT_PUBLIC_UI_PAYWALL_USD`
+- `NEXT_PUBLIC_UI_PAYWALL_ANCHOR_USD`
+- `NEXT_PUBLIC_UI_UPSELL_USD`
+- `NEXT_PUBLIC_UI_UPSELL_ANCHOR_USD`
+- `NEXT_PUBLIC_UI_MEMBERSHIP_MONTHLY_USD`
+- `NEXT_PUBLIC_UI_MEMBERSHIP_ANNUAL_USD`
+
+3. Start development:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+If Next warns about multiple lockfiles or env vars look “missing” during build, run commands from this repo root (`mental/`); `next.config.ts` pins Turbopack to this folder.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Validation Commands
 
-## Learn More
+Use these checks before shipping:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npx tsc --noEmit
+npm run lint
+npm run build
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Compliance Notes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Copy must remain in English.
+- Product messaging is educational profiling only.
+- Do not claim diagnosis, cure, treatment, or guaranteed medical outcomes.
+- Keep explicit disclaimers where relevant: FocusRoute is not a medical diagnosis.
 
-## Deploy on Vercel
+## Stripe and Flow Safety
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Keep the funnel step sequence intact.
+- Do not break `setStep(...)` transitions in quiz screens.
+- Do not alter Stripe API endpoints or price-id wiring unless intentionally migrating billing behavior.

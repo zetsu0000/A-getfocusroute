@@ -1,8 +1,10 @@
 "use client";
 
 import dynamic                      from "next/dynamic";
+import { useEffect } from "react";
 import { AnimatePresence, m }  from "framer-motion";
 import { useQuizStore }             from "@/store/quizStore";
+import { getPersistedQuizResultId } from "@/lib/quizResultId";
 import { QuizEngine }               from "@/components/quiz/QuizEngine";
 
 function ScreenSkeleton() {
@@ -27,8 +29,7 @@ const SuccessScreen      = dynamic(() => import("@/components/success/SuccessScr
 
 // The quiz step uses opacity:0.01 (not 0) so the browser can measure LCP
 // immediately on first paint instead of waiting for the animation to complete.
-const fade = (key: string, isFirst = false) => ({
-  key,
+const fade = (isFirst = false) => ({
   initial:    { opacity: isFirst ? 0.01 : 0, x: isFirst ? 0 : 30  } as const,
   animate:    { opacity: 1, x: 0   } as const,
   exit:       { opacity: 0, x: -30 } as const,
@@ -37,60 +38,68 @@ const fade = (key: string, isFirst = false) => ({
 
 export default function Home() {
   const step = useQuizStore((s) => s.currentStep);
+  const setQuizResultId = useQuizStore((s) => s.setQuizResultId);
+
+  useEffect(() => {
+    const id = getPersistedQuizResultId();
+    if (id) {
+      setQuizResultId(id);
+    }
+  }, [setQuizResultId]);
 
   return (
     <main>
     <AnimatePresence mode="wait">
       {step === "quiz" && (
-        <m.div {...fade("quiz", true)}>
+        <m.div key="quiz" {...fade(true)}>
           <QuizEngine />
         </m.div>
       )}
 
       {step === "loading" && (
-        <m.div {...fade("loading")}>
+        <m.div key="loading" {...fade()}>
           <LoadingScreen />
         </m.div>
       )}
 
       {step === "email" && (
-        <m.div {...fade("email")}>
+        <m.div key="email" {...fade()}>
           <EmailScreen />
         </m.div>
       )}
 
       {step === "name" && (
-        <m.div {...fade("name")}>
+        <m.div key="name" {...fade()}>
           <NameScreen />
         </m.div>
       )}
 
       {step === "chart" && (
-        <m.div {...fade("chart")}>
+        <m.div key="chart" {...fade()}>
           <ChartScreen />
         </m.div>
       )}
 
       {step === "paywall" && (
-        <m.div {...fade("paywall")}>
+        <m.div key="paywall" {...fade()}>
           <PaywallScreen />
         </m.div>
       )}
 
       {step === "upsell" && (
-        <m.div {...fade("upsell")}>
+        <m.div key="upsell" {...fade()}>
           <UpsellScreen />
         </m.div>
       )}
 
       {step === "subscription" && (
-        <m.div {...fade("subscription")}>
+        <m.div key="subscription" {...fade()}>
           <SubscriptionScreen />
         </m.div>
       )}
 
       {step === "success" && (
-        <m.div {...fade("success")}>
+        <m.div key="success" {...fade()}>
           <SuccessScreen />
         </m.div>
       )}

@@ -19,9 +19,9 @@ export function scoreFromAnswers(answers: { questionId: string; selectedOptions:
 
 export function getSymptomLevel(score: number): LevelInfo {
   const clamped = Math.max(0, Math.min(100, score))
-  if (clamped <= 20) return { label: 'Low',       color: '#4A7FA5', bg: '#EAF2F8', pct: 20  }
-  if (clamped <= 40) return { label: 'Mild',      color: '#6AA3C8', bg: '#E8F4FB', pct: 38  }
-  if (clamped <= 60) return { label: 'Moderate',  color: '#F07000', bg: '#FEF0DC', pct: 62  }
-  if (clamped <= 80) return { label: 'High',      color: '#CC5C3A', bg: '#FDEEE8', pct: 80  }
-  return                     { label: 'Very High', color: '#A82E2E', bg: '#FCDEDE', pct: 95  }
+  if (clamped <= 20) return { label: 'Low',       color: 'var(--color-primary)', bg: 'var(--color-primary-tint)', pct: 20  }
+  if (clamped <= 40) return { label: 'Mild',      color: 'var(--color-primary-mid)', bg: 'var(--color-bg-card-2)', pct: 38  }
+  if (clamped <= 60) return { label: 'Moderate',  color: 'var(--color-cognitive)', bg: 'var(--color-cognitive-tint)', pct: 62  }
+  if (clamped <= 80) return { label: 'High',      color: 'var(--color-accent-dark)', bg: 'var(--color-accent-tint)', pct: 80  }
+  return                     { label: 'Very High', color: 'var(--color-accent-dark)', bg: 'var(--color-accent-tint)', pct: 95  }
 }

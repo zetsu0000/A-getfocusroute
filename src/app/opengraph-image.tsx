@@ -1,4 +1,4 @@
-import { ImageResponse } from "next/og";
+﻿import { ImageResponse } from "next/og";
 import { BRAIN_OS } from "@/lib/positioning";
 
 export const alt = `${BRAIN_OS.lineTm} · Personalized ADHD Profile`;
@@ -16,9 +16,9 @@ export default function Image() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "#F5F3EE",
+          background: "#F6F2EA",
           backgroundImage:
-            "radial-gradient(circle, #E8E4D8 1px, transparent 1px)",
+            "radial-gradient(circle, #E8E1D4 1px, transparent 1px)",
           backgroundSize: "28px 28px",
           padding: "64px",
           position: "relative",
@@ -33,7 +33,7 @@ export default function Image() {
             width: 400,
             height: 400,
             borderRadius: "50%",
-            background: "rgba(74,127,165,0.10)",
+            background: "rgba(54,96,122,0.10)",
             display: "flex",
           }}
         />
@@ -45,7 +45,7 @@ export default function Image() {
             width: 320,
             height: 320,
             borderRadius: "50%",
-            background: "rgba(232,116,80,0.08)",
+            background: "rgba(92,138,94,0.08)",
             display: "flex",
           }}
         />
@@ -79,7 +79,7 @@ export default function Image() {
                 width: 56,
                 height: 56,
                 borderRadius: "16px",
-                background: "#4A7FA5",
+            background: "#3F6F8F",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -127,7 +127,7 @@ export default function Image() {
             }}
           >
             <span>{BRAIN_OS.heroTitleBefore}</span>
-            <span style={{ color: "#4A7FA5" }}>{BRAIN_OS.heroTitleAccent}</span>
+            <span style={{ color: "#3F6F8F" }}>{BRAIN_OS.heroTitleAccent}</span>
             <span>Map in ~12 minutes</span>
           </div>
 
@@ -159,10 +159,10 @@ export default function Image() {
                   style={{
                     padding: "10px 22px",
                     borderRadius: "99px",
-                    background: "#EAF2F8",
+                    background: "#E8F1F6",
                     fontSize: 16,
                     fontWeight: 700,
-                    color: "#4A7FA5",
+                    color: "#3F6F8F",
                     display: "flex",
                   }}
                 >

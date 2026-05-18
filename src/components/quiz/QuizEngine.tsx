@@ -33,11 +33,11 @@ export function QuizEngine() {
   const [direction, setDirection] = useState(1);
   const prevIndex = useRef(currentQuestionIndex);
 
-  const question   = questions[currentQuestionIndex];
-  const isInfo     = question.inputType === "info";
-  const isScale    = question.inputType === "scale";
+  const question = questions[currentQuestionIndex];
+  const isInfo = question.inputType === "info";
+  const isScale = question.inputType === "scale";
   const isMultiple = question.inputType === "multiple";
-  const isLanding  = currentQuestionIndex === 0;   // gender question → special landing
+  const isLanding = currentQuestionIndex === 0; // gender question → special landing
 
   /* Numeric progress indicator */
   const answeredCount = questions
@@ -45,7 +45,9 @@ export function QuizEngine() {
     .filter((q) => q.inputType !== "info").length;
   const totalCount = questions.filter((q) => q.inputType !== "info").length;
 
+  // Slide direction follows question index; syncing in an effect avoids reading refs during render (react-hooks/refs).
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- AnimatePresence direction tracks zustand index delta
     setDirection(currentQuestionIndex >= prevIndex.current ? 1 : -1);
     prevIndex.current = currentQuestionIndex;
   }, [currentQuestionIndex]);
@@ -89,7 +91,7 @@ export function QuizEngine() {
             (e.currentTarget as HTMLElement).style.background = "transparent";
             (e.currentTarget as HTMLElement).style.color      = "var(--color-text-muted)";
           }}
-          aria-label="Voltar"
+          aria-label="Back"
         >
           <ArrowLeft size={20} />
         </m.button>

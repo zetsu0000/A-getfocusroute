@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { m } from "framer-motion";
 import { loadStripe } from "@stripe/stripe-js/pure";
 import {
@@ -19,6 +19,39 @@ function getStripePromise() {
   return _stripePromise;
 }
 const PRICE_ID = process.env.NEXT_PUBLIC_PRICE_ROADMAP!;
+
+const upsellStripeAppearance = {
+  theme: "flat" as const,
+  variables: {
+    colorPrimary: "var(--color-primary)",
+    colorBackground: "var(--color-bg-card)",
+    colorText: "var(--color-text)",
+    colorDanger: "var(--color-accent)",
+    fontFamily: "inherit",
+    borderRadius: "12px",
+  },
+};
+
+function UpsellStripeElements({
+  clientSecret,
+  onSuccess,
+  onDecline,
+}: {
+  clientSecret: string;
+  onSuccess: () => void;
+  onDecline: () => void;
+}) {
+  const options = useMemo(
+    () => ({ clientSecret, appearance: upsellStripeAppearance }),
+    [clientSecret],
+  );
+
+  return (
+    <Elements key={clientSecret} stripe={getStripePromise()} options={options}>
+      <UpsellCheckoutForm onSuccess={onSuccess} onDecline={onDecline} />
+    </Elements>
+  );
+}
 
 /* 15-minute countdown */
 function useTimer(initial = 900) {
@@ -66,7 +99,7 @@ function UpsellCheckoutForm({ onSuccess, onDecline }: { onSuccess: () => void; o
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <PaymentElement options={{ layout: "tabs" }} />
-      {error && <p style={{ fontSize: 13, color: "#E87450", textAlign: "center" }}>{error}</p>}
+      {error && <p style={{ fontSize: 13, color: "var(--color-accent)", textAlign: "center" }}>{error}</p>}
 
       <m.button
         type="submit"
@@ -97,7 +130,7 @@ function UpsellCheckoutForm({ onSuccess, onDecline }: { onSuccess: () => void; o
 
 /* Main UpsellScreen */
 export function UpsellScreen() {
-  const { name, email, setStep } = useQuizStore();
+  const { name, email, setStep, quizResultId } = useQuizStore();
   const { display, expired } = useTimer(900);
   const displayName = name || "you";
 
@@ -108,12 +141,18 @@ export function UpsellScreen() {
     fetch("/api/create-payment-intent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ priceId: PRICE_ID, email }),
+      body: JSON.stringify({
+        priceId: PRICE_ID,
+        email,
+        funnel_step: "upsell",
+        quiz_result_id: quizResultId ?? "",
+        user_name: name,
+      }),
     })
       .then((r) => r.json())
       .then((data) => { if (data.clientSecret) setClientSecret(data.clientSecret); })
       .finally(() => setLoadingSecret(false));
-  }, [email]);
+  }, [email, name, quizResultId]);
 
   const handleSuccess = () => setStep("subscription");
   const handleDecline = () => setStep("subscription");
@@ -127,12 +166,12 @@ export function UpsellScreen() {
     >
       {/* Timer bar */}
       <div style={{
-        background: expired ? "var(--color-border)" : "linear-gradient(90deg, #E87450, #CC5C3A)",
+        background: expired ? "var(--color-border)" : "linear-gradient(90deg, var(--color-accent), var(--color-accent-dark))",
         padding: "12px 20px",
-        display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+        display: "flex", alignItems: "center", justifyContent: "center", gap: 10, flexWrap: "wrap",
       }}>
         <Clock size={16} color="white" />
-        <p style={{ fontSize: 13, fontWeight: 700, color: "white" }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: "white", flexShrink: 1, textAlign: "center" }}>
           {expired
             ? "Offer expired — still available at full price"
             : `Special offer expires in ${display} — one-time opportunity`}
@@ -152,10 +191,10 @@ export function UpsellScreen() {
           </div>
           <h1 style={{ fontSize: 24, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.25, marginBottom: 10 }}>
             {displayName}, you just mapped your brain.{" "}
-            <span style={{ color: "var(--color-accent)" }}>Now let&apos;s fix it.</span>
+            <span style={{ color: "var(--color-accent)" }}>Now turn insight into execution.</span>
           </h1>
           <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.65 }}>
-            Your {BRAIN_OS.assessment} revealed your specific ADHD patterns. The {BRAIN_OS.protocol} gives you the exact daily actions to rewire those patterns — personalized to your subtype.
+            Your {BRAIN_OS.assessment} mapped your signature pattern. The {BRAIN_OS.protocol} gives you practical daily actions personalized to that map.
           </p>
         </m.div>
 
@@ -167,9 +206,9 @@ export function UpsellScreen() {
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {[
-              { icon: Calendar, title: "Day-by-day action plan", desc: "28 structured daily actions matched to your ADHD subtype." },
-              { icon: Target,   title: "Symptom-specific strategies", desc: "Procrastination, focus, overwhelm — addressed individually." },
-              { icon: Zap,      title: "Executive function tools", desc: "Body-doubling, time-boxing, dopamine stacking — the ones that actually work." },
+              { icon: Calendar, title: "Day-by-day action plan", desc: "28 structured daily actions matched to your signature profile." },
+              { icon: Target,   title: "Pattern-specific strategies", desc: "Task initiation, sustained focus, and reset planning covered step by step." },
+              { icon: Zap,      title: "Executive function tools", desc: "Body-doubling, time-boxing, and attention anchors selected for your profile." },
               { icon: CheckCircle2, title: "Weekly milestone check-ins", desc: "Track real progress with your personalized metrics." },
             ].map(({ icon: Icon, title, desc }) => (
               <div key={title} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
@@ -206,20 +245,13 @@ export function UpsellScreen() {
               Loading secure payment...
             </div>
           ) : clientSecret ? (
-            <Elements
-              stripe={getStripePromise()}
-              options={{
-                clientSecret,
-                appearance: {
-                  theme: "flat",
-                  variables: { colorPrimary: "#4A7FA5", colorBackground: "var(--color-bg-card)", colorText: "#1C1A2E", colorDanger: "#E87450", fontFamily: "inherit", borderRadius: "12px" },
-                },
-              }}
-            >
-              <UpsellCheckoutForm onSuccess={handleSuccess} onDecline={handleDecline} />
-            </Elements>
+            <UpsellStripeElements
+              clientSecret={clientSecret}
+              onSuccess={handleSuccess}
+              onDecline={handleDecline}
+            />
           ) : (
-            <p style={{ fontSize: 13, color: "#E87450", textAlign: "center" }}>Could not load payment. Please refresh.</p>
+            <p style={{ fontSize: 13, color: "var(--color-accent)", textAlign: "center" }}>Could not load payment. Please refresh.</p>
           )}
         </m.div>
 
@@ -227,7 +259,7 @@ export function UpsellScreen() {
         <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.20 }}
           style={{ background: "var(--color-bg-card)", borderRadius: 22, padding: "20px 22px", boxShadow: "var(--shadow-card)" }}>
           <p style={{ fontSize: 14, fontStyle: "italic", color: "var(--color-text-body)", lineHeight: 1.7, marginBottom: 8 }}>
-            &quot;You have to take this quiz. The report literally read my mind and explained exactly why I procrastinate the way I do. It proved I&apos;m not just lazy, and the 28-day plan is the only thing that has actually worked for my brain.&quot;
+            &quot;The profile language felt uncannily accurate. For the first time, I had a step-by-step system that matched how I actually work.&quot;
           </p>
           <p style={{ fontSize: 13, color: "var(--color-text-muted)" }}>— Sarah M., verified customer</p>
         </m.div>

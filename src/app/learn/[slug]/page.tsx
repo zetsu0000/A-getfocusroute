@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BRAIN_OS } from "@/lib/positioning";
 
@@ -277,7 +278,7 @@ export default async function ArticlePage({
           justifyContent: "space-between",
         }}
       >
-        <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
           <div
             style={{
               width: 38,
@@ -309,22 +310,22 @@ export default async function ArticlePage({
               {BRAIN_OS.headerEyebrow}
             </p>
           </div>
-        </a>
-        <a
+        </Link>
+        <Link
           href="/"
           style={{ fontSize: 13, color: "var(--color-primary)", textDecoration: "none", fontWeight: 600 }}
         >
           ← Start Brain OS
-        </a>
+        </Link>
       </header>
 
       <main style={{ maxWidth: 720, margin: "0 auto", padding: "48px 24px 0" }}>
-        <a
+        <Link
           href="/learn"
           style={{ fontSize: 13, color: "var(--color-text-muted)", textDecoration: "none", marginBottom: 20, display: "inline-block" }}
         >
           ← All articles
-        </a>
+        </Link>
 
         <h1 style={{ fontSize: "clamp(24px, 5vw, 34px)", marginBottom: 12, marginTop: 8, color: "var(--color-text)" }}>
           {article.title}
@@ -349,7 +350,7 @@ export default async function ArticlePage({
           <p style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 16 }}>
             Curious whether your profile matches ADHD patterns?
           </p>
-          <a
+          <Link
             href="/"
             style={{
               display: "inline-block",
@@ -363,7 +364,7 @@ export default async function ArticlePage({
             }}
           >
             Start {BRAIN_OS.lineTm} →
-          </a>
+          </Link>
         </div>
 
         <div
@@ -375,9 +376,9 @@ export default async function ArticlePage({
             justifyContent: "center",
           }}
         >
-          <a href="/learn" style={{ fontSize: 14, color: "var(--color-primary)", textDecoration: "none", fontWeight: 600 }}>
+          <Link href="/learn" style={{ fontSize: 14, color: "var(--color-primary)", textDecoration: "none", fontWeight: 600 }}>
             ← Back to all articles
-          </a>
+          </Link>
         </div>
       </main>
     </div>

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { FunnelStep, QuizAnswer } from "@/types/quiz";
 import { questions } from "@/data/questions";
+import { clearPersistedQuizResultId } from "@/lib/quizResultId";
 
 interface QuizState {
   currentStep: FunnelStep;
@@ -10,6 +11,8 @@ interface QuizState {
   email: string;
   name: string;
   retakeMode: boolean;
+  /** Server row id from POST /api/quiz-result; also mirrored in sessionStorage for funnel recovery. */
+  quizResultId: string | null;
 
   selectOption: (optionId: string, inputType: "single" | "multiple") => void;
   submitAnswer: () => void;
@@ -20,6 +23,7 @@ interface QuizState {
   setStep: (step: FunnelStep) => void;
   resetQuiz: () => void;
   startRetake: (email: string, name: string) => void;
+  setQuizResultId: (id: string | null) => void;
 }
 
 /* Step order after loading */
@@ -33,6 +37,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
   email: "",
   name: "",
   retakeMode: false,
+  quizResultId: null,
 
   selectOption: (optionId, inputType) => {
     const { selectedOptions } = get();
@@ -103,7 +108,10 @@ export const useQuizStore = create<QuizState>((set, get) => ({
     }
   },
 
-  resetQuiz: () =>
+  setQuizResultId: (id) => set({ quizResultId: id }),
+
+  resetQuiz: () => {
+    clearPersistedQuizResultId();
     set({
       currentStep: "quiz",
       currentQuestionIndex: 0,
@@ -112,9 +120,12 @@ export const useQuizStore = create<QuizState>((set, get) => ({
       email: "",
       name: "",
       retakeMode: false,
-    }),
+      quizResultId: null,
+    });
+  },
 
-  startRetake: (email, name) =>
+  startRetake: (email, name) => {
+    clearPersistedQuizResultId();
     set({
       retakeMode: true,
       currentStep: "quiz",
@@ -123,5 +134,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
       selectedOptions: [],
       email,
       name,
-    }),
+      quizResultId: null,
+    });
+  },
 }));

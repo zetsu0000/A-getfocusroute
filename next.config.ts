@@ -1,5 +1,10 @@
 import type { NextConfig } from "next";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import withBundleAnalyzer from "@next/bundle-analyzer";
+
+/** App directory (next.config.ts lives here). Pins Turbopack when a parent folder also has a lockfile. */
+const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 const bundleAnalyzer = withBundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
@@ -21,6 +26,10 @@ const SECURITY_HEADERS = [
 ];
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: projectRoot,
+  },
+
   experimental: {
     // Inline all CSS into <style> tags instead of separate <link> files.
     // This eliminates the render-blocking CSS chunk (FCP/LCP gain of ~190 ms
