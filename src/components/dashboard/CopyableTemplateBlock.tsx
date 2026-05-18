@@ -55,23 +55,22 @@ export function CopyableTemplateBlock({
           {state === "copied" ? "Copied" : state === "err" ? "Copy blocked" : "Copy text"}
         </button>
       </div>
-      <pre
+      <div
         style={{
           margin: 0,
           padding: "14px 16px",
           borderRadius: 12,
-          background: "var(--color-bg-card-2)",
+          background: "color-mix(in oklab, var(--color-bg-card-2) 85%, white 15%)",
           border: "1px solid var(--color-border)",
-          fontSize: 13,
-          lineHeight: 1.55,
+          fontSize: 14,
+          lineHeight: 1.6,
           color: "var(--color-text-body)",
           whiteSpace: "pre-wrap",
-          fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-          overflowX: "auto",
+          wordBreak: "break-word",
         }}
       >
         {text}
-      </pre>
+      </div>
     </div>
   );
 }

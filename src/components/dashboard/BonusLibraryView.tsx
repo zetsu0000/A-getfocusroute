@@ -53,6 +53,7 @@ function LockedCard({
   includedWith: string;
   upgradeNeed: string;
 }) {
+  const ctaLabel = upgradeNeed === "roadmap_28_day" ? "Add 28-Day Protocol" : "View Bonuses";
   return (
     <div
       style={{
@@ -120,7 +121,7 @@ function LockedCard({
         }}
       >
         <p style={{ fontSize: 12, color: "var(--color-text-muted)", margin: 0 }}>
-          Included with <strong style={{ color: "var(--color-text-body)" }}>{includedWith}</strong>
+          Included with the <strong style={{ color: "var(--color-text-body)" }}>{includedWith}</strong>.
         </p>
         <Link
           href={`/dashboard/upgrade?need=${encodeURIComponent(upgradeNeed)}`}
@@ -133,7 +134,7 @@ function LockedCard({
             whiteSpace: "nowrap",
           }}
         >
-          See upgrade options →
+          {ctaLabel} →
         </Link>
       </div>
     </div>
@@ -238,6 +239,12 @@ function buildFullScriptText(bundle: ExplainScriptBundle): string {
 }
 
 function ExplainScriptContent({ bundle }: { bundle: ExplainScriptBundle }) {
+  const sectionNames = [
+    "What it feels like",
+    "What helps",
+    "What I'm not saying",
+  ];
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <p style={{ ...bodyText, color: "var(--color-text-muted)", fontSize: 12 }}>
@@ -268,15 +275,38 @@ function ExplainScriptContent({ bundle }: { bundle: ExplainScriptBundle }) {
       />
 
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {bundle.blocks.map(block => (
-          <div key={block.heading}>
-            <p style={fieldLabel}>{block.heading}</p>
-            {block.paragraphs.map((para, i) => (
-              <p key={i} style={{ ...bodyText, marginBottom: i < block.paragraphs.length - 1 ? 8 : 0 }}>
-                {para}
-              </p>
-            ))}
-          </div>
+        {bundle.blocks.map((block, idx) => (
+          <details
+            key={block.heading}
+            style={{
+              borderRadius: 12,
+              background: "var(--color-bg-card-2)",
+              border: "1px solid var(--color-border)",
+              overflow: "hidden",
+            }}
+          >
+            <summary
+              style={{
+                cursor: "pointer",
+                listStyle: "none",
+                padding: "12px 14px",
+                fontSize: 12,
+                fontWeight: 800,
+                color: "var(--color-text)",
+                textTransform: "uppercase",
+                letterSpacing: "0.04em",
+              }}
+            >
+              {sectionNames[idx] ?? block.heading}
+            </summary>
+            <div style={{ padding: "0 14px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+              {block.paragraphs.map((para, i) => (
+                <p key={i} style={bodyText}>
+                  {para}
+                </p>
+              ))}
+            </div>
+          </details>
         ))}
       </div>
 

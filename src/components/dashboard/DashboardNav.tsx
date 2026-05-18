@@ -115,6 +115,8 @@ export function DashboardNav({
           paddingBottom: 4,
           overflowX: "auto",
           scrollbarWidth: "none",
+          WebkitOverflowScrolling: "touch",
+          paddingRight: 8,
         }}
       >
         <NavLink href="/dashboard" label="Overview" active={pathname === "/dashboard"} />
@@ -138,7 +140,6 @@ export function DashboardNav({
           label="Membership"
           active={pathname.startsWith("/dashboard/membership")}
         />
-        <NavLink href="/dashboard/upgrade" label="Upgrade" active={pathname.startsWith("/dashboard/upgrade")} />
       </nav>
     </header>
   );

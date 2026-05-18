@@ -14,12 +14,14 @@ import {
 function FeatureCard({
   title,
   subtitle,
+  cta,
   href,
   locked,
   need,
 }: {
   title: string;
   subtitle: string;
+  cta: string;
   href: string;
   locked: boolean;
   need: string;
@@ -58,9 +60,19 @@ function FeatureCard({
             flexShrink: 0,
           }}
         >
-          {locked ? "Locked" : "Open"}
+          {locked ? "Available" : "Ready"}
         </span>
       </div>
+      <p
+        style={{
+          marginTop: 10,
+          fontSize: 12,
+          fontWeight: 700,
+          color: "var(--color-primary)",
+        }}
+      >
+        {cta} →
+      </p>
     </Link>
   );
 }
@@ -92,29 +104,33 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
         </p>
         <div style={{ display: "grid", gap: 12 }}>
           <FeatureCard
-            title="Brain Profile"
+            title={profileOpen ? "Your Brain Profile is ready" : "Unlock your Brain Profile"}
             subtitle="Full assessment readout, symptom framing, and signature summary."
+            cta="Open Brain Profile"
             href="/dashboard/profile"
             locked={!profileOpen}
             need="brain_profile"
           />
           <FeatureCard
-            title="28-Day Protocol"
+            title={roadmapOpen ? "Your 28-Day Protocol is ready" : "Add the 28-Day Protocol"}
             subtitle="Daily structure and micro-steps aligned to your Brain OS map."
+            cta={roadmapOpen ? "Open 28-Day Protocol" : "Add 28-Day Protocol"}
             href="/dashboard/roadmap"
             locked={!roadmapOpen}
             need="roadmap_28_day"
           />
           <FeatureCard
-            title="Bonuses"
+            title={bonusesOpen ? "Your bonuses are available" : "Unlock your bonuses"}
             subtitle="Toolkit, audio guides, and explain-this scripts when included in your purchase."
+            cta="View Bonuses"
             href="/dashboard/bonuses"
             locked={!bonusesOpen}
             need="bonus_toolkit"
           />
           <FeatureCard
-            title="Membership"
+            title={membershipOpen ? "Your membership is active" : "Explore membership"}
             subtitle="Subscription status, renewals, and member-only retakes."
+            cta="Explore Membership"
             href="/dashboard/membership"
             locked={!membershipOpen}
             need="membership"

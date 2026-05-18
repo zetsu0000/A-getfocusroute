@@ -74,14 +74,6 @@ const fieldLabel = {
 // ── Locked state ──────────────────────────────────────────────────────────────
 
 export function LockedMembership() {
-  const features = [
-    "Retake the assessment whenever your context shifts",
-    "Monthly Reset — structured monthly reflection prompts",
-    "Focus System Updates — protocol and library improvements",
-    "Full access to Brain Profile and 28-Day Protocol library",
-    "Billing portal access to manage your plan",
-  ];
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <div
@@ -122,34 +114,17 @@ export function LockedMembership() {
               FocusRoute Membership
             </p>
             <p style={{ fontSize: 17, fontWeight: 900, color: "var(--color-text)", letterSpacing: "-0.01em" }}>
-              Ongoing access to your Brain OS
+              Membership
             </p>
           </div>
         </div>
 
         <p style={{ ...bodyText, marginBottom: 18 }}>
-          Membership keeps your focus system active — with retakes, monthly resets, and protocol
-          updates built around how your brain actually changes over time.
+          Keep your FocusRoute system current with retakes, billing access, and future profile updates.
         </p>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 20 }}>
-          {features.map(f => (
-            <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-              <span
-                style={{
-                  flexShrink: 0,
-                  marginTop: 1,
-                  fontSize: 13,
-                  color: "var(--color-primary)",
-                  fontWeight: 800,
-                }}
-              >
-                ✓
-              </span>
-              <span style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.5 }}>{f}</span>
-            </div>
-          ))}
-        </div>
+        <p style={{ ...bodyText, marginBottom: 20 }}>
+          Membership is optional. Your purchased Brain Profile remains yours.
+        </p>
 
         <Link
           href="/dashboard/upgrade?need=membership"
@@ -165,7 +140,7 @@ export function LockedMembership() {
             textDecoration: "none",
           }}
         >
-          See membership options
+          View membership options
         </Link>
       </div>
     </div>
