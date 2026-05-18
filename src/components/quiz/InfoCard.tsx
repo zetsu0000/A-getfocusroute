@@ -1,9 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { m } from "framer-motion";
 import { QuizQuestion } from "@/types/quiz";
 import { useQuizStore } from "@/store/quizStore";
+import { EmailIcon } from "@/components/icons/EmailIcon";
 import { scoreFromAnswers, getSymptomLevel, LevelInfo } from "@/lib/symptom-level";
 
 interface InfoCardProps {
@@ -24,7 +25,7 @@ function getLevelWithDescription(score: number): LevelInfo & { description: stri
 }
 
 /* ─────────────────────────────────────────────────────────────────
-   Sub-component: ADHD Profile Card  — redesigned professional look
+   Sub-component: Cognitive Profile Card  — redesigned professional look
 ───────────────────────────────────────────────────────────────── */
 function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
   const answers = useQuizStore((s) => s.answers);
@@ -33,7 +34,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
 
   const metrics = [
     {
-      label: "ADHD Type",
+      label: "Pattern Type",
       value: "Combined",
       sub: "Inattention + impulsivity",
     },
@@ -59,7 +60,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
     }}>
       <div style={{
         width: "100%", maxWidth: 480,
-        borderRadius: 28,
+        borderRadius: "var(--radius-xl)",
         background: "var(--color-bg-card)",
         boxShadow: "var(--shadow-card)",
         overflow: "hidden",
@@ -67,7 +68,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
 
         {/* ── Header band ───────────────────────────────────── */}
         <div style={{
-          background: "linear-gradient(135deg, #4A7FA5 0%, #3A6385 100%)",
+          background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)",
           padding: "22px 24px 20px",
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
@@ -81,7 +82,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
             <h2 style={{
               fontSize: 20, fontWeight: 800, color: "#ffffff", lineHeight: 1.15,
             }}>
-              ADHD Profile
+              Cognitive Profile
             </h2>
           </div>
           {/* Score pill */}
@@ -92,7 +93,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
             style={{
               background: "rgba(255,255,255,0.15)",
               border: "1.5px solid rgba(255,255,255,0.25)",
-              borderRadius: 16, padding: "8px 16px",
+              borderRadius: "var(--radius-md)", padding: "8px 16px",
               textAlign: "center",
             }}
           >
@@ -119,7 +120,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
                 fontSize: 12, fontWeight: 800,
                 color: level.color,
                 background: level.bg,
-                padding: "4px 12px", borderRadius: 99,
+                padding: "4px 12px", borderRadius: "var(--radius-pill)",
                 border: `1px solid ${level.color}33`,
               }}
             >
@@ -129,8 +130,8 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
 
           {/* Gradient track */}
           <div style={{
-            position: "relative", height: 10, borderRadius: 99,
-            background: "linear-gradient(to right, #6AA3C8, #4A7FA5, #F5C17A, #E87450, #A82E2E)",
+            position: "relative", height: 10, borderRadius: "var(--radius-pill)",
+            background: "linear-gradient(to right, var(--color-primary-mid), var(--color-primary), var(--color-cognitive))",
             marginBottom: 8,
           }}>
             <m.div
@@ -212,7 +213,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
         <div style={{ padding: "20px 24px 24px" }}>
           <button onClick={onContinue} style={{
             width: "100%", padding: "16px 20px",
-            borderRadius: 16, fontSize: 15, fontWeight: 700,
+            borderRadius: "var(--radius-md)", fontSize: 15, fontWeight: 700,
             background: "linear-gradient(135deg, var(--color-accent), var(--color-accent-dark))",
             color: "#ffffff",
             border: "none", cursor: "pointer",
@@ -231,128 +232,104 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
    Sub-component: Brain Before / After Card  (Tela 2)
 ───────────────────────────────────────────────────────────────── */
 function BrainComparisonCard({ onContinue }: { onContinue: () => void }) {
-  const BRAIN_SIZE = 130;
+  const DIMENSIONS = [
+    { label: "Task start", now: 34, projected: 72 },
+    { label: "Focus stability", now: 29, projected: 67 },
+    { label: "Emotional regulation", now: 38, projected: 74 },
+    { label: "Execution consistency", now: 31, projected: 69 },
+  ];
 
   return (
-    /* Full-height centered wrapper */
     <div style={{
       height: "100%",
-      display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent: "center",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
       padding: "20px 20px 32px",
       overflowY: "auto",
     }}>
-    <div style={{ width: "100%", maxWidth: 480, display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ width: "100%", maxWidth: 500, display: "flex", flexDirection: "column", gap: 14 }}>
+        <m.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.32 }}
+          style={{
+            background: "var(--color-bg-card)",
+            border: "1px solid var(--color-border)",
+            boxShadow: "var(--shadow-card)",
+            borderRadius: "var(--radius-lg)",
+            padding: "18px 18px 16px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <p style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, color: "var(--color-text-muted)" }}>
+              Cognitive trajectory
+            </p>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--color-primary)", background: "var(--color-primary-tint)", borderRadius: "var(--radius-pill)", padding: "4px 10px" }}>
+              4-week projection
+            </span>
+          </div>
 
-      {/* ── Comparison card ──────────────────────────────── */}
-      <div style={{
-        borderRadius: 22, overflow: "hidden",
-        background: "var(--color-bg-card)",
-        boxShadow: "var(--shadow-card)",
-      }}>
-        {/* Header tabs */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
-          {["Now", "After 4 weeks"].map((label, i) => (
-            <div key={label} style={{
-              padding: "10px 8px", textAlign: "center",
-              fontSize: 13, fontWeight: 700,
-              color: i === 0 ? "var(--color-text-muted)" : "var(--color-primary)",
-              background: i === 0 ? "var(--color-bg-card-2)" : "rgba(74,127,165,0.1)",
-              borderBottom: `2px solid ${i === 0 ? "var(--color-border)" : "#6AA3C8"}`,
-            }}>
-              {label}
-            </div>
-          ))}
-        </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {DIMENSIONS.map((row, idx) => (
+              <div key={row.label}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+                  <span style={{ fontSize: 12, color: "var(--color-text-body)", fontWeight: 600 }}>{row.label}</span>
+                  <span style={{ fontSize: 11, color: "var(--color-text-muted)", fontWeight: 700 }}>
+                    {row.now}% → {row.projected}%
+                  </span>
+                </div>
+                <div style={{ position: "relative", height: 9, borderRadius: "var(--radius-pill)", background: "var(--color-bg-card-2)", overflow: "hidden" }}>
+                  <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${row.now}%`, background: "linear-gradient(90deg,var(--color-primary-mid),var(--color-primary))" }} />
+                  <m.div
+                    initial={{ width: `${row.now}%` }}
+                    animate={{ width: `${row.projected}%` }}
+                    transition={{ delay: 0.15 + idx * 0.08, duration: 0.45, ease: "easeOut" }}
+                    style={{ position: "absolute", left: 0, top: 0, bottom: 0, background: "linear-gradient(90deg,var(--color-primary),var(--color-cognitive))" }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </m.div>
 
-        {/* Brain row — fixed sizes, no aspect-ratio stretch */}
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "center",
-          gap: 16, padding: "20px 16px",
+        <m.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15, duration: 0.28 }}
+          style={{
+            borderRadius: "var(--radius-lg)",
+            padding: "20px 22px",
+            background: "var(--color-bg-card)",
+            boxShadow: "var(--shadow-card)",
+            border: "1px solid var(--color-border)",
+          }}
+        >
+          <h2 style={{ fontSize: 19, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.35, marginBottom: 10 }}>
+            Your Brain Profile is almost ready —{" "}
+            <span style={{ color: "var(--color-accent)" }}>this is where things start to click</span>
+          </h2>
+          <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.65 }}>
+            We&apos;ve mapped the friction points that are slowing you down and prepared a personalized protocol to improve consistency, focus stability, and execution over the next 28 days.
+          </p>
+        </m.div>
+
+        <button onClick={onContinue} style={{
+          width: "100%",
+          padding: "15px 20px",
+          borderRadius: "var(--radius-md)",
+          fontSize: 15,
+          fontWeight: 700,
+          background: "linear-gradient(135deg, var(--color-accent), var(--color-accent-dark))",
+          color: "#ffffff",
+          border: "none",
+          cursor: "pointer",
+          boxShadow: "var(--shadow-btn-accent)",
         }}>
-          {/* Left — stressed */}
-          <m.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.1, duration: 0.4 }}
-            style={{
-              width: BRAIN_SIZE, height: BRAIN_SIZE, borderRadius: "50%", flexShrink: 0,
-              background: "radial-gradient(circle at 35% 35%, #FEF4E7, #F5C17A, #E87450)",
-              display: "flex", flexDirection: "column",
-              alignItems: "center", justifyContent: "center",
-              boxShadow: "0 6px 20px rgba(232,116,80,0.3)",
-            }}
-          >
-            <span style={{ fontSize: 34 }}>🧠</span>
-            <p style={{ fontSize: 11, fontWeight: 700, color: "#CC5C3A", marginTop: 4 }}>With ADHD</p>
-          </m.div>
-
-          {/* Arrow */}
-          <m.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.35, duration: 0.25 }}
-          >
-            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-              <path d="M4 16h18M22 16l-6-6M22 16l-6 6" stroke="#C4BDB5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M26 16h2" stroke="#6B6B8A" strokeWidth="2.5" strokeLinecap="round" />
-            </svg>
-          </m.div>
-
-          {/* Right — calm */}
-          <m.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.22, duration: 0.4 }}
-            style={{
-              width: BRAIN_SIZE, height: BRAIN_SIZE, borderRadius: "50%", flexShrink: 0,
-              background: "radial-gradient(circle at 35% 35%, #EAF2F8, #6AA3C8, #4A7FA5)",
-              display: "flex", flexDirection: "column",
-              alignItems: "center", justifyContent: "center",
-              boxShadow: "0 6px 20px rgba(74,127,165,0.28)",
-            }}
-          >
-            <span style={{ fontSize: 34, filter: "hue-rotate(190deg) saturate(1.1)" }}>🧠</span>
-            <p style={{ fontSize: 11, fontWeight: 700, color: "#4A7FA5", marginTop: 4 }}>Normal brain</p>
-          </m.div>
-        </div>
+          Continue
+        </button>
       </div>
-
-      {/* ── Text card ────────────────────────────────────── */}
-      <m.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.25 }}
-        style={{
-          borderRadius: 22, padding: "20px 22px",
-          background: "var(--color-bg-card)",
-          boxShadow: "var(--shadow-card)",
-        }}
-      >
-        <h2 style={{
-          fontSize: 18, fontWeight: 800,
-          color: "var(--color-primary)", lineHeight: 1.35, marginBottom: 8,
-        }}>
-          Your results are almost ready —{" "}
-          <span style={{ color: "var(--color-accent)" }}>and they can change everything</span>
-        </h2>
-        <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.65 }}>
-          Based on your responses, we've generated a complete report with your ADHD profile and a personalized guide of strategies for your daily life.
-        </p>
-      </m.div>
-
-      {/* ── CTA ──────────────────────────────────────────── */}
-      <button onClick={onContinue} style={{
-        width: "100%", padding: "15px 20px",
-        borderRadius: 16, fontSize: 15, fontWeight: 700,
-        background: "linear-gradient(135deg, var(--color-accent), var(--color-accent-dark))",
-        color: "#ffffff",
-        border: "none", cursor: "pointer",
-        boxShadow: "var(--shadow-btn-accent)",
-      }}>
-        Continue
-      </button>
-    </div>
     </div>
   );
 }
@@ -380,9 +357,9 @@ function EmailInputCard({ onContinue }: { onContinue: (email: string) => void })
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
           style={{
-            width: 80, height: 80, borderRadius: 22, margin: "0 auto 16px",
-        background: "linear-gradient(135deg, #EAF2F8 0%, #D4E8F5 100%)",
-          boxShadow: "0 8px 32px rgba(74,127,165,0.2)",
+            width: 80, height: 80, borderRadius: "var(--radius-lg)", margin: "0 auto 16px",
+        background: "linear-gradient(135deg, var(--color-primary-tint) 0%, var(--color-cognitive-tint) 100%)",
+          boxShadow: "var(--shadow-btn-primary)",
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: 36,
           }}
@@ -390,7 +367,7 @@ function EmailInputCard({ onContinue }: { onContinue: (email: string) => void })
           ✉️
         </m.div>
         <h2 style={{ fontSize: 20, fontWeight: 800, color: "var(--color-primary)", lineHeight: 1.35 }}>
-          Your ADHD results are almost ready!
+          Your Brain Profile is almost ready!
         </h2>
       </div>
 
@@ -400,10 +377,7 @@ function EmailInputCard({ onContinue }: { onContinue: (email: string) => void })
           position: "absolute", left: 18, top: "50%", transform: "translateY(-50%)",
           color: "var(--color-text-muted)", pointerEvents: "none",
         }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="2" y="4" width="20" height="16" rx="2" />
-            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-          </svg>
+          <EmailIcon />
         </span>
         <input
           type="email"
@@ -412,7 +386,7 @@ function EmailInputCard({ onContinue }: { onContinue: (email: string) => void })
           onChange={(e) => setLocal(e.target.value)}
           style={{
             width: "100%", padding: "17px 18px 17px 48px",
-            borderRadius: 16,
+            borderRadius: "var(--radius-md)",
             background: "var(--color-bg-card)",
             border: "1.5px solid var(--color-border)",
             color: "var(--color-primary)",
@@ -421,8 +395,8 @@ function EmailInputCard({ onContinue }: { onContinue: (email: string) => void })
             boxShadow: "0 1px 3px rgba(142,154,175,0.06)",
           }}
           onFocus={(e) => {
-            e.currentTarget.style.borderColor = "#6AA3C8";
-            e.currentTarget.style.boxShadow   = "0 0 0 3px rgba(74,127,165,0.2)";
+            e.currentTarget.style.borderColor = "var(--color-primary-mid)";
+            e.currentTarget.style.boxShadow   = "0 0 0 3px var(--color-primary-ring)";
           }}
           onBlur={(e) => {
             e.currentTarget.style.borderColor = "var(--color-border)";
@@ -435,7 +409,7 @@ function EmailInputCard({ onContinue }: { onContinue: (email: string) => void })
       <div style={{
         display: "flex", alignItems: "flex-start", gap: 12,
         padding: "14px 16px",
-        background: "rgba(74,127,165,0.08)",
+        background: "var(--color-primary-tint)",
         border: "1px solid var(--color-border)",
         borderRadius: 14,
       }}>
@@ -455,9 +429,9 @@ function EmailInputCard({ onContinue }: { onContinue: (email: string) => void })
 
       <p style={{ fontSize: 12, color: "var(--color-text-muted)", lineHeight: 1.6 }}>
         By continuing, you agree to our{" "}
-        <span style={{ color: "var(--color-primary)", textDecoration: "underline", cursor: "pointer" }}>Terms of Use</span>,{" "}
-        <span style={{ color: "var(--color-primary)", textDecoration: "underline", cursor: "pointer" }}>Privacy Policy</span>, and{" "}
-        <span style={{ color: "var(--color-primary)", textDecoration: "underline", cursor: "pointer" }}>Subscription Policy</span>.
+        <a href="/terms" style={{ color: "var(--color-primary)", textDecoration: "underline" }}>Terms of Use</a>,{" "}
+        <a href="/privacy" style={{ color: "var(--color-primary)", textDecoration: "underline" }}>Privacy Policy</a>, and{" "}
+        <a href="/refund-policy" style={{ color: "var(--color-primary)", textDecoration: "underline" }}>Subscription Policy</a>.
       </p>
 
       <button
@@ -546,6 +520,7 @@ function GenericInfoCard({
       >
         {!question.infoEmoji ? (
           /* People-group illustration when no emoji is set */
+          // eslint-disable-next-line @next/next/no-img-element -- static marketing asset; next/image adds little value here
           <img
             src="/illustrations/people-group.png"
             alt=""
@@ -556,11 +531,11 @@ function GenericInfoCard({
         ) : (
           /* Emoji bubble for regular info cards */
           <div style={{
-            width: 110, height: 110, borderRadius: 28,
+            width: 110, height: 110, borderRadius: "var(--radius-xl)",
             background: "var(--color-primary-tint)",
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: 56,
-            boxShadow: "0 6px 24px rgba(74,127,165,0.14)",
+            boxShadow: "var(--shadow-btn-primary)",
           }}>
             {question.infoEmoji}
           </div>
@@ -626,73 +601,6 @@ function GenericInfoCard({
         </m.button>
       </div>
     </div>
-  );
-}
-
-/* ── App illustration SVG (person interacting with app UI) ─────── */
-function AppIllustration() {
-  return (
-    <svg viewBox="0 0 280 200" fill="none" xmlns="http://www.w3.org/2000/svg"
-      style={{ width: "100%", maxWidth: 280, height: "auto", display: "block" }}>
-      {/* Gear left */}
-      <circle cx="58" cy="94" r="22" fill="none" stroke="#D4E8F5" strokeWidth="8" />
-      <circle cx="58" cy="94" r="10" fill="#D4E8F5" />
-      {[0,60,120,180,240,300].map((a, i) => (
-        <rect key={i} x="54" y="68" width="8" height="12" rx="3" fill="#D4E8F5"
-          transform={`rotate(${a} 58 94)`} />
-      ))}
-
-      {/* Gear right */}
-      <circle cx="220" cy="136" r="16" fill="none" stroke="#EAF2F8" strokeWidth="6" />
-      <circle cx="220" cy="136" r="7" fill="#EAF2F8" />
-      {[0,72,144,216,288].map((a, i) => (
-        <rect key={i} x="217" y="116" width="6" height="10" rx="2.5" fill="#EAF2F8"
-          transform={`rotate(${a} 220 136)`} />
-      ))}
-
-      {/* Phone frame */}
-      <rect x="118" y="20" width="100" height="160" rx="14" fill="white"
-        stroke="#EAF2F8" strokeWidth="2" />
-
-      {/* Phone screen content */}
-      <rect x="127" y="35" width="82" height="10" rx="4" fill="#EAF2F8" />
-      <rect x="127" y="52" width="60" height="8" rx="3" fill="#D4E8F5" />
-
-      {/* Colored blocks on phone */}
-      <rect x="127" y="70" width="36" height="36" rx="8" fill="#4A7FA5" opacity="0.8" />
-      <polygon points="139,80 151,88 139,96" fill="white" />
-      <rect x="169" y="70" width="36" height="36" rx="8" fill="#E87450" opacity="0.8" />
-      <rect x="178" y="83" width="18" height="4" rx="2" fill="white" />
-      <rect x="178" y="91" width="12" height="4" rx="2" fill="white" />
-
-      <rect x="127" y="114" width="78" height="8" rx="3" fill="#EAF2F8" />
-      <rect x="127" y="128" width="52" height="8" rx="3" fill="#EAF2F8" />
-
-      {/* Floating shapes */}
-      <rect x="90" y="30" width="20" height="20" rx="5" fill="#6AA3C8" opacity="0.5"
-        transform="rotate(15 100 40)" />
-      <circle cx="240" cy="52" r="10" fill="#E87450" opacity="0.3" />
-      <polygon points="230,160 245,140 260,160" fill="#4A7FA5" opacity="0.25" />
-
-      {/* Person — back view */}
-      <ellipse cx="100" cy="52" rx="18" ry="20" fill="#F0B88A" />
-      {/* Hair */}
-      <path d="M82 52 Q84 30 100 28 Q116 30 118 52 Q108 38 100 37 Q92 38 82 52Z" fill="#D44070" />
-      {/* Body/shirt */}
-      <path d="M72 80 Q70 66 82 60 L100 68 L118 60 Q130 66 128 80 L130 170 H70Z" fill="#D44070" />
-      {/* Arm pointing to phone */}
-      <path d="M128 72 Q150 80 160 90" stroke="#D44070" strokeWidth="14" strokeLinecap="round" fill="none" />
-      <ellipse cx="163" cy="92" rx="10" ry="9" fill="#F0B88A" />
-      {/* Other arm */}
-      <path d="M72 72 Q58 84 56 110" stroke="#D44070" strokeWidth="14" strokeLinecap="round" fill="none" />
-      <ellipse cx="54" cy="113" rx="10" ry="9" fill="#F0B88A" />
-
-      {/* Question mark bubble */}
-      <rect x="80" y="120" width="32" height="24" rx="8" fill="#4A7FA5" opacity="0.15"
-        stroke="#4A7FA5" strokeWidth="1.5" />
-      <text x="96" y="137" textAnchor="middle" fontSize="14" fontWeight="800"
-        fill="#4A7FA5" opacity="0.8">?</text>
-    </svg>
   );
 }
 

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { m } from "framer-motion";
@@ -12,6 +12,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { useQuizStore } from "@/store/quizStore";
 import { safeName } from "@/lib/personalization";
+import { BRAIN_OS } from "@/lib/positioning";
 
 let _stripePromise: ReturnType<typeof loadStripe> | null = null;
 function getStripePromise() {
@@ -22,37 +23,51 @@ function getStripePromise() {
 const PLANS = {
   annual: {
     priceId:    process.env.NEXT_PUBLIC_PRICE_ANNUAL!,
-    productKey: "membership_annual",
-    label:      "Annual Plan",
-    price:      "$119",
-    sub:        "~$9.92/mo · billed once a year",
-    oldPrice:   "$228",
-    savings:    "Save 48%",
-    badge:      "⭐ MOST POPULAR",
+    label:      "Membership Annual",
+    price:      BRAIN_OS.price.membershipAnnual,
+    amount:     Math.round(BRAIN_OS.price.membershipAnnualValue * 100),
+    sub:        `~$${(BRAIN_OS.price.membershipAnnualValue / 12).toFixed(2)}/mo · billed yearly`,
+    oldPrice:   BRAIN_OS.price.membershipMonthlyValue > 0 ? `$${(BRAIN_OS.price.membershipMonthlyValue * 12).toFixed(0)}` : null,
+    savings:    BRAIN_OS.price.membershipMonthlyValue > 0
+      ? `Save ${Math.max(0, Math.round(((BRAIN_OS.price.membershipMonthlyValue * 12 - BRAIN_OS.price.membershipAnnualValue) / (BRAIN_OS.price.membershipMonthlyValue * 12)) * 100))}%`
+      : null,
+    badge:      "⭐ BEST VALUE",
     highlight:  true,
   },
   monthly: {
     priceId:    process.env.NEXT_PUBLIC_PRICE_MONTHLY!,
-    productKey: "membership_monthly",
-    label:      "Monthly Plan",
-    price:      "$19",
+    label:      "Membership Monthly",
+    price:      BRAIN_OS.price.membershipMonthly,
+    amount:     Math.round(BRAIN_OS.price.membershipMonthlyValue * 100),
     sub:        "per month · cancel anytime",
     oldPrice:   null,
     savings:    null,
     badge:      null,
     highlight:  false,
   },
-} as const;
+};
 
 const FEATURES = [
-  "Continuous access to your ADHD report",
-  "Monthly check-ins and progress tracking",
-  "Updated strategies and content",
-  "Priority support",
+  "Keep access to your FocusRoute Brain Profile™ and protocol library",
+  "Body-doubling sessions and accountability structure",
+  "Profile-based weekly check-ins and updated strategies",
+  "Priority support from the FocusRoute team",
 ];
 
 /* Checkout form for subscriptions */
-function SubCheckoutForm({ priceId, productKey, email, userName, onSuccess }: { priceId: string; productKey: string; email: string; userName: string; onSuccess: () => void }) {
+function SubCheckoutForm({
+  priceId,
+  email,
+  userName,
+  quizResultId,
+  onSuccess,
+}: {
+  priceId: string;
+  email: string;
+  userName: string;
+  quizResultId: string | null;
+  onSuccess: () => void;
+}) {
   const stripe   = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -77,9 +92,9 @@ function SubCheckoutForm({ priceId, productKey, email, userName, onSuccess }: { 
         priceId,
         email,
         paymentMethodId: paymentMethod.id,
-        product_key: productKey,
         funnel_step: "subscription",
-        user_name: userName,
+        quiz_result_id: quizResultId ?? "",
+        user_name: userName.trim(),
       }),
     });
     const data = await res.json();
@@ -101,7 +116,7 @@ function SubCheckoutForm({ priceId, productKey, email, userName, onSuccess }: { 
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <PaymentElement options={{ layout: "tabs" }} />
-      {error && <p style={{ fontSize: 13, color: "#E87450", textAlign: "center" }}>{error}</p>}
+      {error && <p style={{ fontSize: 13, color: "var(--color-accent)", textAlign: "center" }}>{error}</p>}
       <m.button
         type="submit"
         disabled={!stripe || loading}
@@ -115,10 +130,10 @@ function SubCheckoutForm({ priceId, productKey, email, userName, onSuccess }: { 
           boxShadow: loading ? "none" : "var(--shadow-btn-primary)",
         }}
       >
-        {loading ? "Processing..." : "Start my plan →"}
+        {loading ? "Processing..." : "Continue with membership →"}
       </m.button>
       <p style={{ fontSize: 11, color: "var(--color-text-muted)", textAlign: "center" }}>
-        Cancel anytime · No hidden fees
+        Day-7 momentum offer · cancel anytime
       </p>
     </form>
   );
@@ -141,9 +156,9 @@ function PlanCard({ planKey, isSelected, onSelect }: { planKey: "annual" | "mont
         transition: "box-shadow 0.2s, border-color 0.2s",
       }}
     >
-      {plan.badge && (
+          {plan.badge && (
         <div style={{ padding: "8px 20px", background: "var(--color-primary)", color: "#fff", fontSize: 11, fontWeight: 700, textAlign: "center", letterSpacing: "0.05em" }}>
-          {plan.badge} — SAVE 48%
+          {plan.badge}{plan.savings ? ` — ${plan.savings}` : ""}
         </div>
       )}
       <div style={{ padding: "18px 20px" }}>
@@ -192,7 +207,7 @@ function PlanCard({ planKey, isSelected, onSelect }: { planKey: "annual" | "mont
 
 /* Main SubscriptionScreen */
 export function SubscriptionScreen() {
-  const { name, email, setStep } = useQuizStore();
+  const { name, email, setStep, quizResultId } = useQuizStore();
   const displayName = safeName(name, "you");
 
   const [selected, setSelected] = useState<"annual" | "monthly">("annual");
@@ -210,18 +225,18 @@ export function SubscriptionScreen() {
       initial={{ opacity: 0, x: 40 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3 }}
-      style={{ minHeight: "100vh", padding: "32px 16px 64px" }}
+      style={{ minHeight: "100dvh", padding: "32px 16px 64px" }}
     >
       <div style={{ maxWidth: 480, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
 
         {/* Header */}
         <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <h1 style={{ fontSize: 24, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.25, marginBottom: 8 }}>
-            Keep your momentum,{" "}
+            Keep your FocusRoute Brain OS™ active,{" "}
             <span style={{ color: "var(--color-primary)" }}>{displayName}</span>
           </h1>
           <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.65 }}>
-            Lock in continuous access with monthly check-ins, updated strategies, and priority support — so you never lose progress.
+            This is your Day-7 momentum window: keep support, structure, and accountability so your 28-day protocol actually sticks.
           </p>
         </m.div>
 
@@ -247,7 +262,7 @@ export function SubscriptionScreen() {
                   boxShadow: "var(--shadow-btn-primary)",
                 }}
               >
-                Start {selected === "annual" ? "Annual" : "Monthly"} Plan — {plan.price}
+                Start {selected === "annual" ? "Annual" : "Monthly"} Membership — {plan.price}
               </m.button>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24 }}>
                 {[
@@ -267,15 +282,21 @@ export function SubscriptionScreen() {
               stripe={getStripePromise()}
               options={{
                 mode: "subscription",
-                amount: selected === "annual" ? 11900 : 1900,
+                amount: plan.amount,
                 currency: "usd",
                 appearance: {
                   theme: "flat",
-                  variables: { colorPrimary: "#4A7FA5", colorBackground: "var(--color-bg-card)", colorText: "#1C1A2E", colorDanger: "#E87450", fontFamily: "inherit", borderRadius: "12px" },
+                  variables: { colorPrimary: "var(--color-primary)", colorBackground: "var(--color-bg-card)", colorText: "var(--color-text)", colorDanger: "var(--color-accent)", fontFamily: "inherit", borderRadius: "12px" },
                 },
               }}
             >
-              <SubCheckoutForm priceId={plan.priceId} productKey={plan.productKey} email={email} userName={name} onSuccess={handleSuccess} />
+              <SubCheckoutForm
+                priceId={plan.priceId}
+                email={email}
+                userName={name}
+                quizResultId={quizResultId}
+                onSuccess={handleSuccess}
+              />
             </Elements>
           )}
         </m.div>

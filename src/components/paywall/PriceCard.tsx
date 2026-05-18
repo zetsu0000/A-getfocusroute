@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { m } from "framer-motion";
 import { Check } from "lucide-react";
@@ -10,7 +10,7 @@ interface PriceCardProps {
 }
 
 const FEATURES = [
-  "Complete ADHD profile report",
+  "Complete cognitive profile report",
   "Personalized 28-day action guide",
   "Strategies tailored to your profile",
   "Unlimited access to the report and guide",

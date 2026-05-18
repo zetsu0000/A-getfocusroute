@@ -1,6 +1,7 @@
-import { ImageResponse } from "next/og";
+﻿import { ImageResponse } from "next/og";
+import { BRAIN_OS } from "@/lib/positioning";
 
-export const alt = "FocusRoute – Free ADHD Assessment";
+export const alt = `${BRAIN_OS.lineTm} · Personalized ADHD Profile`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -15,9 +16,9 @@ export default function Image() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "#F5F3EE",
+          background: "#F6F2EA",
           backgroundImage:
-            "radial-gradient(circle, #E8E4D8 1px, transparent 1px)",
+            "radial-gradient(circle, #E8E1D4 1px, transparent 1px)",
           backgroundSize: "28px 28px",
           padding: "64px",
           position: "relative",
@@ -32,7 +33,7 @@ export default function Image() {
             width: 400,
             height: 400,
             borderRadius: "50%",
-            background: "rgba(74,127,165,0.10)",
+            background: "rgba(54,96,122,0.10)",
             display: "flex",
           }}
         />
@@ -44,7 +45,7 @@ export default function Image() {
             width: 320,
             height: 320,
             borderRadius: "50%",
-            background: "rgba(232,116,80,0.08)",
+            background: "rgba(92,138,94,0.08)",
             display: "flex",
           }}
         />
@@ -78,7 +79,7 @@ export default function Image() {
                 width: 56,
                 height: 56,
                 borderRadius: "16px",
-                background: "#4A7FA5",
+            background: "#3F6F8F",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -125,9 +126,9 @@ export default function Image() {
               flexDirection: "column",
             }}
           >
-            <span>Discover your</span>
-            <span style={{ color: "#4A7FA5" }}>ADHD profile</span>
-            <span>in 3 minutes</span>
+            <span>{BRAIN_OS.heroTitleBefore}</span>
+            <span style={{ color: "#3F6F8F" }}>{BRAIN_OS.heroTitleAccent}</span>
+            <span>Map in ~12 minutes</span>
           </div>
 
           {/* Subline */}
@@ -140,7 +141,7 @@ export default function Image() {
               marginBottom: "36px",
             }}
           >
-            Free diagnostic assessment · Personalized guide · Instant results
+            Cognitive Mapping Assessment™ · Brain Profile™ · 28-Day Protocol™
           </p>
 
           {/* Pill badges */}
@@ -151,17 +152,17 @@ export default function Image() {
               alignItems: "center",
             }}
           >
-            {["🆓 Free", "⏱ 3 min", "🧠 Science-backed", "📊 +200K people"].map(
+            {["🧠 Brain-first", "⏱ ~12 min", "📘 Personalized profile", "🛡 7-day guarantee"].map(
               (label) => (
                 <div
                   key={label}
                   style={{
                     padding: "10px 22px",
                     borderRadius: "99px",
-                    background: "#EAF2F8",
+                    background: "#E8F1F6",
                     fontSize: 16,
                     fontWeight: 700,
-                    color: "#4A7FA5",
+                    color: "#3F6F8F",
                     display: "flex",
                   }}
                 >

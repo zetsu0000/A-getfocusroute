@@ -1,8 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { m } from "framer-motion";
 import { useQuizStore } from "@/store/quizStore";
+import { EmailIcon } from "@/components/icons/EmailIcon";
 
 export function EmailScreen() {
   const { setEmail, setStep } = useQuizStore();
@@ -24,7 +25,7 @@ export function EmailScreen() {
       exit={{ opacity: 0, x: -40 }}
       transition={{ duration: 0.28 }}
       style={{
-        minHeight: "100vh",
+        minHeight: "100dvh",
         display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center",
         padding: "40px 24px",
@@ -39,13 +40,13 @@ export function EmailScreen() {
             color: "var(--color-primary)",
             lineHeight: 1.3,
           }}>
-            Where should we send your{" "}
-            <span style={{ color: "#CBC0D3" }}>
-              ADHD test results?
+            Save your{" "}
+            <span style={{ color: "var(--color-cognitive)" }}>
+              FocusRoute Brain Profile™
             </span>
           </h1>
           <p style={{ marginTop: 12, fontSize: 14, color: "var(--color-text-muted)" }}>
-            Your report and personalized guide will be sent to the email below.
+            We&apos;ll save your partial reveal and send secure access details for your full report.
           </p>
         </div>
 
@@ -55,14 +56,11 @@ export function EmailScreen() {
             position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)",
             color: "var(--color-text-muted)", pointerEvents: "none",
           }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="2" y="4" width="20" height="16" rx="2"/>
-              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-            </svg>
+            <EmailIcon />
           </span>
           <input
             type="email"
-            placeholder="Email"
+            placeholder="Enter your best email"
             value={local}
             onChange={(e) => setLocal(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleContinue()}
@@ -97,9 +95,9 @@ export function EmailScreen() {
         {/* Legal */}
         <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", lineHeight: 1.6 }}>
           By continuing, you agree to our{" "}
-          <span style={{ color: "var(--color-primary)", textDecoration: "underline", cursor: "pointer" }}>Terms & Conditions</span>,{" "}
-          <span style={{ color: "var(--color-primary)", textDecoration: "underline", cursor: "pointer" }}>Privacy Policy</span>, and{" "}
-          <span style={{ color: "var(--color-primary)", textDecoration: "underline", cursor: "pointer" }}>Subscription Policy</span>.
+          <a href="/terms" style={{ color: "var(--color-primary)", textDecoration: "underline" }}>Terms & Conditions</a>,{" "}
+          <a href="/privacy" style={{ color: "var(--color-primary)", textDecoration: "underline" }}>Privacy Policy</a>, and{" "}
+          <a href="/refund-policy" style={{ color: "var(--color-primary)", textDecoration: "underline" }}>Subscription Policy</a>.
         </p>
 
         {/* CTA */}
@@ -116,7 +114,7 @@ export function EmailScreen() {
               : { background: "var(--color-border)", color: "var(--color-text-muted)" }),
           }}
         >
-          Continue
+          Save My FocusRoute Brain Profile™
         </button>
 
         {/* Privacy card */}
@@ -139,10 +137,13 @@ export function EmailScreen() {
             </svg>
           </div>
           <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.6 }}>
-            We respect your privacy and are committed to protecting your personal data.
-            We&apos;ll send your results and guide to the email you provide.
+            Private by default. We only use this email for FocusRoute Brain OS™ access and relevant updates.
           </p>
         </div>
+
+        <p style={{ fontSize: 11, color: "var(--color-text-muted)", textAlign: "center", lineHeight: 1.6 }}>
+          FocusRoute provides educational profiling and does not provide medical diagnosis.
+        </p>
 
       </div>
     </m.div>

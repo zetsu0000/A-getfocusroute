@@ -1,9 +1,11 @@
-"use client";
+﻿"use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { m } from "framer-motion";
 import { User, Menu } from "lucide-react";
 import { useQuizStore } from "@/store/quizStore";
+import { BRAIN_OS } from "@/lib/positioning";
 
 /* ── Male SVG character ──────────────────────────────────────────── */
 function MaleCharacter() {
@@ -11,12 +13,12 @@ function MaleCharacter() {
     <svg width="250" height="250" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg"
       preserveAspectRatio="xMidYMin slice"
       style={{ width: "100%", height: "100%", display: "block" }}>
-      <rect x="10" y="10" width="280" height="280" rx="20" fill="white" stroke="#4A7FA5" strokeWidth="2" />
+      <rect x="10" y="10" width="280" height="280" rx="20" fill="white" stroke="var(--color-primary)" strokeWidth="2" />
       <path d="M60 280 C 60 220, 90 190, 150 190 C 210 190, 240 220, 240 280" fill="#5C6BC0" stroke="#2C3E50" strokeWidth="2" />
       <rect x="135" y="175" width="30" height="25" fill="#FFAB91" stroke="#2C3E50" strokeWidth="2" />
       <path d="M110 120 C 110 80, 190 80, 190 120 C 190 160, 180 185, 150 185 C 120 185, 110 160, 110 120 Z" fill="#FFAB91" stroke="#2C3E50" strokeWidth="2" />
       <circle cx="192" cy="135" r="10" fill="#FFAB91" stroke="#2C3E50" strokeWidth="2" />
-      <path d="M105 105 C 105 60, 195 60, 195 105 Z" fill="#4A7FA5" stroke="#2C3E50" strokeWidth="2" />
+      <path d="M105 105 C 105 60, 195 60, 195 105 Z" fill="var(--color-primary)" stroke="#2C3E50" strokeWidth="2" />
       <path d="M95 105 Q 150 90 205 105" fill="none" stroke="#2C3E50" strokeWidth="4" strokeLinecap="round" />
       <path d="M105 105 L 105 125 C 115 115, 110 105, 110 105 Z" fill="#263238" />
       <circle cx="138" cy="125" r="2.5" fill="#2C3E50" />
@@ -33,7 +35,7 @@ function FemaleCharacter() {
     <svg width="250" height="250" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg"
       preserveAspectRatio="xMidYMin slice"
       style={{ width: "100%", height: "100%", display: "block" }}>
-      <rect x="10" y="10" width="280" height="280" rx="20" fill="white" stroke="#4A7FA5" strokeWidth="2" />
+      <rect x="10" y="10" width="280" height="280" rx="20" fill="white" stroke="var(--color-primary)" strokeWidth="2" />
       <path d="M 100 60 C 40 60, 20 130, 30 190 C 35 220, 20 260, 45 285 C 75 295, 95 260, 105 230 L 125 150 L 175 150 L 195 230 C 205 260, 225 295, 255 285 C 280 260, 265 220, 270 190 C 280 130, 260 60, 200 60 Z" fill="#A04E4E" stroke="#2C3E50" strokeWidth="2" strokeLinejoin="round" />
       <path d="M 50 280 C 60 210, 90 180, 120 170 L 150 190 L 180 170 C 210 180, 240 210, 250 280 Z" fill="#FF8C00" stroke="#2C3E50" strokeWidth="2" />
       <path d="M 120 170 L 140 210 L 150 190 Z" fill="#FF8C00" stroke="#2C3E50" strokeWidth="2" />
@@ -66,9 +68,9 @@ interface GenderCardProps {
 function GenderCard({ gender, label, isSelected, onSelect }: GenderCardProps) {
   const isOther = gender === "other";
   const ariaLabel =
-    gender === "male"   ? "Start ADHD test for males" :
-    gender === "female" ? "Start ADHD test for females" :
-                          "Start ADHD test for non-binary / prefer not to say";
+    gender === "male"   ? "Select male profile context" :
+    gender === "female" ? "Select female profile context" :
+                          "Select non-binary or prefer not to say";
   return (
     <m.button
       onClick={onSelect}
@@ -132,8 +134,12 @@ function GenderCard({ gender, label, isSelected, onSelect }: GenderCardProps) {
 
 /* ── Main Landing Component ──────────────────────────────────────── */
 export function GenderLanding() {
+  const router = useRouter();
   const { selectOption, submitAnswer } = useQuizStore();
+
+
   const [selected, setSelected] = useState<GenderId | null>(null);
+  const selectionRef = useRef<HTMLDivElement | null>(null);
 
   const handleSelect = (id: GenderId) => {
     if (selected) return;
@@ -179,22 +185,37 @@ export function GenderLanding() {
               FocusRoute
             </p>
             <p style={{ fontSize: 11, color: "var(--color-text-muted)", letterSpacing: "0.08em", fontWeight: 500 }}>
-              ADHD TEST
+              {BRAIN_OS.headerEyebrow}
             </p>
           </div>
         </div>
 
         {/* Navigation icons */}
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          {([["Account", User], ["Menu", Menu]] as const).map(([label, Icon]) => (
-            <button key={label} aria-label={label} style={{
-              width: 44, height: 44, borderRadius: 10,
-              background: "transparent",
-              border: "1.5px solid var(--color-border)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer",
-              color: "var(--color-text-body)",
-            }}>
+          {(
+            [
+              ["Account", User, "/dashboard", "Open dashboard"] as const,
+              ["Menu", Menu, "/", "Go to home"] as const,
+            ] as const
+          ).map(([key, Icon, href, aria]) => (
+            <button
+              key={key}
+              type="button"
+              aria-label={aria}
+              onClick={() => router.push(href)}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 10,
+                background: "transparent",
+                border: "1.5px solid var(--color-border)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                color: "var(--color-text-body)",
+              }}
+            >
               <Icon size={17} />
             </button>
           ))}
@@ -227,11 +248,10 @@ export function GenderLanding() {
             marginBottom: 10,
             letterSpacing: "-0.02em",
           }}>
-            Discover your{" "}
+            You&apos;re not lazy.{" "}
             <span style={{ color: "var(--color-primary)" }}>
-              ADHD profile
-            </span>{" "}
-            in 3 minutes
+              Your brain just needs a different operating system.
+            </span>
           </h1>
 
           <p style={{
@@ -241,34 +261,43 @@ export function GenderLanding() {
             maxWidth: 360,
             margin: "0 auto 12px",
           }}>
-            Take the free diagnostic assessment and receive your personalized result with a guide on how to manage ADHD.
+            Take the free 3-minute Cognitive Mapping Assessment™ to reveal your
+            FocusRoute Brain Profile™ and see how your Brain OS can be configured.
           </p>
 
-          {/* Badge */}
-          <m.span
+          <m.button
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1, duration: 0.28 }}
+            onClick={() => selectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: 6,
-              background: "var(--color-accent-tint)",
-              color: "var(--color-accent-dark)",
-              fontSize: 11, fontWeight: 800,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              padding: "5px 14px",
-              borderRadius: 99,
-              border: "1px solid rgba(232,116,80,0.22)",
+              justifyContent: "center",
+              gap: 8,
+              background: "var(--color-primary)",
+              color: "#ffffff",
+              fontSize: 15,
+              fontWeight: 800,
+              letterSpacing: "-0.01em",
+              padding: "12px 20px",
+              borderRadius: 14,
+              border: "none",
+              cursor: "pointer",
+              boxShadow: "var(--shadow-btn-primary)",
             }}
           >
-            ✦ FREE TEST · 3 MINUTES
-          </m.span>
+            Start My Cognitive Mapping Assessment™
+          </m.button>
+
+          <p style={{ marginTop: 10, fontSize: 12, color: "var(--color-text-muted)", fontWeight: 600 }}>
+            Free · 3 minutes · Private results
+          </p>
         </m.div>
 
         {/* Gender cards */}
         <m.div
+          ref={selectionRef}
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.12, duration: 0.34, ease: "easeOut" }}
@@ -280,8 +309,11 @@ export function GenderLanding() {
             maxWidth: 420,
           }}
           role="group"
-          aria-label="Select your gender"
+          aria-label="Select your profile context"
         >
+          <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", marginBottom: 4 }}>
+            Choose your context so we can tailor your FocusRoute Brain Profile™ language.
+          </p>
           {/* Male + Female side by side */}
           <div style={{ display: "flex", gap: 10 }}>
             <GenderCard
@@ -300,7 +332,7 @@ export function GenderLanding() {
           {/* Non-binary / prefer not to say — full width, shorter */}
           <m.button
             onClick={() => handleSelect("other")}
-            aria-label="Start ADHD test for non-binary / prefer not to say"
+            aria-label="Select non-binary or prefer not to say"
             aria-pressed={selected === "other"}
             whileTap={{ scale: 0.98 }}
             whileHover={{ y: -1 }}
@@ -322,9 +354,18 @@ export function GenderLanding() {
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <span style={{ fontSize: 20 }}>🏳️‍🌈</span>
+              <span
+                aria-hidden="true"
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: "50%",
+                  background: selected === "other" ? "var(--color-primary)" : "var(--color-text-muted)",
+                  opacity: 0.9,
+                }}
+              />
               <span style={{ fontSize: 14, fontWeight: 700, color: selected === "other" ? "var(--color-primary)" : "var(--color-text)" }}>
-                Non-binary / Prefer not to say
+                Prefer not to say
               </span>
             </div>
             <span aria-hidden="true" style={{ fontSize: 15, color: selected === "other" ? "var(--color-primary)" : "var(--color-text-muted)" }}>→</span>
@@ -338,7 +379,7 @@ export function GenderLanding() {
           transition={{ delay: 0.28 }}
           style={{ fontSize: 11, color: "var(--color-text-muted)", textAlign: "center", marginTop: 20 }}
         >
-          Your data is 100% private and secure 🔒
+          FocusRoute provides educational profiling only and is not a medical diagnosis.
         </m.p>
       </div>
     </div>

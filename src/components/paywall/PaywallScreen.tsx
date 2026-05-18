@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { m, AnimatePresence } from "framer-motion";
-import { Shield, Star, Lock, Check, BadgeCheck, CreditCard } from "lucide-react";
+import { Shield, Lock, Check, BadgeCheck, CreditCard } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js/pure";
 import {
   Elements,
@@ -12,7 +12,8 @@ import {
 } from "@stripe/react-stripe-js";
 import { useQuizStore } from "@/store/quizStore";
 import { safeName } from "@/lib/personalization";
-import { scoreFromAnswers, getSymptomLevel } from "@/lib/symptom-level";
+import { BRAIN_OS } from "@/lib/positioning";
+import { getSignatureFromAnswers } from "@/lib/signature";
 
 // Lazy singleton — loadStripe (and the Stripe.js download) only fires
 // when the PaywallScreen first renders, not when the chunk is prefetched.
@@ -22,6 +23,61 @@ function getStripePromise() {
   return _stripePromise;
 }
 const PRICE_ID = process.env.NEXT_PUBLIC_PRICE_ASSESSMENT!;
+
+const stripeAppearance = {
+  theme: "flat" as const,
+  variables: {
+    colorPrimary: "var(--color-primary)",
+    colorBackground: "var(--color-bg-card)",
+    colorText: "var(--color-text)",
+    colorTextSecondary: "var(--color-text-body)",
+    colorTextPlaceholder: "var(--color-text-soft)",
+    colorDanger: "var(--color-error)",
+    fontFamily: "inherit",
+    fontSizeBase: "15px",
+    spacingUnit: "5px",
+    borderRadius: "12px",
+    gridColumnSpacing: "12px",
+    gridRowSpacing: "12px",
+  },
+  rules: {
+    ".Input": {
+      border: "1.5px solid var(--color-border)",
+      backgroundColor: "var(--color-bg-card-2)",
+      padding: "12px 14px",
+      fontSize: "15px",
+      boxShadow: "none",
+      transition: "border-color 0.15s",
+    },
+    ".Input:focus": {
+      border: "1.5px solid var(--color-primary)",
+      boxShadow: "0 0 0 3px var(--color-primary-ring)",
+      outline: "none",
+    },
+    ".Label": {
+      fontSize: "12px",
+      fontWeight: "600",
+      color: "var(--color-text-body)",
+      marginBottom: "5px",
+    },
+    ".Tab": {
+      border: "1.5px solid var(--color-border)",
+      backgroundColor: "var(--color-bg-card-2)",
+      padding: "10px 16px",
+      fontWeight: "600",
+    },
+    ".Tab--selected": {
+      border: "1.5px solid var(--color-primary)",
+      backgroundColor: "var(--color-primary-tint)",
+      color: "var(--color-primary)",
+      boxShadow: "none",
+    },
+    ".Error": {
+      color: "var(--color-error)",
+      fontSize: "12px",
+    },
+  },
+};
 
 /* ── Countdown — persisted in sessionStorage ── */
 const COUNTDOWN_KEY = "focusroute_countdown_end";
@@ -56,46 +112,54 @@ function useCountdown(initial = 600) {
 /* ── Locked result card ── */
 function LockedCard() {
   const answers = useQuizStore((s) => s.answers);
-  const level   = getSymptomLevel(scoreFromAnswers(answers));
+  const signature = getSignatureFromAnswers(answers);
+  const profileBandBySignature: Record<string, { label: string; pct: number; color: string; bg: string; shadow: string }> = {
+    Sprinter: { label: "Fast-cycle",     pct: 68, color: "var(--color-sig-sprinter)",  bg: "var(--color-sig-sprinter-tint)",  shadow: "var(--shadow-sig-sprinter)"  },
+    Archivist: { label: "Detail-led",   pct: 46, color: "var(--color-sig-archivist)", bg: "var(--color-sig-archivist-tint)", shadow: "var(--shadow-sig-archivist)" },
+    Spark: { label: "Novelty-led",      pct: 76, color: "var(--color-sig-spark)",     bg: "var(--color-sig-spark-tint)",     shadow: "var(--shadow-sig-spark)"     },
+    Reactor: { label: "Adaptive",       pct: 58, color: "var(--color-sig-reactor)",   bg: "var(--color-sig-reactor-tint)",   shadow: "var(--shadow-sig-reactor)"   },
+    Drifter: { label: "Anchor-seeking", pct: 39, color: "var(--color-sig-drifter)",   bg: "var(--color-sig-drifter-tint)",   shadow: "var(--shadow-sig-drifter)"   },
+  };
+  const profileBand = profileBandBySignature[signature.signature] ?? profileBandBySignature.Drifter;
 
   const rows = [
-    { label: "ADHD Subtype",          value: "Inattentive-C" },
-    { label: "Procrastination index", value: "78 / 100"      },
-    { label: "Focus pattern",         value: "Hyperactive"   },
-    { label: "Priority strategy",     value: "Body-doubling" },
+    { label: "Cognitive Signature™", value: signature.signature },
+    { label: "Focus consistency index", value: "78 / 100" },
+    { label: "Executive friction pattern", value: "Context switching" },
+    { label: "Priority implementation lever", value: "Body-doubling" },
   ];
 
   return (
-    <div style={{ borderRadius: 22, overflow: "hidden", background: "#fff", boxShadow: "var(--shadow-card)", border: "1px solid var(--color-border)" }}>
+    <div style={{ borderRadius: "var(--radius-lg)", overflow: "hidden", background: "var(--color-bg-card)", boxShadow: "var(--shadow-card)", border: "1px solid var(--color-border)" }}>
 
       {/* Card header */}
-      <div style={{ padding: "16px 20px 14px", background: "linear-gradient(135deg,#EAF2F8,#F5F3EE)", borderBottom: "1px solid var(--color-border)", display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ width: 42, height: 42, borderRadius: 12, background: "linear-gradient(135deg,#4A7FA5,#6AA3C8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🧠</div>
+      <div style={{ padding: "16px 20px 14px", background: "linear-gradient(135deg, var(--color-primary-tint), var(--color-bg-card-2))", borderBottom: "1px solid var(--color-border)", display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ width: 42, height: 42, borderRadius: "var(--radius-sm)", background: "linear-gradient(135deg, var(--color-primary-dark), var(--color-primary-mid))", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🧠</div>
         <div style={{ flex: 1 }}>
-          <p style={{ fontSize: 14, fontWeight: 800, color: "#1C1A2E" }}>Your ADHD Profile</p>
-          <p style={{ fontSize: 11, color: "#9B9BB5", marginTop: 1 }}>Diagnostic assessment · Completed</p>
+          <p style={{ fontSize: 14, fontWeight: 800, color: "var(--color-text)" }}>Your FocusRoute Brain Profile™</p>
+          <p style={{ fontSize: 11, color: "var(--color-text-muted)", marginTop: 1 }}>Cognitive Mapping Assessment™ · Completed</p>
         </div>
-        <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99, background: level.bg, color: level.color }}>
-          {level.label}
+        <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: "var(--radius-pill)", background: profileBand.bg, color: profileBand.color }}>
+          {profileBand.label}
         </span>
       </div>
 
       {/* Gauge */}
       <div style={{ padding: "16px 20px 12px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-          <span style={{ fontSize: 11, color: "#9B9BB5" }}>ADHD Symptom Level</span>
-          <span style={{ fontSize: 11, fontWeight: 700, color: level.color }}>{level.label}</span>
+          <span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>Profile intensity band</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: profileBand.color }}>{profileBand.label}</span>
         </div>
-        <div style={{ height: 8, borderRadius: 99, background: "linear-gradient(to right,#EAF2F8,#6AA3C8,#F5C17A,#E87450,#A82E2E)", position: "relative" }}>
+        <div style={{ height: 8, borderRadius: "var(--radius-pill)", background: "linear-gradient(to right, var(--color-primary-tint), var(--color-primary), var(--color-cognitive))", position: "relative" }}>
           <m.div
             initial={{ left: "0%" }}
-            animate={{ left: `${level.pct}%` }}
+            animate={{ left: `${profileBand.pct}%` }}
             transition={{ delay: 0.5, duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
-            style={{ position: "absolute", top: "50%", transform: "translate(-50%,-50%)", width: 18, height: 18, borderRadius: "50%", background: "#fff", border: `3px solid ${level.color}`, boxShadow: `0 2px 8px ${level.color}55` }}
+            style={{ position: "absolute", top: "50%", transform: "translate(-50%,-50%)", width: 18, height: 18, borderRadius: "50%", background: "var(--color-bg-card)", border: `3px solid ${profileBand.color}`, boxShadow: profileBand.shadow }}
           />
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-          {["Low","Mild","Moderate","High","Very High"].map((l) => (
+          {["Anchored","Steady","Mixed","High-drive","Burst"].map((l) => (
             <span key={l} style={{ fontSize: 11, color: "var(--color-text-muted)" }}>{l}</span>
           ))}
         </div>
@@ -105,9 +169,9 @@ function LockedCard() {
       <div style={{ padding: "0 20px 20px", position: "relative" }}>
         <div style={{ filter: "blur(4px)", userSelect: "none", pointerEvents: "none", display: "flex", flexDirection: "column", gap: 6 }}>
           {rows.map(({ label, value }) => (
-            <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", borderRadius: 12, background: "#FAF9F6", border: "1px solid #EAE6DC" }}>
-              <span style={{ fontSize: 12, color: "#4A4A6A" }}>{label}</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#4A7FA5" }}>{value}</span>
+            <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", borderRadius: "var(--radius-sm)", background: "var(--color-bg-card-2)", border: "1px solid var(--color-border)" }}>
+              <span style={{ fontSize: 12, color: "var(--color-text-body)" }}>{label}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "var(--color-primary)" }}>{value}</span>
             </div>
           ))}
         </div>
@@ -117,11 +181,11 @@ function LockedCard() {
           <m.div
             animate={{ scale: [1, 1.07, 1] }}
             transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-            style={{ width: 50, height: 50, borderRadius: 15, background: "linear-gradient(135deg,#E87450,#CC5C3A)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(232,116,80,0.45)" }}
+            style={{ width: 50, height: 50, borderRadius: 15, background: "linear-gradient(135deg,var(--color-accent),var(--color-accent-dark))", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "var(--shadow-btn-accent)" }}
           >
             <Lock size={22} color="white" strokeWidth={2.5} />
           </m.div>
-          <p style={{ fontSize: 13, fontWeight: 800, color: "#1C1A2E", textAlign: "center", lineHeight: 1.3 }}>
+          <p style={{ fontSize: 13, fontWeight: 800, color: "var(--color-text)", textAlign: "center", lineHeight: 1.3 }}>
             Unlock to reveal<br />your full profile
           </p>
         </div>
@@ -169,7 +233,7 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
         <m.p
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
-          style={{ marginTop: 12, fontSize: 13, color: "#E87450", textAlign: "center", background: "#FDF1EC", borderRadius: 10, padding: "8px 14px" }}
+          style={{ marginTop: 12, fontSize: 13, color: "var(--color-accent-dark)", textAlign: "center", background: "var(--color-accent-tint)", borderRadius: 10, padding: "8px 14px" }}
         >
           ⚠️ {error}
         </m.p>
@@ -181,18 +245,18 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
         whileTap={{ scale: 0.975 }}
         animate={loading ? {} : {
           boxShadow: [
-            "0 4px 22px rgba(232,116,80,0.40)",
-            "0 6px 32px rgba(232,116,80,0.60)",
-            "0 4px 22px rgba(232,116,80,0.40)",
+            "0 4px 22px rgba(92,138,94,0.36)",
+            "0 6px 32px rgba(92,138,94,0.5)",
+            "0 4px 22px rgba(92,138,94,0.36)",
           ],
           transition: { repeat: Infinity, duration: 2.4, ease: "easeInOut" },
         }}
         style={{
-          marginTop: 16, width: "100%", padding: "18px 24px", borderRadius: 16,
+          marginTop: 16, width: "100%", padding: "18px 24px", borderRadius: "var(--radius-md)",
           background: loading
-            ? "#EAE6DC"
-            : "linear-gradient(135deg, #E87450, #CC5C3A)",
-          color: loading ? "#9B9BB5" : "#fff",
+            ? "var(--color-border)"
+            : "linear-gradient(135deg, var(--color-accent), var(--color-accent-dark))",
+          color: loading ? "var(--color-text-muted)" : "#fff",
           fontSize: 17, fontWeight: 800, border: "none",
           cursor: loading ? "not-allowed" : "pointer",
           display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
@@ -203,36 +267,55 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
             <m.span
               animate={{ rotate: 360 }}
               transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
-              style={{ display: "inline-block", width: 16, height: 16, border: "2px solid #9B9BB5", borderTopColor: "transparent", borderRadius: "50%" }}
+              style={{ display: "inline-block", width: 16, height: 16, border: "2px solid var(--color-text-muted)", borderTopColor: "transparent", borderRadius: "50%" }}
             />
             Processing…
           </>
         ) : (
           <>
             <Lock size={17} color="white" strokeWidth={2.5} />
-            Unlock my results — $27
+            Unlock my profile — {BRAIN_OS.price.paywall}
           </>
         )}
       </m.button>
 
       {/* Trust row */}
-      <div style={{ marginTop: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 18 }}>
+      <div style={{ marginTop: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
         {[
           { icon: Shield,    label: "256-bit SSL" },
           { icon: CreditCard, label: "Secure payment" },
           { icon: BadgeCheck, label: "Instant access" },
         ].map(({ icon: Icon, label }) => (
           <div key={label} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <Icon size={13} color="#9B9BB5" />
-            <span style={{ fontSize: 11, color: "#9B9BB5" }}>{label}</span>
+            <Icon size={13} color="var(--color-text-muted)" />
+            <span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>{label}</span>
           </div>
         ))}
       </div>
 
-      <p style={{ marginTop: 10, fontSize: 11, color: "#9B9BB5", textAlign: "center" }}>
-        One-time · No subscription · No hidden fees
+      <p style={{ marginTop: 10, fontSize: 11, color: "var(--color-text-muted)", textAlign: "center" }}>
+        One-time access · Backed by the &quot;This Is Me&quot; 7-Day Guarantee
       </p>
     </form>
+  );
+}
+
+function PaywallStripeElements({
+  clientSecret,
+  onSuccess,
+}: {
+  clientSecret: string;
+  onSuccess: () => void;
+}) {
+  const options = useMemo(
+    () => ({ clientSecret, appearance: stripeAppearance }),
+    [clientSecret],
+  );
+
+  return (
+    <Elements key={clientSecret} stripe={getStripePromise()} options={options}>
+      <CheckoutForm onSuccess={onSuccess} />
+    </Elements>
   );
 }
 
@@ -241,16 +324,16 @@ function PaymentSkeleton() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10, animation: "pulse 1.6s ease-in-out infinite" }}>
       {[56, 56, 50].map((h, i) => (
-        <div key={i} style={{ height: h, borderRadius: 12, background: "#EAE6DC" }} />
+        <div key={i} style={{ height: h, borderRadius: "var(--radius-sm)", background: "var(--color-border)" }} />
       ))}
-      <div style={{ height: 58, borderRadius: 16, background: "#EAE6DC", marginTop: 4 }} />
+      <div style={{ height: 58, borderRadius: "var(--radius-md)", background: "var(--color-border)", marginTop: 4 }} />
     </div>
   );
 }
 
 /* ── Main PaywallScreen ── */
 export function PaywallScreen() {
-  const { name, email, setStep } = useQuizStore();
+  const { name, email, setStep, quizResultId } = useQuizStore();
   const { display, urgent }     = useCountdown(600);
   const displayName              = safeName(name, "You");
 
@@ -268,233 +351,188 @@ export function PaywallScreen() {
       body: JSON.stringify({
         priceId: PRICE_ID,
         email,
-        product_key: "brain_profile",
         funnel_step: "paywall",
+        quiz_result_id: quizResultId ?? "",
         user_name: name,
       }),
     })
       .then((r) => r.json())
       .then((d) => { if (d.clientSecret) setClientSecret(d.clientSecret); })
       .finally(() => setLoadingSecret(false));
-  }, [email, name]);
-
-  const stripeAppearance = {
-    theme: "flat" as const,
-    variables: {
-      colorPrimary:     "#4A7FA5",
-      colorBackground:  "#FFFFFF",
-      colorText:        "#1C1A2E",
-      colorTextSecondary: "#4A4A6A",
-      colorTextPlaceholder: "#9B9BB5",
-      colorDanger:      "#E87450",
-      colorWarning:     "#F07000",
-      colorSuccess:     "#3DA06A",
-      fontFamily:       "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      fontSizeBase:     "15px",
-      spacingUnit:      "5px",
-      borderRadius:     "12px",
-      gridColumnSpacing: "12px",
-      gridRowSpacing:    "12px",
-    },
-    rules: {
-      ".Input": {
-        border:          "1.5px solid #EAE6DC",
-        backgroundColor: "#FAF9F6",
-        padding:         "12px 14px",
-        fontSize:        "15px",
-        boxShadow:       "none",
-        transition:      "border-color 0.15s",
-      },
-      ".Input:focus": {
-        border:    "1.5px solid #4A7FA5",
-        boxShadow: "0 0 0 3px rgba(74,127,165,0.12)",
-        outline:   "none",
-      },
-      ".Label": {
-        fontSize:   "12px",
-        fontWeight: "600",
-        color:      "#4A4A6A",
-        marginBottom: "5px",
-      },
-      ".Tab": {
-        border:          "1.5px solid #EAE6DC",
-        backgroundColor: "#FAF9F6",
-        padding:         "10px 16px",
-        fontWeight:      "600",
-      },
-      ".Tab--selected": {
-        border:          "1.5px solid #4A7FA5",
-        backgroundColor: "#EAF2F8",
-        color:           "#4A7FA5",
-        boxShadow:       "none",
-      },
-      ".Error": {
-        color:    "#E87450",
-        fontSize: "12px",
-      },
-    },
-  };
+  }, [email, name, quizResultId]);
 
   return (
-    <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
+    <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.28 }}>
+      <div style={{ padding: "18px 14px 56px", overflowX: "hidden" }}>
+        <div style={{ maxWidth: 540, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 }}>
 
-      {/* ── Urgency bar ── */}
-      <m.div
-        animate={{ backgroundColor: urgent ? ["#CC5C3A", "#A82E2E", "#CC5C3A"] : ["#1C1A2E", "#1C1A2E"] }}
-        transition={{ repeat: urgent ? Infinity : 0, duration: 1.2 }}
-        style={{ padding: "11px 20px", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}
-      >
-        <m.span
-          animate={{ opacity: [1, 0.4, 1] }}
-          transition={{ repeat: Infinity, duration: 1.4 }}
-          style={{ fontSize: 12 }}
-        >🔴</m.span>
-        <p style={{ fontSize: 13, fontWeight: 700, color: "#fff", letterSpacing: "0.01em" }}>
-          Offer reserved for <span style={{ fontVariantNumeric: "tabular-nums", fontWeight: 900 }}>{display}</span>
-        </p>
-      </m.div>
-
-      {/* ── Page body ── */}
-      <div style={{ padding: "24px 16px 64px", overflowX: "hidden" }}>
-        <div style={{ maxWidth: 460, margin: "0 auto", display: "flex", flexDirection: "column", gap: 22, minWidth: 0 }}>
-
-          {/* ── Headline ── */}
-          <m.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }}>
-            <h1 style={{ fontSize: 26, fontWeight: 900, color: "#1C1A2E", lineHeight: 1.2, letterSpacing: "-0.02em" }}>
-              <span style={{ color: "#4A7FA5" }}>{displayName}</span>, your ADHD profile is ready —{" "}
-              <span style={{ color: "#E87450" }}>but still locked</span>
-            </h1>
-            <p style={{ marginTop: 10, fontSize: 14, color: "#4A4A6A", lineHeight: 1.65 }}>
-              Unlock your full profile for a one-time payment of <strong style={{ color: "#1C1A2E" }}>$27</strong>. No subscription. Instant access.
-            </p>
+          <m.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              borderRadius: "var(--radius-md)",
+              padding: "10px 12px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              background: urgent ? "linear-gradient(135deg,#ECFDF5,#E6FFFB)" : "var(--color-bg-card)",
+              border: urgent ? "1px solid rgba(14,165,164,0.28)" : "1px solid var(--color-border)",
+            }}
+          >
+            <span style={{ fontSize: 12, color: "var(--color-text-body)", fontWeight: 600 }}>
+              Priority window
+            </span>
+            <span style={{ fontSize: 13, color: "var(--color-primary-dark)", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+              {display}
+            </span>
           </m.div>
 
-          {/* ── Locked card ── */}
-          <m.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.10 }}>
-            <LockedCard />
-          </m.div>
+          <m.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.04 }}
+            style={{
+              background: "var(--color-bg-card)",
+              borderRadius: "var(--radius-lg)",
+              border: "1px solid var(--color-border)",
+              boxShadow: "var(--shadow-card)",
+              overflow: "hidden",
+            }}
+          >
+            <div style={{ padding: "18px 20px 14px" }}>
+              <p style={{ fontSize: 11, letterSpacing: "0.09em", textTransform: "uppercase", fontWeight: 700, color: "var(--color-text-muted)", marginBottom: 8 }}>
+                Your results
+              </p>
+              <h1 style={{ fontSize: 24, fontWeight: 900, color: "var(--color-text)", lineHeight: 1.22, letterSpacing: "-0.02em" }}>
+                {displayName}, your {BRAIN_OS.brainProfile} is ready.
+              </h1>
+              <p style={{ marginTop: 8, fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.62 }}>
+                Unlock the full system for <strong style={{ color: "var(--color-text)" }}>{BRAIN_OS.price.paywall}</strong> and start your personalized 28-day protocol today.
+              </p>
+            </div>
 
-          {/* ── What's included ── */}
-          <m.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }}
-            style={{ background: "#fff", borderRadius: 22, padding: "20px 22px", boxShadow: "var(--shadow-card)", border: "1px solid var(--color-border)" }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: "#9B9BB5", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>
-              What you unlock
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
-              {[
-                "Full ADHD type & symptom breakdown",
-                "Personalized cognitive profile analysis",
-                "28-day action guide for your subtype",
-                "Science-backed focus & procrastination tools",
-                "Executive function strategy toolkit",
-              ].map((item) => (
-                <div key={item} style={{ display: "flex", alignItems: "center", gap: 11 }}>
-                  <div style={{ width: 22, height: 22, borderRadius: "50%", background: "#EAF2F8", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Check size={12} color="#4A7FA5" strokeWidth={3} />
-                  </div>
-                  <span style={{ fontSize: 13, color: "#4A4A6A", lineHeight: 1.4 }}>{item}</span>
-                </div>
-              ))}
+            <div style={{ padding: "0 20px 18px" }}>
+              <LockedCard />
             </div>
           </m.div>
 
-          {/* ── Price + Payment form ── */}
-          <m.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}
-            style={{ background: "#fff", borderRadius: 24, boxShadow: "var(--shadow-card)", border: "1px solid var(--color-border)", overflow: "hidden", minWidth: 0 }}>
-
-            {/* Price header */}
-            <div style={{ padding: "20px 22px 18px", borderBottom: "1px solid #EAE6DC" }}>
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-                <div>
-                  <p style={{ fontSize: 15, fontWeight: 800, color: "#1C1A2E" }}>FocusRoute ADHD Assessment</p>
-                  <p style={{ fontSize: 12, color: "#9B9BB5", marginTop: 3 }}>One-time · Lifetime access</p>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <p style={{ fontSize: 12, color: "#9B9BB5", textDecoration: "line-through" }}>$189</p>
-                  <p style={{ fontSize: 34, fontWeight: 900, color: "#E87450", lineHeight: 1, letterSpacing: "-0.03em" }}>$27</p>
-                </div>
-              </div>
-
-              {/* Savings badge */}
-              <div style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, background: "linear-gradient(135deg,#EAF2F8,#E8F4FB)", padding: "7px 14px", borderRadius: 99, border: "1px solid #C4DFEE" }}>
-                <BadgeCheck size={14} color="#4A7FA5" />
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#4A7FA5" }}>85% below the cheapest clinical evaluation ($189)</span>
-              </div>
-            </div>
-
-            {/* Payment form */}
-            <div style={{ padding: "22px 22px 22px", overflowX: "hidden", minWidth: 0 }}>
-              <AnimatePresence mode="wait">
-                {loadingSecret ? (
-                  <m.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                    <PaymentSkeleton />
-                  </m.div>
-                ) : clientSecret ? (
-                  <m.div key="form" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
-                    <Elements
-                      stripe={getStripePromise()}
-                      options={{ clientSecret, appearance: stripeAppearance }}
-                    >
-                      <CheckoutForm onSuccess={handlePaywallSuccess} />
-                    </Elements>
-                  </m.div>
-                ) : (
-                  <m.p key="error" style={{ fontSize: 13, color: "#E87450", textAlign: "center", padding: "16px 0" }}>
-                    Failed to load payment. Please refresh the page.
-                  </m.p>
-                )}
-              </AnimatePresence>
-            </div>
-          </m.div>
-
-          {/* ── Social proof bar ── */}
-          <m.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}
-            style={{ background: "#fff", borderRadius: 18, padding: "14px 18px", boxShadow: "var(--shadow-card)", border: "1px solid var(--color-border)", display: "flex", alignItems: "center", gap: 14 }}>
-            <div style={{ display: "flex" }}>
-              {["🧑‍💻","👩‍🎓","👨‍🏫","👩‍⚕️","🧑‍🎨"].map((e, i) => (
-                <div key={i} style={{ width: 32, height: 32, borderRadius: "50%", fontSize: 13, background: "#EAF2F8", border: "2px solid #fff", display: "flex", alignItems: "center", justifyContent: "center", marginLeft: i > 0 ? -9 : 0 }}>{e}</div>
-              ))}
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} size={11} style={{ fill: "#E87450", color: "#E87450" }} />
-                ))}
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#E87450", marginLeft: 4 }}>4.9</span>
-              </div>
-              <p style={{ fontSize: 12, color: "#9B9BB5" }}>+200,000 people have discovered their profile</p>
-            </div>
-          </m.div>
-
-          {/* ── Testimonials ── */}
-          <m.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.26 }}
-            style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {[
-              { quote: "The report was eye-opening. I finally understood why I struggle so much with focus — and the guide gave me tools that actually fit my brain.", author: "Rafael T.", role: "Systems Analyst" },
-              { quote: "I took 3 other ADHD tests before this. FocusRoute was the first one that felt like it truly saw me. Worth every dollar.", author: "Mia K.", role: "UX Designer" },
-            ].map(({ quote, author, role }) => (
-              <div key={author} style={{ background: "#fff", borderRadius: 18, padding: "18px 20px", boxShadow: "var(--shadow-card)", border: "1px solid var(--color-border)" }}>
-                <div style={{ display: "flex", gap: 2, marginBottom: 10 }}>
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} size={12} style={{ fill: "#E87450", color: "#E87450" }} />
-                  ))}
-                </div>
-                <p style={{ fontSize: 13, fontStyle: "italic", color: "#4A4A6A", lineHeight: 1.65, marginBottom: 10 }}>
-                  &quot;{quote}&quot;
+          <m.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.08 }}
+            style={{
+              background: "var(--color-bg-card)",
+              borderRadius: "var(--radius-lg)",
+              border: "1px solid var(--color-border)",
+              boxShadow: "var(--shadow-card)",
+              padding: "16px 18px",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 12 }}>
+              <div>
+                <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.09em", color: "var(--color-text-muted)", fontWeight: 700 }}>
+                  {BRAIN_OS.lineTm}
                 </p>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#EAF2F8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>
-                    {author[0]}
-                  </div>
-                  <div>
-                    <p style={{ fontSize: 12, fontWeight: 700, color: "#1C1A2E", lineHeight: 1 }}>{author}</p>
-                    <p style={{ fontSize: 11, color: "#9B9BB5" }}>{role}</p>
-                  </div>
-                </div>
+                <p style={{ fontSize: 13, color: "var(--color-text-body)", marginTop: 2 }}>
+                  {BRAIN_OS.assessment} + protocol access
+                </p>
               </div>
-            ))}
+              <div style={{ textAlign: "right" }}>
+                <p style={{ fontSize: 12, color: "var(--color-text-muted)", textDecoration: "line-through" }}>
+                  {BRAIN_OS.price.paywallAnchor}
+                </p>
+                <p style={{ fontSize: 34, fontWeight: 900, color: "var(--color-accent)", lineHeight: 1, letterSpacing: "-0.03em" }}>
+                  {BRAIN_OS.price.paywall}
+                </p>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 12, display: "grid", gap: 8 }}>
+              {BRAIN_OS.paywallUnlockBullets.map((item) => (
+                <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <div style={{ width: 18, height: 18, borderRadius: "var(--radius-pill)", background: "var(--color-primary-tint)", display: "flex", alignItems: "center", justifyContent: "center", marginTop: 1, flexShrink: 0 }}>
+                    <Check size={11} color="var(--color-primary)" strokeWidth={3} />
+                  </div>
+                  <span style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.45 }}>{item}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: 12, marginTop: 4 }}>
+              <div style={{ marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+                <BadgeCheck size={14} color="var(--color-primary-dark)" />
+                <span style={{ fontSize: 12, fontWeight: 700, color: "var(--color-primary-dark)" }}>{BRAIN_OS.clinicalContrastShort}</span>
+              </div>
+              <p style={{ fontSize: 12, color: "var(--color-text-muted)", lineHeight: 1.5 }}>
+                {BRAIN_OS.guaranteeTitle}. If it doesn&apos;t feel accurate, request a full refund within 7 days.
+              </p>
+              <p style={{ fontSize: 11, color: "var(--color-text-muted)", lineHeight: 1.5, marginTop: 8 }}>
+                FocusRoute is not a medical diagnosis and does not replace clinical evaluation.
+              </p>
+            </div>
           </m.div>
 
+          <m.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.12 }}
+            style={{
+              background: "var(--color-bg-card)",
+              borderRadius: "var(--radius-lg)",
+              border: "1px solid var(--color-border)",
+              boxShadow: "var(--shadow-card)",
+              padding: "18px",
+            }}
+          >
+            <AnimatePresence mode="wait">
+              {loadingSecret ? (
+                <m.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <PaymentSkeleton />
+                </m.div>
+              ) : clientSecret ? (
+                <m.div key="form" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.24 }}>
+                  <PaywallStripeElements
+                    clientSecret={clientSecret}
+                    onSuccess={handlePaywallSuccess}
+                  />
+                </m.div>
+              ) : (
+                <m.p key="error" style={{ fontSize: 13, color: "var(--color-accent-dark)", textAlign: "center", padding: "16px 0" }}>
+                  Failed to load payment. Please refresh the page.
+                </m.p>
+              )}
+            </AnimatePresence>
+          </m.div>
+
+          <m.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.16 }}
+            style={{
+              background: "var(--color-bg-card)",
+              borderRadius: 18,
+              border: "1px solid var(--color-border)",
+              boxShadow: "var(--shadow-card)",
+              padding: "14px 16px",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+            }}
+          >
+            <Shield size={16} color="var(--color-primary)" />
+            <p style={{ fontSize: 12, color: "var(--color-text-body)", lineHeight: 1.45 }}>
+              Secure checkout via Stripe · encrypted payment · instant profile access
+            </p>
+          </m.div>
+          <p style={{ textAlign: "center", fontSize: 11, color: "var(--color-text-muted)", marginTop: 6, lineHeight: 2 }}>
+            <a href="/terms" style={{ color: "inherit", textDecoration: "none" }}>Terms</a>
+            {" · "}
+            <a href="/privacy" style={{ color: "inherit", textDecoration: "none" }}>Privacy</a>
+            {" · "}
+            <a href="/refund-policy" style={{ color: "inherit", textDecoration: "none" }}>Refunds</a>
+            {" · "}
+            <a href="/disclaimer" style={{ color: "inherit", textDecoration: "none" }}>Disclaimer</a>
+          </p>
         </div>
       </div>
     </m.div>

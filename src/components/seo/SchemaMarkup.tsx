@@ -5,28 +5,28 @@ export function SchemaMarkup() {
     "mainEntity": [
       {
         "@type": "Question",
-        "name": "Is this ADHD test free?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Yes. The FocusRoute ADHD assessment is completely free to take. You receive your symptom level and profile summary at no cost. A detailed report with a personalized guide is available for a one-time fee." }
+        "name": "What is the FocusRoute Brain OS?",
+        "acceptedAnswer": { "@type": "Answer", "text": "FocusRoute Brain OS is a brain-first ADHD profiling system. It starts with a Cognitive Mapping Assessment and unlocks a personalized Brain Profile with a 28-day protocol tailored to your cognitive patterns." }
       },
       {
         "@type": "Question",
-        "name": "How accurate is an online ADHD test?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Online ADHD assessments like FocusRoute are screening tools based on validated clinical criteria (DSM-5). They are not a medical diagnosis but can identify symptom patterns and help you understand whether a professional evaluation is appropriate." }
+        "name": "Is FocusRoute a medical diagnosis?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. FocusRoute is a screening and profiling experience, not a medical diagnosis. It helps identify symptom patterns and can support a conversation with a licensed clinician." }
       },
       {
         "@type": "Question",
-        "name": "What types of ADHD are there?",
-        "acceptedAnswer": { "@type": "Answer", "text": "There are three main presentations: Predominantly Inattentive (difficulty focusing, forgetfulness), Predominantly Hyperactive-Impulsive (restlessness, impulsivity), and Combined Presentation (both inattention and hyperactivity symptoms)." }
+        "name": "How long does the Brain OS mapping take?",
+        "acceptedAnswer": { "@type": "Answer", "text": "The Cognitive Mapping Assessment takes about 12 minutes and is designed to map attention, executive function, emotional regulation, and daily behavior patterns." }
       },
       {
         "@type": "Question",
-        "name": "How long does the ADHD assessment take?",
-        "acceptedAnswer": { "@type": "Answer", "text": "FocusRoute's assessment takes approximately 3 minutes. It consists of 20 carefully selected questions covering attention, executive function, emotional regulation, and daily impact." }
+        "name": "What do I get after mapping my profile?",
+        "acceptedAnswer": { "@type": "Answer", "text": "You unlock a detailed Brain Profile, an Executive Function Radar, your ADHD Signature, and a personalized 28-day protocol with practical daily actions." }
       },
       {
         "@type": "Question",
-        "name": "Can adults have ADHD?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Yes. ADHD is a lifelong neurodevelopmental condition. Approximately 4–5% of adults worldwide have ADHD, though many remain undiagnosed. Symptoms often look different in adults than in children." }
+        "name": "Is there a guarantee?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. FocusRoute offers a 7-day \"This Is Me\" guarantee. If your profile does not feel accurate to your lived experience, you can request a full refund." }
       }
     ]
   }
@@ -34,8 +34,8 @@ export function SchemaMarkup() {
   const medicalSchema = {
     "@context": "https://schema.org",
     "@type": "MedicalWebPage",
-    "name": "FocusRoute ADHD Assessment",
-    "description": "A free online ADHD screening tool based on DSM-5 criteria for adults.",
+    "name": "FocusRoute Brain OS",
+    "description": "A brain-first ADHD profiling system with cognitive mapping and a personalized 28-day protocol for adults.",
     "url": "https://getfocusroute.com",
     "medicalAudience": { "@type": "MedicalAudience", "audienceType": "Patient" },
     "about": {

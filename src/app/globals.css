@@ -1,4 +1,4 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -12,91 +12,110 @@
    │  BACKGROUND  #F5F3EE  Warm Parchment  — depth without coldness │
    │  SURFACE     #FFFFFF  Pure White      — clarity, cleanliness   │
    │  PRIMARY     #4A7FA5  Cornflower Blue — trust, sky, stability  │
-   │  ACCENT      #E87450  Warm Coral      — emotion, warmth, hope  │
+   │  ACCENT      #5C8A5E  Forest Green    — growth, action, forward motion  │
    │  TEXT        #1C1A2E  Deep Indigo     — sophisticated, readable │
    └─────────────────────────────────────────────────────────────────┘
 
    Cornflower Blue = the psychological anchor of trust used across
    mental-health apps, banking and healthcare — calm, stable, safe.
-   Warm Coral = human warmth, optimism, forward motion — never alarm.
+   Forest Green = growth, intentional action, forward motion — calm and premium.
    ════════════════════════════════════════════════════════════════════ */
 
 :root {
-  color-scheme: light;
+  --color-bg-page: #F6F2EA;
+  --color-bg-dots: #E8E1D4;
+  --color-bg-card: #FFFFFF;
+  --color-bg-card-2: #FAF9F6;
 
-  /* ── Page & surfaces ─────────────────────────────────────────── */
-  --color-bg-page:      #F5F3EE;   /* warm parchment backdrop        */
-  --color-bg-dots:      #E8E4D8;   /* dot-grid — slightly darker     */
-  --color-bg-card:      #FFFFFF;   /* pure white cards               */
-  --color-bg-card-2:    #FAF9F6;   /* secondary / nested surfaces    */
+  --color-border: #EAE6DC;
+  --color-border-2: #CFC3B3;
 
-  /* ── Borders ─────────────────────────────────────────────────── */
-  --color-border:       #EAE6DC;   /* warm beige border              */
-  --color-border-2:     #D4CCBC;   /* stronger warm border / hover   */
+  --color-primary: #36607A;
+  --color-primary-dark: #27485F;
+  --color-primary-mid: #6F9AAF;
+  --color-primary-tint: #E8F1F3;
+  --color-primary-ring: rgba(54, 96, 122, 0.22);
 
-  /* ── Primary — Cornflower Blue (trust, calm, sky) ────────────── */
-  --color-primary:      #4A7FA5;
-  --color-primary-dark: #3A6385;   /* hover / pressed                */
-  --color-primary-tint: #EAF2F8;   /* selected background tint       */
-  --color-primary-mid:  #6AA3C8;   /* lighter stop for gradients     */
-  --color-primary-ring: rgba(74, 127, 165, 0.22);
+  --color-accent: #5C8A5E;
+  --color-accent-dark: #436C45;
+  --color-accent-tint: #EAF4EA;
 
-  /* ── Accent — Warm Coral (emotion, warmth, action) ───────────── */
-  --color-accent:       #E87450;
-  --color-accent-dark:  #CC5C3A;
-  --color-accent-tint:  #FDF1EC;
+  --color-cognitive: #7058B0;
+  --color-cognitive-dark: #544184;
+  --color-cognitive-tint: #F1EEFA;
 
-  /* ── Text ────────────────────────────────────────────────────── */
-  --color-text:         #1C1A2E;   /* deep indigo — sophisticated    */
-  --color-text-body:    #4A4A6A;   /* medium indigo — body copy      */
-  --color-text-muted:   #6B6B8A;   /* mid indigo-gray — captions (WCAG AA on white) */
+  --color-text: #1C1A2E;
+  --color-text-body: #4A4A6A;
+  --color-text-muted: #6B6B8A;
+  --color-text-soft: #9B9BB5;
 
-  /* ── Semantic helpers ────────────────────────────────────────── */
-  --color-selected-bg:    var(--color-primary-tint);
-  --color-selected-ring:  var(--color-primary);
-  --color-star:           #E87450;   /* use coral for stars — warmth  */
-  --color-progress-start: #E87450;   /* accent coral start            */
-  --color-progress-end:   #CC5C3A;   /* accent coral end              */
+  --color-selected-bg: var(--color-primary-tint);
+  --color-selected-ring: var(--color-primary);
 
-  /* ── Status tokens ────────────────────────────────────────────── */
-  --color-success:        #3DA06A;
-  --color-success-tint:   #E6F7EF;
-  --color-error:          #D94F4F;
-  --color-error-tint:     #FDEAEA;
-  --color-warning:        #F07000;
-  --color-warning-tint:   #FEF0DC;
+  --color-star: var(--color-warning);
+  --color-progress-start: var(--color-primary);
+  --color-progress-end: var(--color-cognitive);
 
-  /* ── Shadows (warm-tinted, not cold gray) ────────────────────── */
+  --color-success: #3D936A;
+  --color-success-tint: #E7F5EE;
+  --color-error: #C94A4A;
+  --color-error-tint: #FDEAEA;
+  --color-warning: #D97818;
+  --color-warning-tint: #FEF0DC;
+
   --shadow-card:
-    0 1px 3px  rgba(28, 26, 46, 0.05),
+    0 1px 3px rgba(28, 26, 46, 0.05),
     0 16px 48px rgba(28, 26, 46, 0.08);
 
   --shadow-card-hover:
-    0 2px 6px  rgba(28, 26, 46, 0.07),
+    0 2px 6px rgba(28, 26, 46, 0.07),
     0 24px 64px rgba(28, 26, 46, 0.12);
 
-  /* Blue shadow for primary teal/blue buttons */
-  --shadow-btn-primary: 0 4px 22px rgba(74, 127, 165, 0.38);
-  /* Coral shadow for accent / paywall CTA */
-  --shadow-btn-accent:  0 4px 22px rgba(232, 116, 80, 0.40);
+  --shadow-btn-primary: 0 4px 22px rgba(54, 96, 122, 0.34);
+  --shadow-btn-accent: 0 4px 22px rgba(92, 138, 94, 0.36);
 
-  /* Selected ring on option buttons */
   --shadow-sel:
-    0 0 0 2.5px #4A7FA5,
-    0 4px 16px rgba(74, 127, 165, 0.18);
+    0 0 0 2.5px var(--color-primary),
+    0 4px 16px rgba(54, 96, 122, 0.18);
 
-  /* Legacy alias */
   --shadow-btn: var(--shadow-btn-primary);
+
+  /* ── Border-radius scale ───────────────────────────────────────── */
+  --radius-sm:   12px;   /* inputs, row items, small chips          */
+  --radius-md:   16px;   /* buttons, small cards                    */
+  --radius-lg:   22px;   /* main section cards                      */
+  --radius-xl:   28px;   /* hero containers, large feature cards    */
+  --radius-pill: 999px;  /* badges, pills, progress tracks          */
+  /* ── Cognitive Signature type colors ──────────────────────────── */
+  --color-sig-sprinter:        #3B82F6;
+  --color-sig-sprinter-tint:   #EFF6FF;
+  --shadow-sig-sprinter:       0 2px 8px rgba(59,130,246,0.35);
+
+  --color-sig-archivist:       #2563EB;
+  --color-sig-archivist-tint:  #F1F5F9;
+  --shadow-sig-archivist:      0 2px 8px rgba(37,99,235,0.32);
+
+  --color-sig-spark:           #0EA5A4;
+  --color-sig-spark-tint:      #ECFDF5;
+  --shadow-sig-spark:          0 2px 8px rgba(14,165,164,0.35);
+
+  --color-sig-reactor:         #3DA06A;
+  --color-sig-reactor-tint:    #E6F7EF;
+  --shadow-sig-reactor:        0 2px 8px rgba(61,160,106,0.32);
+
+  --color-sig-drifter:         #F07000;
+  --color-sig-drifter-tint:    #FEF0DC;
+  --shadow-sig-drifter:        0 2px 8px rgba(240,112,0,0.30);
 }
 
 /* ── Tailwind theme ──────────────────────────────────────────────── */
 @theme {
   --color-page:         var(--color-bg-page);
   --color-card:         var(--color-bg-card);
-  --color-blue:         #4A7FA5;
-  --color-blue-mid:     #6AA3C8;
-  --color-coral:        #E87450;
-  --color-indigo:       #1C1A2E;
+  --color-blue:         var(--color-primary);
+  --color-blue-mid:     var(--color-primary-mid);
+  --color-coral:        var(--color-accent);
+  --color-indigo:       var(--color-text);
 }
 
 /* ── Reset ───────────────────────────────────────────────────────── */

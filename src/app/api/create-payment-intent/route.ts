@@ -1,57 +1,61 @@
 import Stripe from "stripe";
-import { compactStripeMetadata, resolveProductKey } from "@/lib/access/products";
+
+import { buildStripeFunnelMetadata } from "@/lib/stripe/metadata";
+import { resolveOneTimeProductKey } from "@/lib/stripe/productKeyPolicy";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const {
-      priceId,
-      email,
-      product_key,
-      productKey,
-      funnel_step,
-      funnelStep,
-      quiz_result_id,
-      quizResultId,
-      user_name,
-      userName,
-    } = body;
+    const body = (await request.json()) as Record<string, unknown>;
+    const priceId = body.priceId;
+    const email = typeof body.email === "string" ? body.email : "";
+    const funnel_step =
+      typeof body.funnel_step === "string" ? body.funnel_step : "";
+    const quiz_result_id =
+      typeof body.quiz_result_id === "string" ? body.quiz_result_id : "";
+    const user_name =
+      typeof body.user_name === "string" ? body.user_name : "";
 
-    const resolvedProductKey = resolveProductKey({ productKey: productKey ?? product_key, priceId });
-    const normalizedEmail = String(email ?? "").trim().toLowerCase();
-
-    if (!priceId) {
-      return Response.json({ error: "priceId is required" }, { status: 400 });
+    if (typeof priceId !== "string" || !priceId) {
+      return Response.json({ error: "priceId required" }, { status: 400 });
+    }
+    if (!funnel_step) {
+      return Response.json({ error: "funnel_step required" }, { status: 400 });
+    }
+    if (!email || !email.includes("@")) {
+      return Response.json({ error: "email required" }, { status: 400 });
     }
 
-    if (!normalizedEmail) {
-      return Response.json({ error: "email is required" }, { status: 400 });
+    const productKey = resolveOneTimeProductKey(priceId, funnel_step);
+    if (!productKey) {
+      return Response.json(
+        { error: "Invalid priceId for this funnel_step" },
+        { status: 400 },
+      );
     }
 
     const price = await stripe.prices.retrieve(priceId);
-    const amount = price.unit_amount;
+    const amount = price.unit_amount!;
 
-    if (!amount) {
-      return Response.json({ error: "Stripe price must have a unit_amount" }, { status: 400 });
-    }
-
-    const metadata = compactStripeMetadata({
-      product_key: resolvedProductKey,
-      email: normalizedEmail,
-      funnel_step: funnelStep ?? funnel_step ?? resolvedProductKey,
-      quiz_result_id: quizResultId ?? quiz_result_id,
-      user_name: userName ?? user_name,
-      priceId,
+    const emailNorm = email.trim().toLowerCase();
+    const funnelMeta = buildStripeFunnelMetadata({
+      product_key: productKey,
+      email: emailNorm,
+      funnel_step,
+      quiz_result_id,
+      user_name,
     });
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
-      currency: price.currency,
+      currency: "usd",
       automatic_payment_methods: { enabled: true },
-      receipt_email: normalizedEmail,
-      metadata,
+      receipt_email: emailNorm,
+      metadata: {
+        ...funnelMeta,
+        priceId,
+      },
     });
 
     return Response.json({ clientSecret: paymentIntent.client_secret });

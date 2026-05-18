@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { m } from "framer-motion";
 import { QuizOption } from "@/types/quiz";
@@ -49,8 +49,10 @@ export function OptionButton({ option, isSelected, inputType, onClick }: OptionB
       {inputType === "multiple" && (
         <m.div
           animate={{
-            backgroundColor: isSelected ? "var(--color-primary)" : "transparent",
-            borderColor:     isSelected ? "var(--color-primary)" : "rgba(28,26,46,0.22)",
+            backgroundColor: isSelected
+              ? "#4a7fa5"
+              : "transparent",
+            borderColor: isSelected ? "#4a7fa5" : "rgba(28,26,46,0.22)",
           }}
           transition={{ duration: 0.14 }}
           style={{

@@ -1,9 +1,11 @@
 "use client";
 
-import dynamic                 from "next/dynamic";
+import dynamic                      from "next/dynamic";
+import { useEffect } from "react";
 import { AnimatePresence, m }  from "framer-motion";
-import { useQuizStore }        from "@/store/quizStore";
-import { QuizEngine }          from "@/components/quiz/QuizEngine";
+import { useQuizStore }             from "@/store/quizStore";
+import { getPersistedQuizResultId } from "@/lib/quizResultId";
+import { QuizEngine }               from "@/components/quiz/QuizEngine";
 
 function ScreenSkeleton() {
   return (
@@ -36,6 +38,14 @@ const fade = (isFirst = false) => ({
 
 export default function Home() {
   const step = useQuizStore((s) => s.currentStep);
+  const setQuizResultId = useQuizStore((s) => s.setQuizResultId);
+
+  useEffect(() => {
+    const id = getPersistedQuizResultId();
+    if (id) {
+      setQuizResultId(id);
+    }
+  }, [setQuizResultId]);
 
   return (
     <main>

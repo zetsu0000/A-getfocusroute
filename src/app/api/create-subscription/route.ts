@@ -1,55 +1,58 @@
 import Stripe from "stripe";
-import { compactStripeMetadata, resolveProductKey } from "@/lib/access/products";
+
+import { buildStripeFunnelMetadata } from "@/lib/stripe/metadata";
+import { resolveMembershipProductKey } from "@/lib/stripe/productKeyPolicy";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const {
-      priceId,
+    const body = (await request.json()) as Record<string, unknown>;
+    const priceId = body.priceId;
+    const emailRaw = typeof body.email === "string" ? body.email : "";
+    const paymentMethodId = body.paymentMethodId;
+    const funnel_step =
+      typeof body.funnel_step === "string" ? body.funnel_step : "subscription";
+    const quiz_result_id =
+      typeof body.quiz_result_id === "string" ? body.quiz_result_id : "";
+    const user_name =
+      typeof body.user_name === "string" ? body.user_name : "";
+
+    if (typeof priceId !== "string" || !priceId) {
+      return Response.json({ error: "priceId required" }, { status: 400 });
+    }
+    if (typeof paymentMethodId !== "string" || !paymentMethodId) {
+      return Response.json({ error: "paymentMethodId required" }, { status: 400 });
+    }
+    if (!emailRaw || !emailRaw.includes("@")) {
+      return Response.json({ error: "email required" }, { status: 400 });
+    }
+
+    const email = emailRaw.trim().toLowerCase();
+
+    const productKey = resolveMembershipProductKey(priceId);
+    if (!productKey) {
+      return Response.json({ error: "Invalid priceId" }, { status: 400 });
+    }
+
+    const funnelMeta = buildStripeFunnelMetadata({
+      product_key: productKey,
       email,
-      paymentMethodId,
-      product_key,
-      productKey,
       funnel_step,
-      funnelStep,
       quiz_result_id,
-      quizResultId,
       user_name,
-      userName,
-    } = body;
-
-    const normalizedEmail = String(email ?? "").trim().toLowerCase();
-    const resolvedProductKey = resolveProductKey({ productKey: productKey ?? product_key, priceId });
-
-    if (!priceId) {
-      return Response.json({ error: "priceId is required" }, { status: 400 });
-    }
-
-    if (!normalizedEmail) {
-      return Response.json({ error: "email is required" }, { status: 400 });
-    }
-
-    if (!paymentMethodId) {
-      return Response.json({ error: "paymentMethodId is required" }, { status: 400 });
-    }
-
-    const metadata = compactStripeMetadata({
-      product_key: resolvedProductKey,
-      email: normalizedEmail,
-      funnel_step: funnelStep ?? funnel_step ?? resolvedProductKey,
-      quiz_result_id: quizResultId ?? quiz_result_id,
-      user_name: userName ?? user_name,
-      priceId,
     });
 
-    let customer;
-    const existing = await stripe.customers.list({ email: normalizedEmail, limit: 1 });
+    let customer: Stripe.Customer;
+    const existing = await stripe.customers.list({ email, limit: 1 });
     if (existing.data.length > 0) {
-      customer = await stripe.customers.update(existing.data[0].id, { metadata });
+      customer = existing.data[0];
+      await stripe.customers.update(customer.id, { metadata: funnelMeta });
     } else {
-      customer = await stripe.customers.create({ email: normalizedEmail, metadata });
+      customer = await stripe.customers.create({
+        email,
+        metadata: funnelMeta,
+      });
     }
 
     await stripe.paymentMethods.attach(paymentMethodId, {
@@ -62,17 +65,20 @@ export async function POST(request: Request) {
     const subscription = await stripe.subscriptions.create({
       customer: customer.id,
       items: [{ price: priceId }],
-      metadata,
       payment_settings: {
         payment_method_types: ["card"],
         save_default_payment_method: "on_subscription",
       },
+      metadata: funnelMeta,
       expand: ["latest_invoice.payment_intent"],
     });
 
-    const invoice = subscription.latest_invoice as Stripe.Invoice & { payment_intent?: Stripe.PaymentIntent | string };
+    const invoice = subscription.latest_invoice as Stripe.Invoice & {
+      payment_intent?: Stripe.PaymentIntent | string;
+    };
     const rawPI = invoice?.payment_intent;
-    const paymentIntent = typeof rawPI === "string" ? null : (rawPI as Stripe.PaymentIntent | undefined);
+    const paymentIntent =
+      typeof rawPI === "string" ? null : (rawPI as Stripe.PaymentIntent | undefined);
 
     return Response.json({
       subscriptionId: subscription.id,

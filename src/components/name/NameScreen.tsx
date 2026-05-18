@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { m } from "framer-motion";
@@ -42,7 +42,7 @@ export function NameScreen() {
       exit={{ opacity: 0, x: -40 }}
       transition={{ duration: 0.28 }}
       style={{
-        minHeight: "100vh",
+        minHeight: "100dvh",
         display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center",
         padding: "40px 24px",
@@ -57,14 +57,17 @@ export function NameScreen() {
           textAlign: "center", lineHeight: 1.3,
           marginBottom: 4,
         }}>
-          What&apos;s your name?
+          Personalize your signature reveal
         </h1>
+        <p style={{ fontSize: 14, color: "var(--color-text-muted)", textAlign: "center" }}>
+          We&apos;ll use your name in your Cognitive Signature™ preview and Profile-to-Protocol™ overview.
+        </p>
 
         {/* Name input */}
         <div>
           <input
             type="text"
-            placeholder="Enter your name"
+            placeholder="Enter your first name"
             value={local}
             onChange={(e) => setLocal(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleContinue()}
@@ -81,8 +84,8 @@ export function NameScreen() {
             }}
             onFocus={(e) => {
               if (!hasError) {
-                e.currentTarget.style.borderColor = "#CBC0D3";
-                e.currentTarget.style.boxShadow   = "0 0 0 3px rgba(203,192,211,0.22)";
+                e.currentTarget.style.borderColor = "var(--color-cognitive)";
+                e.currentTarget.style.boxShadow   = "0 0 0 3px rgba(107,92,165,0.2)";
               }
             }}
           />
@@ -111,12 +114,12 @@ export function NameScreen() {
               : { background: "var(--color-border)", color: "var(--color-text-muted)" }),
           }}
         >
-          Continue
+          Continue to My Partial Profile Reveal
         </button>
 
         {/* Privacy note */}
         <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", lineHeight: 1.6 }}>
-          🔒 Your name is kept private and only used to personalize your results
+          🔒 Your name stays private and is used only for personalization
         </p>
 
       </div>

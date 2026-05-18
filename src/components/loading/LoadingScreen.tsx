@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useRef } from "react";
 import { m, AnimatePresence } from "framer-motion";
@@ -6,10 +6,10 @@ import { Star, CheckCircle2 } from "lucide-react";
 import { useQuizStore } from "@/store/quizStore";
 
 const PHASES = [
-  { label: "Analyzing your responses",    end: 22 },
-  { label: "Calculating your profile",    end: 55 },
-  { label: "Generating your report",      end: 78 },
-  { label: "Preparing your ADHD guide",   end: 100 },
+  { label: "Reading your Cognitive Mapping Assessment™", end: 24 },
+  { label: "Building your Executive Function Radar™", end: 56 },
+  { label: "Mapping your Cognitive Signature™", end: 80 },
+  { label: "Preparing your partial profile reveal", end: 100 },
 ];
 
 const TOTAL_MS = 7000;
@@ -17,9 +17,9 @@ const MODAL_AT = 38;
 
 const REVIEWS = [
   {
-    stars: 5, author: "by Cherrysue7",
-    title: "Super accurate and eye-opening results",
-    text: "The test identified exactly the areas I needed to work on. The guide is practical and straight to the point — in 2 weeks I already felt a real difference in my focus and organization.",
+    stars: 5, author: "FocusRoute member",
+    title: "Finally a profile that feels like my brain",
+    text: "The language was practical and specific. I could see exactly where I lose momentum and what to try first.",
   },
 ];
 
@@ -88,7 +88,7 @@ export function LoadingScreen() {
   return (
     <>
       <div style={{
-        minHeight: "100vh",
+        minHeight: "100dvh",
         display: "flex", flexDirection: "column", alignItems: "center",
         padding: "0 24px",
       }}>
@@ -101,10 +101,10 @@ export function LoadingScreen() {
             transition={{ duration: 0.4 }}
           >
             <h1 style={{ fontSize: 28, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.2, marginBottom: 2 }}>
-              Calculating your
+              Building your
             </h1>
             <h1 style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.2, color: "var(--color-primary)" }}>
-              results...
+              Brain Profile™...
             </h1>
           </m.div>
         </div>
@@ -147,7 +147,7 @@ export function LoadingScreen() {
                       style={{
                         height: "100%", borderRadius: 99,
                         background: "linear-gradient(90deg, var(--color-progress-start), var(--color-progress-end))",
-                        boxShadow: "0 0 8px rgba(74,127,165,0.35)",
+                        boxShadow: "0 0 8px rgba(54,96,122,0.32)",
                       }}
                     />
                   </div>
@@ -170,10 +170,10 @@ export function LoadingScreen() {
           }}
         >
           <p style={{ fontSize: 26, fontWeight: 800, color: "var(--color-primary)", textAlign: "center" }}>
-            +200,000 people
+            FocusRoute Brain OS™
           </p>
           <p style={{ fontSize: 15, color: "var(--color-text-body)", marginTop: 4, marginBottom: 18 }}>
-            have already discovered their ADHD profile with FocusRoute
+            profile-first clarity for focus and execution patterns
           </p>
 
           <div style={{
@@ -202,7 +202,7 @@ export function LoadingScreen() {
               key="bd"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              style={{ position: "fixed", inset: 0, zIndex: 40, background: "rgba(13,33,55,0.45)", backdropFilter: "blur(5px)" }}
+              style={{ position: "fixed", inset: 0, zIndex: 40, background: "rgba(28,26,46,0.42)", backdropFilter: "blur(5px)" }}
             />
 
             <div style={{
@@ -220,7 +220,7 @@ export function LoadingScreen() {
                   width: "100%", maxWidth: 440,
                   background: "var(--color-bg-card)",
                   borderRadius: 24, padding: "28px 28px 24px",
-                  boxShadow: "0 24px 64px rgba(13,33,55,0.22)",
+                  boxShadow: "0 24px 64px rgba(28,26,46,0.22)",
                   pointerEvents: "auto",
                 }}
               >
@@ -229,13 +229,13 @@ export function LoadingScreen() {
                   textTransform: "uppercase", letterSpacing: "0.1em",
                   textAlign: "center", marginBottom: 10,
                 }}>
-                  Before we continue, tell us
+                  Quick check-in
                 </p>
                 <h2 style={{
                   fontSize: 17, fontWeight: 800, color: "var(--color-text)",
                   textAlign: "center", lineHeight: 1.4, marginBottom: 22,
                 }}>
-                  Did you know that understanding your ADHD profile is the first step to managing it?
+                  Quick pulse check: does profile clarity help you take action faster?
                 </h2>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                   {["No", "Yes"].map((opt) => (
@@ -254,7 +254,7 @@ export function LoadingScreen() {
                       onMouseEnter={(e) => {
                         const el = e.currentTarget;
                         el.style.background  = "var(--color-primary)";
-                        el.style.color       = "#fff";
+                        el.style.color       = "var(--color-bg-card)";
                         el.style.borderColor = "var(--color-primary)";
                       }}
                       onMouseLeave={(e) => {
