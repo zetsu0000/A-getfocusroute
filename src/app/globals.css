@@ -2,52 +2,35 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ════════════════════════════════════════════════════════════════════
-   🎨  POLA-INSPIRED PALETTE  —  Warm Elegance · Trust · Emotion
-
-   Inspired by POLA 2029 Vision (Awwwards SOTD):
-   clean white surfaces, warm parchment backdrop, organic warmth.
-
-   ┌─────────────────────────────────────────────────────────────────┐
-   │  BACKGROUND  #F5F3EE  Warm Parchment  — depth without coldness │
-   │  SURFACE     #FFFFFF  Pure White      — clarity, cleanliness   │
-   │  PRIMARY     #4A7FA5  Cornflower Blue — trust, sky, stability  │
-   │  ACCENT      #5C8A5E  Forest Green    — growth, action, forward motion  │
-   │  TEXT        #1C1A2E  Deep Indigo     — sophisticated, readable │
-   └─────────────────────────────────────────────────────────────────┘
-
-   Cornflower Blue = the psychological anchor of trust used across
-   mental-health apps, banking and healthcare — calm, stable, safe.
-   Forest Green = growth, intentional action, forward motion — calm and premium.
-   ════════════════════════════════════════════════════════════════════ */
+/* Premium Editorial Cognitive visual system. */
 
 :root {
-  --color-bg-page: #F6F2EA;
-  --color-bg-dots: #E8E1D4;
+  --color-bg-page: #F7F2EA;
+  --color-bg-dots: #E7DED0;
   --color-bg-card: #FFFFFF;
-  --color-bg-card-2: #FAF9F6;
+  --color-bg-card-2: #FCF8F2;
 
-  --color-border: #EAE6DC;
-  --color-border-2: #CFC3B3;
+  --color-text: #171421;
+  --color-text-body: #444058;
+  --color-text-muted: #6F6A80;
+  --color-text-soft: #9A94AA;
 
-  --color-primary: #36607A;
-  --color-primary-dark: #27485F;
-  --color-primary-mid: #6F9AAF;
-  --color-primary-tint: #E8F1F3;
-  --color-primary-ring: rgba(54, 96, 122, 0.22);
+  --color-border: #E2D8CA;
+  --color-border-2: #CBBEAE;
 
-  --color-accent: #5C8A5E;
-  --color-accent-dark: #436C45;
-  --color-accent-tint: #EAF4EA;
+  --color-primary: #263B52;
+  --color-primary-dark: #17283A;
+  --color-primary-mid: #58748E;
+  --color-primary-tint: #E9F0F4;
+  --color-primary-ring: rgba(38, 59, 82, 0.22);
 
-  --color-cognitive: #7058B0;
-  --color-cognitive-dark: #544184;
-  --color-cognitive-tint: #F1EEFA;
+  --color-accent: #171421;
+  --color-accent-dark: #0E0B16;
+  --color-accent-tint: #EFEAF7;
 
-  --color-text: #1C1A2E;
-  --color-text-body: #4A4A6A;
-  --color-text-muted: #6B6B8A;
-  --color-text-soft: #9B9BB5;
+  --color-cognitive: #6757E8;
+  --color-cognitive-dark: #4A3DB6;
+  --color-cognitive-tint: #F0EEFF;
 
   --color-selected-bg: var(--color-primary-tint);
   --color-selected-ring: var(--color-primary);
@@ -56,29 +39,32 @@
   --color-progress-start: var(--color-primary);
   --color-progress-end: var(--color-cognitive);
 
-  --color-success: #3D936A;
-  --color-success-tint: #E7F5EE;
-  --color-error: #C94A4A;
+  --color-success: #2F8B63;
+  --color-success-tint: #E8F5EE;
+  --color-error: #C64545;
   --color-error-tint: #FDEAEA;
-  --color-warning: #D97818;
-  --color-warning-tint: #FEF0DC;
+  --color-warning: #C88322;
+  --color-warning-tint: #FEF1DC;
 
   --shadow-card:
-    0 1px 3px rgba(28, 26, 46, 0.05),
-    0 16px 48px rgba(28, 26, 46, 0.08);
+    0 1px 2px rgba(23, 20, 33, 0.06),
+    0 18px 52px rgba(23, 20, 33, 0.10);
 
   --shadow-card-hover:
-    0 2px 6px rgba(28, 26, 46, 0.07),
-    0 24px 64px rgba(28, 26, 46, 0.12);
+    0 2px 6px rgba(23, 20, 33, 0.10),
+    0 28px 72px rgba(23, 20, 33, 0.16);
+  --shadow-card-strong:
+    0 2px 8px rgba(23, 20, 33, 0.10),
+    0 30px 80px rgba(23, 20, 33, 0.16);
 
-  --shadow-btn-primary: 0 4px 22px rgba(54, 96, 122, 0.34);
-  --shadow-btn-accent: 0 4px 22px rgba(92, 138, 94, 0.36);
+  --shadow-btn-primary: 0 6px 22px rgba(38, 59, 82, 0.28);
+  --shadow-btn-accent: 0 10px 34px rgba(23, 20, 33, 0.28);
 
   --shadow-sel:
     0 0 0 2.5px var(--color-primary),
-    0 4px 16px rgba(54, 96, 122, 0.18);
+    0 4px 16px rgba(38, 59, 82, 0.18);
 
-  --shadow-btn: var(--shadow-btn-primary);
+  --shadow-btn: var(--shadow-btn-accent);
 
   /* ── Border-radius scale ───────────────────────────────────────── */
   --radius-sm:   12px;   /* inputs, row items, small chips          */
@@ -87,25 +73,25 @@
   --radius-xl:   28px;   /* hero containers, large feature cards    */
   --radius-pill: 999px;  /* badges, pills, progress tracks          */
   /* ── Cognitive Signature type colors ──────────────────────────── */
-  --color-sig-sprinter:        #3B82F6;
-  --color-sig-sprinter-tint:   #EFF6FF;
-  --shadow-sig-sprinter:       0 2px 8px rgba(59,130,246,0.35);
+  --color-sig-sprinter:        #58748E;
+  --color-sig-sprinter-tint:   #E9F0F4;
+  --shadow-sig-sprinter:       0 2px 8px rgba(38,59,82,0.28);
 
-  --color-sig-archivist:       #2563EB;
-  --color-sig-archivist-tint:  #F1F5F9;
-  --shadow-sig-archivist:      0 2px 8px rgba(37,99,235,0.32);
+  --color-sig-archivist:       #263B52;
+  --color-sig-archivist-tint:  #F3F6F8;
+  --shadow-sig-archivist:      0 2px 8px rgba(38,59,82,0.24);
 
-  --color-sig-spark:           #0EA5A4;
-  --color-sig-spark-tint:      #ECFDF5;
-  --shadow-sig-spark:          0 2px 8px rgba(14,165,164,0.35);
+  --color-sig-spark:           #6757E8;
+  --color-sig-spark-tint:      #F0EEFF;
+  --shadow-sig-spark:          0 2px 8px rgba(103,87,232,0.30);
 
-  --color-sig-reactor:         #3DA06A;
-  --color-sig-reactor-tint:    #E6F7EF;
-  --shadow-sig-reactor:        0 2px 8px rgba(61,160,106,0.32);
+  --color-sig-reactor:         #2F8B63;
+  --color-sig-reactor-tint:    #E8F5EE;
+  --shadow-sig-reactor:        0 2px 8px rgba(47,139,99,0.28);
 
-  --color-sig-drifter:         #F07000;
-  --color-sig-drifter-tint:    #FEF0DC;
-  --shadow-sig-drifter:        0 2px 8px rgba(240,112,0,0.30);
+  --color-sig-drifter:         #C88322;
+  --color-sig-drifter-tint:    #FEF1DC;
+  --shadow-sig-drifter:        0 2px 8px rgba(200,131,34,0.26);
 }
 
 /* ── Tailwind theme ──────────────────────────────────────────────── */

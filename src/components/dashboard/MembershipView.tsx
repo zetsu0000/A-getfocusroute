@@ -81,8 +81,9 @@ export function LockedMembership() {
           borderRadius: 18,
           padding: "24px 22px",
           background:
-            "linear-gradient(135deg, var(--color-primary-tint) 0%, var(--color-cognitive-tint) 100%)",
-          border: "1px solid var(--color-border)",
+            "linear-gradient(135deg, var(--color-bg-card) 0%, var(--color-accent-tint) 100%)",
+          border: "1px solid var(--color-border-2)",
+          boxShadow: "var(--shadow-card-strong)",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
@@ -98,7 +99,7 @@ export function LockedMembership() {
               justifyContent: "center",
             }}
           >
-            <Crown size={20} color="var(--color-primary)" />
+            <Crown size={20} color="var(--color-accent)" />
           </div>
           <div>
             <p
@@ -107,7 +108,7 @@ export function LockedMembership() {
                 fontWeight: 800,
                 letterSpacing: "0.09em",
                 textTransform: "uppercase",
-                color: "var(--color-primary)",
+                color: "var(--color-accent)",
                 marginBottom: 3,
               }}
             >
@@ -133,11 +134,12 @@ export function LockedMembership() {
             display: "inline-flex",
             padding: "13px 24px",
             borderRadius: 12,
-            background: "var(--color-primary)",
+            background: "var(--color-accent)",
             color: "#fff",
             fontSize: 14,
             fontWeight: 700,
             textDecoration: "none",
+            boxShadow: "var(--shadow-btn-accent)",
           }}
         >
           View membership options

@@ -48,11 +48,11 @@ export function OptionButton({ option, isSelected, inputType, onClick }: OptionB
       {/* ── Multiple-choice checkbox ──────────────────────────── */}
       {inputType === "multiple" && (
         <m.div
-          animate={{
-            backgroundColor: isSelected
-              ? "#4a7fa5"
+        animate={{
+          backgroundColor: isSelected
+              ? "var(--color-cognitive)"
               : "transparent",
-            borderColor: isSelected ? "#4a7fa5" : "rgba(28,26,46,0.22)",
+            borderColor: isSelected ? "var(--color-cognitive)" : "rgba(28,26,46,0.22)",
           }}
           transition={{ duration: 0.14 }}
           style={{
@@ -84,7 +84,7 @@ export function OptionButton({ option, isSelected, inputType, onClick }: OptionB
           transition={{ type: "spring", stiffness: 500, damping: 22 }}
           style={{
             width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
-            background: "var(--color-primary)",
+            background: "var(--color-cognitive)",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}
         >

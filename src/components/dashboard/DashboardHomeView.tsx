@@ -18,6 +18,7 @@ function FeatureCard({
   href,
   locked,
   need,
+  featured = false,
 }: {
   title: string;
   subtitle: string;
@@ -25,6 +26,7 @@ function FeatureCard({
   href: string;
   locked: boolean;
   need: string;
+  featured?: boolean;
 }) {
   const dest = locked ? `/dashboard/upgrade?need=${encodeURIComponent(need)}` : href;
   return (
@@ -34,12 +36,16 @@ function FeatureCard({
       style={{
         display: "block",
         borderRadius: "var(--radius-lg)",
-        padding: "18px 18px",
-        background: "var(--color-bg-card)",
-        border: "1px solid var(--color-border)",
-        boxShadow: "var(--shadow-card)",
+        padding: featured ? "20px 20px" : "18px 18px",
+        background: featured
+          ? "linear-gradient(135deg, var(--color-bg-card) 0%, var(--color-cognitive-tint) 100%)"
+          : "var(--color-bg-card)",
+        border: featured
+          ? "1px solid rgba(103,87,232,0.28)"
+          : "1px solid var(--color-border)",
+        boxShadow: featured ? "var(--shadow-card-strong)" : "var(--shadow-card)",
         textDecoration: "none",
-        opacity: locked ? 0.72 : 1,
+        opacity: locked ? 0.86 : 1,
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
@@ -55,12 +61,12 @@ function FeatureCard({
             letterSpacing: "0.06em",
             padding: "4px 8px",
             borderRadius: 8,
-            background: locked ? "var(--color-bg-card-2)" : "var(--color-success-tint)",
-            color: locked ? "var(--color-text-muted)" : "var(--color-success)",
+            background: locked ? "var(--color-warning-tint)" : "var(--color-success-tint)",
+            color: locked ? "var(--color-warning)" : "var(--color-success)",
             flexShrink: 0,
           }}
         >
-          {locked ? "Available" : "Ready"}
+          {locked ? "Locked" : "Ready"}
         </span>
       </div>
       <p
@@ -68,7 +74,7 @@ function FeatureCard({
           marginTop: 10,
           fontSize: 12,
           fontWeight: 700,
-          color: "var(--color-primary)",
+          color: locked ? "var(--color-accent)" : "var(--color-primary)",
         }}
       >
         {cta} →
@@ -110,6 +116,7 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
             href="/dashboard/profile"
             locked={!profileOpen}
             need="brain_profile"
+            featured
           />
           <FeatureCard
             title={roadmapOpen ? "Your 28-Day Protocol is ready" : "Add the 28-Day Protocol"}
@@ -122,7 +129,7 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
           <FeatureCard
             title={bonusesOpen ? "Your bonuses are available" : "Unlock your bonuses"}
             subtitle="Toolkit, audio guides, and explain-this scripts when included in your purchase."
-            cta="View Bonuses"
+            cta={bonusesOpen ? "View Bonuses" : "Open bonus options"}
             href="/dashboard/bonuses"
             locked={!bonusesOpen}
             need="bonus_toolkit"

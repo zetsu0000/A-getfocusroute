@@ -37,9 +37,9 @@ function FemaleCharacter() {
       style={{ width: "100%", height: "100%", display: "block" }}>
       <rect x="10" y="10" width="280" height="280" rx="20" fill="white" stroke="var(--color-primary)" strokeWidth="2" />
       <path d="M 100 60 C 40 60, 20 130, 30 190 C 35 220, 20 260, 45 285 C 75 295, 95 260, 105 230 L 125 150 L 175 150 L 195 230 C 205 260, 225 295, 255 285 C 280 260, 265 220, 270 190 C 280 130, 260 60, 200 60 Z" fill="#A04E4E" stroke="#2C3E50" strokeWidth="2" strokeLinejoin="round" />
-      <path d="M 50 280 C 60 210, 90 180, 120 170 L 150 190 L 180 170 C 210 180, 240 210, 250 280 Z" fill="#FF8C00" stroke="#2C3E50" strokeWidth="2" />
-      <path d="M 120 170 L 140 210 L 150 190 Z" fill="#FF8C00" stroke="#2C3E50" strokeWidth="2" />
-      <path d="M 180 170 L 160 210 L 150 190 Z" fill="#FF8C00" stroke="#2C3E50" strokeWidth="2" />
+      <path d="M 50 280 C 60 210, 90 180, 120 170 L 150 190 L 180 170 C 210 180, 240 210, 250 280 Z" fill="#58748E" stroke="#2C3E50" strokeWidth="2" />
+      <path d="M 120 170 L 140 210 L 150 190 Z" fill="#58748E" stroke="#2C3E50" strokeWidth="2" />
+      <path d="M 180 170 L 160 210 L 150 190 Z" fill="#58748E" stroke="#2C3E50" strokeWidth="2" />
       <line x1="150" y1="190" x2="150" y2="280" stroke="#2C3E50" strokeWidth="2" />
       <circle cx="157" cy="230" r="3" fill="none" stroke="#2C3E50" strokeWidth="1.5" />
       <circle cx="157" cy="260" r="3" fill="none" stroke="#2C3E50" strokeWidth="1.5" />
@@ -275,7 +275,7 @@ export function GenderLanding() {
               alignItems: "center",
               justifyContent: "center",
               gap: 8,
-              background: "var(--color-primary)",
+              background: "var(--color-accent)",
               color: "#ffffff",
               fontSize: 15,
               fontWeight: 800,
@@ -284,7 +284,7 @@ export function GenderLanding() {
               borderRadius: 14,
               border: "none",
               cursor: "pointer",
-              boxShadow: "var(--shadow-btn-primary)",
+              boxShadow: "var(--shadow-btn-accent)",
             }}
           >
             Start My Cognitive Mapping Assessment™

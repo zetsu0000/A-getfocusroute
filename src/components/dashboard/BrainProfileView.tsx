@@ -1,4 +1,5 @@
 ﻿import type { CSSProperties, ReactNode } from "react";
+import { CopyableTemplateBlock } from "@/components/dashboard/CopyableTemplateBlock";
 import type { BrainProfileData, RadarDimension } from "@/lib/dashboard/brain-profile";
 import type { ExplainScriptBundle } from "@/data/bonuses";
 
@@ -174,8 +175,8 @@ function RadarChart({ dimensions }: { dimensions: RadarDimension[] }) {
       {/* Filled polygon */}
       <polygon
         points={filled}
-        fill="rgba(74, 127, 165, 0.14)"
-        stroke="var(--color-primary)"
+        fill="rgba(103, 87, 232, 0.14)"
+        stroke="var(--color-cognitive)"
         strokeWidth={2}
         strokeLinejoin="round"
       />
@@ -187,7 +188,7 @@ function RadarChart({ dimensions }: { dimensions: RadarDimension[] }) {
           cx={pt.x}
           cy={pt.y}
           r={4}
-          fill="var(--color-primary)"
+          fill="var(--color-cognitive)"
           stroke="var(--color-bg-card)"
           strokeWidth={2}
         />
@@ -222,6 +223,14 @@ function RadarChart({ dimensions }: { dimensions: RadarDimension[] }) {
   );
 }
 
+function buildExplainScriptText(bundle: ExplainScriptBundle): string {
+  const body = bundle.blocks
+    .map(block => `${block.heading}\n\n${block.paragraphs.join("\n\n")}`)
+    .join("\n\n---\n\n");
+
+  return `${bundle.opener}\n\n${bundle.openerFollowUp}\n\n---\n\n${body}\n\n---\n\n${bundle.footerNote}`;
+}
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export function BrainProfileView({
@@ -247,8 +256,9 @@ export function BrainProfileView({
       <Card
         style={{
           background:
-            "linear-gradient(135deg, var(--color-primary-tint) 0%, var(--color-cognitive-tint) 100%)",
-          border: "1px solid var(--color-border)",
+            "linear-gradient(135deg, var(--color-bg-card) 0%, var(--color-cognitive-tint) 100%)",
+          border: "1px solid rgba(103,87,232,0.26)",
+          boxShadow: "var(--shadow-card-strong)",
         }}
       >
         <p
@@ -257,7 +267,7 @@ export function BrainProfileView({
             fontWeight: 800,
             letterSpacing: "0.1em",
             textTransform: "uppercase",
-            color: "var(--color-primary)",
+            color: "var(--color-cognitive-dark)",
             marginBottom: 10,
           }}
         >
@@ -279,7 +289,7 @@ export function BrainProfileView({
           style={{
             fontSize: 14,
             fontWeight: 700,
-            color: "var(--color-primary-dark)",
+            color: "var(--color-text)",
             marginBottom: 10,
             lineHeight: 1.4,
           }}
@@ -316,7 +326,7 @@ export function BrainProfileView({
               fontWeight: 800,
               padding: "4px 12px",
               borderRadius: 99,
-              background: "var(--color-primary)",
+              background: "var(--color-success)",
               color: "#fff",
             }}
           >
@@ -333,7 +343,7 @@ export function BrainProfileView({
               border: "1px solid var(--color-border)",
             }}
           >
-            Profile-to-Protocol™ Ready
+            Profile report unlocked
           </span>
         </div>
       </Card>
@@ -376,7 +386,7 @@ export function BrainProfileView({
       </Card>
 
       {/* 4 ── Strengths & Friction */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
         <Card>
           <SectionLabel>Strengths</SectionLabel>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -451,7 +461,7 @@ export function BrainProfileView({
                 style={{
                   position: "absolute",
                   left: 0,
-                  color: "var(--color-primary)",
+                  color: "var(--color-cognitive)",
                   fontWeight: 800,
                   fontSize: 12,
                 }}
@@ -465,7 +475,7 @@ export function BrainProfileView({
       </Card>
 
       {/* 6 ── Working Style */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
         <Card>
           <SectionLabel>Task Initiation Style</SectionLabel>
           <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.68 }}>
@@ -483,7 +493,7 @@ export function BrainProfileView({
       {/* 7 ── "Finally, an explanation" */}
       <Card
         style={{
-          background: "linear-gradient(135deg, #FDF8F2 0%, var(--color-cognitive-tint) 100%)",
+          background: "linear-gradient(135deg, var(--color-bg-card-2) 0%, var(--color-cognitive-tint) 100%)",
           border: "1px solid var(--color-border-2)",
         }}
       >
@@ -509,7 +519,7 @@ export function BrainProfileView({
                 lineHeight: 1.72,
                 paddingLeft: i > 0 ? 14 : 0,
                 borderLeft:
-                  i > 0 ? "2px solid var(--color-primary-tint)" : "none",
+                  i > 0 ? "2px solid var(--color-cognitive-tint)" : "none",
               }}
             >
               {para}
@@ -547,7 +557,7 @@ export function BrainProfileView({
             style={{
               padding: "14px 16px",
               borderRadius: 12,
-              background: "var(--color-primary-tint)",
+              background: "var(--color-cognitive-tint)",
               border: "1px solid var(--color-border)",
               marginBottom: 18,
             }}
@@ -556,7 +566,7 @@ export function BrainProfileView({
               style={{
                 fontSize: 13,
                 fontWeight: 700,
-                color: "var(--color-primary-dark)",
+                color: "var(--color-cognitive-dark)",
                 lineHeight: 1.55,
                 marginBottom: 6,
               }}
@@ -568,36 +578,57 @@ export function BrainProfileView({
             </p>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <CopyableTemplateBlock
+            label="Copy opening lines"
+            text={`${explainScriptBundle.opener}\n\n${explainScriptBundle.openerFollowUp}`}
+          />
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 16 }}>
             {explainScriptBundle.blocks.map((block, i) => (
-              <div key={i}>
-                <p
+              <details
+                key={i}
+                open={i === 0}
+                style={{
+                  borderRadius: 14,
+                  background: "var(--color-bg-card-2)",
+                  border: "1px solid var(--color-border)",
+                  overflow: "hidden",
+                }}
+              >
+                <summary
                   style={{
+                    cursor: "pointer",
+                    listStyle: "none",
+                    padding: "13px 15px",
                     fontSize: 12,
                     fontWeight: 800,
                     color: "var(--color-text)",
-                    marginBottom: 6,
                     textTransform: "uppercase",
                     letterSpacing: "0.05em",
                   }}
                 >
                   {block.heading}
-                </p>
-                {block.paragraphs.map((para, j) => (
-                  <p
-                    key={j}
-                    style={{
-                      fontSize: 13,
-                      color: "var(--color-text-body)",
-                      lineHeight: 1.68,
-                      marginBottom: j < block.paragraphs.length - 1 ? 8 : 0,
-                    }}
-                  >
-                    {para}
-                  </p>
-                ))}
-              </div>
+                </summary>
+                <div style={{ padding: "0 15px 15px", display: "flex", flexDirection: "column", gap: 8 }}>
+                  {block.paragraphs.map((para, j) => (
+                    <p
+                      key={j}
+                      style={{
+                        fontSize: 13,
+                        color: "var(--color-text-body)",
+                        lineHeight: 1.68,
+                      }}
+                    >
+                      {para}
+                    </p>
+                  ))}
+                </div>
+              </details>
             ))}
+          </div>
+
+          <div style={{ marginTop: 16 }}>
+            <CopyableTemplateBlock label="Copy full script" text={buildExplainScriptText(explainScriptBundle)} />
           </div>
 
           <p

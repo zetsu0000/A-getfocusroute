@@ -110,7 +110,7 @@ export function EmailScreen() {
             border: "none", cursor: valid ? "pointer" : "not-allowed",
             transition: "all 0.2s",
             ...(valid
-              ? { background: "var(--color-primary)", color: "#fff", boxShadow: "var(--shadow-btn)" }
+              ? { background: "var(--color-accent)", color: "#fff", boxShadow: "var(--shadow-btn-accent)" }
               : { background: "var(--color-border)", color: "var(--color-text-muted)" }),
           }}
         >
@@ -128,7 +128,7 @@ export function EmailScreen() {
         }}>
           <div style={{
             width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-            background: "var(--color-primary)",
+            background: "var(--color-accent)",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">

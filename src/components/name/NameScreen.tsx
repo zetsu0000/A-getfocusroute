@@ -110,11 +110,11 @@ export function NameScreen() {
             border: "none", cursor: valid ? "pointer" : "not-allowed",
             transition: "all 0.2s",
             ...(valid
-              ? { background: "var(--color-primary)", color: "#fff", boxShadow: "var(--shadow-btn)" }
+              ? { background: "var(--color-accent)", color: "#fff", boxShadow: "var(--shadow-btn-accent)" }
               : { background: "var(--color-border)", color: "var(--color-text-muted)" }),
           }}
         >
-          Continue to My Partial Profile Reveal
+          Reveal My Profile Preview
         </button>
 
         {/* Privacy note */}

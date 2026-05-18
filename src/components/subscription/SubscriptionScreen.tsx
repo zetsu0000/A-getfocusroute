@@ -48,10 +48,10 @@ const PLANS = {
 };
 
 const FEATURES = [
-  "Keep access to your FocusRoute Brain Profile™ and protocol library",
-  "Body-doubling sessions and accountability structure",
-  "Profile-based weekly check-ins and updated strategies",
-  "Priority support from the FocusRoute team",
+  "Keep your FocusRoute system current with profile updates",
+  "Retake your assessment as your routines and context change",
+  "Access billing tools and membership controls in one place",
+  "Receive future report and protocol library improvements",
 ];
 
 /* Checkout form for subscriptions */
@@ -61,12 +61,14 @@ function SubCheckoutForm({
   userName,
   quizResultId,
   onSuccess,
+  ctaLabel,
 }: {
   priceId: string;
   email: string;
   userName: string;
   quizResultId: string | null;
   onSuccess: () => void;
+  ctaLabel: string;
 }) {
   const stripe   = useStripe();
   const elements = useElements();
@@ -116,21 +118,21 @@ function SubCheckoutForm({
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <PaymentElement options={{ layout: "tabs" }} />
-      {error && <p style={{ fontSize: 13, color: "var(--color-accent)", textAlign: "center" }}>{error}</p>}
+      {error && <p style={{ fontSize: 13, color: "var(--color-error)", textAlign: "center", background: "var(--color-error-tint)", borderRadius: 12, padding: "9px 12px" }}>{error}</p>}
       <m.button
         type="submit"
         disabled={!stripe || loading}
         animate={loading ? {} : { scale: [1, 1.015, 1], transition: { repeat: Infinity, duration: 2.6, ease: "easeInOut" } }}
         style={{
           width: "100%", padding: "18px 24px", borderRadius: 16,
-          background: loading ? "var(--color-border)" : "var(--color-primary)",
+          background: loading ? "var(--color-border)" : "var(--color-accent)",
           color: loading ? "var(--color-text-muted)" : "#ffffff",
           fontSize: 16, fontWeight: 800, border: "none",
           cursor: loading ? "not-allowed" : "pointer",
-          boxShadow: loading ? "none" : "var(--shadow-btn-primary)",
+          boxShadow: loading ? "none" : "var(--shadow-btn-accent)",
         }}
       >
-        {loading ? "Processing..." : "Continue with membership →"}
+        {loading ? "Processing..." : ctaLabel}
       </m.button>
       <p style={{ fontSize: 11, color: "var(--color-text-muted)", textAlign: "center" }}>
         Day-7 momentum offer · cancel anytime
@@ -152,12 +154,12 @@ function PlanCard({ planKey, isSelected, onSelect }: { planKey: "annual" | "mont
         width: "100%", textAlign: "left", borderRadius: 20, overflow: "hidden",
         background: "var(--color-bg-card)",
         boxShadow: isSelected ? "var(--shadow-sel)" : "var(--shadow-card)",
-        border: isSelected ? "2px solid var(--color-primary)" : "2px solid transparent",
+        border: isSelected ? "2px solid var(--color-accent)" : "2px solid transparent",
         transition: "box-shadow 0.2s, border-color 0.2s",
       }}
     >
           {plan.badge && (
-        <div style={{ padding: "8px 20px", background: "var(--color-primary)", color: "#fff", fontSize: 11, fontWeight: 700, textAlign: "center", letterSpacing: "0.05em" }}>
+        <div style={{ padding: "8px 20px", background: "var(--color-accent)", color: "#fff", fontSize: 11, fontWeight: 700, textAlign: "center", letterSpacing: "0.05em" }}>
           {plan.badge}{plan.savings ? ` — ${plan.savings}` : ""}
         </div>
       )}
@@ -178,12 +180,12 @@ function PlanCard({ planKey, isSelected, onSelect }: { planKey: "annual" | "mont
           </div>
           <div style={{
             marginTop: 4, width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-            border: `2px solid ${isSelected ? "var(--color-primary)" : "var(--color-border-2)"}`,
+            border: `2px solid ${isSelected ? "var(--color-accent)" : "var(--color-border-2)"}`,
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
             {isSelected && (
               <m.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500, damping: 25 }}
-                style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--color-primary)" }} />
+                style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--color-accent)" }} />
             )}
           </div>
         </div>
@@ -192,8 +194,8 @@ function PlanCard({ planKey, isSelected, onSelect }: { planKey: "annual" | "mont
           <ul style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--color-border)", display: "flex", flexDirection: "column", gap: 8 }}>
             {FEATURES.map((f) => (
               <li key={f} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 18, height: 18, borderRadius: "50%", background: "var(--color-primary-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Check size={10} color="var(--color-primary)" />
+                <div style={{ width: 18, height: 18, borderRadius: "50%", background: "var(--color-success-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Check size={10} color="var(--color-success)" />
                 </div>
                 <span style={{ fontSize: 12, color: "var(--color-text-body)" }}>{f}</span>
               </li>
@@ -232,11 +234,11 @@ export function SubscriptionScreen() {
         {/* Header */}
         <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <h1 style={{ fontSize: 24, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.25, marginBottom: 8 }}>
-            Keep your FocusRoute Brain OS™ active,{" "}
-            <span style={{ color: "var(--color-primary)" }}>{displayName}</span>
+            Keep your FocusRoute system current,{" "}
+            <span style={{ color: "var(--color-accent)" }}>{displayName}</span>
           </h1>
           <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.65 }}>
-            This is your Day-7 momentum window: keep support, structure, and accountability so your 28-day protocol actually sticks.
+            Membership is optional. Your purchased Brain Profile remains yours, and membership adds retakes, billing access, and future profile updates.
           </p>
         </m.div>
 
@@ -257,9 +259,9 @@ export function SubscriptionScreen() {
                 animate={{ scale: [1, 1.016, 1], transition: { repeat: Infinity, duration: 2.6, ease: "easeInOut" } }}
                 style={{
                   width: "100%", padding: "18px 24px", borderRadius: 16,
-                  background: "var(--color-primary)", color: "#ffffff",
+                  background: "var(--color-accent)", color: "#ffffff",
                   fontSize: 16, fontWeight: 800, border: "none", cursor: "pointer",
-                  boxShadow: "var(--shadow-btn-primary)",
+                  boxShadow: "var(--shadow-btn-accent)",
                 }}
               >
                 Start {selected === "annual" ? "Annual" : "Monthly"} Membership — {plan.price}
@@ -271,7 +273,7 @@ export function SubscriptionScreen() {
                   { icon: Star,      label: "4.9 / 5" },
                 ].map(({ icon: Icon, label }) => (
                   <div key={label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                    <Icon size={16} color="var(--color-primary)" />
+                    <Icon size={16} color={label === "4.9 / 5" ? "var(--color-warning)" : "var(--color-primary)"} />
                     <span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>{label}</span>
                   </div>
                 ))}
@@ -286,7 +288,7 @@ export function SubscriptionScreen() {
                 currency: "usd",
                 appearance: {
                   theme: "flat",
-                  variables: { colorPrimary: "var(--color-primary)", colorBackground: "var(--color-bg-card)", colorText: "var(--color-text)", colorDanger: "var(--color-accent)", fontFamily: "inherit", borderRadius: "12px" },
+                  variables: { colorPrimary: "var(--color-accent)", colorBackground: "var(--color-bg-card)", colorText: "var(--color-text)", colorDanger: "var(--color-error)", fontFamily: "inherit", borderRadius: "12px" },
                 },
               }}
             >
@@ -296,6 +298,7 @@ export function SubscriptionScreen() {
                 userName={name}
                 quizResultId={quizResultId}
                 onSuccess={handleSuccess}
+                ctaLabel={`Start ${selected === "annual" ? "Annual" : "Monthly"} Membership — ${plan.price}`}
               />
             </Elements>
           )}

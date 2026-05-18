@@ -483,14 +483,15 @@ export function LockedRoadmapPreview() {
             display: "inline-flex",
             padding: "12px 22px",
             borderRadius: 12,
-            background: "var(--color-primary)",
+            background: "var(--color-accent)",
             color: "#fff",
             fontSize: 13,
             fontWeight: 700,
             textDecoration: "none",
+            boxShadow: "var(--shadow-btn-accent)",
           }}
         >
-          See upgrade options
+          Add the 28-Day Protocol
         </Link>
       </div>
     </div>

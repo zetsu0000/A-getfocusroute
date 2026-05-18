@@ -27,7 +27,7 @@ const PRICE_ID = process.env.NEXT_PUBLIC_PRICE_ASSESSMENT!;
 const stripeAppearance = {
   theme: "flat" as const,
   variables: {
-    colorPrimary: "var(--color-primary)",
+    colorPrimary: "var(--color-accent)",
     colorBackground: "var(--color-bg-card)",
     colorText: "var(--color-text)",
     colorTextSecondary: "var(--color-text-body)",
@@ -50,7 +50,7 @@ const stripeAppearance = {
       transition: "border-color 0.15s",
     },
     ".Input:focus": {
-      border: "1.5px solid var(--color-primary)",
+      border: "1.5px solid var(--color-accent)",
       boxShadow: "0 0 0 3px var(--color-primary-ring)",
       outline: "none",
     },
@@ -67,9 +67,9 @@ const stripeAppearance = {
       fontWeight: "600",
     },
     ".Tab--selected": {
-      border: "1.5px solid var(--color-primary)",
-      backgroundColor: "var(--color-primary-tint)",
-      color: "var(--color-primary)",
+      border: "1.5px solid var(--color-accent)",
+      backgroundColor: "var(--color-accent-tint)",
+      color: "var(--color-accent)",
       boxShadow: "none",
     },
     ".Error": {
@@ -78,36 +78,6 @@ const stripeAppearance = {
     },
   },
 };
-
-/* ── Countdown — persisted in sessionStorage ── */
-const COUNTDOWN_KEY = "focusroute_countdown_end";
-
-function useCountdown(initial = 600) {
-  const [secs, setSecs] = useState<number>(() => {
-    if (typeof window === "undefined") return initial;
-    const stored = sessionStorage.getItem(COUNTDOWN_KEY);
-    if (stored) {
-      const remaining = Math.round((Number(stored) - Date.now()) / 1000);
-      if (remaining > 0) return remaining;
-    }
-    const end = Date.now() + initial * 1000;
-    sessionStorage.setItem(COUNTDOWN_KEY, String(end));
-    return initial;
-  });
-
-  useEffect(() => {
-    const t = setInterval(() =>
-      setSecs((s) => {
-        if (s <= 1) { clearInterval(t); return 0; }
-        return s - 1;
-      }), 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  const m = String(Math.floor(secs / 60)).padStart(2, "0");
-  const s = String(secs % 60).padStart(2, "0");
-  return { display: `${m}:${s}`, urgent: secs < 120 };
-}
 
 /* ── Locked result card ── */
 function LockedCard() {
@@ -134,7 +104,9 @@ function LockedCard() {
 
       {/* Card header */}
       <div style={{ padding: "16px 20px 14px", background: "linear-gradient(135deg, var(--color-primary-tint), var(--color-bg-card-2))", borderBottom: "1px solid var(--color-border)", display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ width: 42, height: 42, borderRadius: "var(--radius-sm)", background: "linear-gradient(135deg, var(--color-primary-dark), var(--color-primary-mid))", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🧠</div>
+        <div style={{ width: 42, height: 42, borderRadius: "var(--radius-sm)", background: "linear-gradient(135deg, var(--color-cognitive-dark), var(--color-cognitive))", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", boxShadow: "0 12px 28px rgba(103,87,232,0.22)" }}>
+          <BadgeCheck size={19} strokeWidth={2.5} />
+        </div>
         <div style={{ flex: 1 }}>
           <p style={{ fontSize: 14, fontWeight: 800, color: "var(--color-text)" }}>Your FocusRoute Brain Profile™</p>
           <p style={{ fontSize: 11, color: "var(--color-text-muted)", marginTop: 1 }}>Cognitive Mapping Assessment™ · Completed</p>
@@ -150,7 +122,7 @@ function LockedCard() {
           <span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>Profile intensity band</span>
           <span style={{ fontSize: 11, fontWeight: 700, color: profileBand.color }}>{profileBand.label}</span>
         </div>
-        <div style={{ height: 8, borderRadius: "var(--radius-pill)", background: "linear-gradient(to right, var(--color-primary-tint), var(--color-primary), var(--color-cognitive))", position: "relative" }}>
+        <div style={{ height: 8, borderRadius: "var(--radius-pill)", background: "linear-gradient(to right, var(--color-primary-tint), var(--color-cognitive-tint), var(--color-cognitive))", position: "relative" }}>
           <m.div
             initial={{ left: "0%" }}
             animate={{ left: `${profileBand.pct}%` }}
@@ -233,7 +205,7 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
         <m.p
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
-          style={{ marginTop: 12, fontSize: 13, color: "var(--color-accent-dark)", textAlign: "center", background: "var(--color-accent-tint)", borderRadius: 10, padding: "8px 14px" }}
+        style={{ marginTop: 12, fontSize: 13, color: "var(--color-error)", textAlign: "center", background: "var(--color-error-tint)", borderRadius: 10, padding: "8px 14px" }}
         >
           ⚠️ {error}
         </m.p>
@@ -245,9 +217,9 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
         whileTap={{ scale: 0.975 }}
         animate={loading ? {} : {
           boxShadow: [
-            "0 4px 22px rgba(92,138,94,0.36)",
-            "0 6px 32px rgba(92,138,94,0.5)",
-            "0 4px 22px rgba(92,138,94,0.36)",
+            "0 10px 30px rgba(23,20,33,0.22)",
+            "0 14px 38px rgba(23,20,33,0.3)",
+            "0 10px 30px rgba(23,20,33,0.22)",
           ],
           transition: { repeat: Infinity, duration: 2.4, ease: "easeInOut" },
         }}
@@ -274,7 +246,7 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
         ) : (
           <>
             <Lock size={17} color="white" strokeWidth={2.5} />
-            Unlock my profile — {BRAIN_OS.price.paywall}
+            Unlock My Brain Profile — {BRAIN_OS.price.paywall}
           </>
         )}
       </m.button>
@@ -334,7 +306,6 @@ function PaymentSkeleton() {
 /* ── Main PaywallScreen ── */
 export function PaywallScreen() {
   const { name, email, setStep, quizResultId } = useQuizStore();
-  const { display, urgent }     = useCountdown(600);
   const displayName              = safeName(name, "You");
 
   const handlePaywallSuccess = () => {
@@ -374,17 +345,19 @@ export function PaywallScreen() {
               padding: "10px 12px",
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
-              background: urgent ? "linear-gradient(135deg,#ECFDF5,#E6FFFB)" : "var(--color-bg-card)",
-              border: urgent ? "1px solid rgba(14,165,164,0.28)" : "1px solid var(--color-border)",
+              justifyContent: "center",
+              gap: 12,
+              flexWrap: "wrap",
+              background: "var(--color-bg-card)",
+              border: "1px solid var(--color-border-2)",
             }}
           >
-            <span style={{ fontSize: 12, color: "var(--color-text-body)", fontWeight: 600 }}>
-              Priority window
-            </span>
-            <span style={{ fontSize: 13, color: "var(--color-primary-dark)", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
-              {display}
-            </span>
+            {["Secure checkout", "Instant access", "Private assessment data"].map((item) => (
+              <span key={item} style={{ fontSize: 12, color: "var(--color-text-body)", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5 }}>
+                <BadgeCheck size={13} color="var(--color-success)" strokeWidth={2.5} />
+                {item}
+              </span>
+            ))}
           </m.div>
 
           <m.div
@@ -407,7 +380,7 @@ export function PaywallScreen() {
                 {displayName}, your {BRAIN_OS.brainProfile} is ready.
               </h1>
               <p style={{ marginTop: 8, fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.62 }}>
-                Unlock the full system for <strong style={{ color: "var(--color-text)" }}>{BRAIN_OS.price.paywall}</strong> and start your personalized 28-day protocol today.
+                Unlock the complete profile report for <strong style={{ color: "var(--color-text)" }}>{BRAIN_OS.price.paywall}</strong> and keep your personalized FocusRoute insights in your account.
               </p>
             </div>
 
@@ -434,7 +407,7 @@ export function PaywallScreen() {
                   {BRAIN_OS.lineTm}
                 </p>
                 <p style={{ fontSize: 13, color: "var(--color-text-body)", marginTop: 2 }}>
-                  {BRAIN_OS.assessment} + protocol access
+                  Premium report access
                 </p>
               </div>
               <div style={{ textAlign: "right" }}>
@@ -460,7 +433,7 @@ export function PaywallScreen() {
 
             <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: 12, marginTop: 4 }}>
               <div style={{ marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
-                <BadgeCheck size={14} color="var(--color-primary-dark)" />
+                <BadgeCheck size={14} color="var(--color-warning)" />
                 <span style={{ fontSize: 12, fontWeight: 700, color: "var(--color-primary-dark)" }}>{BRAIN_OS.clinicalContrastShort}</span>
               </div>
               <p style={{ fontSize: 12, color: "var(--color-text-muted)", lineHeight: 1.5 }}>

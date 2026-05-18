@@ -36,7 +36,7 @@ export function PriceCard({ plan, isSelected, onSelect }: PriceCardProps) {
       {isAnnual && (
         <div style={{
           padding: "9px 24px",
-          background: "var(--color-primary)",
+          background: "var(--color-warning)",
           color: "#fff",
           fontSize: 12, fontWeight: 700,
           textAlign: "center", letterSpacing: "0.05em",
@@ -101,10 +101,10 @@ export function PriceCard({ plan, isSelected, onSelect }: PriceCardProps) {
               <li key={f} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <div style={{
                   width: 20, height: 20, borderRadius: "50%",
-                  background: "var(--color-primary-tint)",
+                  background: "var(--color-success-tint)",
                   display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
                 }}>
-                  <Check size={11} color="var(--color-primary)" />
+                  <Check size={11} color="var(--color-success)" />
                 </div>
                 <span style={{ fontSize: 13, color: "var(--color-text-body)" }}>{f}</span>
               </li>

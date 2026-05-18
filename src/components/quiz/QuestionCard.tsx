@@ -15,17 +15,20 @@ export function QuestionCard({ question }: QuestionCardProps) {
   const canContinue = selectedOptions.length > 0;
 
   return (
-    /* Full-height flex column: title at top, spacer, options at bottom */
+    /* Balanced full-height layout for the first screen and later questions. */
     <div style={{
-      height: "100%",
+      minHeight: "100%",
       display: "flex",
       flexDirection: "column",
+      justifyContent: "center",
       overflowY: "auto",
+      padding: "clamp(24px, 5vh, 44px) 0 clamp(32px, 6vh, 52px)",
+      gap: "clamp(24px, 5vh, 42px)",
     }}>
 
       {/* ── Title — top, centered, dark ──────────────────────── */}
       <div style={{
-        padding: "28px 24px 0",
+        padding: "0 24px",
         textAlign: "center",
         maxWidth: 520,
         margin: "0 auto",
@@ -52,12 +55,8 @@ export function QuestionCard({ question }: QuestionCardProps) {
         )}
       </div>
 
-      {/* ── Spacer — pushes options to the bottom ────────────── */}
-      <div style={{ flex: 1, minHeight: 32 }} />
-
-      {/* ── Options + optional Continue — bottom aligned ─────── */}
       <div style={{
-        padding: "0 20px 40px",
+        padding: "0 20px",
         maxWidth: 480,
         margin: "0 auto",
         width: "100%",
@@ -105,9 +104,9 @@ export function QuestionCard({ question }: QuestionCardProps) {
                 transition: "background 0.18s, box-shadow 0.18s",
                 ...(canContinue
                   ? {
-                      background: "var(--color-primary)",
+                      background: "var(--color-accent)",
                       color: "#ffffff",
-                      boxShadow: "var(--shadow-btn-primary)",
+                      boxShadow: "var(--shadow-btn-accent)",
                     }
                   : {
                       background: "var(--color-border)",
@@ -115,7 +114,7 @@ export function QuestionCard({ question }: QuestionCardProps) {
                     }),
               }}
             >
-              Continue
+              Record Answer
             </m.button>
           )}
         </AnimatePresence>

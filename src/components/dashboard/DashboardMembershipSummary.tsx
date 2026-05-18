@@ -38,7 +38,7 @@ export function DashboardMembershipSummary({
         </p>
         <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.55 }}>
           No subscription on file yet. Unlock membership for retakes, billing portal access, and
-          ongoing protocol updates.
+          future profile updates.
         </p>
         <Link
           href="/dashboard/upgrade?need=membership"
@@ -47,14 +47,15 @@ export function DashboardMembershipSummary({
             marginTop: 14,
             padding: "12px 20px",
             borderRadius: 12,
-            background: "var(--color-primary)",
+            background: "var(--color-accent)",
             color: "#fff",
             fontSize: 13,
             fontWeight: 700,
             textDecoration: "none",
+            boxShadow: "var(--shadow-btn-accent)",
           }}
         >
-          View upgrade options
+          Explore Membership
         </Link>
       </div>
     );

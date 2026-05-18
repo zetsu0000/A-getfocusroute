@@ -353,12 +353,12 @@ export function ChartScreen() {
               fontWeight: 700,
               border: "none",
               cursor: "pointer",
-              background: "var(--color-primary)",
+              background: "var(--color-accent)",
               color: "#fff",
-              boxShadow: "var(--shadow-btn-primary)",
+              boxShadow: "var(--shadow-btn-accent)",
             }}
           >
-            Unlock My Full Profile-to-Protocol™ Plan
+            Unlock My Brain Profile
           </m.button>
         )}
       </div>

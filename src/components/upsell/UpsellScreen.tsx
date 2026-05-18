@@ -9,7 +9,7 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
-import { CheckCircle2, Clock, Zap, Calendar, Target } from "lucide-react";
+import { CheckCircle2, Zap, Calendar, Target } from "lucide-react";
 import { useQuizStore } from "@/store/quizStore";
 import { BRAIN_OS } from "@/lib/positioning";
 
@@ -23,10 +23,10 @@ const PRICE_ID = process.env.NEXT_PUBLIC_PRICE_ROADMAP!;
 const upsellStripeAppearance = {
   theme: "flat" as const,
   variables: {
-    colorPrimary: "var(--color-primary)",
+    colorPrimary: "var(--color-accent)",
     colorBackground: "var(--color-bg-card)",
     colorText: "var(--color-text)",
-    colorDanger: "var(--color-accent)",
+    colorDanger: "var(--color-error)",
     fontFamily: "inherit",
     borderRadius: "12px",
   },
@@ -51,19 +51,6 @@ function UpsellStripeElements({
       <UpsellCheckoutForm onSuccess={onSuccess} onDecline={onDecline} />
     </Elements>
   );
-}
-
-/* 15-minute countdown */
-function useTimer(initial = 900) {
-  const [secs, setSecs] = useState(initial);
-  useEffect(() => {
-    const t = setInterval(() => setSecs((s) => Math.max(0, s - 1)), 1000);
-    return () => clearInterval(t);
-  }, []);
-  const m = String(Math.floor(secs / 60)).padStart(2, "0");
-  const s = String(secs % 60).padStart(2, "0");
-  const expired = secs === 0;
-  return { display: `${m}:${s}`, expired };
 }
 
 /* Checkout form */
@@ -99,7 +86,7 @@ function UpsellCheckoutForm({ onSuccess, onDecline }: { onSuccess: () => void; o
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <PaymentElement options={{ layout: "tabs" }} />
-      {error && <p style={{ fontSize: 13, color: "var(--color-accent)", textAlign: "center" }}>{error}</p>}
+      {error && <p style={{ fontSize: 13, color: "var(--color-error)", textAlign: "center", background: "var(--color-error-tint)", borderRadius: 12, padding: "9px 12px" }}>{error}</p>}
 
       <m.button
         type="submit"
@@ -114,7 +101,7 @@ function UpsellCheckoutForm({ onSuccess, onDecline }: { onSuccess: () => void; o
           boxShadow: loading ? "none" : "var(--shadow-btn-accent)",
         }}
       >
-        {loading ? "Processing..." : `Yes! Add the ${BRAIN_OS.protocol} — ${BRAIN_OS.price.upsell}`}
+        {loading ? "Processing..." : `Add the ${BRAIN_OS.protocol} — ${BRAIN_OS.price.upsell}`}
       </m.button>
 
       <button
@@ -122,7 +109,7 @@ function UpsellCheckoutForm({ onSuccess, onDecline }: { onSuccess: () => void; o
         onClick={onDecline}
         style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "var(--color-text-muted)", textDecoration: "underline", padding: "4px 0" }}
       >
-        No thanks, I&apos;ll figure it out on my own
+        Skip for now
       </button>
     </form>
   );
@@ -131,7 +118,6 @@ function UpsellCheckoutForm({ onSuccess, onDecline }: { onSuccess: () => void; o
 /* Main UpsellScreen */
 export function UpsellScreen() {
   const { name, email, setStep, quizResultId } = useQuizStore();
-  const { display, expired } = useTimer(900);
   const displayName = name || "you";
 
   const [clientSecret,  setClientSecret]  = useState<string | null>(null);
@@ -164,17 +150,15 @@ export function UpsellScreen() {
       transition={{ duration: 0.3 }}
       style={{ minHeight: "100vh", padding: "0 0 56px" }}
     >
-      {/* Timer bar */}
+      {/* Offer context */}
       <div style={{
-        background: expired ? "var(--color-border)" : "linear-gradient(90deg, var(--color-accent), var(--color-accent-dark))",
+        background: "linear-gradient(90deg, var(--color-accent), var(--color-accent-dark))",
         padding: "12px 20px",
         display: "flex", alignItems: "center", justifyContent: "center", gap: 10, flexWrap: "wrap",
       }}>
-        <Clock size={16} color="white" />
+        <Target size={16} color="white" />
         <p style={{ fontSize: 13, fontWeight: 700, color: "white", flexShrink: 1, textAlign: "center" }}>
-          {expired
-            ? "Offer expired — still available at full price"
-            : `Special offer expires in ${display} — one-time opportunity`}
+          Optional protocol expansion · one-time purchase · instant access
         </p>
       </div>
 
@@ -185,13 +169,13 @@ export function UpsellScreen() {
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
             <div style={{ background: "var(--color-primary-tint)", borderRadius: 8, padding: "4px 10px" }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--color-primary)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                Special One-Time Offer
+                Protocol add-on
               </span>
             </div>
           </div>
           <h1 style={{ fontSize: 24, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.25, marginBottom: 10 }}>
             {displayName}, you just mapped your brain.{" "}
-            <span style={{ color: "var(--color-accent)" }}>Now turn insight into execution.</span>
+            <span style={{ color: "var(--color-accent)" }}>Turn insight into a daily system.</span>
           </h1>
           <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.65 }}>
             Your {BRAIN_OS.assessment} mapped your signature pattern. The {BRAIN_OS.protocol} gives you practical daily actions personalized to that map.
@@ -208,7 +192,7 @@ export function UpsellScreen() {
             {[
               { icon: Calendar, title: "Day-by-day action plan", desc: "28 structured daily actions matched to your signature profile." },
               { icon: Target,   title: "Pattern-specific strategies", desc: "Task initiation, sustained focus, and reset planning covered step by step." },
-              { icon: Zap,      title: "Executive function tools", desc: "Body-doubling, time-boxing, and attention anchors selected for your profile." },
+              { icon: Zap,      title: "Executive function tools", desc: "Time-boxing, reset cues, and attention anchors selected for your profile." },
               { icon: CheckCircle2, title: "Weekly milestone check-ins", desc: "Track real progress with your personalized metrics." },
             ].map(({ icon: Icon, title, desc }) => (
               <div key={title} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
@@ -251,7 +235,7 @@ export function UpsellScreen() {
               onDecline={handleDecline}
             />
           ) : (
-            <p style={{ fontSize: 13, color: "var(--color-accent)", textAlign: "center" }}>Could not load payment. Please refresh.</p>
+            <p style={{ fontSize: 13, color: "var(--color-error)", textAlign: "center" }}>Could not load payment. Please refresh.</p>
           )}
         </m.div>
 

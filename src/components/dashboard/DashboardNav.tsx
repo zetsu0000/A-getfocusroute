@@ -14,8 +14,10 @@ const navLink: CSSProperties = {
   fontSize: 13,
   color: "var(--color-text-body)",
   textDecoration: "none",
-  padding: "6px 0",
+  padding: "7px 0",
   borderBottom: "2px solid transparent",
+  whiteSpace: "nowrap",
+  flexShrink: 0,
 };
 
 function NavLink({
@@ -34,8 +36,8 @@ function NavLink({
       style={{
         ...navLink,
         fontWeight: active ? 800 : 500,
-        color: active ? "var(--color-primary)" : "var(--color-text-body)",
-        borderBottomColor: active ? "var(--color-primary)" : "transparent",
+        color: active ? "var(--color-accent)" : "var(--color-text-body)",
+        borderBottomColor: active ? "var(--color-accent)" : "transparent",
       }}
     >
       {label}
@@ -102,7 +104,7 @@ export function DashboardNav({
           marginBottom: 4,
         }}
       >
-        {firstName ? (<>Welcome back, <span style={{ color: "var(--color-primary)" }}>{firstName}</span></>) : "Welcome back"}
+        {firstName ? (<>Welcome back, <span style={{ color: "var(--color-accent)" }}>{firstName}</span></>) : "Welcome back"}
       </h1>
       <p style={{ fontSize: 13, color: "var(--color-text-muted)", marginBottom: 20, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>{snap.user.email}</p>
 

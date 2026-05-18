@@ -1,5 +1,6 @@
 ﻿import type { CSSProperties } from "react";
 import Link from "next/link";
+import { LockKeyhole } from "lucide-react";
 
 import { CopyableTemplateBlock } from "@/components/dashboard/CopyableTemplateBlock";
 import type { ExplainScriptBundle, ToolkitItem } from "@/data/bonuses";
@@ -53,13 +54,14 @@ function LockedCard({
   includedWith: string;
   upgradeNeed: string;
 }) {
-  const ctaLabel = upgradeNeed === "roadmap_28_day" ? "Add 28-Day Protocol" : "View Bonuses";
+  const ctaLabel = upgradeNeed === "roadmap_28_day" ? "Add 28-Day Protocol" : "Unlock Brain Profile";
   return (
     <div
       style={{
         borderRadius: 18,
-        background: "var(--color-bg-card)",
-        border: "1px solid var(--color-border)",
+        background: "linear-gradient(135deg, var(--color-bg-card) 0%, var(--color-bg-card-2) 100%)",
+        border: "1px solid var(--color-border-2)",
+        boxShadow: "var(--shadow-card)",
         overflow: "hidden",
       }}
     >
@@ -70,15 +72,14 @@ function LockedCard({
             width: 38,
             height: 38,
             borderRadius: 10,
-            background: "var(--color-bg-card-2)",
+            background: "var(--color-accent-tint)",
             border: "1px solid var(--color-border)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: 17,
           }}
         >
-          🔒
+          <LockKeyhole size={17} color="var(--color-accent)" strokeWidth={2.4} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <span
@@ -129,9 +130,13 @@ function LockedCard({
           style={{
             fontSize: 12,
             fontWeight: 700,
-            color: "var(--color-primary)",
+            color: "var(--color-accent)",
             textDecoration: "none",
             whiteSpace: "nowrap",
+            background: "var(--color-accent-tint)",
+            border: "1px solid var(--color-border)",
+            borderRadius: 10,
+            padding: "8px 11px",
           }}
         >
           {ctaLabel} →

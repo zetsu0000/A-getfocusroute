@@ -327,7 +327,7 @@ function BrainComparisonCard({ onContinue }: { onContinue: () => void }) {
           cursor: "pointer",
           boxShadow: "var(--shadow-btn-accent)",
         }}>
-          Continue
+          See My Brain Profile Preview
         </button>
       </div>
     </div>
@@ -443,11 +443,11 @@ function EmailInputCard({ onContinue }: { onContinue: (email: string) => void })
           border: "none",
           transition: "all 0.2s",
           ...(local.trim()
-            ? { background: "var(--color-primary)", color: "#ffffff", boxShadow: "var(--shadow-btn)", cursor: "pointer" }
+            ? { background: "var(--color-accent)", color: "#ffffff", boxShadow: "var(--shadow-btn-accent)", cursor: "pointer" }
             : { background: "var(--color-border)", color: "var(--color-text-muted)", cursor: "not-allowed" }),
         }}
       >
-        Continue
+        Save My Profile Preview
       </button>
     </div>
     </div>
@@ -597,7 +597,7 @@ function GenericInfoCard({
             boxShadow: "var(--shadow-btn-accent)",
           }}
         >
-          Continue
+          Keep Going
         </m.button>
       </div>
     </div>
