@@ -35,14 +35,14 @@ export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
-/** Active = active row and (no ends_at or ends_at in the future). */
+/** Active = active row and (no expires_at or expires_at in the future). */
 export async function getActiveEntitlementKindsForUser(
   userId: string,
 ): Promise<Set<EntitlementKey>> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("entitlements")
-    .select("kind, ends_at")
+    .select("entitlement_key, expires_at")
     .eq("user_id", userId)
     .eq("active", true);
 
@@ -53,11 +53,11 @@ export async function getActiveEntitlementKindsForUser(
   const nowMs = Date.now();
   const out = new Set<EntitlementKey>();
   for (const row of data) {
-    if (row.ends_at != null && new Date(row.ends_at).getTime() <= nowMs) {
+    if (row.expires_at != null && new Date(row.expires_at).getTime() <= nowMs) {
       continue;
     }
-    if (row.kind && isEntitlementKey(row.kind)) {
-      out.add(row.kind);
+    if (row.entitlement_key && isEntitlementKey(row.entitlement_key)) {
+      out.add(row.entitlement_key);
     }
   }
   return out;
@@ -101,7 +101,7 @@ export async function grantProductByEmail(
 }
 
 /**
- * Move pending email grants into `entitlements` for this user. Idempotent per kind.
+ * Move pending email grants into `entitlements` for this user. Idempotent per key.
  */
 export async function claimEmailProductGrantsForUser(
   userId: string,
@@ -125,36 +125,26 @@ export async function claimEmailProductGrantsForUser(
       if (!grant.id || typeof grant.product_key !== "string") continue;
       if (!isProductKey(grant.product_key)) continue;
 
-      const kinds = entitlementsGrantedByProduct(grant.product_key);
+      const keys = entitlementsGrantedByProduct(grant.product_key);
 
-      for (const kind of kinds) {
+      for (const key of keys) {
         const { data: existing } = await admin
           .from("entitlements")
           .select("id")
           .eq("user_id", userId)
-          .eq("kind", kind)
+          .eq("entitlement_key", key)
           .eq("active", true)
           .maybeSingle();
 
         if (existing) continue;
 
-        const grantMeta =
-          grant.metadata &&
-          typeof grant.metadata === "object" &&
-          !Array.isArray(grant.metadata)
-            ? (grant.metadata as Record<string, unknown>)
-            : {};
-
         const { error: insErr } = await admin.from("entitlements").insert({
           user_id: userId,
-          kind,
+          email: normalized,
+          entitlement_key: key,
+          source: "email_product_grant",
+          source_id: grant.id,
           active: true,
-          metadata: {
-            source: "email_product_grant",
-            grant_id: grant.id,
-            product_key: grant.product_key,
-            ...grantMeta,
-          },
         });
         if (insErr) {
           throw new Error(`claimEmailProductGrantsForUser insert: ${insErr.message}`);

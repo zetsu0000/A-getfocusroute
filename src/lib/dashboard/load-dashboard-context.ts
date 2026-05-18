@@ -24,21 +24,21 @@ export type DashboardProfileRow = {
 
 export type DashboardPurchaseRow = {
   id: string;
-  amount_cents: number | null;
+  product_key: string;
+  amount: number | null;
   currency: string;
   status: string;
   created_at: string;
-  metadata: Record<string, unknown> | null;
 };
 
 export type DashboardSubscriptionRow = {
   id: string;
   status: string;
   stripe_subscription_id: string | null;
+  price_id: string | null;
   current_period_start: string | null;
   current_period_end: string | null;
   cancel_at_period_end: boolean;
-  metadata: Record<string, unknown> | null;
   created_at: string;
 };
 
@@ -191,14 +191,14 @@ export const getDashboardSnapshot = cache(async (): Promise<DashboardSnapshot> =
       .limit(1),
     supabase
       .from("purchases")
-      .select("id, amount_cents, currency, status, created_at, metadata")
+      .select("id, product_key, amount, currency, status, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(25),
     supabase
       .from("subscriptions")
       .select(
-        "id, status, stripe_subscription_id, current_period_start, current_period_end, cancel_at_period_end, metadata, created_at",
+        "id, status, stripe_subscription_id, price_id, current_period_start, current_period_end, cancel_at_period_end, created_at",
       )
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
