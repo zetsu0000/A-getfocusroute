@@ -6,6 +6,7 @@ import { m } from "framer-motion";
 import { useQuizStore } from "@/store/quizStore";
 import { safeName } from "@/lib/personalization";
 import { getSignatureFromAnswers } from "@/lib/signature";
+import { SignatureRevealCard } from "@/components/signature/SignatureRevealCard";
 import { setPersistedQuizResultId } from "@/lib/quizResultId";
 import { createClient } from "@/lib/supabase/client";
 
@@ -156,68 +157,36 @@ export function ChartScreen() {
           gap: 24,
         }}
       >
+        <SignatureRevealCard
+          signatureKey={signature.signature}
+          signatureName={signature.signature}
+          signatureEssence={signature.title}
+          signatureSummary={signature.preview}
+          variant="preview"
+        />
+
         <div
           style={{
             background: "var(--color-bg-card)",
-            borderRadius: "var(--radius-xl)",
-            padding: "24px 20px 20px",
+            borderRadius: "var(--radius-lg)",
+            padding: "18px 20px",
             boxShadow: "var(--shadow-card)",
+            border: "1px solid var(--color-border)",
           }}
         >
           <p
             style={{
-              fontSize: 11,
-              color: "var(--color-text-muted)",
+              fontSize: 10,
+              fontWeight: 800,
+              letterSpacing: "0.12em",
               textTransform: "uppercase",
-              letterSpacing: "0.08em",
-              fontWeight: 700,
-              marginBottom: 8,
+              color: "var(--color-text-muted)",
+              marginBottom: 12,
             }}
           >
-            Partial profile reveal
+            Signature strengths
           </p>
-          <h2
-            style={{
-              fontSize: 24,
-              fontWeight: 900,
-              color: "var(--color-text)",
-              lineHeight: 1.2,
-              marginBottom: 8,
-            }}
-          >
-            {displayName}, your Cognitive Signature™ is{" "}
-            <span style={{ color: "var(--color-cognitive)" }}>
-              {signature.signature}
-            </span>
-          </h2>
-          <p
-            style={{
-              fontSize: 13,
-              fontWeight: 700,
-              color: "var(--color-cognitive)",
-              marginBottom: 8,
-            }}
-          >
-            {signature.title}
-          </p>
-          <p
-            style={{
-              fontSize: 14,
-              color: "var(--color-text-body)",
-              lineHeight: 1.65,
-            }}
-          >
-            {signature.preview}
-          </p>
-
-          <div
-            style={{
-              marginTop: 16,
-              display: "flex",
-              flexDirection: "column",
-              gap: 10,
-            }}
-          >
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {signature.strengths.map((bullet) => (
               <div
                 key={bullet}
@@ -365,4 +334,6 @@ export function ChartScreen() {
     </m.div>
   );
 }
+
+
 

@@ -1,7 +1,8 @@
-﻿import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { CopyableTemplateBlock } from "@/components/dashboard/CopyableTemplateBlock";
 import type { BrainProfileData, RadarDimension } from "@/lib/dashboard/brain-profile";
 import type { ExplainScriptBundle } from "@/data/bonuses";
+import { SignatureHeroBadge } from "@/components/signature/SignatureHeroBadge";
 
 // ── Geometry helpers (server-computed SVG) ────────────────────────────────────
 
@@ -253,102 +254,14 @@ export function BrainProfileView({
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
 
       {/* 1 ── Signature Hero */}
-      <Card
-        style={{
-          background: "var(--color-bg-card)",
-          border: "1px solid var(--color-border-2)",
-          borderLeft: "3px solid var(--color-cognitive)",
-          boxShadow: "var(--shadow-card-strong)",
-        }}
-      >
-        <SectionLabel>Profile Summary</SectionLabel>
-        <p
-          style={{
-            fontSize: 10,
-            fontWeight: 800,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            color: "var(--color-cognitive-dark)",
-            marginBottom: 10,
-          }}
-        >
-          Cognitive Signature™ · FocusRoute Brain Profile™
-        </p>
-        <h2
-          style={{
-            fontSize: 28,
-            fontWeight: 900,
-            color: "var(--color-text)",
-            lineHeight: 1.12,
-            marginBottom: 4,
-            letterSpacing: "-0.02em",
-          }}
-        >
-          {profile.signatureName}
-        </h2>
-        <p
-          style={{
-            fontSize: 14,
-            fontWeight: 700,
-            color: "var(--color-text)",
-            marginBottom: 10,
-            lineHeight: 1.4,
-          }}
-        >
-          {profile.signatureTitle}
-        </p>
-        <p
-          style={{
-            fontSize: 14,
-            color: "var(--color-text-body)",
-            lineHeight: 1.68,
-            marginBottom: 16,
-          }}
-        >
-          {profile.signatureDesc}
-        </p>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 800,
-              padding: "4px 12px",
-              borderRadius: 99,
-              background: "var(--color-bg-card)",
-              color: "var(--color-text-muted)",
-              border: "1px solid var(--color-border)",
-            }}
-          >
-            Overall strength: {profile.overallScore}/100
-          </span>
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 800,
-              padding: "4px 12px",
-              borderRadius: 99,
-              background: "transparent",
-              color: "var(--color-success)",
-              border: "1px solid var(--color-border)",
-            }}
-          >
-            {levelLabel}
-          </span>
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 800,
-              padding: "4px 12px",
-              borderRadius: 99,
-              background: "transparent",
-              color: "var(--color-cognitive-dark)",
-              border: "1px solid var(--color-border)",
-            }}
-          >
-            Profile report unlocked
-          </span>
-        </div>
-      </Card>
+      <SignatureHeroBadge
+        signatureKey={profile.signatureName}
+        signatureName={profile.signatureName}
+        signatureTitle={profile.signatureTitle}
+        signatureDesc={profile.signatureDesc}
+        overallScore={profile.overallScore}
+        scoreLabel={levelLabel}
+      />
 
       {/* 2 ── Executive Function Radar™ */}
       <Card>

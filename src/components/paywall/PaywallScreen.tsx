@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useMemo } from "react";
 import { m, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Shield, Lock, Check, BadgeCheck, CreditCard, Sparkles } from "lucide-react";
+import { Shield, Lock, Check, BadgeCheck, CreditCard } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js/pure";
 import {
   Elements,
@@ -14,6 +14,7 @@ import { useQuizStore } from "@/store/quizStore";
 import { safeName } from "@/lib/personalization";
 import { BRAIN_OS } from "@/lib/positioning";
 import { getSignatureFromAnswers } from "@/lib/signature";
+import { SignatureRevealCard } from "@/components/signature/SignatureRevealCard";
 
 // Lazy singleton — loadStripe (and the Stripe.js download) only fires
 // when the PaywallScreen first renders, not when the chunk is prefetched.
@@ -117,85 +118,13 @@ function LockedCard() {
 
   return (
     <div style={{ borderRadius: "var(--radius-lg)", overflow: "hidden", background: "var(--color-bg-card)", boxShadow: "var(--shadow-card-strong)", border: "1px solid var(--color-border-2)" }}>
-      <div style={{ padding: "18px 18px 16px", background: "linear-gradient(145deg, var(--color-primary-dark), var(--color-text))", position: "relative", overflow: "hidden" }}>
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundImage: "radial-gradient(rgba(255,255,255,0.16) 1px, transparent 1px)",
-            backgroundSize: "28px 28px",
-            opacity: 0.3,
-          }}
-        />
-        <m.div
-          aria-hidden="true"
-          animate={reduceMotion ? undefined : { rotate: 360 }}
-          transition={reduceMotion ? undefined : { duration: 18, repeat: Infinity, ease: "linear" }}
-          style={{
-            position: "absolute",
-            right: -58,
-            top: -64,
-            width: 190,
-            height: 190,
-            borderRadius: "50%",
-            border: "1px solid rgba(255,255,255,0.12)",
-            background: "radial-gradient(circle, rgba(76,63,215,0.36) 0%, rgba(46,111,158,0.18) 42%, transparent 68%)",
-            boxShadow: "0 0 60px rgba(76,63,215,0.26)",
-          }}
-        />
-        <div style={{ position: "relative" }}>
-          <p style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 800, color: "rgba(255,255,255,0.58)", marginBottom: 10 }}>
-            Your preview
-          </p>
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", gap: 14, alignItems: "center" }}>
-            <div style={{ minWidth: 0 }}>
-              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.64)", fontWeight: 700, marginBottom: 5 }}>
-                Your Cognitive Signature is
-              </p>
-              <m.h2
-                initial={reduceMotion ? undefined : { opacity: 0, y: 10, rotateX: -12 }}
-                animate={reduceMotion ? undefined : { opacity: 1, y: 0, rotateX: 0 }}
-                transition={reduceMotion ? undefined : { duration: 0.58, ease: [0.16, 1, 0.3, 1] }}
-                style={{
-                  fontSize: "clamp(38px, 14vw, 64px)",
-                  fontWeight: 950,
-                  letterSpacing: "-0.055em",
-                  lineHeight: 0.9,
-                  color: "#fff",
-                  textShadow: "0 18px 46px rgba(0,0,0,0.32)",
-                  overflowWrap: "break-word",
-                }}
-              >
-                {signature.signature}
-              </m.h2>
-            </div>
-            <m.div
-              animate={reduceMotion ? undefined : { y: [0, -5, 0], rotate: [-1, 1.5, -1] }}
-              transition={reduceMotion ? undefined : { duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-              style={{
-                width: 72,
-                height: 72,
-                borderRadius: 22,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#fff",
-                background: "linear-gradient(145deg, rgba(255,255,255,0.16), rgba(255,255,255,0.05))",
-                border: "1px solid rgba(255,255,255,0.16)",
-                boxShadow: "0 20px 50px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.18)",
-              }}
-            >
-              <Sparkles size={28} strokeWidth={2.3} />
-            </m.div>
-          </div>
-          <p style={{ marginTop: 12, fontSize: 15, fontWeight: 800, color: "#fff", lineHeight: 1.35 }}>
-            {signature.title}
-          </p>
-          <p style={{ marginTop: 8, fontSize: 13, color: "rgba(255,255,255,0.7)", lineHeight: 1.58 }}>
-            {signature.preview}
-          </p>
-        </div>
-      </div>
+      <SignatureRevealCard
+        signatureKey={signature.signature}
+        signatureName={signature.signature}
+        signatureEssence={signature.title}
+        signatureSummary={signature.preview}
+        variant="paywall"
+      />
 
       <div style={{ padding: "16px 18px 18px" }}>
         <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.6, marginBottom: 12 }}>
