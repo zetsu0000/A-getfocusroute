@@ -131,7 +131,7 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
           </button>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "7px 14px", marginTop: 16 }}>
             {trust.map((item) => (
-              <span key={item} style={{ fontSize: 12, color: "var(--color-text-muted)", fontWeight: 700 }}>
+              <span key={item} style={{ fontSize: 12, color: "var(--color-text-body)", fontWeight: 800 }}>
                 {item}
               </span>
             ))}
@@ -142,20 +142,34 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
       <section style={{ padding: "10px 18px 26px" }}>
         <div style={{ maxWidth: 620, margin: "0 auto", display: "grid", gap: 9 }}>
           {recognition.map((item) => (
-            <div
+            <button
               key={item}
+              type="button"
+              onClick={onStart}
+              aria-label={`${item} Start the FocusRoute assessment`}
               style={{
+                width: "100%",
+                textAlign: "left",
                 borderRadius: 14,
                 background: "var(--color-bg-card)",
-                border: "1px solid var(--color-border)",
-                padding: "13px 14px",
-                boxShadow: "0 1px 2px rgba(23,20,33,0.05)",
+                border: "1px solid var(--color-border-2)",
+                padding: "14px 14px",
+                boxShadow: "0 1px 2px rgba(20,17,31,0.06)",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                outlineColor: "var(--color-primary)",
               }}
             >
               <p style={{ fontSize: 14, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.35 }}>
                 {item}
               </p>
-            </div>
+              <span aria-hidden="true" style={{ color: "var(--color-primary)", fontSize: 16, fontWeight: 900, flexShrink: 0 }}>
+                →
+              </span>
+            </button>
           ))}
         </div>
       </section>
@@ -198,7 +212,7 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
       </section>
 
       <section style={{ padding: "22px 18px 38px" }}>
-        <div style={{ maxWidth: 620, margin: "0 auto", borderTop: "1px solid var(--color-border)", paddingTop: 22 }}>
+        <div style={{ maxWidth: 620, margin: "0 auto", borderTop: "1px solid var(--color-border)", paddingTop: 22, paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}>
           <p style={{ fontSize: 13, color: "var(--color-text-muted)", lineHeight: 1.65, marginBottom: 18 }}>
             Your results are private. FocusRoute is built for self-understanding and
             productivity support. It is not a diagnosis, medical treatment, or a
@@ -246,6 +260,11 @@ export default function Home() {
   const setEmail = useQuizStore((s) => s.setEmail);
   const setName = useQuizStore((s) => s.setName);
   const [quizStarted, setQuizStarted] = useState(false);
+
+  function startQuiz() {
+    setQuizStarted(true);
+    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "auto" }));
+  }
 
   useEffect(() => {
     const id = getPersistedQuizResultId();
@@ -295,7 +314,7 @@ export default function Home() {
       {step === "quiz" && (
         <m.div key="quiz" {...fade(true)}>
           {!retakeMode && currentQuestionIndex === 0 && !quizStarted ? (
-            <HomepageFunnel onStart={() => setQuizStarted(true)} />
+            <HomepageFunnel onStart={startQuiz} />
           ) : (
             <QuizEngine />
           )}
