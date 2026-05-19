@@ -1,4 +1,4 @@
-﻿import type { CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import { SignatureSigil } from "./SignatureSigil";
 import { getSignatureIdentity } from "@/lib/signature-identity";
 
@@ -74,19 +74,16 @@ export function SignatureHeroBadge({
       />
 
       <div style={{ position: "relative", padding: "22px 22px 24px" }}>
-        {/* eyebrow */}
-        <p
-          style={{
-            fontSize: 10,
-            fontWeight: 800,
-            letterSpacing: "0.14em",
-            textTransform: "uppercase",
-            color: "rgba(255,255,255,0.5)",
-            marginBottom: 16,
-          }}
-        >
-          Cognitive Signature™ · FocusRoute Brain Profile™
-        </p>
+        {/* class-index rail */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+          <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(255,255,255,0.42)" }}>
+            Cognitive Signature
+          </span>
+          <span style={{ flex: 1, height: 1, background: "linear-gradient(to right, rgba(255,255,255,0.18), rgba(255,255,255,0))" }} />
+          <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.22em", textTransform: "uppercase", color: `rgba(${identity.accentRgb},1)`, fontVariantNumeric: "tabular-nums" }}>
+            Class · {identity.classIndex}
+          </span>
+        </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 18, alignItems: "center", marginBottom: 16 }}>
           <div style={{ flexShrink: 0 }}>

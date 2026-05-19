@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { m, useReducedMotion } from "framer-motion";
 import { SignatureSigil } from "./SignatureSigil";
@@ -94,35 +94,51 @@ export function SignatureRevealCard({
 
       <div style={{ position: "relative", padding: "24px 22px 26px" }}>
 
-        {/* eyebrow */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 18 }}>
+        {/* class-index rail — collectible rank marker */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            marginBottom: 22,
+          }}
+        >
           <span
             style={{
               fontSize: 10,
               fontWeight: 800,
-              letterSpacing: "0.14em",
+              letterSpacing: "0.22em",
               textTransform: "uppercase",
-              color: "rgba(255,255,255,0.55)",
+              color: "rgba(255,255,255,0.42)",
             }}
           >
             Cognitive Signature
           </span>
-          <span style={{ width: 4, height: 4, borderRadius: "50%", background: "rgba(255,255,255,0.25)" }} />
+          <span style={{ flex: 1, height: 1, background: "linear-gradient(to right, rgba(255,255,255,0.18), rgba(255,255,255,0))" }} />
           <span
             style={{
               fontSize: 10,
               fontWeight: 800,
-              letterSpacing: "0.14em",
+              letterSpacing: "0.22em",
               textTransform: "uppercase",
               color: labelColor,
+              fontVariantNumeric: "tabular-nums",
             }}
           >
-            {identity.classLabel.replace("Class · ", "")}
+            Class · {identity.classIndex}
           </span>
         </div>
 
-        {/* hero row: sigil + name */}
-        <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 18, alignItems: "center", marginBottom: 16 }}>
+        {/* hero row: sigil + name + class label */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "auto 1fr",
+            gap: 18,
+            alignItems: "center",
+            marginBottom: 18,
+          }}
+        >
           <m.div
             initial={reduce ? undefined : { opacity: 0, scale: 0.7, rotate: -8 }}
             animate={reduce ? undefined : { opacity: 1, scale: 1, rotate: 0 }}
@@ -133,30 +149,78 @@ export function SignatureRevealCard({
               animate={reduce ? undefined : { y: [0, -3.5, 0] }}
               transition={reduce ? undefined : { duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
             >
-              <SignatureSigil signatureKey={identity.key} size={84} withGlow />
+              <SignatureSigil signatureKey={identity.key} size={92} withGlow />
             </m.div>
           </m.div>
 
           <div style={{ minWidth: 0 }}>
-            <p style={{ fontSize: 12, color: supportColor, fontWeight: 700, marginBottom: 4 }}>
-              Your signature
-            </p>
-            <m.h2
-              initial={reduce ? undefined : { opacity: 0, y: 12, rotateX: -10 }}
-              animate={reduce ? undefined : { opacity: 1, y: 0, rotateX: 0 }}
-              transition={reduce ? undefined : { duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            <p
               style={{
-                fontSize: "clamp(30px, 9vw, 44px)",
-                fontWeight: 900,
-                color: titleColor,
-                lineHeight: 0.95,
-                letterSpacing: "-0.035em",
-                textShadow: "0 14px 38px rgba(0,0,0,0.28)",
-                overflowWrap: "break-word",
+                fontSize: 11,
+                fontWeight: 800,
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                color: labelColor,
+                marginBottom: 6,
               }}
             >
-              {signatureName}
-            </m.h2>
+              {identity.classLabel}
+            </p>
+            <div style={{ position: "relative" }}>
+              {/* faint outline ghost behind the title for depth */}
+              {!reduce && (
+                <span
+                  aria-hidden="true"
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    fontSize: "clamp(30px, 9vw, 46px)",
+                    fontWeight: 900,
+                    color: "transparent",
+                    WebkitTextStroke: `1px rgba(${identity.accentRgb},0.35)`,
+                    lineHeight: 0.95,
+                    letterSpacing: "-0.035em",
+                    transform: "translate(1.5px, 2px)",
+                    pointerEvents: "none",
+                    overflowWrap: "break-word",
+                  }}
+                >
+                  {signatureName}
+                </span>
+              )}
+              <m.h2
+                initial={reduce ? undefined : { opacity: 0, y: 12, rotateX: -10 }}
+                animate={reduce ? undefined : { opacity: 1, y: 0, rotateX: 0 }}
+                transition={reduce ? undefined : { duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+                style={{
+                  position: "relative",
+                  fontSize: "clamp(30px, 9vw, 46px)",
+                  fontWeight: 900,
+                  color: titleColor,
+                  lineHeight: 0.95,
+                  letterSpacing: "-0.035em",
+                  textShadow: "0 14px 38px rgba(0,0,0,0.28)",
+                  overflowWrap: "break-word",
+                }}
+              >
+                {signatureName}
+              </m.h2>
+            </div>
+            {/* accent rule + glyph word */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+              <span style={{ width: 18, height: 2, background: identity.accent, borderRadius: 999 }} />
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 800,
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.6)",
+                }}
+              >
+                Sigil · {identity.glyph}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -176,7 +240,6 @@ export function SignatureRevealCard({
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: identity.accent }} />
           <span style={{ fontSize: 12, fontWeight: 700, color: titleColor, letterSpacing: "-0.005em" }}>{essence}</span>
         </div>
-
         {/* reveal statement */}
         <m.p
           initial={reduce ? undefined : { opacity: 0, y: 10 }}

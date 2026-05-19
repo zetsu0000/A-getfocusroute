@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Cognitive Signature identity system.
  * Server-safe (no browser APIs).
  *
@@ -20,6 +20,8 @@ export type SigilKey = "thrust" | "blueprint" | "burst" | "ember" | "orbit";
 export interface SignatureIdentity {
   /** Archetype key (matches BrainSignature). */
   key: SignatureKey;
+  /** Roman-numeral rank shown as a collectible class index (I-V). */
+  classIndex: string;
   /** Short class-style label shown above the name. */
   classLabel: string;
   /** One-line essence, e.g. "Activation-driven momentum". */
@@ -52,6 +54,7 @@ export const SIGNATURE_ORDER: SignatureKey[] = [
 export const SIGNATURE_IDENTITY: Record<SignatureKey, SignatureIdentity> = {
   Sprinter: {
     key: "Sprinter",
+    classIndex: "I",
     classLabel: "Class · Activation",
     essence: "Activation-driven momentum",
     motif: "thrust",
@@ -66,6 +69,7 @@ export const SIGNATURE_IDENTITY: Record<SignatureKey, SignatureIdentity> = {
   },
   Archivist: {
     key: "Archivist",
+    classIndex: "II",
     classLabel: "Class · Depth",
     essence: "Depth-led precision",
     motif: "blueprint",
@@ -80,6 +84,7 @@ export const SIGNATURE_IDENTITY: Record<SignatureKey, SignatureIdentity> = {
   },
   Spark: {
     key: "Spark",
+    classIndex: "III",
     classLabel: "Class · Signal",
     essence: "Novelty-powered synthesis",
     motif: "prism",
@@ -94,6 +99,7 @@ export const SIGNATURE_IDENTITY: Record<SignatureKey, SignatureIdentity> = {
   },
   Reactor: {
     key: "Reactor",
+    classIndex: "IV",
     classLabel: "Class · Ember",
     essence: "Pressure-sensitive responsiveness",
     motif: "ember",
@@ -108,6 +114,7 @@ export const SIGNATURE_IDENTITY: Record<SignatureKey, SignatureIdentity> = {
   },
   Drifter: {
     key: "Drifter",
+    classIndex: "V",
     classLabel: "Class · Orbit",
     essence: "Anchor-seeking flexibility",
     motif: "orbit",

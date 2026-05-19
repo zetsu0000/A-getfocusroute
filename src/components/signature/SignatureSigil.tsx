@@ -1,10 +1,11 @@
-﻿import type { CSSProperties } from "react";
+import { useId, type CSSProperties } from "react";
 import { getSignatureIdentity, type SigilKey } from "@/lib/signature-identity";
 
 /**
  * SignatureSigil — server-rendered SVG emblem for a Cognitive Signature.
  *
- * Renders a unified medallion frame (rounded hex) with a per-archetype glyph.
+ * Renders a unified hex medallion frame with vertex dots + top notch
+ * (class-emblem ornamentation) and a per-archetype inner glyph.
  * No client APIs — safe in server components.
  *
  * For animated reveal moments wrap with framer motion in a client component.
@@ -20,73 +21,195 @@ type Props = {
   className?: string;
 };
 
-/* Inner glyph paths — each in a 64x64 coordinate space, centered on (32,32). */
+/* ──────────────────────────────────────────────────────────────────────────
+ * Inner glyphs — each in a 64x64 coordinate space, centered on (32,32).
+ * Each glyph keeps a consistent 2.4px primary stroke and 18px max radius
+ * so the 5 sigils feel like a true visual family.
+ * ────────────────────────────────────────────────────────────────────────── */
+
 function GlyphThrust({ color }: { color: string }) {
-  // Sprinter — three forward chevrons stacked, motion vector.
+  // Sprinter / Activation — Delta triangle of change, velocity bar, motion dots.
   return (
-    <g stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" fill="none">
-      <path d="M16 22 L30 32 L16 42" />
-      <path d="M26 22 L40 32 L26 42" />
-      <path d="M36 22 L50 32 L36 42" opacity="0.55" />
+    <g fill="none">
+      {/* upward triangle (delta = change) */}
+      <path
+        d="M32 17 L46 41 L18 41 Z"
+        stroke={color}
+        strokeWidth="2.4"
+        strokeLinejoin="round"
+        fill={color}
+        fillOpacity="0.16"
+      />
+      {/* horizontal velocity bar through base */}
+      <line
+        x1="14" y1="46" x2="50" y2="46"
+        stroke={color}
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+      {/* motion trail dots */}
+      <circle cx="9"  cy="46" r="1.3" fill={color} opacity="0.7" />
+      <circle cx="55" cy="46" r="1.3" fill={color} opacity="0.5" />
+      {/* inner forward-arrow notch */}
+      <path
+        d="M28 32 L36 32 L32 28 M32 36 L32 28"
+        stroke={color}
+        strokeWidth="2.0"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </g>
   );
 }
 
 function GlyphBlueprint({ color }: { color: string }) {
-  // Archivist — nested rotated squares, ordered depth.
+  // Archivist / Depth — A threshold/portal: two columns + lintel + foundation,
+  // with a single offset inner frame suggesting layered depth.
   return (
-    <g stroke={color} strokeWidth="2.2" strokeLinejoin="round" fill="none">
-      <rect x="16" y="16" width="32" height="32" rx="2" />
-      <rect x="22" y="22" width="20" height="20" rx="1.5" opacity="0.75" />
-      <rect x="28" y="28" width="8" height="8" rx="1" opacity="0.55" fill={color} fillOpacity="0.18" />
-      <line x1="32" y1="10" x2="32" y2="16" opacity="0.6" />
-      <line x1="32" y1="48" x2="32" y2="54" opacity="0.6" />
-      <line x1="10" y1="32" x2="16" y2="32" opacity="0.6" />
-      <line x1="48" y1="32" x2="54" y2="32" opacity="0.6" />
+    <g fill="none" stroke={color} strokeLinecap="round" strokeLinejoin="round">
+      {/* outer frame */}
+      <path
+        d="M14 16 L14 48 M50 16 L50 48 M14 16 L50 16 M14 48 L50 48"
+        strokeWidth="2.4"
+      />
+      {/* foundation line below frame */}
+      <line x1="10" y1="52" x2="54" y2="52" strokeWidth="2.0" opacity="0.65" />
+      {/* inner offset frame — depth layer */}
+      <rect
+        x="20" y="22"
+        width="24" height="20"
+        strokeWidth="1.8"
+        opacity="0.6"
+      />
+      {/* central anchor dot */}
+      <circle cx="32" cy="32" r="2.2" fill={color} stroke="none" />
+      {/* corner ticks (architect's marks) */}
+      <path d="M14 22 L18 22 M14 42 L18 42 M50 22 L46 22 M50 42 L46 42" strokeWidth="1.6" opacity="0.55" />
     </g>
   );
 }
 
 function GlyphBurst({ color }: { color: string }) {
-  // Spark — 8-point starburst with inner gem.
-  const rays = Array.from({ length: 8 }, (_, i) => {
-    const angle = (i * Math.PI) / 4;
-    const x1 = 32 + Math.cos(angle) * 12;
-    const y1 = 32 + Math.sin(angle) * 12;
-    const x2 = 32 + Math.cos(angle) * 22;
-    const y2 = 32 + Math.sin(angle) * 22;
-    return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth="2.1" strokeLinecap="round" opacity={i % 2 === 0 ? 1 : 0.45} />;
-  });
+  // Spark / Signal — A vertical diamond (prism) with 4 cardinal ray triplets.
   return (
     <g fill="none">
-      {rays}
-      <polygon points="32,20 38,32 32,44 26,32" fill={color} fillOpacity="0.16" stroke={color} strokeWidth="2.2" strokeLinejoin="round" />
+      {/* cardinal ray triplets (small dashes) */}
+      {[
+        // top
+        { x1: 32, y1: 6,  x2: 32, y2: 11 },
+        { x1: 28, y1: 8,  x2: 28, y2: 11, w: 1.4 },
+        { x1: 36, y1: 8,  x2: 36, y2: 11, w: 1.4 },
+        // bottom
+        { x1: 32, y1: 53, x2: 32, y2: 58 },
+        { x1: 28, y1: 53, x2: 28, y2: 56, w: 1.4 },
+        { x1: 36, y1: 53, x2: 36, y2: 56, w: 1.4 },
+        // left
+        { x1: 6,  y1: 32, x2: 11, y2: 32 },
+        { x1: 8,  y1: 28, x2: 11, y2: 28, w: 1.4 },
+        { x1: 8,  y1: 36, x2: 11, y2: 36, w: 1.4 },
+        // right
+        { x1: 53, y1: 32, x2: 58, y2: 32 },
+        { x1: 53, y1: 28, x2: 56, y2: 28, w: 1.4 },
+        { x1: 53, y1: 36, x2: 56, y2: 36, w: 1.4 },
+      ].map((r, i) => (
+        <line
+          key={i}
+          x1={r.x1} y1={r.y1} x2={r.x2} y2={r.y2}
+          stroke={color}
+          strokeWidth={r.w ?? 2.2}
+          strokeLinecap="round"
+          opacity={r.w ? 0.55 : 1}
+        />
+      ))}
+      {/* vertical prism — 2 stacked triangles */}
+      <path
+        d="M32 17 L42 32 L32 47 L22 32 Z"
+        stroke={color}
+        strokeWidth="2.4"
+        strokeLinejoin="round"
+        fill={color}
+        fillOpacity="0.18"
+      />
+      {/* prism axis */}
+      <line x1="22" y1="32" x2="42" y2="32" stroke={color} strokeWidth="1.4" opacity="0.55" />
+      {/* core gem */}
+      <circle cx="32" cy="32" r="2" fill={color} />
     </g>
   );
 }
 
 function GlyphEmber({ color }: { color: string }) {
-  // Reactor — radiating circles with a flame-shaped core.
+  // Reactor / Ember — Atomic core: solid nucleus, orbital ring, 3 particles,
+  // single flame-tip rising — "active ember" sigil.
   return (
-    <g fill="none" stroke={color} strokeWidth="2.2">
-      <circle cx="32" cy="32" r="18" opacity="0.18" />
-      <circle cx="32" cy="32" r="13" opacity="0.4" />
-      {/* flame core (teardrop) */}
-      <path d="M32 18 C40 26 40 36 32 46 C24 36 24 26 32 18 Z" fill={color} fillOpacity="0.22" strokeLinejoin="round" />
-      <circle cx="32" cy="36" r="2.2" fill={color} stroke="none" />
+    <g fill="none">
+      {/* outer orbital ring (tilted ellipse) */}
+      <ellipse
+        cx="32" cy="34"
+        rx="20" ry="9"
+        transform="rotate(-18 32 34)"
+        stroke={color}
+        strokeWidth="2.0"
+        opacity="0.6"
+      />
+      {/* flame tip rising from nucleus */}
+      <path
+        d="M32 22 C35 18 35 13 32 8 C29 13 29 18 32 22 Z"
+        fill={color}
+        fillOpacity="0.7"
+        stroke={color}
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      {/* nucleus */}
+      <circle cx="32" cy="34" r="5" fill={color} fillOpacity="0.9" />
+      <circle cx="32" cy="34" r="2.4" fill="#ffffff" fillOpacity="0.35" />
+      {/* orbital particles */}
+      <circle cx="12" cy="38" r="2.0" fill={color} />
+      <circle cx="52" cy="30" r="2.0" fill={color} />
+      <circle cx="42" cy="46" r="1.4" fill={color} opacity="0.7" />
     </g>
   );
 }
 
 function GlyphOrbit({ color }: { color: string }) {
-  // Drifter — orbit ring with anchor node.
+  // Drifter / Orbit — A single tilted orbit ring, anchored center node,
+  // one bright satellite, and a faint inner micro-orbit for depth.
   return (
-    <g fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round">
-      <ellipse cx="32" cy="32" rx="20" ry="10" transform="rotate(-22 32 32)" opacity="0.55" />
-      <ellipse cx="32" cy="32" rx="20" ry="10" transform="rotate(22 32 32)" opacity="0.35" />
-      <circle cx="32" cy="32" r="5" fill={color} fillOpacity="0.22" />
-      <circle cx="14" cy="26" r="2.3" fill={color} stroke="none" />
-      <circle cx="50" cy="38" r="1.8" fill={color} stroke="none" opacity="0.7" />
+    <g fill="none">
+      {/* outer orbit ring */}
+      <ellipse
+        cx="32" cy="32"
+        rx="22" ry="11"
+        transform="rotate(-22 32 32)"
+        stroke={color}
+        strokeWidth="2.2"
+        opacity="0.85"
+      />
+      {/* inner micro orbit */}
+      <ellipse
+        cx="32" cy="32"
+        rx="10" ry="5"
+        transform="rotate(-22 32 32)"
+        stroke={color}
+        strokeWidth="1.4"
+        opacity="0.35"
+      />
+      {/* compass cross — anchor reference */}
+      <path
+        d="M32 22 L32 42 M22 32 L42 32"
+        stroke={color}
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        opacity="0.4"
+      />
+      {/* central anchor */}
+      <circle cx="32" cy="32" r="3.4" fill={color} />
+      <circle cx="32" cy="32" r="1.6" fill="#ffffff" fillOpacity="0.4" />
+      {/* satellite on outer ring */}
+      <circle cx="50" cy="25" r="2.2" fill={color} />
+      {/* trailing dot */}
+      <circle cx="14" cy="39" r="1.4" fill={color} opacity="0.55" />
     </g>
   );
 }
@@ -101,35 +224,83 @@ function Glyph({ sigilKey, color }: { sigilKey: SigilKey; color: string }) {
   }
 }
 
-/* Hexagonal medallion frame for consistency across all 5 signatures. */
-function MedallionFrame({ color, gradientId, frameId }: { color: string; gradientId: string; frameId: string }) {
+/* ──────────────────────────────────────────────────────────────────────────
+ * Hex medallion frame — class-emblem ornamentation:
+ *  - Outer hex with gradient fill
+ *  - Inner highlight hex (top-light reflection)
+ *  - 6 vertex dots (rank pips)
+ *  - Top notch indicator (class-mark)
+ * ────────────────────────────────────────────────────────────────────────── */
+function MedallionFrame({
+  color,
+  gradientId,
+  frameId,
+}: { color: string; gradientId: string; frameId: string }) {
+  // Hex vertices (point-up): top, upper-right, lower-right, bottom, lower-left, upper-left
+  const v: Array<[number, number]> = [
+    [32, 4],
+    [56, 17.5],
+    [56, 46.5],
+    [32, 60],
+    [8, 46.5],
+    [8, 17.5],
+  ];
+  const points = v.map(([x, y]) => `${x},${y}`).join(" ");
+  const innerPoints = v.map(([x, y]) => {
+    // shrink toward center (32,32) by 7%
+    const nx = 32 + (x - 32) * 0.92;
+    const ny = 32 + (y - 32) * 0.92;
+    return `${nx.toFixed(2)},${ny.toFixed(2)}`;
+  }).join(" ");
+
   return (
     <>
       <defs>
         <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%"  stopColor={color} stopOpacity="0.85" />
-          <stop offset="100%" stopColor={color} stopOpacity="0.35" />
+          <stop offset="0%"  stopColor={color} stopOpacity="0.9" />
+          <stop offset="100%" stopColor={color} stopOpacity="0.4" />
         </linearGradient>
-        <linearGradient id={frameId} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%"  stopColor="#ffffff" stopOpacity="0.55" />
+        <linearGradient id={frameId} x1="50%" y1="0%" x2="50%" y2="100%">
+          <stop offset="0%"  stopColor="#ffffff" stopOpacity="0.6" />
+          <stop offset="55%" stopColor="#ffffff" stopOpacity="0.05" />
           <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
         </linearGradient>
       </defs>
-      {/* hex with rounded corners — points up/down */}
+      {/* fill */}
       <polygon
-        points="32,3 57,17 57,47 32,61 7,47 7,17"
+        points={points}
         fill={`url(#${gradientId})`}
-        fillOpacity="0.08"
-        stroke={`url(#${gradientId})`}
-        strokeWidth="1.5"
+        fillOpacity="0.10"
       />
+      {/* outer stroke */}
       <polygon
-        points="32,6 54.5,18.5 54.5,45.5 32,58 9.5,45.5 9.5,18.5"
+        points={points}
+        fill="none"
+        stroke={`url(#${gradientId})`}
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      {/* inner highlight stroke */}
+      <polygon
+        points={innerPoints}
         fill="none"
         stroke={`url(#${frameId})`}
-        strokeWidth="0.6"
-        opacity="0.6"
+        strokeWidth="0.7"
       />
+      {/* vertex pips */}
+      {v.map(([x, y], i) => (
+        <circle
+          key={i}
+          cx={x}
+          cy={y}
+          r="0.9"
+          fill={color}
+          opacity={i === 0 ? 1 : 0.55}
+        />
+      ))}
+      {/* top class-mark notch */}
+      <line x1="29" y1="2" x2="35" y2="2" stroke={color} strokeWidth="1.1" strokeLinecap="round" opacity="0.85" />
+      <line x1="30.5" y1="0" x2="33.5" y2="0" stroke={color} strokeWidth="0.9" strokeLinecap="round" opacity="0.55" />
     </>
   );
 }
@@ -142,7 +313,8 @@ export function SignatureSigil({
   className,
 }: Props) {
   const identity = getSignatureIdentity(signatureKey);
-  const uid = `sig-${identity.key.toLowerCase()}`;
+  const reactId = useId().replace(/:/g, "");
+  const uid = `sig-${identity.key.toLowerCase()}-${reactId}`;
   const gradientId = `${uid}-fill`;
   const frameId = `${uid}-frame`;
   const glowId = `${uid}-glow`;
@@ -165,10 +337,10 @@ export function SignatureSigil({
         <div
           style={{
             position: "absolute",
-            inset: -size * 0.18,
+            inset: -size * 0.2,
             borderRadius: "50%",
-            background: `radial-gradient(circle, rgba(${identity.accentRgb},0.32) 0%, rgba(${identity.accentRgb},0) 70%)`,
-            filter: "blur(8px)",
+            background: `radial-gradient(circle, rgba(${identity.accentRgb},0.36) 0%, rgba(${identity.accentRgb},0) 70%)`,
+            filter: "blur(10px)",
             pointerEvents: "none",
           }}
         />
@@ -178,14 +350,21 @@ export function SignatureSigil({
         height={size}
         viewBox="0 0 64 64"
         fill="none"
-        style={{ position: "relative", zIndex: 1, filter: withGlow ? `drop-shadow(0 6px 18px rgba(${identity.accentRgb},0.35))` : undefined }}
+        style={{
+          position: "relative",
+          zIndex: 1,
+          filter: withGlow
+            ? `drop-shadow(0 8px 22px rgba(${identity.accentRgb},0.42))`
+            : undefined,
+        }}
       >
         <defs>
           <radialGradient id={glowId} cx="50%" cy="50%" r="50%">
-            <stop offset="0%"  stopColor={identity.accent} stopOpacity="0.35" />
+            <stop offset="0%"  stopColor={identity.accent} stopOpacity="0.4" />
             <stop offset="100%" stopColor={identity.accent} stopOpacity="0" />
           </radialGradient>
         </defs>
+        {/* radial backdrop */}
         <circle cx="32" cy="32" r="28" fill={`url(#${glowId})`} />
         <MedallionFrame color={identity.accent} gradientId={gradientId} frameId={frameId} />
         <Glyph sigilKey={identity.sigilKey} color={identity.accent} />
