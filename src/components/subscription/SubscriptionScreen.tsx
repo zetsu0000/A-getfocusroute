@@ -106,7 +106,7 @@ function SubCheckoutForm({
     if (data.clientSecret) {
       const { error: confirmErr } = await stripe.confirmPayment({
         clientSecret: data.clientSecret,
-        confirmParams: { return_url: window.location.origin + "/?step=success" },
+        confirmParams: { return_url: window.location.origin + "/assessment?step=success" },
         redirect: "if_required",
       });
       if (confirmErr) { setError(confirmErr.message ?? "Payment failed"); setLoading(false); return; }

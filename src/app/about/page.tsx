@@ -123,7 +123,7 @@ export default function AboutPage() {
             <Link href="/" style={{ textDecoration: "none" }}>
               <span style={{ fontSize: 15, fontWeight: 800, color: "#171421", letterSpacing: "-0.02em" }}>FocusRoute</span>
             </Link>
-            <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#171421", color: "#FFFFFF", fontSize: 13, fontWeight: 700, padding: "9px 18px", borderRadius: 999, textDecoration: "none" }}>
+            <Link href="/assessment" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#171421", color: "#FFFFFF", fontSize: 13, fontWeight: 700, padding: "9px 18px", borderRadius: 999, textDecoration: "none" }}>
               Start Free <ChevronRight size={14} />
             </Link>
           </div>
@@ -148,7 +148,7 @@ export default function AboutPage() {
               Take the free 3-minute assessment. Get a complete cognitive map — and a 28-day action plan built around how your brain actually works.
             </m.p>
             <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, duration: 0.5 }} style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 56 }}>
-              <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#6757E8", color: "#FFFFFF", fontSize: 17, fontWeight: 800, padding: "17px 30px", borderRadius: 999, textDecoration: "none", letterSpacing: "-0.02em", boxShadow: "0 10px 36px rgba(103,87,232,0.45)" }}>
+              <Link href="/assessment" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#6757E8", color: "#FFFFFF", fontSize: 17, fontWeight: 800, padding: "17px 30px", borderRadius: 999, textDecoration: "none", letterSpacing: "-0.02em", boxShadow: "0 10px 36px rgba(103,87,232,0.45)" }}>
                 Start your free Brain Profile <ArrowRight size={18} />
               </Link>
               <a href="#how-it-works" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.8)", fontSize: 15, fontWeight: 600, padding: "17px 24px", borderRadius: 999, textDecoration: "none", border: "1px solid rgba(255,255,255,0.11)" }}>
@@ -318,7 +318,7 @@ export default function AboutPage() {
                 </p>
               </m.div>
               <m.div variants={fadeUp} style={{ display: "flex", flexWrap: "wrap", gap: 14, justifyContent: "center", marginBottom: 28 }}>
-                <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#6757E8", color: "#FFFFFF", fontSize: 17, fontWeight: 800, padding: "18px 32px", borderRadius: 999, textDecoration: "none", letterSpacing: "-0.02em", boxShadow: "0 14px 44px rgba(103,87,232,0.5)" }}>
+                <Link href="/assessment" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#6757E8", color: "#FFFFFF", fontSize: 17, fontWeight: 800, padding: "18px 32px", borderRadius: 999, textDecoration: "none", letterSpacing: "-0.02em", boxShadow: "0 14px 44px rgba(103,87,232,0.5)" }}>
                   Start your free Brain Profile <ArrowRight size={19} />
                 </Link>
               </m.div>
@@ -353,7 +353,7 @@ export default function AboutPage() {
           <div style={{ maxWidth: 480, margin: "0 auto", textAlign: "center" }}>
             <p style={{ fontSize: 18, fontWeight: 800, color: "#171421", letterSpacing: "-0.02em", marginBottom: 8 }}>Ready to understand your brain?</p>
             <p style={{ fontSize: 14, color: "#9A94AA", marginBottom: 22 }}>Free assessment. 3 minutes. Your cognitive map, instantly.</p>
-            <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#171421", color: "#FFFFFF", fontSize: 15, fontWeight: 800, padding: "14px 26px", borderRadius: 999, textDecoration: "none", letterSpacing: "-0.02em" }}>
+            <Link href="/assessment" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#171421", color: "#FFFFFF", fontSize: 15, fontWeight: 800, padding: "14px 26px", borderRadius: 999, textDecoration: "none", letterSpacing: "-0.02em" }}>
               Start your free Brain Profile <ArrowRight size={16} />
             </Link>
             <div style={{ marginTop: 32, paddingTop: 24, borderTop: "1px solid #E2D8CA", display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>

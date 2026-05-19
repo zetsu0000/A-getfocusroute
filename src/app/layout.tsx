@@ -3,7 +3,6 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { SchemaMarkup } from "@/components/seo/SchemaMarkup";
 import { MotionProvider } from "@/components/providers/MotionProvider";
-import { BRAIN_OS } from "@/lib/positioning";
 
 /*
  * Plus Jakarta Sans — a modern, friendly, highly legible sans-serif.
@@ -18,8 +17,8 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 const BASE_URL = "https://getfocusroute.com";
-const TITLE    = `${BRAIN_OS.lineTm} · Personalized ADHD Profile`;
-const DESC     = "You're not lazy. Your brain needs a different operating system. Map your cognitive profile and unlock a personalized 28-day protocol.";
+const TITLE    = "FocusRoute · Cognitive Profile and Focus Assessment";
+const DESC     = "Understand your attention patterns, focus friction, and next best step with a private guided assessment.";
 
 export const metadata: Metadata = {
   title: {
@@ -43,7 +42,7 @@ export const metadata: Metadata = {
         url:    "/opengraph-image",
         width:  1200,
         height: 630,
-        alt:    `${BRAIN_OS.lineTm} · Personalized ADHD Profile`,
+        alt:    "FocusRoute cognitive profile and focus assessment",
       },
     ],
   },
@@ -62,7 +61,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`light ${jakarta.variable}`}>
+    <html lang="en" className={`light ${jakarta.variable}`}>
       <body className={jakarta.className}><SchemaMarkup /><MotionProvider>{children}</MotionProvider></body>
     </html>
   );

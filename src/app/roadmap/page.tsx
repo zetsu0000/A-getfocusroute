@@ -131,7 +131,7 @@ export default function RoadmapLandingPage() {
             <Link href="/" style={{ textDecoration: "none" }}>
               <span style={{ fontSize: 15, fontWeight: 800, color: "#171421", letterSpacing: "-0.02em" }}>FocusRoute</span>
             </Link>
-            <Link href="/?step=upsell" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#171421", color: "#FFFFFF", fontSize: 13, fontWeight: 700, padding: "9px 18px", borderRadius: 999, textDecoration: "none" }}>
+            <Link href="/assessment?step=upsell" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#171421", color: "#FFFFFF", fontSize: 13, fontWeight: 700, padding: "9px 18px", borderRadius: 999, textDecoration: "none" }}>
               Start the Protocol <ChevronRight size={14} />
             </Link>
           </div>
@@ -156,7 +156,7 @@ export default function RoadmapLandingPage() {
               A guided daily protocol for reducing friction, building momentum, and creating focus routines that fit how your mind actually works.
             </m.p>
             <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24, duration: 0.5 }} style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 48 }}>
-              <Link href="/?step=upsell" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#6757E8", color: "#FFFFFF", fontSize: 16, fontWeight: 800, padding: "16px 28px", borderRadius: 999, textDecoration: "none", letterSpacing: "-0.02em", boxShadow: "0 8px 32px rgba(103,87,232,0.4)" }}>
+              <Link href="/assessment?step=upsell" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#6757E8", color: "#FFFFFF", fontSize: 16, fontWeight: 800, padding: "16px 28px", borderRadius: 999, textDecoration: "none", letterSpacing: "-0.02em", boxShadow: "0 8px 32px rgba(103,87,232,0.4)" }}>
                 Start the 28-Day Protocol <ArrowRight size={18} />
               </Link>
               <a href="#what-you-get" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.8)", fontSize: 15, fontWeight: 600, padding: "16px 24px", borderRadius: 999, textDecoration: "none", border: "1px solid rgba(255,255,255,0.12)" }}>
@@ -425,7 +425,7 @@ export default function RoadmapLandingPage() {
                     <p style={{ fontSize: 36, fontWeight: 800, color: "#FFFFFF", lineHeight: 1, letterSpacing: "-0.03em" }}>{BRAIN_OS.price.upsell}</p>
                   </div>
                 </div>
-                <Link href="/?step=upsell" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%", background: "#6757E8", color: "#FFFFFF", fontSize: 17, fontWeight: 800, padding: "18px 24px", borderRadius: 16, textDecoration: "none", letterSpacing: "-0.02em", boxShadow: "0 12px 40px rgba(103,87,232,0.45)" }}>
+                <Link href="/assessment?step=upsell" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%", background: "#6757E8", color: "#FFFFFF", fontSize: 17, fontWeight: 800, padding: "18px 24px", borderRadius: 16, textDecoration: "none", letterSpacing: "-0.02em", boxShadow: "0 12px 40px rgba(103,87,232,0.45)" }}>
                   Unlock the 28-Day Protocol <ArrowRight size={19} />
                 </Link>
                 <p style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 14 }}>7-day guarantee · Secure checkout · Not a subscription</p>
@@ -461,7 +461,7 @@ export default function RoadmapLandingPage() {
           <div style={{ maxWidth: 480, margin: "0 auto", textAlign: "center" }}>
             <p style={{ fontSize: 20, fontWeight: 800, color: "#171421", letterSpacing: "-0.02em", marginBottom: 8 }}>Ready to build your focus system?</p>
             <p style={{ fontSize: 14, color: "#9A94AA", marginBottom: 24 }}>28 days. One action per day. Adapted to your cognitive profile.</p>
-            <Link href="/?step=upsell" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#171421", color: "#FFFFFF", fontSize: 16, fontWeight: 800, padding: "16px 28px", borderRadius: 999, textDecoration: "none", letterSpacing: "-0.02em" }}>
+            <Link href="/assessment?step=upsell" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#171421", color: "#FFFFFF", fontSize: 16, fontWeight: 800, padding: "16px 28px", borderRadius: 999, textDecoration: "none", letterSpacing: "-0.02em" }}>
               Start the 28-Day Protocol <ArrowRight size={17} />
             </Link>
             <div style={{ marginTop: 32, paddingTop: 24, borderTop: "1px solid #E2D8CA", display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>

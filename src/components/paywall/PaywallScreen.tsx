@@ -184,7 +184,7 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
 
     const { error: confirmErr } = await stripe.confirmPayment({
       elements,
-      confirmParams: { return_url: window.location.origin + "/?step=upsell" },
+      confirmParams: { return_url: window.location.origin + "/assessment?step=upsell" },
       redirect: "if_required",
     });
 

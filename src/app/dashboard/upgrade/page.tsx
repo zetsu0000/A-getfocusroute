@@ -17,25 +17,25 @@ const COPY: Record<string, { title: string; body: string; cta: string; href: str
     title: "Your Brain Profile is locked",
     body: "Complete checkout to unlock your personalized cognitive profile, Executive Function Radar, and bonus resources.",
     cta: "Unlock Brain Profile",
-    href: "/",
+    href: "/assessment?step=paywall",
   },
   roadmap_28_day: {
     title: "28-Day Protocol",
     body: "Add the 28-Day Protocol to get structured daily micro-actions calibrated to your Brain Profile.",
     cta: "Unlock 28-Day Protocol",
-    href: "/",
+    href: "/assessment?step=upsell",
   },
   bonus_toolkit: {
     title: "Bonuses",
     body: "Bonus resources are included with qualifying purchases — toolkit, audio guides, and explain scripts.",
     cta: "View upgrade options",
-    href: "/",
+    href: "/assessment?step=upsell",
   },
   membership: {
     title: "FocusRoute Membership",
     body: "Membership keeps your Brain OS active — with monthly resets, retakes when your context shifts, and protocol updates built around how your brain changes over time.",
     cta: "View membership options",
-    href: "/",
+    href: "/assessment?step=subscription",
   },
 };
 
@@ -43,7 +43,7 @@ const DEFAULT = {
   title: "Unlock your Brain Profile",
   body: "Complete the assessment checkout to access your personalized Brain Profile, 28-Day Protocol, and bonus library. Access syncs to your account automatically after payment.",
   cta: "Unlock Brain Profile",
-  href: "/",
+  href: "/assessment?step=paywall",
 };
 
 export default async function DashboardUpgradePage({
