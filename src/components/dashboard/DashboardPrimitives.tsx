@@ -25,10 +25,8 @@ export function AccessBadge({ unlocked }: { unlocked: boolean }) {
         display: "inline-flex",
         alignItems: "center",
         gap: 5,
-        fontSize: 9,
-        fontWeight: 800,
-        textTransform: "uppercase",
-        letterSpacing: "0.07em",
+        fontSize: 10,
+        fontWeight: 700,
         borderRadius: 999,
         padding: "4px 8px",
         background: unlocked ? "transparent" : "var(--color-bg-card-2)",
@@ -37,7 +35,7 @@ export function AccessBadge({ unlocked }: { unlocked: boolean }) {
       }}
     >
       {unlocked ? null : <LockKeyhole size={10} />}
-      {unlocked ? "Unlocked" : "Locked"}
+      {unlocked ? "Available" : "Locked"}
     </span>
   );
 }

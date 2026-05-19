@@ -53,6 +53,7 @@ export function DashboardNav({
   pathname: string;
 }) {
   const u = snap.entitlementSet;
+  const displayName = snap.profile?.full_name?.trim() || "";
 
   return (
     <header style={{ paddingTop: 20, marginBottom: 22 }}>
@@ -103,7 +104,7 @@ export function DashboardNav({
           marginBottom: 5,
         }}
       >
-        Welcome back
+        {displayName ? <>Welcome back, {displayName}</> : "Welcome back"}
       </h1>
       <p style={{ fontSize: 13, color: "var(--color-text-muted)", marginBottom: 20, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>{snap.user.email}</p>
 

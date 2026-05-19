@@ -3,6 +3,7 @@ import Link from "next/link";
 import { DashboardMembershipSummary } from "@/components/dashboard/DashboardMembershipSummary";
 import { AccessBadge, PremiumCard, SectionEyebrow } from "@/components/dashboard/DashboardPrimitives";
 import { DashboardRetakeSection } from "@/components/dashboard/DashboardRetakeSection";
+import { DisplayNameForm } from "@/components/dashboard/DisplayNameForm";
 import type { LoggedInDashboardSnapshot } from "@/lib/dashboard/load-dashboard-context";
 import {
   hasBonusesAccess,
@@ -43,7 +44,6 @@ function FeatureCard({
         padding: featured ? "18px 18px" : "15px 15px",
         background: "var(--color-bg-card)",
         border: featured ? "1px solid var(--color-border-2)" : "1px solid var(--color-border)",
-        borderLeft: featured ? "3px solid var(--color-cognitive)" : "1px solid var(--color-border)",
         boxShadow: featured ? "var(--shadow-card-strong)" : "var(--shadow-card)",
         textDecoration: "none",
         opacity: locked ? 0.92 : 1,
@@ -64,7 +64,7 @@ function FeatureCard({
           color: locked ? "var(--color-accent)" : "var(--color-primary-dark)",
         }}
       >
-        {cta} -&gt;
+        {cta} <span aria-hidden="true">→</span>
       </p>
     </Link>
   );
@@ -78,7 +78,8 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
   const membershipOpen = hasMembershipAccess(u);
   const retake = hasRetakeQuizAccess(u);
 
-  const displayName = snap.profile?.full_name?.trim() || snap.user.email.split("@")[0] || "Member";
+  const storedDisplayName = snap.profile?.full_name?.trim() || "";
+  const displayName = storedDisplayName || snap.user.email.split("@")[0] || "Member";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 520, margin: "0 auto" }}>
@@ -86,14 +87,15 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
         <SectionEyebrow>Your FocusRoute system</SectionEyebrow>
         <PremiumCard featured>
           <p style={{ fontSize: 20, fontWeight: 900, color: "var(--color-text)", lineHeight: 1.22, marginBottom: 6 }}>
-            Your cognitive profile hub
+            Your FocusRoute system
           </p>
           <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.65, marginBottom: 14 }}>
-            Access your Brain Profile, bonuses, and next-step protocols from one place.
+            Your profile, bonuses, and next-step protocols in one place.
           </p>
-          <p style={{ fontSize: 12, color: "var(--color-text-muted)", borderTop: "1px solid var(--color-border)", paddingTop: 12 }}>
+          <p style={{ fontSize: 12, color: "var(--color-text-muted)", borderTop: "1px solid var(--color-border)", paddingTop: 12, marginBottom: 14 }}>
             Signed in as {displayName}
           </p>
+          <DisplayNameForm initialName={storedDisplayName} />
         </PremiumCard>
       </section>
 
@@ -161,7 +163,7 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
             <p style={{ fontSize: 12, color: "var(--color-text-body)", lineHeight: 1.5, marginBottom: 8 }}>
               Purchases, subscription status, and account billing support.
             </p>
-            <p style={{ fontSize: 12, fontWeight: 800, color: "var(--color-primary-dark)" }}>Open Billing -&gt;</p>
+            <p style={{ fontSize: 12, fontWeight: 800, color: "var(--color-primary-dark)" }}>Open Billing <span aria-hidden="true">→</span></p>
           </Link>
         </div>
       </section>
