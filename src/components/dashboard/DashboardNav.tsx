@@ -128,7 +128,7 @@ export function DashboardNav({
           active={pathname.startsWith("/dashboard/profile")}
         />
         <NavLink
-          href={hasRoadmapAccess(u) ? "/dashboard/roadmap" : "/dashboard/upgrade?need=roadmap_28_day"}
+          href={hasRoadmapAccess(u) ? "/dashboard/roadmap" : "/roadmap"}
           label="28-Day Protocol"
           active={pathname.startsWith("/dashboard/roadmap")}
         />

@@ -55,6 +55,9 @@ function LockedCard({
   upgradeNeed: string;
 }) {
   const ctaLabel = upgradeNeed === "roadmap_28_day" ? "Add 28-Day Protocol" : "Unlock Brain Profile";
+  const ctaHref = upgradeNeed === "roadmap_28_day"
+    ? "/roadmap"
+    : `/dashboard/upgrade?need=${encodeURIComponent(upgradeNeed)}`;
   return (
     <div
       style={{
@@ -125,7 +128,7 @@ function LockedCard({
           Included with the <strong style={{ color: "var(--color-text-body)" }}>{includedWith}</strong>.
         </p>
         <Link
-          href={`/dashboard/upgrade?need=${encodeURIComponent(upgradeNeed)}`}
+          href={ctaHref}
           prefetch={false}
           style={{
             fontSize: 12,

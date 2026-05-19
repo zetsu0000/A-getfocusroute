@@ -28,7 +28,9 @@ function FeatureCard({
   need: string;
   featured?: boolean;
 }) {
-  const dest = locked ? `/dashboard/upgrade?need=${encodeURIComponent(need)}` : href;
+  const dest = locked
+    ? (need === "roadmap_28_day" ? "/roadmap" : `/dashboard/upgrade?need=${encodeURIComponent(need)}`)
+    : href;
   return (
     <Link
       href={dest}

@@ -477,7 +477,7 @@ export function LockedRoadmapPreview() {
           Skip or swap days — the protocol fits your pace, not the other way around.
         </p>
         <Link
-          href="/dashboard/upgrade?need=roadmap_28_day"
+          href="/roadmap"
           prefetch={false}
           style={{
             display: "inline-flex",
