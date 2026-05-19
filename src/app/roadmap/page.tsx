@@ -122,6 +122,7 @@ export default function RoadmapLandingPage() {
           50%{opacity:1;transform:translate(-50%,-50%) scale(1.12);}
         }
         @media(prefers-reduced-motion:reduce){*{animation-duration:0.01ms!important;transition-duration:0.01ms!important;}}
+        @media(max-width:420px){.roadmap-nav-cta{display:none!important;}}
       `}</style>
       <div style={{ background: "#F7F2EA", overflowX: "hidden" }}>
 
@@ -131,7 +132,7 @@ export default function RoadmapLandingPage() {
             <Link href="/" style={{ textDecoration: "none" }}>
               <span style={{ fontSize: 15, fontWeight: 800, color: "#171421", letterSpacing: "-0.02em" }}>FocusRoute</span>
             </Link>
-            <Link href="/assessment?step=upsell" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#171421", color: "#FFFFFF", fontSize: 13, fontWeight: 700, padding: "9px 18px", borderRadius: 999, textDecoration: "none" }}>
+            <Link href="/assessment?step=upsell" className="roadmap-nav-cta" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#171421", color: "#FFFFFF", fontSize: 13, fontWeight: 700, padding: "9px 18px", borderRadius: 999, textDecoration: "none", whiteSpace: "nowrap" }}>
               Start the Protocol <ChevronRight size={14} />
             </Link>
           </div>

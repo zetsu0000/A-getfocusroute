@@ -72,9 +72,9 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
   const trust = ["Free", "3 minutes", "Private results", "Not a diagnosis"];
 
   return (
-    <div style={{ minHeight: "100dvh", background: "var(--color-bg-page)", overflowX: "hidden" }}>
+    <div style={{ minHeight: "100dvh", background: "var(--color-bg-page)", overflowX: "hidden", width: "100%", maxWidth: "100%" }}>
       <section style={{ padding: "34px 18px 28px" }}>
-        <div style={{ maxWidth: 620, margin: "0 auto" }}>
+        <div style={{ maxWidth: 620, margin: "0 auto", minWidth: 0 }}>
           <p
             style={{
               fontSize: 11,
@@ -89,11 +89,12 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
           </p>
           <h1
             style={{
-              fontSize: "clamp(34px, 10vw, 58px)",
+              fontSize: "clamp(31px, 9vw, 54px)",
               fontWeight: 900,
               color: "var(--color-text)",
               lineHeight: 1.04,
               marginBottom: 18,
+              overflowWrap: "break-word",
             }}
           >
             You&apos;re not lazy. Your focus system is overloaded.
@@ -105,6 +106,7 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
               lineHeight: 1.65,
               marginBottom: 22,
               maxWidth: 540,
+              overflowWrap: "break-word",
             }}
           >
             Take the free 3-minute FocusRoute assessment to map your focus patterns,
@@ -140,7 +142,7 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
       </section>
 
       <section style={{ padding: "10px 18px 26px" }}>
-        <div style={{ maxWidth: 620, margin: "0 auto", display: "grid", gap: 9 }}>
+        <div style={{ maxWidth: 620, margin: "0 auto", display: "grid", gap: 9, minWidth: 0 }}>
           {recognition.map((item) => (
             <button
               key={item}
@@ -162,9 +164,10 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
                 justifyContent: "space-between",
                 gap: 12,
                 outlineColor: "var(--color-signal)",
+                minWidth: 0,
               }}
             >
-              <p style={{ fontSize: 14, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.35 }}>
+              <p style={{ fontSize: 14, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.35, minWidth: 0, overflowWrap: "break-word" }}>
                 {item}
               </p>
               <span aria-hidden="true" style={{ color: "var(--color-signal)", fontSize: 16, fontWeight: 900, flexShrink: 0 }}>
@@ -176,14 +179,14 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
       </section>
 
       <section style={{ padding: "22px 18px" }}>
-        <div style={{ maxWidth: 620, margin: "0 auto" }}>
+        <div style={{ maxWidth: 620, margin: "0 auto", minWidth: 0 }}>
           <p style={{ fontSize: 11, fontWeight: 800, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
             What you&apos;ll get
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 9 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(130px, 100%), 1fr))", gap: 9 }}>
             {outcomes.map((item) => (
-              <div key={item} style={{ borderRadius: 12, background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderTop: "2px solid var(--color-signal-tint)", padding: "12px 12px" }}>
-                <p style={{ fontSize: 13, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.35 }}>
+              <div key={item} style={{ borderRadius: 12, background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderTop: "2px solid var(--color-signal-tint)", padding: "12px 12px", minWidth: 0 }}>
+                <p style={{ fontSize: 13, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.35, overflowWrap: "break-word" }}>
                   {item}
                 </p>
               </div>
@@ -193,17 +196,17 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
       </section>
 
       <section style={{ padding: "22px 18px" }}>
-        <div style={{ maxWidth: 620, margin: "0 auto" }}>
+        <div style={{ maxWidth: 620, margin: "0 auto", minWidth: 0 }}>
           <p style={{ fontSize: 11, fontWeight: 800, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>
             How it works
           </p>
           <div style={{ display: "grid", gap: 10 }}>
             {steps.map((item, index) => (
-              <div key={item} style={{ display: "grid", gridTemplateColumns: "30px 1fr", gap: 12, alignItems: "start" }}>
+              <div key={item} style={{ display: "grid", gridTemplateColumns: "30px minmax(0, 1fr)", gap: 12, alignItems: "start" }}>
                 <span style={{ width: 30, height: 30, borderRadius: 999, border: "1px solid var(--color-border-2)", background: "var(--color-signal-tint)", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "var(--color-signal)", fontSize: 12, fontWeight: 900 }}>
                   {index + 1}
                 </span>
-                <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.55, paddingTop: 4 }}>
+                <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.55, paddingTop: 4, overflowWrap: "break-word" }}>
                   {item}
                 </p>
               </div>
@@ -213,8 +216,8 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
       </section>
 
       <section style={{ padding: "22px 18px 38px" }}>
-        <div style={{ maxWidth: 620, margin: "0 auto", borderTop: "1px solid var(--color-border)", paddingTop: 22, paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}>
-          <p style={{ fontSize: 13, color: "var(--color-text-muted)", lineHeight: 1.65, marginBottom: 18 }}>
+        <div style={{ maxWidth: 620, margin: "0 auto", borderTop: "1px solid var(--color-border)", paddingTop: 22, paddingBottom: "max(12px, env(safe-area-inset-bottom))", minWidth: 0 }}>
+          <p style={{ fontSize: 13, color: "var(--color-text-muted)", lineHeight: 1.65, marginBottom: 18, overflowWrap: "break-word" }}>
             Your results are private. FocusRoute is built for self-understanding and
             productivity support. It is not a diagnosis, medical treatment, or a
             substitute for professional care.
@@ -310,7 +313,7 @@ export default function Home() {
   }, [email, setEmail, setName]);
 
   return (
-    <main>
+    <main style={{ overflowX: "hidden" }}>
     <AnimatePresence mode="wait">
       {step === "quiz" && (
         <m.div key="quiz" {...fade(true)}>

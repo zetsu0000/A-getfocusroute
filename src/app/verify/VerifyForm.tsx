@@ -28,7 +28,7 @@ export function VerifyForm() {
     const code = token.replace(/\s/g, "");
     if (code.length < 6) {
       setStatus("error");
-      setMessage("Enter the code from your email (usually 6 digits).");
+      setMessage("Enter the verification code sent to your email.");
       return;
     }
 
@@ -167,7 +167,7 @@ export function VerifyForm() {
               marginBottom: 10,
             }}
           >
-            Enter your code
+            Check your email
           </h1>
           <p
             style={{
@@ -177,9 +177,9 @@ export function VerifyForm() {
               marginBottom: 8,
             }}
           >
-            We sent a code to{" "}
+            Enter the verification code sent to{" "}
             <strong style={{ color: "var(--color-text)" }}>{emailParam}</strong>
-            . Paste it below, or use the magic link in the same email.
+            . You can also use the magic link in the same email.
           </p>
           <p
             style={{
@@ -237,15 +237,14 @@ export function VerifyForm() {
                   marginBottom: 8,
                 }}
               >
-                Login code
+                Verification code
               </span>
               <input
                 type="text"
                 inputMode="numeric"
                 autoComplete="one-time-code"
-                placeholder="6-digit code"
+                placeholder="Verification code"
                 required
-                maxLength={12}
                 value={token}
                 onChange={(ev) =>
                   setToken(ev.target.value)

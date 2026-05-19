@@ -5,23 +5,23 @@ export function SchemaMarkup() {
     "mainEntity": [
       {
         "@type": "Question",
-        "name": "What is the FocusRoute Brain OS?",
-        "acceptedAnswer": { "@type": "Answer", "text": "FocusRoute Brain OS is a brain-first ADHD profiling system. It starts with a Cognitive Mapping Assessment and unlocks a personalized Brain Profile with a 28-day protocol tailored to your cognitive patterns." }
+        "name": "What is FocusRoute?",
+        "acceptedAnswer": { "@type": "Answer", "text": "FocusRoute is an educational self-understanding and productivity-support experience. It helps you map focus patterns, friction points, and practical next steps through a guided assessment." }
       },
       {
         "@type": "Question",
         "name": "Is FocusRoute a medical diagnosis?",
-        "acceptedAnswer": { "@type": "Answer", "text": "No. FocusRoute is a screening and profiling experience, not a medical diagnosis. It helps identify symptom patterns and can support a conversation with a licensed clinician." }
+        "acceptedAnswer": { "@type": "Answer", "text": "No. FocusRoute is not a diagnosis, medical test, therapy, or treatment. It is designed for self-understanding and productivity support." }
       },
       {
         "@type": "Question",
-        "name": "How long does the Brain OS mapping take?",
-        "acceptedAnswer": { "@type": "Answer", "text": "The Cognitive Mapping Assessment takes about 12 minutes and is designed to map attention, executive function, emotional regulation, and daily behavior patterns." }
+        "name": "How long does the assessment take?",
+        "acceptedAnswer": { "@type": "Answer", "text": "The FocusRoute assessment takes about 3 minutes and gives you a preview before any purchase decision." }
       },
       {
         "@type": "Question",
-        "name": "What do I get after mapping my profile?",
-        "acceptedAnswer": { "@type": "Answer", "text": "You unlock a detailed Brain Profile, an Executive Function Radar, your ADHD Signature, and a personalized 28-day protocol with practical daily actions." }
+        "name": "What do I get after the assessment?",
+        "acceptedAnswer": { "@type": "Answer", "text": "You receive a preview of your FocusRoute pattern. If it feels useful, you can unlock the full Brain Profile with clearer language for your focus patterns and next-step recommendations." }
       },
       {
         "@type": "Question",
@@ -31,25 +31,24 @@ export function SchemaMarkup() {
     ]
   }
 
-  const medicalSchema = {
+  const productSchema = {
     "@context": "https://schema.org",
-    "@type": "MedicalWebPage",
-    "name": "FocusRoute Brain OS",
-    "description": "A brain-first ADHD profiling system with cognitive mapping and a personalized 28-day protocol for adults.",
+    "@type": "WebApplication",
+    "name": "FocusRoute",
+    "applicationCategory": "ProductivityApplication",
+    "description": "An educational self-understanding and productivity-support assessment for mapping focus patterns, friction points, and practical next steps.",
     "url": "https://getfocusroute.com",
-    "medicalAudience": { "@type": "MedicalAudience", "audienceType": "Patient" },
-    "about": {
-      "@type": "MedicalCondition",
-      "name": "Attention Deficit Hyperactivity Disorder",
-      "alternateName": "ADHD",
-      "code": { "@type": "MedicalCode", "codeValue": "F90", "codingSystem": "ICD-10" }
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "availability": "https://schema.org/InStock"
     }
   }
 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(medicalSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }} />
     </>
   )
 }

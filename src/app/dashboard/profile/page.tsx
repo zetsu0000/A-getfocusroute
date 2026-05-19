@@ -64,7 +64,7 @@ export default async function DashboardProfilePage() {
             Function Radar™, and personalised protocol here.
           </p>
           <Link
-            href="/"
+            href="/assessment"
             prefetch={false}
             style={{
               display: "inline-flex",

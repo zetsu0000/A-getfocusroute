@@ -89,6 +89,7 @@ function PrimaryCta({ children = "Start Assessment" }: { children?: string }) {
         fontWeight: 900,
         textDecoration: "none",
         boxShadow: "var(--shadow-btn-accent)",
+        maxWidth: "100%",
       }}
     >
       {children}
@@ -133,6 +134,9 @@ function HeroVisual() {
         boxShadow: "0 30px 90px rgba(20,17,31,0.22)",
         overflow: "hidden",
         padding: 22,
+        width: "100%",
+        maxWidth: "100%",
+        boxSizing: "border-box",
       }}
     >
       <div
@@ -180,7 +184,8 @@ function HeroVisual() {
               display: "flex",
               alignItems: "center",
               gap: 12,
-              width: `${100 - index * 7}%`,
+              width: "100%",
+              maxWidth: `calc(100% - ${index * 14}px)`,
               marginLeft: index * 14,
               borderRadius: 16,
               background: "rgba(255,255,255,0.92)",
@@ -206,7 +211,7 @@ function HeroVisual() {
             </span>
             <span style={{ minWidth: 0 }}>
               <span style={{ display: "block", fontSize: 11, fontWeight: 800, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</span>
-              <span style={{ display: "block", fontSize: 14, fontWeight: 900, color: "var(--color-text)", lineHeight: 1.25 }}>{value}</span>
+              <span style={{ display: "block", fontSize: 14, fontWeight: 900, color: "var(--color-text)", lineHeight: 1.25, overflowWrap: "break-word" }}>{value}</span>
             </span>
           </div>
         ))}
@@ -221,9 +226,11 @@ export default function HomePage() {
       <style>{`
         .fr-desktop-nav { display: flex; }
         .fr-mobile-menu { display: none; }
-        .fr-grid-2 { grid-template-columns: minmax(0, 1.02fr) minmax(320px, 0.78fr); }
+        .fr-shell, .fr-grid-2, .fr-card-grid, .fr-benefit-grid { min-width: 0; max-width: 100%; box-sizing: border-box; }
+        .fr-grid-2 { grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.78fr); }
         .fr-card-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         .fr-benefit-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .fr-card-grid > *, .fr-benefit-grid > * { min-width: 0; }
         @media (max-width: 820px) {
           .fr-desktop-nav { display: none !important; }
           .fr-mobile-menu { display: block !important; }
@@ -231,9 +238,14 @@ export default function HomePage() {
         }
         @media (max-width: 430px) {
           .fr-shell { padding-left: 16px !important; padding-right: 16px !important; }
-          .fr-hero-title { font-size: 38px !important; }
-          .fr-section-title { font-size: 28px !important; }
+          .fr-hero-title { font-size: 34px !important; line-height: 1.03 !important; }
+          .fr-section-title { font-size: 26px !important; }
           .fr-hero-visual { margin-top: 8px; }
+        }
+        @media (max-width: 360px) {
+          .fr-shell { padding-left: 14px !important; padding-right: 14px !important; }
+          .fr-hero-title { font-size: 31px !important; }
+          .fr-section-title { font-size: 24px !important; }
         }
       `}</style>
       <main style={{ minHeight: "100dvh", background: "var(--color-bg-page)", overflowX: "hidden" }}>
@@ -317,7 +329,7 @@ export default function HomePage() {
               <h1 className="fr-hero-title" style={{ fontSize: "clamp(46px, 7vw, 76px)", lineHeight: 0.98, letterSpacing: "-0.045em", fontWeight: 900, color: "var(--color-text)", maxWidth: 760, marginBottom: 22 }}>
                 Understand how your focus works.
               </h1>
-              <p style={{ fontSize: 18, lineHeight: 1.7, color: "var(--color-text-body)", maxWidth: 610, marginBottom: 28 }}>
+              <p style={{ fontSize: 18, lineHeight: 1.7, color: "var(--color-text-body)", maxWidth: 610, marginBottom: 28, overflowWrap: "break-word" }}>
                 FocusRoute helps you understand your attention patterns, friction points, and next best step through a simple guided assessment.
               </p>
               <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, marginBottom: 16 }}>
@@ -346,8 +358,8 @@ export default function HomePage() {
             <SectionLabel>Patterns people recognize</SectionLabel>
             <div className="fr-card-grid" style={{ display: "grid", gap: 12 }}>
               {recognition.map((item) => (
-                <div key={item} style={{ minHeight: 112, borderRadius: 18, background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderTop: "2px solid var(--color-signal)", boxShadow: "var(--shadow-card)", padding: 18 }}>
-                  <p style={{ color: "var(--color-text)", fontSize: 16, fontWeight: 900, lineHeight: 1.32, letterSpacing: "-0.01em" }}>{item}</p>
+                <div key={item} style={{ minHeight: 112, borderRadius: 18, background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderTop: "2px solid var(--color-signal)", boxShadow: "var(--shadow-card)", padding: 18, minWidth: 0 }}>
+                  <p style={{ color: "var(--color-text)", fontSize: 16, fontWeight: 900, lineHeight: 1.32, letterSpacing: "-0.01em", overflowWrap: "break-word" }}>{item}</p>
                 </div>
               ))}
             </div>
@@ -367,12 +379,12 @@ export default function HomePage() {
             </div>
             <div className="fr-card-grid" style={{ display: "grid", gap: 14 }}>
               {profileCards.map(({ icon: Icon, title, body }, index) => (
-                <article key={title} style={{ borderRadius: 20, background: index === 0 ? "var(--color-bg-card-2)" : "var(--color-bg-card)", border: "1px solid var(--color-border)", boxShadow: index === 0 ? "var(--shadow-card-strong)" : "var(--shadow-card)", padding: 20 }}>
+                <article key={title} style={{ borderRadius: 20, background: index === 0 ? "var(--color-bg-card-2)" : "var(--color-bg-card)", border: "1px solid var(--color-border)", boxShadow: index === 0 ? "var(--shadow-card-strong)" : "var(--shadow-card)", padding: 20, minWidth: 0 }}>
                   <span style={{ width: 42, height: 42, borderRadius: 13, display: "inline-flex", alignItems: "center", justifyContent: "center", color: index < 2 ? "var(--color-cognitive)" : "var(--color-signal)", background: index < 2 ? "var(--color-cognitive-tint)" : "var(--color-signal-tint)", marginBottom: 15 }}>
                     <Icon size={20} />
                   </span>
                   <h3 style={{ fontSize: 17, fontWeight: 900, color: "var(--color-text)", letterSpacing: "-0.015em", marginBottom: 7 }}>{title}</h3>
-                  <p style={{ fontSize: 14, lineHeight: 1.65, color: "var(--color-text-body)" }}>{body}</p>
+                  <p style={{ fontSize: 14, lineHeight: 1.65, color: "var(--color-text-body)", overflowWrap: "break-word" }}>{body}</p>
                 </article>
               ))}
             </div>

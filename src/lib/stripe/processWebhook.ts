@@ -88,6 +88,7 @@ function subscriptionPeriodBounds(sub: Stripe.Subscription): {
 async function upsertSubscriptionRow(
   admin: ReturnType<typeof createAdminClient>,
   subInput: Stripe.Subscription,
+  emailHint?: string | null,
 ): Promise<void> {
   let sub = subInput;
   if (!sub.items?.data?.length) {
@@ -102,20 +103,24 @@ async function upsertSubscriptionRow(
       : sub.customer?.id ?? "";
   const { start: cps, end: cpe } = subscriptionPeriodBounds(sub);
   const fm = parseFunnelMetadata(sub.metadata ?? undefined);
+  const priceId = firstSubscriptionItemPriceId(sub);
+  const email =
+    emailHint ??
+    fm.email ??
+    (await resolveCustomerEmail(customerId)) ??
+    "";
 
   const { error } = await admin.from("subscriptions").upsert(
     {
       stripe_subscription_id: sub.id,
       stripe_customer_id: customerId,
       user_id: null,
+      email,
+      price_id: priceId,
       status: sub.status,
       current_period_start: cps,
       current_period_end: cpe,
       cancel_at_period_end: sub.cancel_at_period_end ?? false,
-      metadata: {
-        ...fm,
-        stripe_subscription_id: sub.id,
-      },
     },
     { onConflict: "stripe_subscription_id" },
   );
@@ -381,7 +386,7 @@ async function handleCheckoutSessionCompleted(
         expand: ["items.data"],
       });
     }
-    await upsertSubscriptionRow(admin, sub);
+    await upsertSubscriptionRow(admin, sub, email);
 
     if (!subscriptionProductKeyMatchesPolicy(sub, productKey)) {
       console.warn(
@@ -459,12 +464,6 @@ async function handleSubscriptionUpsert(event: Stripe.Event): Promise<void> {
       expand: ["items.data"],
     });
   }
-  await upsertSubscriptionRow(admin, sub);
-
-  if (sub.status === "canceled") {
-    await finalizeSubscriptionCancellation(admin, sub.id);
-    return;
-  }
 
   const parsed = parseFunnelMetadata(sub.metadata ?? undefined);
   let email = parsed.email;
@@ -480,6 +479,13 @@ async function handleSubscriptionUpsert(event: Stripe.Event): Promise<void> {
     const cid =
       typeof sub.customer === "string" ? sub.customer : sub.customer?.id;
     email = await resolveCustomerEmail(cid);
+  }
+
+  await upsertSubscriptionRow(admin, sub, email);
+
+  if (sub.status === "canceled") {
+    await finalizeSubscriptionCancellation(admin, sub.id);
+    return;
   }
 
   if (!email || !productKey) {
@@ -500,7 +506,7 @@ async function handleSubscriptionUpsert(event: Stripe.Event): Promise<void> {
   });
 }
 
-/** Entitlement kinds issued from membership subscriptions (Stripe subscription id in metadata). */
+/** Entitlement keys issued from membership subscriptions via email product grants. */
 const SUBSCRIPTION_ENTITLEMENT_KINDS = [
   "membership",
   "retake_quiz",
@@ -512,27 +518,30 @@ async function deactivateSubscriptionLinkedEntitlements(
   subscriptionId: string,
 ): Promise<void> {
   const endsAt = new Date().toISOString();
-  const { data: rows, error: selErr } = await admin
-    .from("entitlements")
+  const { data: grants, error: selErr } = await admin
+    .from("email_product_grants")
     .select("id")
-    .eq("metadata->>stripe_subscription_id", subscriptionId)
-    .eq("active", true)
-    .in("kind", [...SUBSCRIPTION_ENTITLEMENT_KINDS]);
+    .eq("metadata->>stripe_subscription_id", subscriptionId);
 
   if (selErr) {
-    throw new Error(`entitlements select for subscription cancel: ${selErr.message}`);
+    throw new Error(`email_product_grants select for subscription cancel: ${selErr.message}`);
   }
 
-  for (const row of rows ?? []) {
-    if (!row.id) continue;
-    const { error: upErr } = await admin
-      .from("entitlements")
-      .update({ active: false, ends_at: endsAt })
-      .eq("id", row.id)
-      .eq("active", true);
-    if (upErr) {
-      throw new Error(`entitlements deactivate: ${upErr.message}`);
-    }
+  const grantIds = (grants ?? []).map((row) => row.id).filter(Boolean);
+  if (grantIds.length === 0) {
+    return;
+  }
+
+  const { error: upErr } = await admin
+    .from("entitlements")
+    .update({ active: false, expires_at: endsAt })
+    .eq("source", "email_product_grant")
+    .in("source_id", grantIds)
+    .eq("active", true)
+    .in("entitlement_key", [...SUBSCRIPTION_ENTITLEMENT_KINDS]);
+
+  if (upErr) {
+    throw new Error(`entitlements deactivate: ${upErr.message}`);
   }
 }
 

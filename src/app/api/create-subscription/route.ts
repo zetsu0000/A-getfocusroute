@@ -66,7 +66,6 @@ export async function POST(request: Request) {
       customer: customer.id,
       items: [{ price: priceId }],
       payment_settings: {
-        payment_method_types: ["card"],
         save_default_payment_method: "on_subscription",
       },
       metadata: funnelMeta,
