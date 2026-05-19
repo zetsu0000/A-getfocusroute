@@ -1,8 +1,8 @@
 ﻿"use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { m, AnimatePresence } from "framer-motion";
-import { Shield, Lock, Check, BadgeCheck, CreditCard } from "lucide-react";
+import { m, AnimatePresence, useReducedMotion } from "framer-motion";
+import { Shield, Lock, Check, BadgeCheck, CreditCard, Sparkles } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js/pure";
 import {
   Elements,
@@ -79,10 +79,19 @@ const stripeAppearance = {
   },
 };
 
+const fullProfileReveals = [
+  "Why you start fast, stall, or avoid certain tasks",
+  "What conditions help your focus switch on",
+  "Where pressure helps and where it backfires",
+  "How your recovery style affects consistency",
+  "A plain-English script for explaining your pattern",
+];
+
 /* ── Locked result card ── */
 function LockedCard() {
   const answers = useQuizStore((s) => s.answers);
   const signature = getSignatureFromAnswers(answers);
+  const reduceMotion = useReducedMotion();
   const profileBandBySignature: Record<string, { label: string; pct: number; color: string; bg: string; shadow: string }> = {
     Sprinter: { label: "Fast-cycle",     pct: 68, color: "var(--color-sig-sprinter)",  bg: "var(--color-sig-sprinter-tint)",  shadow: "var(--shadow-sig-sprinter)"  },
     Archivist: { label: "Detail-led",   pct: 46, color: "var(--color-sig-archivist)", bg: "var(--color-sig-archivist-tint)", shadow: "var(--shadow-sig-archivist)" },
@@ -93,74 +102,153 @@ function LockedCard() {
   const profileBand = profileBandBySignature[signature.signature] ?? profileBandBySignature.Drifter;
 
   const rows = [
-    { label: "Cognitive Signature™", value: signature.signature },
-    { label: "Focus consistency index", value: "78 / 100" },
-    { label: "Executive friction pattern", value: "Context switching" },
-    { label: "Priority implementation lever", value: "Body-doubling" },
+    { label: "Your pressure response pattern", value: "Preview hidden" },
+    { label: "Your best starting conditions", value: "Preview hidden" },
+    { label: "Your recovery rhythm", value: "Preview hidden" },
+    { label: "Your explain-it-to-someone script", value: "Preview hidden" },
+    { label: "Your next-step protocol recommendation", value: "Preview hidden" },
+  ];
+
+  const curiosityBullets = [
+    "What triggers your strongest focus",
+    "Where pressure starts to distort planning",
+    "How you recover momentum after overload",
   ];
 
   return (
-    <div style={{ borderRadius: "var(--radius-lg)", overflow: "hidden", background: "var(--color-bg-card)", boxShadow: "var(--shadow-card)", border: "1px solid var(--color-border)" }}>
-
-      {/* Card header */}
-      <div style={{ padding: "16px 20px 14px", background: "linear-gradient(135deg, var(--color-primary-tint), var(--color-bg-card-2))", borderBottom: "1px solid var(--color-border)", display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ width: 42, height: 42, borderRadius: "var(--radius-sm)", background: "linear-gradient(135deg, var(--color-cognitive-dark), var(--color-cognitive))", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", boxShadow: "0 12px 28px rgba(76,63,215,0.22)" }}>
-          <BadgeCheck size={19} strokeWidth={2.5} />
+    <div style={{ borderRadius: "var(--radius-lg)", overflow: "hidden", background: "var(--color-bg-card)", boxShadow: "var(--shadow-card-strong)", border: "1px solid var(--color-border-2)" }}>
+      <div style={{ padding: "18px 18px 16px", background: "linear-gradient(145deg, var(--color-primary-dark), var(--color-text))", position: "relative", overflow: "hidden" }}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: "radial-gradient(rgba(255,255,255,0.16) 1px, transparent 1px)",
+            backgroundSize: "28px 28px",
+            opacity: 0.3,
+          }}
+        />
+        <m.div
+          aria-hidden="true"
+          animate={reduceMotion ? undefined : { rotate: 360 }}
+          transition={reduceMotion ? undefined : { duration: 18, repeat: Infinity, ease: "linear" }}
+          style={{
+            position: "absolute",
+            right: -58,
+            top: -64,
+            width: 190,
+            height: 190,
+            borderRadius: "50%",
+            border: "1px solid rgba(255,255,255,0.12)",
+            background: "radial-gradient(circle, rgba(76,63,215,0.36) 0%, rgba(46,111,158,0.18) 42%, transparent 68%)",
+            boxShadow: "0 0 60px rgba(76,63,215,0.26)",
+          }}
+        />
+        <div style={{ position: "relative" }}>
+          <p style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 800, color: "rgba(255,255,255,0.58)", marginBottom: 10 }}>
+            Your preview
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", gap: 14, alignItems: "center" }}>
+            <div style={{ minWidth: 0 }}>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.64)", fontWeight: 700, marginBottom: 5 }}>
+                Your Cognitive Signature is
+              </p>
+              <m.h2
+                initial={reduceMotion ? undefined : { opacity: 0, y: 10, rotateX: -12 }}
+                animate={reduceMotion ? undefined : { opacity: 1, y: 0, rotateX: 0 }}
+                transition={reduceMotion ? undefined : { duration: 0.58, ease: [0.16, 1, 0.3, 1] }}
+                style={{
+                  fontSize: "clamp(38px, 14vw, 64px)",
+                  fontWeight: 950,
+                  letterSpacing: "-0.055em",
+                  lineHeight: 0.9,
+                  color: "#fff",
+                  textShadow: "0 18px 46px rgba(0,0,0,0.32)",
+                  overflowWrap: "break-word",
+                }}
+              >
+                {signature.signature}
+              </m.h2>
+            </div>
+            <m.div
+              animate={reduceMotion ? undefined : { y: [0, -5, 0], rotate: [-1, 1.5, -1] }}
+              transition={reduceMotion ? undefined : { duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+              style={{
+                width: 72,
+                height: 72,
+                borderRadius: 22,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#fff",
+                background: "linear-gradient(145deg, rgba(255,255,255,0.16), rgba(255,255,255,0.05))",
+                border: "1px solid rgba(255,255,255,0.16)",
+                boxShadow: "0 20px 50px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.18)",
+              }}
+            >
+              <Sparkles size={28} strokeWidth={2.3} />
+            </m.div>
+          </div>
+          <p style={{ marginTop: 12, fontSize: 15, fontWeight: 800, color: "#fff", lineHeight: 1.35 }}>
+            {signature.title}
+          </p>
+          <p style={{ marginTop: 8, fontSize: 13, color: "rgba(255,255,255,0.7)", lineHeight: 1.58 }}>
+            {signature.preview}
+          </p>
         </div>
-        <div style={{ flex: 1 }}>
-          <p style={{ fontSize: 14, fontWeight: 800, color: "var(--color-text)" }}>Your FocusRoute Brain Profile™</p>
-          <p style={{ fontSize: 11, color: "var(--color-text-muted)", marginTop: 1 }}>Cognitive Mapping Assessment™ · Completed</p>
-        </div>
-        <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: "var(--radius-pill)", background: profileBand.bg, color: profileBand.color }}>
-          {profileBand.label}
-        </span>
       </div>
 
-      {/* Gauge */}
-      <div style={{ padding: "16px 20px 12px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-          <span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>Profile intensity band</span>
-          <span style={{ fontSize: 11, fontWeight: 700, color: profileBand.color }}>{profileBand.label}</span>
-        </div>
-        <div style={{ height: 8, borderRadius: "var(--radius-pill)", background: "linear-gradient(to right, var(--color-primary-tint), var(--color-cognitive-tint), var(--color-cognitive))", position: "relative" }}>
-          <m.div
-            initial={{ left: "0%" }}
-            animate={{ left: `${profileBand.pct}%` }}
-            transition={{ delay: 0.5, duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
-            style={{ position: "absolute", top: "50%", transform: "translate(-50%,-50%)", width: 18, height: 18, borderRadius: "50%", background: "var(--color-bg-card)", border: `3px solid ${profileBand.color}`, boxShadow: profileBand.shadow }}
-          />
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-          {["Anchored","Steady","Mixed","High-drive","Burst"].map((l) => (
-            <span key={l} style={{ fontSize: 11, color: "var(--color-text-muted)" }}>{l}</span>
-          ))}
-        </div>
-      </div>
+      <div style={{ padding: "16px 18px 18px" }}>
+        <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.6, marginBottom: 12 }}>
+          This preview points to how your focus system tends to react under demand, not as a diagnosis, but as a pattern map.
+        </p>
 
-      {/* Blurred rows */}
-      <div style={{ padding: "0 20px 20px", position: "relative" }}>
-        <div style={{ filter: "blur(4px)", userSelect: "none", pointerEvents: "none", display: "flex", flexDirection: "column", gap: 6 }}>
-          {rows.map(({ label, value }) => (
-            <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", borderRadius: "var(--radius-sm)", background: "var(--color-bg-card-2)", border: "1px solid var(--color-border)" }}>
-              <span style={{ fontSize: 12, color: "var(--color-text-body)" }}>{label}</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "var(--color-primary)" }}>{value}</span>
+        <div style={{ display: "grid", gap: 8, marginBottom: 14 }}>
+          {curiosityBullets.map((item) => (
+            <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
+              <span style={{ width: 18, height: 18, borderRadius: "50%", background: "var(--color-cognitive-tint)", color: "var(--color-cognitive)", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+                <Check size={11} strokeWidth={3} />
+              </span>
+              <span style={{ fontSize: 13, color: "var(--color-text)", fontWeight: 750, lineHeight: 1.45 }}>{item}</span>
             </div>
           ))}
         </div>
 
-        {/* Lock overlay */}
-        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
+        <div style={{ height: 8, borderRadius: "var(--radius-pill)", background: "linear-gradient(to right, var(--color-primary-tint), var(--color-signal-tint), var(--color-cognitive-tint))", position: "relative", marginBottom: 16 }}>
           <m.div
-            animate={{ scale: [1, 1.07, 1] }}
-            transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-            style={{ width: 50, height: 50, borderRadius: 15, background: "linear-gradient(135deg,var(--color-accent),var(--color-accent-dark))", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "var(--shadow-btn-accent)" }}
-          >
-            <Lock size={22} color="white" strokeWidth={2.5} />
-          </m.div>
-          <p style={{ fontSize: 13, fontWeight: 800, color: "var(--color-text)", textAlign: "center", lineHeight: 1.3 }}>
-            Unlock to reveal<br />your full profile
-          </p>
+            initial={reduceMotion ? undefined : { left: "0%" }}
+            animate={reduceMotion ? undefined : { left: `${profileBand.pct}%` }}
+            transition={reduceMotion ? undefined : { delay: 0.35, duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+            style={{ position: "absolute", left: reduceMotion ? `${profileBand.pct}%` : undefined, top: "50%", transform: "translate(-50%,-50%)", width: 18, height: 18, borderRadius: "50%", background: "var(--color-bg-card)", border: `3px solid ${profileBand.color}`, boxShadow: profileBand.shadow }}
+          />
         </div>
+
+        <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", border: "1px solid var(--color-border)", background: "var(--color-bg-card-2)" }}>
+          <div style={{ filter: "blur(3.5px)", userSelect: "none", pointerEvents: "none", display: "flex", flexDirection: "column", gap: 6, padding: 12 }}>
+          {rows.map(({ label, value }) => (
+            <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: "var(--radius-sm)", background: "var(--color-bg-card)", border: "1px solid var(--color-border)" }}>
+              <span style={{ fontSize: 12, color: "var(--color-text-body)" }}>{label}</span>
+              <span style={{ fontSize: 11, fontWeight: 800, color: "var(--color-primary)", whiteSpace: "nowrap" }}>{value}</span>
+            </div>
+          ))}
+          </div>
+
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, background: "rgba(255,255,255,0.58)" }}>
+            <m.div
+              animate={reduceMotion ? undefined : { scale: [1, 1.05, 1] }}
+              transition={reduceMotion ? undefined : { repeat: Infinity, duration: 3, ease: "easeInOut" }}
+              style={{ width: 44, height: 44, borderRadius: 14, background: "linear-gradient(135deg,var(--color-accent),var(--color-accent-dark))", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "var(--shadow-btn-accent)" }}
+            >
+              <Lock size={19} color="white" strokeWidth={2.5} />
+            </m.div>
+            <p style={{ fontSize: 13, fontWeight: 850, color: "var(--color-text)", textAlign: "center", lineHeight: 1.32 }}>
+              Unlock to see<br />the full pattern map
+            </p>
+          </div>
+        </div>
+
+        <p style={{ marginTop: 12, fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.58 }}>
+          Your full profile explains what this pattern means and how to work with it instead of fighting it.
+        </p>
       </div>
     </div>
   );
@@ -246,7 +334,7 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
         ) : (
           <>
             <Lock size={17} color="white" strokeWidth={2.5} />
-            Unlock My Brain Profile — {BRAIN_OS.price.paywall}
+            Unlock My Full Pattern — {BRAIN_OS.price.paywall}
           </>
         )}
       </m.button>
@@ -306,7 +394,7 @@ function PaymentSkeleton() {
 /* ── Main PaywallScreen ── */
 export function PaywallScreen() {
   const { name, email, setStep, quizResultId } = useQuizStore();
-  const displayName              = safeName(name, "You");
+  const displayName = safeName(name, "Your");
 
   const handlePaywallSuccess = () => {
     setStep("upsell");
@@ -352,9 +440,9 @@ export function PaywallScreen() {
               border: "1px solid var(--color-border-2)",
             }}
           >
-            {["Secure checkout", "Instant access", "Private assessment data"].map((item) => (
+            {["Private assessment data", "Not a diagnosis", "Instant access"].map((item) => (
               <span key={item} style={{ fontSize: 12, color: "var(--color-text-body)", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5 }}>
-                <BadgeCheck size={13} color="var(--color-success)" strokeWidth={2.5} />
+                <BadgeCheck size={13} color="var(--color-text-muted)" strokeWidth={2.5} />
                 {item}
               </span>
             ))}
@@ -374,13 +462,13 @@ export function PaywallScreen() {
           >
             <div style={{ padding: "18px 20px 14px" }}>
               <p style={{ fontSize: 11, letterSpacing: "0.09em", textTransform: "uppercase", fontWeight: 700, color: "var(--color-text-muted)", marginBottom: 8 }}>
-                Your results
+                Pattern found
               </p>
               <h1 style={{ fontSize: 24, fontWeight: 900, color: "var(--color-text)", lineHeight: 1.22, letterSpacing: "-0.02em" }}>
-                {displayName}, your {BRAIN_OS.brainProfile} is ready.
+                Now see what your pattern means.
               </h1>
               <p style={{ marginTop: 8, fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.62 }}>
-                Unlock the complete profile report for <strong style={{ color: "var(--color-text)" }}>{BRAIN_OS.price.paywall}</strong> and keep your personalized FocusRoute insights in your account.
+                {displayName === "Your" ? "Your" : `${displayName}, your`} preview shows the signature. The full Brain Profile explains the focus patterns, friction points, recovery style, and next steps behind it.
               </p>
             </div>
 
@@ -404,10 +492,10 @@ export function PaywallScreen() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 12 }}>
               <div>
                 <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.09em", color: "var(--color-text-muted)", fontWeight: 700 }}>
-                  {BRAIN_OS.lineTm}
+                  Unlock the full explanation
                 </p>
                 <p style={{ fontSize: 13, color: "var(--color-text-body)", marginTop: 2 }}>
-                  Premium report access
+                  See what your pattern means
                 </p>
               </div>
               <div style={{ textAlign: "right" }}>
@@ -420,8 +508,11 @@ export function PaywallScreen() {
               </div>
             </div>
 
+            <p style={{ fontSize: 12, fontWeight: 850, color: "var(--color-text)", marginBottom: 10 }}>
+              What your full profile reveals
+            </p>
             <div style={{ marginBottom: 12, display: "grid", gap: 8 }}>
-              {BRAIN_OS.paywallUnlockBullets.map((item) => (
+              {fullProfileReveals.map((item) => (
                 <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
                   <div style={{ width: 18, height: 18, borderRadius: "var(--radius-pill)", background: "var(--color-signal-tint)", display: "flex", alignItems: "center", justifyContent: "center", marginTop: 1, flexShrink: 0 }}>
                     <Check size={11} color="var(--color-signal)" strokeWidth={3} />
@@ -440,7 +531,7 @@ export function PaywallScreen() {
                 {BRAIN_OS.guaranteeTitle}. If it doesn&apos;t feel accurate, request a full refund within 7 days.
               </p>
               <p style={{ fontSize: 11, color: "var(--color-text-muted)", lineHeight: 1.5, marginTop: 8 }}>
-                FocusRoute is not a medical diagnosis and does not replace clinical evaluation.
+                FocusRoute is educational self-understanding and productivity support. It is not a diagnosis or medical treatment.
               </p>
             </div>
           </m.div>
