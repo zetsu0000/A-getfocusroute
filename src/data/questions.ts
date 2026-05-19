@@ -4,7 +4,7 @@ import { QuizQuestion } from "@/types/quiz";
  * FULL FUNNEL — 20 quiz questions + info cards
  *
  * ┌─ BLOCK A: Regular style (Q1–Q10) ──────────────────────────┐
- * │  Q1  gender      → special landing screen                  │
+ * │  Q1  gender      → profile context                         │
  * │  Q2  age         single                                     │
  * │  Q3  mood        single                                     │
  * │  Q4  struggles   multiple                                   │
@@ -43,10 +43,11 @@ export const questions: QuizQuestion[] = [
 
   /* ═════════════ BLOCK A — Regular (Q1 – Q10) ═══════════════ */
 
-  /* Q1 — Gender (rendered as GenderLanding, not a normal card) */
+  /* Q1 - Profile context */
   {
     id: "gender",
-    question: "Which profile context should we use in your report?",
+    question: "Choose the version that fits your context.",
+    subtitle: "This only helps tailor the language in your report.",
     inputType: "single",
     options: [
       { id: "male",   label: "Male" },

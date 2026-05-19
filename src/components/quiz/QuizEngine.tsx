@@ -8,7 +8,6 @@ import { useQuizStore } from "@/store/quizStore";
 import { questions } from "@/data/questions";
 import { ProgressBar } from "./ProgressBar";
 import { QuestionCard } from "./QuestionCard";
-import { GenderLanding } from "./GenderLanding";
 
 // InfoCard only renders for `info`-type questions (first one appears after Q10),
 // and ScaleQuestion only renders for `scale`-type questions (first one at Q11).
@@ -37,7 +36,6 @@ export function QuizEngine() {
   const isInfo = question.inputType === "info";
   const isScale = question.inputType === "scale";
   const isMultiple = question.inputType === "multiple";
-  const isLanding = currentQuestionIndex === 0; // gender question → special landing
 
   /* Numeric progress indicator */
   const answeredCount = questions
@@ -53,16 +51,13 @@ export function QuizEngine() {
   }, [currentQuestionIndex]);
 
   useEffect(() => {
-    /* Landing + Scale handle their own advance */
-    if (isLanding || isScale) return;
+    /* Scale handles its own advance */
+    if (isScale) return;
     if (!isMultiple && !isInfo && selectedOptions.length === 1) {
       const t = setTimeout(() => submitAnswer(), 380);
       return () => clearTimeout(t);
     }
-  }, [selectedOptions, isMultiple, isInfo, isScale, isLanding, submitAnswer]);
-
-  /* Render the special landing screen for the first (gender) question */
-  if (isLanding) return <GenderLanding />;
+  }, [selectedOptions, isMultiple, isInfo, isScale, submitAnswer]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -73,15 +68,19 @@ export function QuizEngine() {
         style={{ padding: "20px 20px 14px" }}
       >
         <m.button
-          onClick={goBack}
+          onClick={currentQuestionIndex > 0 ? goBack : undefined}
+          aria-hidden={currentQuestionIndex === 0}
+          tabIndex={currentQuestionIndex === 0 ? -1 : 0}
           whileTap={{ scale: 0.88 }}
           className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
           style={{
             color: "var(--color-text-muted)",
             background: "transparent",
             border: "none",
-            cursor: "pointer",
+            cursor: currentQuestionIndex > 0 ? "pointer" : "default",
+            pointerEvents: currentQuestionIndex > 0 ? "auto" : "none",
             transition: "background 0.15s, color 0.15s",
+            visibility: currentQuestionIndex > 0 ? "visible" : "hidden",
           }}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLElement).style.background = "var(--color-bg-card)";
