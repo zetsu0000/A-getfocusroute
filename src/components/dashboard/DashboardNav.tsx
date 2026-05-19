@@ -37,7 +37,7 @@ function NavLink({
         ...navLink,
         fontWeight: active ? 800 : 600,
         color: active ? "var(--color-accent)" : "var(--color-text-body)",
-        borderBottomColor: active ? "var(--color-accent)" : "transparent",
+        borderBottomColor: active ? "var(--color-signal)" : "transparent",
       }}
     >
       {label}
@@ -86,7 +86,7 @@ export function DashboardNav({
           style={{
             fontSize: 12,
             fontWeight: 700,
-            color: "var(--color-accent)",
+            color: "var(--color-signal)",
             textTransform: "uppercase",
             letterSpacing: "0.08em",
           }}

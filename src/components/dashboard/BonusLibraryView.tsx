@@ -218,8 +218,8 @@ function UnlockedCard({
             flexShrink: 0,
             fontSize: 11,
             fontWeight: 700,
-            color: "var(--color-primary)",
-            background: "var(--color-primary-tint)",
+            color: "var(--color-signal)",
+            background: "var(--color-signal-tint)",
             border: "1px solid var(--color-border)",
             borderRadius: 99,
             padding: "4px 10px",
@@ -264,11 +264,11 @@ function ExplainScriptContent({ bundle }: { bundle: ExplainScriptBundle }) {
         style={{
           borderRadius: 12,
           padding: "14px 16px",
-          background: "var(--color-primary-tint)",
+          background: "var(--color-signal-tint)",
           border: "1px solid var(--color-border)",
         }}
       >
-        <p style={{ ...fieldLabel, color: "var(--color-primary)" }}>Opening lines</p>
+        <p style={{ ...fieldLabel, color: "var(--color-signal)" }}>Opening lines</p>
         <p style={{ fontSize: 14, fontWeight: 600, color: "var(--color-primary-dark)", lineHeight: 1.6 }}>
           &ldquo;{bundle.opener}&rdquo;
         </p>
@@ -364,7 +364,7 @@ function AudioSection() {
             fontWeight: 800,
             letterSpacing: "0.09em",
             textTransform: "uppercase",
-            color: "var(--color-success)",
+            color: "var(--color-signal)",
             marginBottom: 4,
           }}
         >
@@ -424,8 +424,8 @@ function AudioSection() {
                   fontWeight: 700,
                   padding: "3px 9px",
                   borderRadius: 99,
-                  background: "var(--color-success-tint)",
-                  color: "var(--color-success)",
+                  background: "var(--color-signal-tint)",
+                  color: "var(--color-signal)",
                   border: "1px solid var(--color-border)",
                   whiteSpace: "nowrap",
                 }}
@@ -450,11 +450,11 @@ function AudioSection() {
                 style={{
                   borderRadius: 10,
                   padding: "11px 13px",
-                  background: "var(--color-success-tint)",
+                  background: "var(--color-signal-tint)",
                   border: "1px solid var(--color-border)",
                 }}
               >
-                <p style={{ ...fieldLabel, color: "var(--color-success)" }}>Opening prompt</p>
+                <p style={{ ...fieldLabel, color: "var(--color-signal)" }}>Opening prompt</p>
                 <p style={{ ...bodyText, fontStyle: "italic" }}>{session.openingPrompt}</p>
               </div>
               <div>
@@ -580,7 +580,7 @@ export function BonusLibraryView({
       ) : (
         <LockedCard
           category="Session Guides"
-          categoryColor="var(--color-success)"
+          categoryColor="var(--color-signal)"
           title="Focus Session Guides"
           tagline="Four structured session formats — 8 to 25 minutes — for starting, sprinting, resetting, and shutting down."
           includedWith="28-Day Protocol purchase"

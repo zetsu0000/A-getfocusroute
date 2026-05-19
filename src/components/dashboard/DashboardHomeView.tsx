@@ -44,6 +44,7 @@ function FeatureCard({
         padding: featured ? "18px 18px" : "15px 15px",
         background: "var(--color-bg-card)",
         border: featured ? "1px solid var(--color-border-2)" : "1px solid var(--color-border)",
+        borderTop: featured ? "2px solid var(--color-cognitive)" : "1px solid var(--color-border)",
         boxShadow: featured ? "var(--shadow-card-strong)" : "var(--shadow-card)",
         textDecoration: "none",
         opacity: locked ? 0.92 : 1,
@@ -61,10 +62,10 @@ function FeatureCard({
           marginTop: 10,
           fontSize: 12,
           fontWeight: 800,
-          color: locked ? "var(--color-accent)" : "var(--color-primary-dark)",
+          color: locked ? "var(--color-accent)" : "var(--color-signal)",
         }}
       >
-        {cta} <span aria-hidden="true">→</span>
+        {cta} <span aria-hidden="true">&rarr;</span>
       </p>
     </Link>
   );
@@ -163,7 +164,7 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
             <p style={{ fontSize: 12, color: "var(--color-text-body)", lineHeight: 1.5, marginBottom: 8 }}>
               Purchases, subscription status, and account billing support.
             </p>
-            <p style={{ fontSize: 12, fontWeight: 800, color: "var(--color-primary-dark)" }}>Open Billing <span aria-hidden="true">→</span></p>
+            <p style={{ fontSize: 12, fontWeight: 800, color: "var(--color-signal)" }}>Open Billing <span aria-hidden="true">&rarr;</span></p>
           </Link>
         </div>
       </section>

@@ -79,7 +79,7 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
             style={{
               fontSize: 11,
               fontWeight: 800,
-              color: "var(--color-primary)",
+              color: "var(--color-signal)",
               letterSpacing: "0.08em",
               textTransform: "uppercase",
               marginBottom: 18,
@@ -151,23 +151,24 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
                 width: "100%",
                 textAlign: "left",
                 borderRadius: 14,
-                background: "var(--color-bg-card)",
+                background: "linear-gradient(90deg, var(--color-bg-card) 0%, var(--color-signal-tint) 100%)",
                 border: "1px solid var(--color-border-2)",
+                borderLeft: "3px solid var(--color-signal)",
                 padding: "14px 14px",
-                boxShadow: "0 1px 2px rgba(20,17,31,0.06)",
+                boxShadow: "0 1px 2px rgba(20,17,31,0.06), 0 10px 28px rgba(46,111,158,0.08)",
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
                 gap: 12,
-                outlineColor: "var(--color-primary)",
+                outlineColor: "var(--color-signal)",
               }}
             >
               <p style={{ fontSize: 14, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.35 }}>
                 {item}
               </p>
-              <span aria-hidden="true" style={{ color: "var(--color-primary)", fontSize: 16, fontWeight: 900, flexShrink: 0 }}>
-                →
+              <span aria-hidden="true" style={{ color: "var(--color-signal)", fontSize: 16, fontWeight: 900, flexShrink: 0 }}>
+                &rarr;
               </span>
             </button>
           ))}
@@ -181,7 +182,7 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 9 }}>
             {outcomes.map((item) => (
-              <div key={item} style={{ borderRadius: 12, background: "var(--color-bg-card)", border: "1px solid var(--color-border)", padding: "12px 12px" }}>
+              <div key={item} style={{ borderRadius: 12, background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderTop: "2px solid var(--color-signal-tint)", padding: "12px 12px" }}>
                 <p style={{ fontSize: 13, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.35 }}>
                   {item}
                 </p>
@@ -199,7 +200,7 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
           <div style={{ display: "grid", gap: 10 }}>
             {steps.map((item, index) => (
               <div key={item} style={{ display: "grid", gridTemplateColumns: "30px 1fr", gap: 12, alignItems: "start" }}>
-                <span style={{ width: 30, height: 30, borderRadius: 999, border: "1px solid var(--color-border-2)", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "var(--color-primary-dark)", fontSize: 12, fontWeight: 900 }}>
+                <span style={{ width: 30, height: 30, borderRadius: 999, border: "1px solid var(--color-border-2)", background: "var(--color-signal-tint)", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "var(--color-signal)", fontSize: 12, fontWeight: 900 }}>
                   {index + 1}
                 </span>
                 <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.55, paddingTop: 4 }}>

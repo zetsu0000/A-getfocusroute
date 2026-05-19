@@ -11,9 +11,9 @@ const PHASES = [
     name: "Map",
     theme: "Stabilize & reduce friction",
     desc: "Discover your patterns. Choose one lane. Lower the activation cost of starting.",
-    color: "var(--color-primary)",
-    tint: "var(--color-primary-tint)",
-    border: "var(--color-primary)",
+    color: "var(--color-signal)",
+    tint: "var(--color-signal-tint)",
+    border: "var(--color-signal)",
     days: [1, 2, 3, 4, 5, 6, 7],
   },
   {
@@ -31,9 +31,9 @@ const PHASES = [
     name: "Build",
     theme: "Execution loops & recovery",
     desc: "Strengthen execution habits. Practice returning after disruption. Reduce context-switching costs.",
-    color: "var(--color-success)",
-    tint: "var(--color-success-tint)",
-    border: "var(--color-success)",
+    color: "var(--color-primary)",
+    tint: "var(--color-primary-tint)",
+    border: "var(--color-primary)",
     days: [15, 16, 17, 18, 19, 20, 21],
   },
   {
@@ -374,7 +374,7 @@ export function LockedRoadmapPreview() {
             fontWeight: 800,
             letterSpacing: "0.1em",
             textTransform: "uppercase",
-            color: "var(--color-primary)",
+            color: "var(--color-signal)",
             marginBottom: 8,
           }}
         >
@@ -464,6 +464,7 @@ export function LockedRoadmapPreview() {
           padding: "20px 20px",
           background: "var(--color-bg-card)",
           border: "1px solid var(--color-border-2)",
+          borderTop: "2px solid var(--color-signal)",
           boxShadow: "var(--shadow-card)",
         }}
       >
@@ -550,7 +551,7 @@ export function RoadmapProtocolView() {
             fontWeight: 800,
             letterSpacing: "0.1em",
             textTransform: "uppercase",
-            color: "var(--color-primary)",
+            color: "var(--color-signal)",
             marginBottom: 8,
           }}
         >

@@ -2,35 +2,38 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Premium Cognitive Contrast visual system. */
+/* Warm Ink + Cognitive Signal visual system. */
 
 :root {
-  --color-bg-page: #F5EFE4;
-  --color-bg-dots: #E4D8C8;
+  --color-bg-page: #F4EDE2;
+  --color-bg-dots: #E2D4C2;
   --color-bg-card: #FFFFFF;
   --color-bg-card-2: #FBF7EF;
 
   --color-text: #14111F;
-  --color-text-body: #3F3A52;
-  --color-text-muted: #6D667C;
+  --color-text-body: #3D3850;
+  --color-text-muted: #6B6378;
   --color-text-soft: #9A93A8;
 
-  --color-border: #DED3C3;
-  --color-border-2: #C8B9A6;
+  --color-border: #DCCFBE;
+  --color-border-2: #C7B7A2;
 
-  --color-primary: #23384F;
-  --color-primary-dark: #142638;
+  --color-primary: #20364F;
+  --color-primary-dark: #132437;
   --color-primary-mid: #496A86;
-  --color-primary-tint: #E7EEF3;
-  --color-primary-ring: rgba(35, 56, 79, 0.22);
+  --color-primary-tint: #E5EEF4;
+  --color-primary-ring: rgba(32, 54, 79, 0.22);
 
   --color-accent: #14111F;
-  --color-accent-dark: #090711;
-  --color-accent-tint: #F0ECF8;
+  --color-accent-dark: #08070E;
+  --color-accent-tint: #EFECF6;
 
-  --color-cognitive: #5A46D6;
-  --color-cognitive-dark: #3D2FA3;
-  --color-cognitive-tint: #EEEAFE;
+  --color-cognitive: #4C3FD7;
+  --color-cognitive-dark: #30268F;
+  --color-cognitive-tint: #ECE9FF;
+
+  --color-signal: #2E6F9E;
+  --color-signal-tint: #E5F1F8;
 
   --color-selected-bg: var(--color-primary-tint);
   --color-selected-ring: var(--color-primary);
@@ -39,12 +42,12 @@
   --color-progress-start: var(--color-primary);
   --color-progress-end: var(--color-cognitive);
 
-  --color-success: #2F8B63;
-  --color-success-tint: #E8F5EE;
+  --color-success: #2F7D5B;
+  --color-success-tint: #E8F4EE;
   --color-error: #C64545;
   --color-error-tint: #FDEAEA;
-  --color-warning: #C88322;
-  --color-warning-tint: #FEF1DC;
+  --color-warning: #B8751D;
+  --color-warning-tint: #FEF0D8;
 
   --shadow-card:
     0 1px 2px rgba(20, 17, 31, 0.07),
@@ -57,12 +60,12 @@
     0 2px 8px rgba(20, 17, 31, 0.11),
     0 30px 80px rgba(20, 17, 31, 0.17);
 
-  --shadow-btn-primary: 0 6px 22px rgba(35, 56, 79, 0.30);
+  --shadow-btn-primary: 0 6px 22px rgba(32, 54, 79, 0.30);
   --shadow-btn-accent: 0 10px 34px rgba(20, 17, 31, 0.32);
 
   --shadow-sel:
     0 0 0 2.5px var(--color-primary),
-    0 4px 16px rgba(35, 56, 79, 0.18);
+    0 4px 16px rgba(32, 54, 79, 0.18);
 
   --shadow-btn: var(--shadow-btn-accent);
 
@@ -73,25 +76,25 @@
   --radius-xl:   28px;   /* hero containers, large feature cards    */
   --radius-pill: 999px;  /* badges, pills, progress tracks          */
   /* ── Cognitive Signature type colors ──────────────────────────── */
-  --color-sig-sprinter:        #496A86;
-  --color-sig-sprinter-tint:   #E7EEF3;
-  --shadow-sig-sprinter:       0 2px 8px rgba(35,56,79,0.30);
+  --color-sig-sprinter:        #2E6F9E;
+  --color-sig-sprinter-tint:   #E5F1F8;
+  --shadow-sig-sprinter:       0 2px 8px rgba(46,111,158,0.28);
 
-  --color-sig-archivist:       #23384F;
+  --color-sig-archivist:       #20364F;
   --color-sig-archivist-tint:  #F2F6F8;
-  --shadow-sig-archivist:      0 2px 8px rgba(35,56,79,0.26);
+  --shadow-sig-archivist:      0 2px 8px rgba(32,54,79,0.26);
 
-  --color-sig-spark:           #5A46D6;
-  --color-sig-spark-tint:      #EEEAFE;
-  --shadow-sig-spark:          0 2px 8px rgba(90,70,214,0.30);
+  --color-sig-spark:           #4C3FD7;
+  --color-sig-spark-tint:      #ECE9FF;
+  --shadow-sig-spark:          0 2px 8px rgba(76,63,215,0.30);
 
-  --color-sig-reactor:         #2F8B63;
-  --color-sig-reactor-tint:    #E8F5EE;
-  --shadow-sig-reactor:        0 2px 8px rgba(47,139,99,0.28);
+  --color-sig-reactor:         #2F7D5B;
+  --color-sig-reactor-tint:    #E8F4EE;
+  --shadow-sig-reactor:        0 2px 8px rgba(47,125,91,0.26);
 
-  --color-sig-drifter:         #C88322;
-  --color-sig-drifter-tint:    #FEF1DC;
-  --shadow-sig-drifter:        0 2px 8px rgba(200,131,34,0.26);
+  --color-sig-drifter:         #B8751D;
+  --color-sig-drifter-tint:    #FEF0D8;
+  --shadow-sig-drifter:        0 2px 8px rgba(184,117,29,0.26);
 }
 
 /* ── Tailwind theme ──────────────────────────────────────────────── */

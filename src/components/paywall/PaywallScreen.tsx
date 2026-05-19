@@ -104,7 +104,7 @@ function LockedCard() {
 
       {/* Card header */}
       <div style={{ padding: "16px 20px 14px", background: "linear-gradient(135deg, var(--color-primary-tint), var(--color-bg-card-2))", borderBottom: "1px solid var(--color-border)", display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ width: 42, height: 42, borderRadius: "var(--radius-sm)", background: "linear-gradient(135deg, var(--color-cognitive-dark), var(--color-cognitive))", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", boxShadow: "0 12px 28px rgba(103,87,232,0.22)" }}>
+        <div style={{ width: 42, height: 42, borderRadius: "var(--radius-sm)", background: "linear-gradient(135deg, var(--color-cognitive-dark), var(--color-cognitive))", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", boxShadow: "0 12px 28px rgba(76,63,215,0.22)" }}>
           <BadgeCheck size={19} strokeWidth={2.5} />
         </div>
         <div style={{ flex: 1 }}>
@@ -217,9 +217,9 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
         whileTap={{ scale: 0.975 }}
         animate={loading ? {} : {
           boxShadow: [
-            "0 10px 30px rgba(23,20,33,0.22)",
-            "0 14px 38px rgba(23,20,33,0.3)",
-            "0 10px 30px rgba(23,20,33,0.22)",
+            "0 10px 30px rgba(20,17,31,0.22)",
+            "0 14px 38px rgba(20,17,31,0.3)",
+            "0 10px 30px rgba(20,17,31,0.22)",
           ],
           transition: { repeat: Infinity, duration: 2.4, ease: "easeInOut" },
         }}
@@ -423,8 +423,8 @@ export function PaywallScreen() {
             <div style={{ marginBottom: 12, display: "grid", gap: 8 }}>
               {BRAIN_OS.paywallUnlockBullets.map((item) => (
                 <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                  <div style={{ width: 18, height: 18, borderRadius: "var(--radius-pill)", background: "var(--color-primary-tint)", display: "flex", alignItems: "center", justifyContent: "center", marginTop: 1, flexShrink: 0 }}>
-                    <Check size={11} color="var(--color-primary)" strokeWidth={3} />
+                  <div style={{ width: 18, height: 18, borderRadius: "var(--radius-pill)", background: "var(--color-signal-tint)", display: "flex", alignItems: "center", justifyContent: "center", marginTop: 1, flexShrink: 0 }}>
+                    <Check size={11} color="var(--color-signal)" strokeWidth={3} />
                   </div>
                   <span style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.45 }}>{item}</span>
                 </div>

@@ -56,6 +56,7 @@ export function PremiumCard({
         padding: featured ? "20px 20px" : "16px 16px",
         background: "var(--color-bg-card)",
         border: featured ? "1px solid var(--color-border-2)" : "1px solid var(--color-border)",
+        borderTop: featured ? "2px solid var(--color-signal)" : undefined,
         boxShadow: featured ? "var(--shadow-card-strong)" : "var(--shadow-card)",
         ...style,
       }}

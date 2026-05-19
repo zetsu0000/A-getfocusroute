@@ -175,7 +175,7 @@ function RadarChart({ dimensions }: { dimensions: RadarDimension[] }) {
       {/* Filled polygon */}
       <polygon
         points={filled}
-        fill="rgba(103, 87, 232, 0.14)"
+        fill="rgba(76, 63, 215, 0.14)"
         stroke="var(--color-cognitive)"
         strokeWidth={2}
         strokeLinejoin="round"
@@ -463,7 +463,7 @@ export function BrainProfileView({
                 style={{
                   position: "absolute",
                   left: 0,
-                  color: "var(--color-cognitive)",
+                  color: "var(--color-signal)",
                   fontWeight: 800,
                   fontSize: 12,
                 }}
