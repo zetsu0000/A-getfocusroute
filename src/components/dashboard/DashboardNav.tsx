@@ -14,9 +14,8 @@ const navLink: CSSProperties = {
   fontSize: 12,
   color: "var(--color-text)",
   textDecoration: "none",
-  padding: "9px 12px",
-  border: "1px solid transparent",
-  borderRadius: 999,
+  padding: "10px 4px 8px",
+  borderBottom: "2px solid transparent",
   whiteSpace: "nowrap",
   flexShrink: 0,
 };
@@ -38,8 +37,7 @@ function NavLink({
         ...navLink,
         fontWeight: active ? 800 : 600,
         color: active ? "var(--color-accent)" : "var(--color-text-body)",
-        background: active ? "var(--color-accent-tint)" : "transparent",
-        borderColor: active ? "var(--color-border-2)" : "transparent",
+        borderBottomColor: active ? "var(--color-accent)" : "transparent",
       }}
     >
       {label}
@@ -54,11 +52,10 @@ export function DashboardNav({
   snap: LoggedInDashboardSnapshot;
   pathname: string;
 }) {
-  const firstName = snap.profile?.full_name?.trim() || snap.user.email.split("@")[0] || "";
   const u = snap.entitlementSet;
 
   return (
-    <header style={{ paddingTop: 24, marginBottom: 28 }}>
+    <header style={{ paddingTop: 20, marginBottom: 22 }}>
       <div
         style={{
           display: "flex",
@@ -66,7 +63,7 @@ export function DashboardNav({
           justifyContent: "space-between",
           gap: 12,
           flexWrap: "wrap",
-          marginBottom: 16,
+          marginBottom: 14,
         }}
       >
         <Link
@@ -99,14 +96,14 @@ export function DashboardNav({
 
       <h1
         style={{
-          fontSize: 24,
+          fontSize: 20,
           fontWeight: 800,
           color: "var(--color-text)",
           lineHeight: 1.25,
-          marginBottom: 4,
+          marginBottom: 5,
         }}
       >
-        {firstName ? (<>Welcome back, <span style={{ color: "var(--color-accent)" }}>{firstName}</span></>) : "Welcome back"}
+        Welcome back
       </h1>
       <p style={{ fontSize: 13, color: "var(--color-text-muted)", marginBottom: 20, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>{snap.user.email}</p>
 
@@ -114,15 +111,15 @@ export function DashboardNav({
         style={{
           display: "flex",
           flexWrap: "nowrap",
-          gap: "0 8px",
-          border: "1px solid var(--color-border)",
-          borderRadius: 14,
-          padding: 6,
-          background: "var(--color-bg-card)",
+          gap: "0 18px",
+          borderBottom: "1px solid var(--color-border)",
+          padding: "0 12px 0 12px",
+          margin: "0 -2px",
           overflowX: "auto",
           scrollbarWidth: "none",
           WebkitOverflowScrolling: "touch",
-          paddingRight: 6,
+          scrollPaddingInline: 12,
+          overscrollBehaviorX: "contain",
         }}
       >
         <NavLink href="/dashboard" label="Overview" active={pathname === "/dashboard"} />

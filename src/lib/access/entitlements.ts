@@ -1,7 +1,6 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 import {
   PRODUCT_TO_ENTITLEMENTS,
   type ProductKey,
@@ -38,13 +37,20 @@ export function normalizeEmail(email: string): string {
 /** Active = active row and (no expires_at or expires_at in the future). */
 export async function getActiveEntitlementKindsForUser(
   userId: string,
+  email?: string,
 ): Promise<Set<EntitlementKey>> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const admin = createAdminClient();
+  const normalized = email ? normalizeEmail(email) : null;
+  let query = admin
     .from("entitlements")
     .select("entitlement_key, expires_at")
-    .eq("user_id", userId)
     .eq("active", true);
+
+  query = normalized
+    ? query.or(`user_id.eq.${userId},email.eq.${normalized}`)
+    : query.eq("user_id", userId);
+
+  const { data, error } = await query;
 
   if (error || !data) {
     return new Set();

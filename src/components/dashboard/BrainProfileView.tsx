@@ -255,9 +255,9 @@ export function BrainProfileView({
       {/* 1 ── Signature Hero */}
       <Card
         style={{
-          background:
-            "linear-gradient(135deg, var(--color-bg-card) 0%, var(--color-cognitive-tint) 100%)",
-          border: "1px solid rgba(103,87,232,0.26)",
+          background: "var(--color-bg-card)",
+          border: "1px solid var(--color-border-2)",
+          borderLeft: "3px solid var(--color-cognitive)",
           boxShadow: "var(--shadow-card-strong)",
         }}
       >
@@ -327,8 +327,9 @@ export function BrainProfileView({
               fontWeight: 800,
               padding: "4px 12px",
               borderRadius: 99,
-              background: "var(--color-success)",
-              color: "#fff",
+              background: "transparent",
+              color: "var(--color-success)",
+              border: "1px solid var(--color-border)",
             }}
           >
             {levelLabel}
@@ -339,7 +340,7 @@ export function BrainProfileView({
               fontWeight: 800,
               padding: "4px 12px",
               borderRadius: 99,
-              background: "var(--color-cognitive-tint)",
+              background: "transparent",
               color: "var(--color-cognitive-dark)",
               border: "1px solid var(--color-border)",
             }}
@@ -494,7 +495,7 @@ export function BrainProfileView({
       {/* 7 ── "Finally, an explanation" */}
       <Card
         style={{
-          background: "linear-gradient(135deg, var(--color-bg-card-2) 0%, var(--color-cognitive-tint) 100%)",
+          background: "var(--color-bg-card)",
           border: "1px solid var(--color-border-2)",
         }}
       >

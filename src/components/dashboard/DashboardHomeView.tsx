@@ -32,6 +32,7 @@ function FeatureCard({
   const dest = locked
     ? (need === "roadmap_28_day" ? "/roadmap" : `/dashboard/upgrade?need=${encodeURIComponent(need)}`)
     : href;
+
   return (
     <Link
       href={dest}
@@ -39,16 +40,17 @@ function FeatureCard({
       style={{
         display: "block",
         borderRadius: 18,
-        padding: featured ? "20px 20px" : "16px 16px",
-        background: featured ? "linear-gradient(135deg, var(--color-bg-card) 0%, var(--color-cognitive-tint) 100%)" : "var(--color-bg-card)",
-        border: featured ? "1px solid rgba(103,87,232,0.28)" : "1px solid var(--color-border)",
+        padding: featured ? "18px 18px" : "15px 15px",
+        background: "var(--color-bg-card)",
+        border: featured ? "1px solid var(--color-border-2)" : "1px solid var(--color-border)",
+        borderLeft: featured ? "3px solid var(--color-cognitive)" : "1px solid var(--color-border)",
         boxShadow: featured ? "var(--shadow-card-strong)" : "var(--shadow-card)",
         textDecoration: "none",
-        opacity: locked ? 0.9 : 1,
+        opacity: locked ? 0.92 : 1,
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
-        <div>
+        <div style={{ minWidth: 0 }}>
           <p style={{ fontSize: 14, fontWeight: 800, color: "var(--color-text)", marginBottom: 4 }}>{title}</p>
           <p style={{ fontSize: 12, color: "var(--color-text-body)", lineHeight: 1.5 }}>{subtitle}</p>
         </div>
@@ -58,11 +60,11 @@ function FeatureCard({
         style={{
           marginTop: 10,
           fontSize: 12,
-          fontWeight: 700,
-          color: locked ? "var(--color-accent)" : "var(--color-primary)",
+          fontWeight: 800,
+          color: locked ? "var(--color-accent)" : "var(--color-primary-dark)",
         }}
       >
-        {cta} →
+        {cta} -&gt;
       </p>
     </Link>
   );
@@ -79,22 +81,17 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
   const displayName = snap.profile?.full_name?.trim() || snap.user.email.split("@")[0] || "Member";
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 22, maxWidth: 520, margin: "0 auto" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 520, margin: "0 auto" }}>
       <section style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <SectionEyebrow>Your FocusRoute system</SectionEyebrow>
         <PremiumCard featured>
-          <p style={{ fontSize: 22, fontWeight: 900, color: "var(--color-text)", lineHeight: 1.2, marginBottom: 6, letterSpacing: "-0.02em" }}>
+          <p style={{ fontSize: 20, fontWeight: 900, color: "var(--color-text)", lineHeight: 1.22, marginBottom: 6 }}>
             Your cognitive profile hub
           </p>
           <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.65, marginBottom: 14 }}>
             Access your Brain Profile, bonuses, and next-step protocols from one place.
           </p>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
-            <AccessBadge unlocked={profileOpen} />
-            <AccessBadge unlocked={roadmapOpen} />
-            <AccessBadge unlocked={bonusesOpen} />
-          </div>
-          <p style={{ fontSize: 12, color: "var(--color-text-muted)" }}>
+          <p style={{ fontSize: 12, color: "var(--color-text-muted)", borderTop: "1px solid var(--color-border)", paddingTop: 12 }}>
             Signed in as {displayName}
           </p>
         </PremiumCard>
@@ -104,16 +101,16 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
         <p
           style={{
             fontSize: 11,
-            fontWeight: 700,
+            fontWeight: 800,
             color: "var(--color-text-muted)",
             textTransform: "uppercase",
             letterSpacing: "0.08em",
-            marginBottom: 12,
+            marginBottom: 10,
           }}
         >
           Your access
         </p>
-        <div style={{ display: "grid", gap: 12 }}>
+        <div style={{ display: "grid", gap: 10 }}>
           <FeatureCard
             title="Brain Profile"
             subtitle={profileOpen ? "Your personalized profile is ready." : "Unlock your personalized profile and explanation script."}
@@ -126,7 +123,7 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
           <FeatureCard
             title="28-Day Protocol"
             subtitle={roadmapOpen ? "Your day-by-day protocol is available." : "Your premium next step after the Brain Profile."}
-            cta={roadmapOpen ? "Open 28-Day Protocol" : "Add 28-Day Protocol"}
+            cta={roadmapOpen ? "Open 28-Day Protocol" : "Explore the 28-Day Protocol"}
             href="/dashboard/roadmap"
             locked={!roadmapOpen}
             need="roadmap_28_day"
@@ -134,7 +131,7 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
           <FeatureCard
             title="Bonuses"
             subtitle={bonusesOpen ? "Your bonus library is ready to use." : "Included with the 28-Day Protocol."}
-            cta={bonusesOpen ? "View Bonuses" : "Explore 28-Day Protocol"}
+            cta={bonusesOpen ? "View Bonuses" : "Explore the 28-Day Protocol"}
             href="/dashboard/bonuses"
             locked={!bonusesOpen}
             need="bonus_toolkit"
@@ -153,7 +150,7 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
             style={{
               display: "block",
               borderRadius: 18,
-              padding: "16px 16px",
+              padding: "15px 15px",
               background: "var(--color-bg-card)",
               border: "1px solid var(--color-border)",
               boxShadow: "var(--shadow-card)",
@@ -164,7 +161,7 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
             <p style={{ fontSize: 12, color: "var(--color-text-body)", lineHeight: 1.5, marginBottom: 8 }}>
               Purchases, subscription status, and account billing support.
             </p>
-            <p style={{ fontSize: 12, fontWeight: 700, color: "var(--color-primary)" }}>Open Billing →</p>
+            <p style={{ fontSize: 12, fontWeight: 800, color: "var(--color-primary-dark)" }}>Open Billing -&gt;</p>
           </Link>
         </div>
       </section>

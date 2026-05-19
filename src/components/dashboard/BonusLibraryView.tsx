@@ -62,7 +62,7 @@ function LockedCard({
     <div
       style={{
         borderRadius: 18,
-        background: "linear-gradient(135deg, var(--color-bg-card) 0%, var(--color-bg-card-2) 100%)",
+        background: "var(--color-bg-card)",
         border: "1px solid var(--color-border-2)",
         boxShadow: "var(--shadow-card)",
         overflow: "hidden",
@@ -72,10 +72,10 @@ function LockedCard({
         <div
           style={{
             flexShrink: 0,
-            width: 38,
-            height: 38,
+            width: 34,
+            height: 34,
             borderRadius: 10,
-            background: "var(--color-accent-tint)",
+            background: "var(--color-bg-card-2)",
             border: "1px solid var(--color-border)",
             display: "flex",
             alignItems: "center",
@@ -132,14 +132,14 @@ function LockedCard({
           prefetch={false}
           style={{
             fontSize: 12,
-            fontWeight: 700,
-            color: "var(--color-accent)",
+            fontWeight: 800,
+            color: upgradeNeed === "roadmap_28_day" ? "#fff" : "var(--color-accent)",
             textDecoration: "none",
             whiteSpace: "nowrap",
-            background: "var(--color-accent-tint)",
-            border: "1px solid var(--color-border)",
+            background: upgradeNeed === "roadmap_28_day" ? "var(--color-accent)" : "transparent",
+            border: upgradeNeed === "roadmap_28_day" ? "1px solid var(--color-accent)" : "1px solid var(--color-border)",
             borderRadius: 10,
-            padding: "8px 11px",
+            padding: "9px 12px",
           }}
         >
           {ctaLabel} →

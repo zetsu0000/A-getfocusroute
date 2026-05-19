@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-import { LockKeyhole, Sparkles } from "lucide-react";
+import { LockKeyhole } from "lucide-react";
 
 export function SectionEyebrow({ children }: { children: ReactNode }) {
   return (
@@ -24,19 +24,19 @@ export function AccessBadge({ unlocked }: { unlocked: boolean }) {
       style={{
         display: "inline-flex",
         alignItems: "center",
-        gap: 6,
-        fontSize: 10,
+        gap: 5,
+        fontSize: 9,
         fontWeight: 800,
         textTransform: "uppercase",
         letterSpacing: "0.07em",
         borderRadius: 999,
-        padding: "5px 10px",
-        background: unlocked ? "var(--color-success-tint)" : "var(--color-bg-card-2)",
+        padding: "4px 8px",
+        background: unlocked ? "transparent" : "var(--color-bg-card-2)",
         color: unlocked ? "var(--color-success)" : "var(--color-text-muted)",
         border: "1px solid var(--color-border)",
       }}
     >
-      {unlocked ? <Sparkles size={11} /> : <LockKeyhole size={11} />}
+      {unlocked ? null : <LockKeyhole size={10} />}
       {unlocked ? "Unlocked" : "Locked"}
     </span>
   );
@@ -55,11 +55,9 @@ export function PremiumCard({
     <div
       style={{
         borderRadius: 18,
-        padding: featured ? "22px 22px" : "18px 18px",
-        background: featured
-          ? "linear-gradient(135deg, var(--color-bg-card) 0%, var(--color-cognitive-tint) 100%)"
-          : "var(--color-bg-card)",
-        border: featured ? "1px solid rgba(103,87,232,0.28)" : "1px solid var(--color-border)",
+        padding: featured ? "20px 20px" : "16px 16px",
+        background: "var(--color-bg-card)",
+        border: featured ? "1px solid var(--color-border-2)" : "1px solid var(--color-border)",
         boxShadow: featured ? "var(--shadow-card-strong)" : "var(--shadow-card)",
         ...style,
       }}

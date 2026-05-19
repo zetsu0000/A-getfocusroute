@@ -412,7 +412,7 @@ export function LockedRoadmapPreview() {
               display: "flex",
               alignItems: "center",
               gap: 12,
-              opacity: 0.82,
+              opacity: 0.92,
             }}
           >
             <div
@@ -425,11 +425,15 @@ export function LockedRoadmapPreview() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: 16,
+                fontSize: 9,
+                fontWeight: 800,
+                textTransform: "uppercase",
+                letterSpacing: "0.04em",
+                color: "var(--color-text-muted)",
                 flexShrink: 0,
               }}
             >
-              🔒
+              Locked
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ fontSize: 14, fontWeight: 800, color: "var(--color-text)", marginBottom: 2 }}>
@@ -457,9 +461,10 @@ export function LockedRoadmapPreview() {
       <div
         style={{
           borderRadius: 16,
-          padding: "22px 22px",
-          background: "linear-gradient(135deg, var(--color-primary-tint), var(--color-cognitive-tint))",
-          border: "1px solid var(--color-border)",
+          padding: "20px 20px",
+          background: "var(--color-bg-card)",
+          border: "1px solid var(--color-border-2)",
+          boxShadow: "var(--shadow-card)",
         }}
       >
         <p style={{ fontSize: 15, fontWeight: 800, color: "var(--color-text)", marginBottom: 8 }}>
@@ -491,7 +496,7 @@ export function LockedRoadmapPreview() {
             boxShadow: "var(--shadow-btn-accent)",
           }}
         >
-          Add the 28-Day Protocol
+          Explore the 28-Day Protocol
         </Link>
       </div>
     </div>

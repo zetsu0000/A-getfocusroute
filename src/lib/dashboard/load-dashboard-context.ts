@@ -169,7 +169,7 @@ export const getDashboardSnapshot = cache(async (): Promise<DashboardSnapshot> =
 
   await ensureProfileRow(user);
 
-  const entitlementSet = await getActiveEntitlementKindsForUser(user.id);
+  const entitlementSet = await getActiveEntitlementKindsForUser(user.id, user.email);
   const entitlementKinds = [...entitlementSet];
 
   const [
