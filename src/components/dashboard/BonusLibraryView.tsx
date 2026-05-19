@@ -54,7 +54,7 @@ function LockedCard({
   includedWith: string;
   upgradeNeed: string;
 }) {
-  const ctaLabel = upgradeNeed === "roadmap_28_day" ? "Add 28-Day Protocol" : "Unlock Brain Profile";
+  const ctaLabel = upgradeNeed === "roadmap_28_day" ? "Explore the 28-Day Protocol" : "Unlock Brain Profile";
   const ctaHref = upgradeNeed === "roadmap_28_day"
     ? "/roadmap"
     : `/dashboard/upgrade?need=${encodeURIComponent(upgradeNeed)}`;

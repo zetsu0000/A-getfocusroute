@@ -389,11 +389,11 @@ export function LockedRoadmapPreview() {
             letterSpacing: "-0.01em",
           }}
         >
-          Your full protocol is one step away.
+          Your next premium step is ready.
         </h2>
         <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.65 }}>
-          28 micro-actions across 4 phases — Map, Stabilize, Build, Practice — each with a clear
-          objective, a single micro-action, and a reflection prompt.
+          Turn your Brain Profile into consistent action with 28 micro-actions across 4 phases:
+          Map, Stabilize, Build, and Practice.
         </p>
       </div>
 
@@ -474,7 +474,7 @@ export function LockedRoadmapPreview() {
           }}
         >
           Get your full roadmap with day-by-day micro-actions calibrated to your Brain Profile.
-          Skip or swap days — the protocol fits your pace, not the other way around.
+          Skip or swap days — the protocol supports your pace, not the other way around.
         </p>
         <Link
           href="/roadmap"

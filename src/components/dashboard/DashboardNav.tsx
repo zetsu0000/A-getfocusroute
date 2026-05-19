@@ -11,11 +11,12 @@ import {
 } from "@/lib/dashboard/unlock";
 
 const navLink: CSSProperties = {
-  fontSize: 13,
-  color: "var(--color-text-body)",
+  fontSize: 12,
+  color: "var(--color-text)",
   textDecoration: "none",
-  padding: "7px 0",
-  borderBottom: "2px solid transparent",
+  padding: "9px 12px",
+  border: "1px solid transparent",
+  borderRadius: 999,
   whiteSpace: "nowrap",
   flexShrink: 0,
 };
@@ -35,9 +36,10 @@ function NavLink({
       prefetch={false}
       style={{
         ...navLink,
-        fontWeight: active ? 800 : 500,
+        fontWeight: active ? 800 : 600,
         color: active ? "var(--color-accent)" : "var(--color-text-body)",
-        borderBottomColor: active ? "var(--color-accent)" : "transparent",
+        background: active ? "var(--color-accent-tint)" : "transparent",
+        borderColor: active ? "var(--color-border-2)" : "transparent",
       }}
     >
       {label}
@@ -86,7 +88,7 @@ export function DashboardNav({
           style={{
             fontSize: 12,
             fontWeight: 700,
-            color: "var(--color-text-muted)",
+            color: "var(--color-accent)",
             textTransform: "uppercase",
             letterSpacing: "0.08em",
           }}
@@ -112,13 +114,15 @@ export function DashboardNav({
         style={{
           display: "flex",
           flexWrap: "nowrap",
-          gap: "0 20px",
-          borderBottom: "1px solid var(--color-border)",
-          paddingBottom: 4,
+          gap: "0 8px",
+          border: "1px solid var(--color-border)",
+          borderRadius: 14,
+          padding: 6,
+          background: "var(--color-bg-card)",
           overflowX: "auto",
           scrollbarWidth: "none",
           WebkitOverflowScrolling: "touch",
-          paddingRight: 8,
+          paddingRight: 6,
         }}
       >
         <NavLink href="/dashboard" label="Overview" active={pathname === "/dashboard"} />

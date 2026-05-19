@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { DashboardMembershipSummary } from "@/components/dashboard/DashboardMembershipSummary";
+import { AccessBadge, PremiumCard, SectionEyebrow } from "@/components/dashboard/DashboardPrimitives";
 import { DashboardRetakeSection } from "@/components/dashboard/DashboardRetakeSection";
 import type { LoggedInDashboardSnapshot } from "@/lib/dashboard/load-dashboard-context";
 import {
@@ -37,39 +38,21 @@ function FeatureCard({
       prefetch={false}
       style={{
         display: "block",
-        borderRadius: "var(--radius-lg)",
-        padding: featured ? "20px 20px" : "18px 18px",
-        background: featured
-          ? "linear-gradient(135deg, var(--color-bg-card) 0%, var(--color-cognitive-tint) 100%)"
-          : "var(--color-bg-card)",
-        border: featured
-          ? "1px solid rgba(103,87,232,0.28)"
-          : "1px solid var(--color-border)",
+        borderRadius: 18,
+        padding: featured ? "20px 20px" : "16px 16px",
+        background: featured ? "linear-gradient(135deg, var(--color-bg-card) 0%, var(--color-cognitive-tint) 100%)" : "var(--color-bg-card)",
+        border: featured ? "1px solid rgba(103,87,232,0.28)" : "1px solid var(--color-border)",
         boxShadow: featured ? "var(--shadow-card-strong)" : "var(--shadow-card)",
         textDecoration: "none",
-        opacity: locked ? 0.86 : 1,
+        opacity: locked ? 0.9 : 1,
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
         <div>
-          <p style={{ fontSize: 15, fontWeight: 800, color: "var(--color-text)", marginBottom: 4 }}>{title}</p>
+          <p style={{ fontSize: 14, fontWeight: 800, color: "var(--color-text)", marginBottom: 4 }}>{title}</p>
           <p style={{ fontSize: 12, color: "var(--color-text-body)", lineHeight: 1.5 }}>{subtitle}</p>
         </div>
-        <span
-          style={{
-            fontSize: 10,
-            fontWeight: 800,
-            textTransform: "uppercase",
-            letterSpacing: "0.06em",
-            padding: "4px 8px",
-            borderRadius: 8,
-            background: locked ? "var(--color-warning-tint)" : "var(--color-success-tint)",
-            color: locked ? "var(--color-warning)" : "var(--color-success)",
-            flexShrink: 0,
-          }}
-        >
-          {locked ? "Locked" : "Ready"}
-        </span>
+        <AccessBadge unlocked={!locked} />
       </div>
       <p
         style={{
@@ -97,6 +80,26 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 22, maxWidth: 520, margin: "0 auto" }}>
+      <section style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <SectionEyebrow>Your FocusRoute system</SectionEyebrow>
+        <PremiumCard featured>
+          <p style={{ fontSize: 22, fontWeight: 900, color: "var(--color-text)", lineHeight: 1.2, marginBottom: 6, letterSpacing: "-0.02em" }}>
+            Your cognitive profile hub
+          </p>
+          <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.65, marginBottom: 14 }}>
+            Access your Brain Profile, bonuses, and next-step protocols from one place.
+          </p>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+            <AccessBadge unlocked={profileOpen} />
+            <AccessBadge unlocked={roadmapOpen} />
+            <AccessBadge unlocked={bonusesOpen} />
+          </div>
+          <p style={{ fontSize: 12, color: "var(--color-text-muted)" }}>
+            Signed in as {displayName}
+          </p>
+        </PremiumCard>
+      </section>
+
       <section>
         <p
           style={{
@@ -108,30 +111,30 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
             marginBottom: 12,
           }}
         >
-          Your FocusRoute access
+          Your access
         </p>
         <div style={{ display: "grid", gap: 12 }}>
           <FeatureCard
-            title={profileOpen ? "Your Brain Profile is ready" : "Unlock your Brain Profile"}
-            subtitle="Full assessment readout, symptom framing, and signature summary."
-            cta="Open Brain Profile"
+            title="Brain Profile"
+            subtitle={profileOpen ? "Your personalized profile is ready." : "Unlock your personalized profile and explanation script."}
+            cta={profileOpen ? "Open Brain Profile" : "Unlock Brain Profile"}
             href="/dashboard/profile"
             locked={!profileOpen}
             need="brain_profile"
             featured
           />
           <FeatureCard
-            title={roadmapOpen ? "Your 28-Day Protocol is ready" : "Add the 28-Day Protocol"}
-            subtitle="Daily structure and micro-steps aligned to your Brain OS map."
+            title="28-Day Protocol"
+            subtitle={roadmapOpen ? "Your day-by-day protocol is available." : "Your premium next step after the Brain Profile."}
             cta={roadmapOpen ? "Open 28-Day Protocol" : "Add 28-Day Protocol"}
             href="/dashboard/roadmap"
             locked={!roadmapOpen}
             need="roadmap_28_day"
           />
           <FeatureCard
-            title={bonusesOpen ? "Your bonuses are available" : "Unlock your bonuses"}
-            subtitle="Toolkit, audio guides, and explain-this scripts when included in your purchase."
-            cta={bonusesOpen ? "View Bonuses" : "Open bonus options"}
+            title="Bonuses"
+            subtitle={bonusesOpen ? "Your bonus library is ready to use." : "Included with the 28-Day Protocol."}
+            cta={bonusesOpen ? "View Bonuses" : "Explore 28-Day Protocol"}
             href="/dashboard/bonuses"
             locked={!bonusesOpen}
             need="bonus_toolkit"
@@ -144,6 +147,25 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
             locked={!membershipOpen}
             need="membership"
           />
+          <Link
+            href="/dashboard/membership"
+            prefetch={false}
+            style={{
+              display: "block",
+              borderRadius: 18,
+              padding: "16px 16px",
+              background: "var(--color-bg-card)",
+              border: "1px solid var(--color-border)",
+              boxShadow: "var(--shadow-card)",
+              textDecoration: "none",
+            }}
+          >
+            <p style={{ fontSize: 14, fontWeight: 800, color: "var(--color-text)", marginBottom: 4 }}>Billing</p>
+            <p style={{ fontSize: 12, color: "var(--color-text-body)", lineHeight: 1.5, marginBottom: 8 }}>
+              Purchases, subscription status, and account billing support.
+            </p>
+            <p style={{ fontSize: 12, fontWeight: 700, color: "var(--color-primary)" }}>Open Billing →</p>
+          </Link>
         </div>
       </section>
 

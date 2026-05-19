@@ -261,6 +261,7 @@ export function BrainProfileView({
           boxShadow: "var(--shadow-card-strong)",
         }}
       >
+        <SectionLabel>Profile Summary</SectionLabel>
         <p
           style={{
             fontSize: 10,
@@ -379,7 +380,7 @@ export function BrainProfileView({
 
       {/* 3 ── Profile Explanation */}
       <Card>
-        <SectionLabel>What This Profile Means</SectionLabel>
+        <SectionLabel>Cognitive Signature</SectionLabel>
         <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.72 }}>
           {profile.profileExplanation}
         </p>
@@ -483,7 +484,7 @@ export function BrainProfileView({
           </p>
         </Card>
         <Card>
-          <SectionLabel>Distraction Recovery</SectionLabel>
+          <SectionLabel>Recovery Style</SectionLabel>
           <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.68 }}>
             {profile.distractionRecovery}
           </p>
