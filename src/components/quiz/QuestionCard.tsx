@@ -114,7 +114,7 @@ export function QuestionCard({ question }: QuestionCardProps) {
                     }),
               }}
             >
-              Record Answer
+              Continue
             </m.button>
           )}
         </AnimatePresence>

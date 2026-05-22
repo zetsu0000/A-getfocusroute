@@ -93,7 +93,8 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
   const retake = hasRetakeQuizAccess(u);
 
   const storedDisplayName = snap.profile?.full_name?.trim() || "";
-  const displayName = storedDisplayName || snap.user.email.split("@")[0] || "Member";
+  const greetingName = storedDisplayName;
+  const retakeName = storedDisplayName;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 520, margin: "0 auto" }}>
@@ -101,15 +102,34 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
         <SectionEyebrow>Your FocusRoute system</SectionEyebrow>
         <PremiumCard featured>
           <p style={{ fontSize: 20, fontWeight: 900, color: "var(--color-text)", lineHeight: 1.22, marginBottom: 6 }}>
-            Your FocusRoute system
+            {greetingName ? `Welcome back, ${greetingName}` : "Your FocusRoute system"}
           </p>
           <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.65, marginBottom: 14 }}>
             Your profile, bonuses, and next-step protocols in one place.
           </p>
-          <p style={{ fontSize: 12, color: "var(--color-text-muted)", borderTop: "1px solid var(--color-border)", paddingTop: 12, marginBottom: 14 }}>
-            Signed in as {displayName}
-          </p>
-          <DisplayNameForm initialName={storedDisplayName} />
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+              borderTop: "1px solid var(--color-border)",
+              paddingTop: 12,
+            }}
+          >
+            <p
+              style={{
+                fontSize: 12,
+                color: "var(--color-text-muted)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                maxWidth: "100%",
+              }}
+            >
+              {snap.user.email}
+            </p>
+            <DisplayNameForm initialName={storedDisplayName} />
+          </div>
         </PremiumCard>
       </section>
 
@@ -195,7 +215,7 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
 
       {retake && (
         <section>
-          <DashboardRetakeSection email={snap.user.email} displayName={displayName} />
+          <DashboardRetakeSection email={snap.user.email} displayName={retakeName} />
         </section>
       )}
 

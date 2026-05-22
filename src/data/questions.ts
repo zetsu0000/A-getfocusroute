@@ -56,15 +56,15 @@ export const questions: QuizQuestion[] = [
   /* Q4 */
   {
     id: "struggles",
-    question: "Which executive-function friction points feel most familiar?",
+    question: "Where does focus usually get stuck for you?",
     subtitle: "Select all that apply.",
     inputType: "multiple",
     options: [
-      { id: "anxiety", label: "Starting tasks when stakes are high" },
+      { id: "anxiety", label: "Starting tasks when the stakes feel high" },
       { id: "depression", label: "Following through after the first burst" },
-      { id: "burnout", label: "Keeping plans organized across the week" },
-      { id: "ocd", label: "Remembering key details without overloading" },
-      { id: "other", label: "Regulating emotions when plans change" },
+      { id: "burnout", label: "Keeping plans organized through the week" },
+      { id: "ocd", label: "Remembering details without feeling overloaded" },
+      { id: "other", label: "Staying steady when plans change" },
       { id: "none", label: "None of these right now" },
     ],
   },

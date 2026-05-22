@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import {
   type DisplayNameState,
@@ -11,6 +11,39 @@ const initialState: DisplayNameState = { ok: false, message: "" };
 
 export function DisplayNameForm({ initialName }: { initialName: string }) {
   const [state, action, pending] = useActionState(updateDisplayName, initialState);
+  const [userOpened, setUserOpened] = useState(false);
+  const open = userOpened && !state.ok;
+
+  const hasName = initialName.length > 0;
+  const triggerLabel = hasName ? "Edit name" : "Add your name";
+
+  if (!open) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <button
+          type="button"
+          onClick={() => setUserOpened(true)}
+          style={{
+            appearance: "none",
+            background: "transparent",
+            border: "none",
+            padding: 0,
+            fontSize: 12,
+            fontWeight: 700,
+            color: "var(--color-accent)",
+            cursor: "pointer",
+            textDecoration: "underline",
+            textUnderlineOffset: 3,
+          }}
+        >
+          {triggerLabel}
+        </button>
+        {state.ok && state.message ? (
+          <span style={{ fontSize: 12, color: "var(--color-success)" }}>{state.message}</span>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <form action={action} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -34,6 +67,7 @@ export function DisplayNameForm({ initialName }: { initialName: string }) {
           defaultValue={initialName}
           placeholder="Your name"
           maxLength={80}
+          autoFocus
           style={{
             minWidth: 0,
             flex: 1,
@@ -62,6 +96,24 @@ export function DisplayNameForm({ initialName }: { initialName: string }) {
           }}
         >
           {pending ? "Saving" : "Save"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setUserOpened(false)}
+          disabled={pending}
+          style={{
+            borderRadius: 12,
+            border: "1px solid var(--color-border)",
+            background: "transparent",
+            color: "var(--color-text-muted)",
+            cursor: pending ? "wait" : "pointer",
+            fontSize: 13,
+            fontWeight: 700,
+            padding: "11px 12px",
+            whiteSpace: "nowrap",
+          }}
+        >
+          Cancel
         </button>
       </div>
       {state.message ? (

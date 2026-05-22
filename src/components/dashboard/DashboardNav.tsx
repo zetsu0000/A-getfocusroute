@@ -19,6 +19,7 @@ const navLink: CSSProperties = {
   borderRadius: "var(--radius-pill)",
   whiteSpace: "nowrap",
   flexShrink: 0,
+  scrollSnapAlign: "start",
 };
 
 function NavLink({
@@ -95,7 +96,7 @@ export function DashboardNav({
             letterSpacing: "0.08em",
           }}
         >
-          Product hub
+          Dashboard
         </span>
       </div>
 
@@ -118,13 +119,18 @@ export function DashboardNav({
           flexWrap: "nowrap",
           gap: 8,
           borderBottom: "1px solid var(--color-border)",
-          padding: "0 12px 10px 12px",
+          padding: "0 16px 10px 12px",
           margin: "0 -2px",
           overflowX: "auto",
           scrollbarWidth: "none",
           WebkitOverflowScrolling: "touch",
           scrollPaddingInline: 12,
           overscrollBehaviorX: "contain",
+          scrollSnapType: "x proximity",
+          maskImage:
+            "linear-gradient(to right, black 0, black calc(100% - 22px), transparent 100%)",
+          WebkitMaskImage:
+            "linear-gradient(to right, black 0, black calc(100% - 22px), transparent 100%)",
         }}
       >
         <NavLink href="/dashboard" label="Overview" active={pathname === "/dashboard"} />
