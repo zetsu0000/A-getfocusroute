@@ -4,6 +4,9 @@ import { useEffect, useState, useRef } from "react";
 import { m, AnimatePresence } from "framer-motion";
 import { Star, CheckCircle2 } from "lucide-react";
 import { useQuizStore } from "@/store/quizStore";
+import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
+import { trackEvent } from "@/lib/analytics/client";
+import { getSignatureFromAnswers } from "@/lib/signature";
 
 const PHASES = [
   { label: "Reading your Cognitive Mapping Assessment™", end: 24 },
@@ -25,6 +28,7 @@ const REVIEWS = [
 
 export function LoadingScreen() {
   const setStep = useQuizStore((s) => s.setStep);
+  const answers = useQuizStore((s) => s.answers);
 
   const [progress,  setProgress]  = useState(0);
   const [showModal, setShowModal] = useState(false);
@@ -35,6 +39,11 @@ export function LoadingScreen() {
   const modalDoneRef = useRef(false);
 
   useEffect(() => {
+    const signature = answers.length ? getSignatureFromAnswers(answers).signature : null;
+    trackEvent(FIRST_PARTY_EVENTS.quizCompleted, {
+      metadata: signature ? { signature_key: signature } : {},
+    });
+
     let frame: number;
     const start = Date.now();
 
@@ -72,7 +81,7 @@ export function LoadingScreen() {
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [answers]);
 
   const answerModal = () => {
     setShowModal(false);
@@ -130,7 +139,7 @@ export function LoadingScreen() {
                     {phase.label}
                   </span>
                   {done ? (
-                    <m.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500 }}>
+                    <m.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.14 }}>
                       <CheckCircle2 size={18} color="var(--color-primary)" />
                     </m.div>
                   ) : active ? (

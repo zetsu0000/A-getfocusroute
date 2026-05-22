@@ -64,9 +64,9 @@ export function OptionButton({ option, isSelected, inputType, onClick }: OptionB
         >
           {isSelected && (
             <m.svg
-              initial={{ scale: 0, opacity: 0 }}
+              initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 600, damping: 24 }}
+              transition={{ duration: 0.14 }}
               width="11" height="9" viewBox="0 0 10 8" fill="none"
             >
               <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2.2"
@@ -79,9 +79,9 @@ export function OptionButton({ option, isSelected, inputType, onClick }: OptionB
       {/* ── Single-choice: only show indicator when SELECTED ─── */}
       {inputType === "single" && isSelected && (
         <m.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 500, damping: 22 }}
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.14 }}
           style={{
             width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
             background: "var(--color-cognitive)",

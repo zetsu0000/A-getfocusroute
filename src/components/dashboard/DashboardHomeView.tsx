@@ -65,7 +65,7 @@ function FeatureCard({
           color: locked ? "var(--color-accent)" : "var(--color-signal)",
         }}
       >
-        {cta} <span aria-hidden="true">&rarr;</span>
+        {cta}
       </p>
     </Link>
   );
@@ -164,7 +164,7 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
             <p style={{ fontSize: 12, color: "var(--color-text-body)", lineHeight: 1.5, marginBottom: 8 }}>
               Purchases, subscription status, and account billing support.
             </p>
-            <p style={{ fontSize: 12, fontWeight: 800, color: "var(--color-signal)" }}>Open Billing <span aria-hidden="true">&rarr;</span></p>
+            <p style={{ fontSize: 12, fontWeight: 800, color: "var(--color-signal)" }}>Open Billing</p>
           </Link>
         </div>
       </section>

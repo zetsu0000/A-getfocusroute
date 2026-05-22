@@ -315,7 +315,7 @@ export function BrainProfileView({
                     marginBottom: 4,
                   }}
                 >
-                  ↑ {s.label}
+                  Strength: {s.label}
                 </p>
                 <p style={{ fontSize: 12, color: "var(--color-text-body)", lineHeight: 1.55 }}>
                   {s.detail}
@@ -337,7 +337,7 @@ export function BrainProfileView({
                     marginBottom: 4,
                   }}
                 >
-                  ↓ {f.label}
+                  Friction: {f.label}
                 </p>
                 <p style={{ fontSize: 12, color: "var(--color-text-body)", lineHeight: 1.55 }}>
                   {f.detail}
@@ -381,7 +381,7 @@ export function BrainProfileView({
                   fontSize: 12,
                 }}
               >
-                →
+                •
               </span>
               {condition}
             </li>
@@ -432,9 +432,10 @@ export function BrainProfileView({
                 fontSize: 14,
                 color: "var(--color-text-body)",
                 lineHeight: 1.72,
-                paddingLeft: i > 0 ? 14 : 0,
-                borderLeft:
-                  i > 0 ? "2px solid var(--color-cognitive-tint)" : "none",
+                padding: i > 0 ? "12px 14px" : 0,
+                border: i > 0 ? "1px solid var(--color-border)" : "none",
+                borderRadius: i > 0 ? 12 : 0,
+                background: i > 0 ? "var(--color-bg-card-2)" : "transparent",
               }}
             >
               {para}

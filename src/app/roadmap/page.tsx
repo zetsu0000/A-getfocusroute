@@ -9,12 +9,14 @@ import {
   ArrowRight, Layers, BarChart3, Lightbulb,
 } from "lucide-react";
 import { BRAIN_OS } from "@/lib/positioning";
+import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
+import { trackEvent } from "@/lib/analytics/client";
 
 const PHASES = [
   { id: "map", num: "01", label: "Map", days: "Days 1–7", color: "#6757E8", tint: "rgba(103,87,232,0.12)", objective: "Understand your friction landscape", what: "Identify your top 3 friction points, map your natural energy windows, and locate your activation blockers.", why: "You can't optimize what you haven't mapped. This phase turns your profile into a personal operating manual.", icon: Brain },
   { id: "stabilize", num: "02", label: "Stabilize", days: "Days 8–14", color: "#3B82B8", tint: "rgba(59,130,184,0.12)", objective: "Build a reliable daily baseline", what: "Install one consistent anchor habit, create a reset ritual, and reduce the decision load of starting.", why: "Stability before growth. A single repeatable routine does more than ten inconsistent strategies.", icon: Layers },
   { id: "build", num: "03", label: "Build", days: "Days 15–21", color: "#2F8B63", tint: "rgba(47,139,99,0.12)", objective: "Stack momentum with micro-wins", what: "Add one focus block per day, practice the recovery protocol, and start protecting your peak window.", why: "Momentum is a system, not a trait. Small consistent wins create neurological pathways that make the next action easier.", icon: BarChart3 },
-  { id: "practice", num: "04", label: "Practice", days: "Days 22–28", color: "#C88322", tint: "rgba(200,131,34,0.12)", objective: "Design your next loop", what: "Run a weekly review, calibrate your routine to real life, and plan your next iteration.", why: "The protocol ends — the system doesn't. This phase teaches you to self-diagnose and self-correct going forward.", icon: Repeat },
+  { id: "practice", num: "04", label: "Practice", days: "Days 22–28", color: "#C88322", tint: "rgba(200,131,34,0.12)", objective: "Design your next loop", what: "Run a weekly review, calibrate your routine to real life, and plan your next iteration.", why: "The protocol ends, the system doesn't. This phase teaches you to self-assess and adjust going forward.", icon: Repeat },
 ];
 
 const SAMPLE_DAYS = [
@@ -54,7 +56,7 @@ const fadeUp = {
   hidden: { opacity: 0, y: 28 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
 };
-const stagger = { visible: { transition: { staggerChildren: 0.09 } } };
+const stagger = { visible: { transition: { staggerChildren: 0.035 } } };
 
 function SectionReveal({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -90,11 +92,11 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 function HeroVisual() {
   return (
     <div style={{ position: "relative", width: "100%", maxWidth: 380, margin: "0 auto", height: 280, perspective: 1000 }}>
-      <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle,rgba(103,87,232,0.35) 0%,rgba(103,87,232,0) 70%)", filter: "blur(32px)", animation: "pulseGlow 3s ease-in-out infinite" }} />
+      <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle,var(--color-cognitive-tint) 0%,rgba(255,255,255,0) 70%)", filter: "blur(34px)", opacity: 0.8 }} />
       {PHASES.map((phase, i) => {
         const Icon = phase.icon;
         return (
-          <m.div key={phase.id} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: i * 54 - 50 }} transition={{ delay: 0.2 + i * 0.12, duration: 0.7, ease: [0.22, 1, 0.36, 1] }} whileHover={{ scale: 1.03, zIndex: 10 }} style={{ position: "absolute", left: "50%", top: "50%", transform: "translateX(-50%)", width: "92%", maxWidth: 320, background: "rgba(255,255,255,0.07)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 16, padding: "13px 18px", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 8px 32px rgba(0,0,0,0.3)", cursor: "default", zIndex: PHASES.length - i }}>
+          <m.div key={phase.id} initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: i * 54 - 50 }} transition={{ delay: 0.12 + i * 0.08, duration: 0.48, ease: [0.22, 1, 0.36, 1] }} style={{ position: "absolute", left: "50%", top: "50%", transform: "translateX(-50%)", width: "92%", maxWidth: 320, background: "rgba(255,255,255,0.075)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 16, padding: "13px 18px", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 12px 34px rgba(0,0,0,0.22)", cursor: "default", zIndex: PHASES.length - i }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: phase.tint.replace("0.12","0.25"), display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: `1px solid ${phase.color}44` }}>
               <Icon size={17} color={phase.color} />
             </div>
@@ -114,25 +116,27 @@ function HeroVisual() {
 }
 
 export default function RoadmapLandingPage() {
+  const trackRoadmapCta = (ctaLocation: string) => {
+    trackEvent(FIRST_PARTY_EVENTS.roadmapCtaClicked, {
+      metadata: { cta_location: ctaLocation },
+    });
+  };
+
   return (
     <>
       <style>{`
-        @keyframes pulseGlow {
-          0%,100%{opacity:0.7;transform:translate(-50%,-50%) scale(1);}
-          50%{opacity:1;transform:translate(-50%,-50%) scale(1.12);}
-        }
         @media(prefers-reduced-motion:reduce){*{animation-duration:0.01ms!important;transition-duration:0.01ms!important;}}
         @media(max-width:420px){.roadmap-nav-cta{display:none!important;}}
       `}</style>
-      <div style={{ background: "#F7F2EA", overflowX: "hidden" }}>
+      <div style={{ background: "var(--color-bg-page)", overflowX: "hidden" }}>
 
         {/* NAV */}
-        <nav style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(247,242,234,0.9)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: "1px solid #E2D8CA" }}>
+        <nav style={{ position: "sticky", top: 0, zIndex: 50, background: "color-mix(in srgb, var(--color-bg-page) 90%, transparent)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: "1px solid var(--color-border)" }}>
           <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 20px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <Link href="/" style={{ textDecoration: "none" }}>
-              <span style={{ fontSize: 15, fontWeight: 800, color: "#171421", letterSpacing: "-0.02em" }}>FocusRoute</span>
+              <span style={{ fontSize: 15, fontWeight: 800, color: "var(--color-text)", letterSpacing: "-0.02em" }}>FocusRoute</span>
             </Link>
-            <Link href="/assessment?step=upsell" className="roadmap-nav-cta" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#171421", color: "#FFFFFF", fontSize: 13, fontWeight: 700, padding: "9px 18px", borderRadius: 999, textDecoration: "none", whiteSpace: "nowrap" }}>
+            <Link href="/assessment?step=upsell" onClick={() => trackRoadmapCta("nav")} className="roadmap-nav-cta" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--color-text)", color: "var(--color-bg-card)", fontSize: 13, fontWeight: 700, padding: "9px 18px", borderRadius: 999, textDecoration: "none", whiteSpace: "nowrap" }}>
               Start the Protocol <ChevronRight size={14} />
             </Link>
           </div>
@@ -157,7 +161,7 @@ export default function RoadmapLandingPage() {
               A guided daily protocol for reducing friction, building momentum, and creating focus routines that fit how your mind actually works.
             </m.p>
             <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24, duration: 0.5 }} style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 48 }}>
-              <Link href="/assessment?step=upsell" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#6757E8", color: "#FFFFFF", fontSize: 16, fontWeight: 800, padding: "16px 28px", borderRadius: 999, textDecoration: "none", letterSpacing: "-0.02em", boxShadow: "0 8px 32px rgba(103,87,232,0.4)" }}>
+              <Link href="/assessment?step=upsell" onClick={() => trackRoadmapCta("hero")} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "var(--color-accent)", color: "var(--color-bg-card)", fontSize: 16, fontWeight: 800, padding: "16px 28px", borderRadius: 999, textDecoration: "none", letterSpacing: "-0.02em", boxShadow: "var(--shadow-btn-accent)" }}>
                 Start the 28-Day Protocol <ArrowRight size={18} />
               </Link>
               <a href="#what-you-get" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.8)", fontSize: 15, fontWeight: 600, padding: "16px 24px", borderRadius: 999, textDecoration: "none", border: "1px solid rgba(255,255,255,0.12)" }}>
@@ -178,7 +182,7 @@ export default function RoadmapLandingPage() {
         </section>
 
         {/* PROBLEM */}
-        <section style={{ padding: "72px 20px", background: "#F7F2EA" }}>
+        <section style={{ padding: "72px 20px", background: "var(--color-bg-page)" }}>
           <div style={{ maxWidth: 640, margin: "0 auto" }}>
             <SectionReveal>
               <m.div variants={fadeUp}>
@@ -208,7 +212,7 @@ export default function RoadmapLandingPage() {
         </section>
 
         {/* WHAT YOU GET */}
-        <section id="what-you-get" style={{ padding: "72px 20px", background: "#FFFFFF" }}>
+        <section id="what-you-get" style={{ padding: "72px 20px", background: "var(--color-bg-card)" }}>
           <div style={{ maxWidth: 960, margin: "0 auto" }}>
             <SectionReveal>
               <m.div variants={fadeUp} style={{ textAlign: "center", marginBottom: 48 }}>
@@ -221,7 +225,7 @@ export default function RoadmapLandingPage() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 16 }}>
                 {[
                   { icon: Calendar, title: "28 guided days", desc: "Each day has one clear micro-action. No decision needed — just execute.", color: "#6757E8", tint: "rgba(103,87,232,0.08)" },
-                  { icon: Target, title: "4 structured phases", desc: "Map → Stabilize → Build → Practice. Each phase builds on the last.", color: "#3B82B8", tint: "rgba(59,130,184,0.08)" },
+                  { icon: Target, title: "4 structured phases", desc: "Map, Stabilize, Build, Practice. Each phase builds on the last.", color: "#3B82B8", tint: "rgba(59,130,184,0.08)" },
                   { icon: Zap, title: "Daily micro-actions", desc: "5–15 minutes per day. Designed to fit into real life, not a perfect day.", color: "#2F8B63", tint: "rgba(47,139,99,0.08)" },
                   { icon: Brain, title: "Reflection prompts", desc: "Short daily check-ins that build self-awareness and surface what's working.", color: "#C88322", tint: "rgba(200,131,34,0.08)" },
                   { icon: Repeat, title: "Focus recovery tools", desc: "Reset rituals, re-entry protocols, and momentum restarters for hard days.", color: "#6757E8", tint: "rgba(103,87,232,0.08)" },
@@ -426,7 +430,7 @@ export default function RoadmapLandingPage() {
                     <p style={{ fontSize: 36, fontWeight: 800, color: "#FFFFFF", lineHeight: 1, letterSpacing: "-0.03em" }}>{BRAIN_OS.price.upsell}</p>
                   </div>
                 </div>
-                <Link href="/assessment?step=upsell" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%", background: "#6757E8", color: "#FFFFFF", fontSize: 17, fontWeight: 800, padding: "18px 24px", borderRadius: 16, textDecoration: "none", letterSpacing: "-0.02em", boxShadow: "0 12px 40px rgba(103,87,232,0.45)" }}>
+                <Link href="/assessment?step=upsell" onClick={() => trackRoadmapCta("price_cta")} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%", background: "#6757E8", color: "#FFFFFF", fontSize: 17, fontWeight: 800, padding: "18px 24px", borderRadius: 16, textDecoration: "none", letterSpacing: "-0.02em", boxShadow: "0 12px 40px rgba(103,87,232,0.45)" }}>
                   Unlock the 28-Day Protocol <ArrowRight size={19} />
                 </Link>
                 <p style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 14 }}>7-day guarantee · Secure checkout · Not a subscription</p>
@@ -462,7 +466,7 @@ export default function RoadmapLandingPage() {
           <div style={{ maxWidth: 480, margin: "0 auto", textAlign: "center" }}>
             <p style={{ fontSize: 20, fontWeight: 800, color: "#171421", letterSpacing: "-0.02em", marginBottom: 8 }}>Ready to build your focus system?</p>
             <p style={{ fontSize: 14, color: "#9A94AA", marginBottom: 24 }}>28 days. One action per day. Adapted to your cognitive profile.</p>
-            <Link href="/assessment?step=upsell" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#171421", color: "#FFFFFF", fontSize: 16, fontWeight: 800, padding: "16px 28px", borderRadius: 999, textDecoration: "none", letterSpacing: "-0.02em" }}>
+            <Link href="/assessment?step=upsell" onClick={() => trackRoadmapCta("footer")} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#171421", color: "#FFFFFF", fontSize: 16, fontWeight: 800, padding: "16px 28px", borderRadius: 999, textDecoration: "none", letterSpacing: "-0.02em" }}>
               Start the 28-Day Protocol <ArrowRight size={17} />
             </Link>
             <div style={{ marginTop: 32, paddingTop: 24, borderTop: "1px solid #E2D8CA", display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>

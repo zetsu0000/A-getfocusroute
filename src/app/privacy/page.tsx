@@ -36,7 +36,7 @@ const ul: React.CSSProperties = {
 
 export default function PrivacyPage() {
   return (
-    <LegalLayout title="Privacy Policy" lastUpdated="May 17, 2026">
+    <LegalLayout title="Privacy Policy" lastUpdated="May 22, 2026">
 
       <div
         style={{
@@ -95,8 +95,10 @@ export default function PrivacyPage() {
         </p>
         <p style={p}>
           We may collect basic, anonymised usage information such as page visits and feature
-          interactions to understand how the product is being used. This data does not identify
-          individual users. We do not currently run advertising analytics or cross-site tracking.
+          interactions to understand how the product is being used. We also use analytics and
+          advertising measurement tools to understand campaign performance and improve marketing.
+          This may include page views, button clicks, referrer, campaign parameters, browser or
+          device data, anonymised session identifiers, and payment conversion events.
         </p>
       </section>
 
@@ -111,9 +113,9 @@ export default function PrivacyPage() {
           <li>Respond to support requests and account inquiries</li>
         </ul>
         <p style={p}>
-          We do not sell your personal data. We do not use your quiz answers for advertising
-          targeting. We do not share your individual data with third parties except as described in
-          the Third-Party Services section below.
+          We do not sell your personal data. We do not share raw assessment answers, OTP codes, or
+          payment card details with advertising platforms. We may share limited conversion events
+          with advertising platforms for measurement, retargeting, and campaign optimisation.
         </p>
       </section>
 
@@ -149,8 +151,11 @@ export default function PrivacyPage() {
             retained per Vercel&apos;s standard practices: vercel.com/legal/privacy-policy
           </li>
           <li>
-            <strong>Analytics</strong> — we may add privacy-respecting analytics in the future and
-            will update this policy accordingly. No advertising trackers are currently in use.
+            <strong>Analytics and advertising measurement</strong> — Vercel Analytics and Speed
+            Insights help us understand site usage and performance. Meta Pixel and Meta
+            Conversions API may receive limited page, click, and conversion events for advertising
+            measurement and optimisation. We do not send raw assessment answers, OTP codes, or
+            payment card details to these tools.
           </li>
         </ul>
         <p style={p}>
@@ -173,9 +178,13 @@ export default function PrivacyPage() {
             <strong>Session storage</strong> — used to recover an in-progress quiz if your browser
             session ends unexpectedly. This data is cleared when the tab is closed.
           </li>
+          <li>
+            <strong>Analytics identifiers</strong> — used to understand anonymous sessions,
+            campaign attribution, and whether marketing traffic converts. These identifiers do not
+            prove account access or purchase status.
+          </li>
         </ul>
         <p style={p}>
-          We do not use advertising cookies, third-party tracking pixels, or cross-site identifiers.
           Paid access and entitlements are verified server-side — not from browser storage.
         </p>
       </section>

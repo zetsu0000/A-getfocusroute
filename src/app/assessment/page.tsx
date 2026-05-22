@@ -8,6 +8,8 @@ import type { FunnelStep }          from "@/types/quiz";
 import { getPersistedQuizResultId } from "@/lib/quizResultId";
 import { createClient }             from "@/lib/supabase/client";
 import { QuizEngine }               from "@/components/quiz/QuizEngine";
+import { FIRST_PARTY_EVENTS }       from "@/lib/analytics/events";
+import { trackEvent }               from "@/lib/analytics/client";
 
 function ScreenSkeleton() {
   return (
@@ -147,7 +149,12 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
             <button
               key={item}
               type="button"
-              onClick={onStart}
+              onClick={() => {
+                trackEvent(FIRST_PARTY_EVENTS.recognitionCardClicked, {
+                  metadata: { card_label: item, cta_location: "assessment_entry" },
+                });
+                onStart();
+              }}
               aria-label={`${item} Start the FocusRoute assessment`}
               style={{
                 width: "100%",
@@ -155,7 +162,6 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
                 borderRadius: 14,
                 background: "linear-gradient(90deg, var(--color-bg-card) 0%, var(--color-signal-tint) 100%)",
                 border: "1px solid var(--color-border-2)",
-                borderLeft: "3px solid var(--color-signal)",
                 padding: "14px 14px",
                 boxShadow: "0 1px 2px rgba(20,17,31,0.06), 0 10px 28px rgba(46,111,158,0.08)",
                 cursor: "pointer",
@@ -170,7 +176,7 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
               <p style={{ fontSize: 14, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.35, minWidth: 0, overflowWrap: "break-word" }}>
                 {item}
               </p>
-              <span aria-hidden="true" style={{ color: "var(--color-signal)", fontSize: 16, fontWeight: 900, flexShrink: 0 }}>
+              <span aria-hidden="true" style={{ width: 24, height: 24, borderRadius: "var(--radius-pill)", border: "1px solid var(--color-border-2)", color: "var(--color-signal)", fontSize: 15, fontWeight: 900, flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", background: "var(--color-bg-card)" }}>
                 &rarr;
               </span>
             </button>
@@ -266,6 +272,9 @@ export default function Home() {
   const [quizStarted, setQuizStarted] = useState(false);
 
   function startQuiz() {
+    trackEvent(FIRST_PARTY_EVENTS.assessmentStarted, {
+      metadata: { cta_location: "assessment_entry" },
+    });
     setQuizStarted(true);
     requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "auto" }));
   }

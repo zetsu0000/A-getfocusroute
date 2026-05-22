@@ -1,6 +1,8 @@
 "use client";
 
 import { safeNextPath } from "@/lib/auth/safe-next";
+import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
+import { trackEvent } from "@/lib/analytics/client";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -48,6 +50,10 @@ export function VerifyForm() {
         return;
       }
 
+      trackEvent(FIRST_PARTY_EVENTS.otpVerified, {
+        meta: false,
+        metadata: { next_path: nextPath },
+      });
       router.refresh();
       router.replace(nextPath);
     } catch (err) {

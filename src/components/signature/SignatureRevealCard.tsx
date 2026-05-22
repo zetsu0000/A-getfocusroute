@@ -25,6 +25,60 @@ type Props = {
   revealStatement?: string;
 };
 
+function SignatureMotif({
+  sigilKey,
+  accentRgb,
+}: {
+  sigilKey: string;
+  accentRgb: string;
+}) {
+  const line = `rgba(${accentRgb},0.56)`;
+  const soft = `rgba(${accentRgb},0.2)`;
+
+  if (sigilKey === "thrust") {
+    return (
+      <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+        {[0, 1, 2].map((i) => (
+          <span key={i} style={{ position: "absolute", right: 18 + i * 14, top: 74 + i * 10, width: 48 - i * 8, height: 2, borderRadius: 999, background: line, transform: "rotate(-18deg)", opacity: 0.75 - i * 0.16 }} />
+        ))}
+      </div>
+    );
+  }
+
+  if (sigilKey === "blueprint") {
+    return (
+      <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none", backgroundImage: `linear-gradient(${soft} 1px, transparent 1px), linear-gradient(90deg, ${soft} 1px, transparent 1px)`, backgroundSize: "34px 34px", maskImage: "linear-gradient(120deg, transparent 0%, #000 36%, transparent 82%)", opacity: 0.75 }} />
+    );
+  }
+
+  if (sigilKey === "burst") {
+    return (
+      <div aria-hidden="true" style={{ position: "absolute", right: 20, top: 28, width: 78, height: 78, pointerEvents: "none" }}>
+        {[0, 45, 90, 135].map((deg) => (
+          <span key={deg} style={{ position: "absolute", left: "50%", top: "50%", width: 34, height: 1.5, borderRadius: 999, background: line, transformOrigin: "0 50%", transform: `rotate(${deg}deg)`, opacity: 0.62 }} />
+        ))}
+      </div>
+    );
+  }
+
+  if (sigilKey === "ember") {
+    return (
+      <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+        {[0, 1, 2, 3].map((i) => (
+          <span key={i} style={{ position: "absolute", right: 42 + i * 18, bottom: 34 + (i % 2) * 18, width: 5 + i, height: 5 + i, borderRadius: "50%", background: line, opacity: 0.62 - i * 0.09 }} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div aria-hidden="true" style={{ position: "absolute", right: 18, top: 38, width: 112, height: 112, borderRadius: "50%", border: `1px solid ${line}`, transform: "rotate(-22deg)", pointerEvents: "none", opacity: 0.5 }}>
+      <span style={{ position: "absolute", right: 16, top: 18, width: 7, height: 7, borderRadius: "50%", background: line }} />
+      <span style={{ position: "absolute", left: 28, bottom: 20, width: 4, height: 4, borderRadius: "50%", background: line, opacity: 0.62 }} />
+    </div>
+  );
+}
+
 export function SignatureRevealCard({
   signatureKey,
   signatureName,
@@ -58,6 +112,7 @@ export function SignatureRevealCard({
         background: bg,
         boxShadow: `0 18px 48px rgba(${identity.accentRgb},0.28), 0 2px 8px rgba(0,0,0,0.2)`,
         border: `1px solid rgba(255,255,255,0.06)`,
+        perspective: 900,
       }}
     >
       {/* dot-grid texture */}
@@ -73,12 +128,11 @@ export function SignatureRevealCard({
         }}
       />
 
-      {/* corner accent glow */}
-      <m.div
+      <SignatureMotif sigilKey={identity.sigilKey} accentRgb={identity.accentRgb} />
+
+      {/* corner accent light */}
+      <div
         aria-hidden="true"
-        initial={reduce ? undefined : { opacity: 0.5, scale: 0.95 }}
-        animate={reduce ? undefined : { opacity: [0.5, 0.85, 0.5], scale: [0.95, 1.05, 0.95] }}
-        transition={reduce ? undefined : { duration: 6, repeat: Infinity, ease: "easeInOut" }}
         style={{
           position: "absolute",
           top: -90,
@@ -92,7 +146,7 @@ export function SignatureRevealCard({
         }}
       />
 
-      <div style={{ position: "relative", padding: "24px 22px 26px" }}>
+      <div style={{ position: "relative", padding: "24px 22px 26px", transformStyle: "preserve-3d" }}>
 
         {/* class-index rail — collectible rank marker */}
         <div
@@ -140,17 +194,14 @@ export function SignatureRevealCard({
           }}
         >
           <m.div
-            initial={reduce ? undefined : { opacity: 0, scale: 0.7, rotate: -8 }}
-            animate={reduce ? undefined : { opacity: 1, scale: 1, rotate: 0 }}
-            transition={reduce ? undefined : { duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            style={{ flexShrink: 0 }}
+            initial={reduce ? undefined : { opacity: 0, scale: 0.86, rotate: -5, rotateX: 12 }}
+            animate={reduce ? undefined : { opacity: 1, scale: 1, rotate: 0, rotateX: 0 }}
+            transition={reduce ? undefined : { duration: 0.48, ease: [0.16, 1, 0.3, 1] }}
+            style={{ flexShrink: 0, transformStyle: "preserve-3d" }}
           >
-            <m.div
-              animate={reduce ? undefined : { y: [0, -3.5, 0] }}
-              transition={reduce ? undefined : { duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-            >
+            <div style={{ transform: "translateZ(18px)" }}>
               <SignatureSigil signatureKey={identity.key} size={92} withGlow />
-            </m.div>
+            </div>
           </m.div>
 
           <div style={{ minWidth: 0 }}>
@@ -189,9 +240,9 @@ export function SignatureRevealCard({
                 </span>
               )}
               <m.h2
-                initial={reduce ? undefined : { opacity: 0, y: 12, rotateX: -10 }}
+                initial={reduce ? undefined : { opacity: 0, y: 10, rotateX: -8 }}
                 animate={reduce ? undefined : { opacity: 1, y: 0, rotateX: 0 }}
-                transition={reduce ? undefined : { duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+                transition={reduce ? undefined : { duration: 0.42, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
                 style={{
                   position: "relative",
                   fontSize: "clamp(30px, 9vw, 46px)",
@@ -225,7 +276,10 @@ export function SignatureRevealCard({
         </div>
 
         {/* essence chip */}
-        <div
+        <m.div
+          initial={reduce ? undefined : { opacity: 0, y: 8 }}
+          animate={reduce ? undefined : { opacity: 1, y: 0 }}
+          transition={reduce ? undefined : { duration: 0.32, delay: 0.26, ease: [0.16, 1, 0.3, 1] }}
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -239,12 +293,12 @@ export function SignatureRevealCard({
         >
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: identity.accent }} />
           <span style={{ fontSize: 12, fontWeight: 700, color: titleColor, letterSpacing: "-0.005em" }}>{essence}</span>
-        </div>
+        </m.div>
         {/* reveal statement */}
         <m.p
           initial={reduce ? undefined : { opacity: 0, y: 10 }}
           animate={reduce ? undefined : { opacity: 1, y: 0 }}
-          transition={reduce ? undefined : { duration: 0.55, delay: 0.25 }}
+          transition={reduce ? undefined : { duration: 0.38, delay: 0.34 }}
           style={{
             fontSize: 15,
             fontWeight: 700,

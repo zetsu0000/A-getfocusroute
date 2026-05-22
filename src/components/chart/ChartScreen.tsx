@@ -9,6 +9,8 @@ import { getSignatureFromAnswers } from "@/lib/signature";
 import { SignatureRevealCard } from "@/components/signature/SignatureRevealCard";
 import { setPersistedQuizResultId } from "@/lib/quizResultId";
 import { createClient } from "@/lib/supabase/client";
+import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
+import { trackEvent } from "@/lib/analytics/client";
 
 export function ChartScreen() {
   const {
@@ -27,6 +29,12 @@ export function ChartScreen() {
   const saveStarted = useRef(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [saveEmail, setSaveEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    trackEvent(FIRST_PARTY_EVENTS.resultPreviewViewed, {
+      metadata: { signature_key: signature.signature },
+    });
+  }, [signature.signature]);
 
   useEffect(() => {
     let cancelled = false;

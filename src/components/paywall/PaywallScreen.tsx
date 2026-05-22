@@ -15,6 +15,12 @@ import { safeName } from "@/lib/personalization";
 import { BRAIN_OS } from "@/lib/positioning";
 import { getSignatureFromAnswers } from "@/lib/signature";
 import { SignatureRevealCard } from "@/components/signature/SignatureRevealCard";
+import {
+  createAnalyticsEventId,
+  getAnalyticsContext,
+  trackEvent,
+} from "@/lib/analytics/client";
+import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 
 // Lazy singleton — loadStripe (and the Stripe.js download) only fires
 // when the PaywallScreen first renders, not when the chunk is prefetched.
@@ -144,31 +150,29 @@ function LockedCard() {
 
         <div style={{ height: 8, borderRadius: "var(--radius-pill)", background: "linear-gradient(to right, var(--color-primary-tint), var(--color-signal-tint), var(--color-cognitive-tint))", position: "relative", marginBottom: 16 }}>
           <m.div
-            initial={reduceMotion ? undefined : { left: "0%" }}
-            animate={reduceMotion ? undefined : { left: `${profileBand.pct}%` }}
-            transition={reduceMotion ? undefined : { delay: 0.35, duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
-            style={{ position: "absolute", left: reduceMotion ? `${profileBand.pct}%` : undefined, top: "50%", transform: "translate(-50%,-50%)", width: 18, height: 18, borderRadius: "50%", background: "var(--color-bg-card)", border: `3px solid ${profileBand.color}`, boxShadow: profileBand.shadow }}
+            initial={reduceMotion ? undefined : { opacity: 0, scale: 0.9 }}
+            animate={reduceMotion ? undefined : { opacity: 1, scale: 1 }}
+            transition={reduceMotion ? undefined : { delay: 0.35, duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+            style={{ position: "absolute", left: `${profileBand.pct}%`, top: "50%", transform: "translate(-50%,-50%)", width: 18, height: 18, borderRadius: "50%", background: "var(--color-bg-card)", border: `3px solid ${profileBand.color}`, boxShadow: profileBand.shadow }}
           />
         </div>
 
-        <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", border: "1px solid var(--color-border)", background: "var(--color-bg-card-2)" }}>
-          <div style={{ filter: "blur(3.5px)", userSelect: "none", pointerEvents: "none", display: "flex", flexDirection: "column", gap: 6, padding: 12 }}>
-          {rows.map(({ label, value }) => (
-            <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: "var(--radius-sm)", background: "var(--color-bg-card)", border: "1px solid var(--color-border)" }}>
-              <span style={{ fontSize: 12, color: "var(--color-text-body)" }}>{label}</span>
-              <span style={{ fontSize: 11, fontWeight: 800, color: "var(--color-primary)", whiteSpace: "nowrap" }}>{value}</span>
+        <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", border: "1px solid var(--color-border)", background: "linear-gradient(180deg,var(--color-bg-card),var(--color-bg-card-2))" }}>
+          <div style={{ userSelect: "none", pointerEvents: "none", display: "flex", flexDirection: "column", gap: 8, padding: 12 }}>
+          {rows.map(({ label }) => (
+            <div key={label} style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 74px", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: "var(--radius-sm)", background: "rgba(255,255,255,0.66)", border: "1px solid var(--color-border)" }}>
+              <span style={{ fontSize: 12, color: "var(--color-text)", fontWeight: 750, overflowWrap: "break-word" }}>{label}</span>
+              <span aria-hidden="true" style={{ height: 8, borderRadius: "var(--radius-pill)", background: "linear-gradient(90deg,var(--color-border),var(--color-primary-ring))" }} />
             </div>
           ))}
           </div>
 
-          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, background: "rgba(255,255,255,0.58)" }}>
-            <m.div
-              animate={reduceMotion ? undefined : { scale: [1, 1.05, 1] }}
-              transition={reduceMotion ? undefined : { repeat: Infinity, duration: 3, ease: "easeInOut" }}
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, background: "linear-gradient(180deg,rgba(255,255,255,0.54),rgba(255,255,255,0.84))", backdropFilter: "blur(2px)" }}>
+            <div
               style={{ width: 44, height: 44, borderRadius: 14, background: "linear-gradient(135deg,var(--color-accent),var(--color-accent-dark))", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "var(--shadow-btn-accent)" }}
             >
               <Lock size={19} color="white" strokeWidth={2.5} />
-            </m.div>
+            </div>
             <p style={{ fontSize: 13, fontWeight: 850, color: "var(--color-text)", textAlign: "center", lineHeight: 1.32 }}>
               Unlock to see<br />the full pattern map
             </p>
@@ -197,7 +201,15 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
     setError(null);
 
     const { error: submitErr } = await elements.submit();
-    if (submitErr) { setError(submitErr.message ?? "Error"); setLoading(false); return; }
+    if (submitErr) {
+      setError(submitErr.message ?? "Error");
+      trackEvent(FIRST_PARTY_EVENTS.paymentError, {
+        meta: false,
+        metadata: { product_key: "brain_profile", stage: "element_submit" },
+      });
+      setLoading(false);
+      return;
+    }
 
     const { error: confirmErr } = await stripe.confirmPayment({
       elements,
@@ -205,13 +217,26 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
       redirect: "if_required",
     });
 
-    if (confirmErr) { setError(confirmErr.message ?? "Payment failed"); setLoading(false); }
+    if (confirmErr) {
+      setError(confirmErr.message ?? "Payment failed");
+      trackEvent(FIRST_PARTY_EVENTS.paymentError, {
+        meta: false,
+        metadata: { product_key: "brain_profile", stage: "confirm_payment" },
+      });
+      setLoading(false);
+    }
     else            { onSuccess(); }
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <PaymentElement
+        onReady={() => {
+          trackEvent(FIRST_PARTY_EVENTS.paymentElementLoaded, {
+            meta: false,
+            metadata: { product_key: "brain_profile" },
+          });
+        }}
         options={{
           layout: { type: "tabs", defaultCollapsed: false },
           fields: { billingDetails: { name: "auto" } },
@@ -232,14 +257,7 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
         type="submit"
         disabled={!stripe || loading}
         whileTap={{ scale: 0.975 }}
-        animate={loading ? {} : {
-          boxShadow: [
-            "0 10px 30px rgba(20,17,31,0.22)",
-            "0 14px 38px rgba(20,17,31,0.3)",
-            "0 10px 30px rgba(20,17,31,0.22)",
-          ],
-          transition: { repeat: Infinity, duration: 2.4, ease: "easeInOut" },
-        }}
+        whileHover={loading ? undefined : { y: -1 }}
         style={{
           marginTop: 16, width: "100%", padding: "18px 24px", borderRadius: "var(--radius-md)",
           background: loading
@@ -249,6 +267,7 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
           fontSize: 17, fontWeight: 800, border: "none",
           cursor: loading ? "not-allowed" : "pointer",
           display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+          boxShadow: loading ? "none" : "0 12px 28px rgba(20,17,31,0.2)",
         }}
       >
         {loading ? (
@@ -311,7 +330,7 @@ function PaywallStripeElements({
 /* ── Loading skeleton ── */
 function PaymentSkeleton() {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10, animation: "pulse 1.6s ease-in-out infinite" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       {[56, 56, 50].map((h, i) => (
         <div key={i} style={{ height: h, borderRadius: "var(--radius-sm)", background: "var(--color-border)" }} />
       ))}
@@ -322,8 +341,9 @@ function PaymentSkeleton() {
 
 /* ── Main PaywallScreen ── */
 export function PaywallScreen() {
-  const { name, email, setStep, quizResultId } = useQuizStore();
+  const { name, email, setStep, quizResultId, answers } = useQuizStore();
   const displayName = safeName(name, "Your");
+  const signature = getSignatureFromAnswers(answers);
 
   const handlePaywallSuccess = () => {
     setStep("upsell");
@@ -333,6 +353,16 @@ export function PaywallScreen() {
   const [loadingSecret, setLoadingSecret] = useState(true);
 
   useEffect(() => {
+    trackEvent(FIRST_PARTY_EVENTS.paywallViewed, {
+      metadata: {
+        product_key: "brain_profile",
+        signature_key: signature.signature,
+      },
+    });
+  }, [signature.signature]);
+
+  useEffect(() => {
+    const analyticsEventId = createAnalyticsEventId("initiate_checkout");
     fetch("/api/create-payment-intent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -342,10 +372,25 @@ export function PaywallScreen() {
         funnel_step: "paywall",
         quiz_result_id: quizResultId ?? "",
         user_name: name,
+        analytics_event_id: analyticsEventId,
+        analytics_context: getAnalyticsContext(),
       }),
     })
       .then((r) => r.json())
-      .then((d) => { if (d.clientSecret) setClientSecret(d.clientSecret); })
+      .then((d) => {
+        if (d.clientSecret) {
+          setClientSecret(d.clientSecret);
+          trackEvent(FIRST_PARTY_EVENTS.paymentIntentCreated, {
+            eventId: analyticsEventId,
+            firstParty: false,
+            metadata: {
+              product_key: "brain_profile",
+              value: typeof d.value === "number" ? d.value : null,
+              currency: typeof d.currency === "string" ? d.currency : "usd",
+            },
+          });
+        }
+      })
       .finally(() => setLoadingSecret(false));
   }, [email, name, quizResultId]);
 

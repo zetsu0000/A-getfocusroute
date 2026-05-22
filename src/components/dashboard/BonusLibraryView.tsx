@@ -1,6 +1,6 @@
 ﻿import type { CSSProperties } from "react";
 import Link from "next/link";
-import { LockKeyhole } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronDown, LockKeyhole } from "lucide-react";
 
 import { CopyableTemplateBlock } from "@/components/dashboard/CopyableTemplateBlock";
 import type { ExplainScriptBundle, ToolkitItem } from "@/data/bonuses";
@@ -140,9 +140,12 @@ function LockedCard({
             border: upgradeNeed === "roadmap_28_day" ? "1px solid var(--color-accent)" : "1px solid var(--color-border)",
             borderRadius: 10,
             padding: "9px 12px",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
           }}
         >
-          {ctaLabel} →
+          {ctaLabel} <ArrowRight size={13} strokeWidth={2.4} />
         </Link>
       </div>
     </div>
@@ -225,9 +228,12 @@ function UnlockedCard({
             padding: "4px 10px",
             marginTop: 2,
             whiteSpace: "nowrap",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
           }}
         >
-          Open ↓
+          Open <ChevronDown size={13} strokeWidth={2.5} />
         </span>
       </summary>
       <div style={{ borderTop: "1px solid var(--color-border)", padding: "20px 20px" }}>
@@ -592,9 +598,10 @@ export function BonusLibraryView({
       <Link
         href="/dashboard"
         prefetch={false}
-        style={{ fontSize: 13, fontWeight: 700, color: "var(--color-primary)", textDecoration: "none" }}
+        style={{ fontSize: 13, fontWeight: 700, color: "var(--color-primary)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}
       >
-        ← Back to overview
+        <ArrowLeft size={14} strokeWidth={2.4} />
+        Back to overview
       </Link>
     </div>
   );

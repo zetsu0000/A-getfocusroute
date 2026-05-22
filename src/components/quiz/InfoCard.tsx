@@ -12,11 +12,11 @@ interface InfoCardProps {
 }
 
 const LEVEL_DESCRIPTIONS: Record<string, string> = {
-  "Low":       "You show few inattention symptoms. Light maintenance training will keep your brain sharp for years.",
-  "Mild":      "Mild symptoms emerge in high-demand situations. A 28-day program will close those attention gaps.",
-  "Moderate":  "Noticeable symptoms (forgetfulness, frequent distractions) are impacting your activities. 10 minutes of daily training is recommended to reverse this.",
-  "High":      "Constant focus and organization difficulties affect your daily life. Our intensive 28-day program was built exactly for you.",
-  "Very High": "Intense symptoms that require attention. With the right plan and consistency, you can transform your focus in just a few weeks.",
+  "Low":       "Your answers show a lighter focus-friction pattern. A simple maintenance rhythm may be enough to keep your system clear.",
+  "Mild":      "Your pattern tends to show up in high-demand moments. The right starting cues can reduce drag before it builds.",
+  "Moderate":  "Your focus friction is noticeable across tasks and transitions. A practical protocol can help you create cleaner entry points.",
+  "High":      "Your pattern carries a heavier daily load. You may benefit from a more structured plan for starting, sustaining, and resetting.",
+  "Very High": "Your responses point to strong focus friction. The full profile turns that intensity into a clearer map of what to try next.",
 };
 
 function getLevelWithDescription(score: number): LevelInfo & { description: string } {
@@ -34,19 +34,19 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
 
   const metrics = [
     {
-      label: "Pattern Type",
-      value: "Combined",
-      sub: "Inattention + impulsivity",
+      label: "Focus pattern",
+      value: "Mixed",
+      sub: "Start, sustain, reset",
     },
     {
-      label: "Procrastination",
+      label: "Friction load",
       value: score >= 60 ? "High" : score >= 40 ? "Moderate" : "Low",
-      sub: score >= 60 ? "Frequent in daily life" : score >= 40 ? "Present in high-demand situations" : "Rarely present",
+      sub: score >= 60 ? "Often shows up" : score >= 40 ? "Shows under demand" : "Usually lighter",
     },
     {
-      label: "Score",
+      label: "Response index",
       value: score.toFixed(0),
-      sub: "out of 100 possible points",
+      sub: "pattern strength",
     },
   ];
 
@@ -77,12 +77,12 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
               fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.65)",
               letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4,
             }}>
-              Assessment Results
+              Pattern Preview
             </p>
             <h2 style={{
               fontSize: 20, fontWeight: 800, color: "#ffffff", lineHeight: 1.15,
             }}>
-              Cognitive Profile
+              Focus Profile
             </h2>
           </div>
           {/* Score pill */}
@@ -101,7 +101,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
               {score.toFixed(0)}
             </p>
             <p style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", fontWeight: 600, marginTop: 2 }}>
-              / 100
+              index
             </p>
           </m.div>
         </div>
@@ -110,7 +110,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
         <div style={{ padding: "20px 24px 0" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
             <p style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text-body)" }}>
-              Symptom level
+              Pattern intensity
             </p>
             <m.span
               initial={{ opacity: 0, x: 8 }}
@@ -135,11 +135,12 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
             marginBottom: 8,
           }}>
             <m.div
-              initial={{ left: "0%" }}
-              animate={{ left: `${level.pct}%` }}
-              transition={{ delay: 0.35, duration: 1.0, ease: [0.34, 1.56, 0.64, 1] }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.35, duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
               style={{
                 position: "absolute",
+                left: `${level.pct}%`,
                 top: "50%", transform: "translate(-50%, -50%)",
                 width: 20, height: 20, borderRadius: "50%",
                 background: "#fff",
@@ -167,7 +168,8 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
             padding: "14px 16px",
             borderRadius: 14,
             background: level.bg,
-            borderLeft: `3px solid ${level.color}`,
+            border: `1px solid ${level.color}33`,
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.5)",
           }}
         >
           <p style={{ fontSize: 12, color: "var(--color-text-body)", lineHeight: 1.6 }}>
@@ -220,7 +222,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
             boxShadow: "var(--shadow-btn-accent)",
             letterSpacing: "0.01em",
           }}>
-            See my full results →
+            See my full results
           </button>
         </div>
       </div>
@@ -277,7 +279,7 @@ function BrainComparisonCard({ onContinue }: { onContinue: () => void }) {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
                   <span style={{ fontSize: 12, color: "var(--color-text-body)", fontWeight: 600 }}>{row.label}</span>
                   <span style={{ fontSize: 11, color: "var(--color-text-muted)", fontWeight: 700 }}>
-                    {row.now}% → {row.projected}%
+                    {row.now}% to {row.projected}%
                   </span>
                 </div>
                 <div style={{ position: "relative", height: 9, borderRadius: "var(--radius-pill)", background: "var(--color-bg-card-2)", overflow: "hidden" }}>
@@ -307,7 +309,7 @@ function BrainComparisonCard({ onContinue }: { onContinue: () => void }) {
           }}
         >
           <h2 style={{ fontSize: 19, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.35, marginBottom: 10 }}>
-            Your Brain Profile is almost ready —{" "}
+            Your Brain Profile is almost ready:{" "}
             <span style={{ color: "var(--color-accent)" }}>this is where things start to click</span>
           </h2>
           <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.65 }}>
@@ -364,7 +366,7 @@ function EmailInputCard({ onContinue }: { onContinue: (email: string) => void })
             fontSize: 36,
           }}
         >
-          ✉️
+          <EmailIcon />
         </m.div>
         <h2 style={{ fontSize: 20, fontWeight: 800, color: "var(--color-primary)", lineHeight: 1.35 }}>
           Your Brain Profile is almost ready!
@@ -519,7 +521,7 @@ function GenericInfoCard({
         }}
       >
         {!question.infoEmoji ? (
-          /* People-group illustration when no emoji is set */
+          /* People-group illustration when no compact mark is set */
           // eslint-disable-next-line @next/next/no-img-element -- static marketing asset; next/image adds little value here
           <img
             src="/illustrations/people-group.png"
@@ -529,15 +531,18 @@ function GenericInfoCard({
             style={{ width: "100%", maxWidth: 320, height: "auto", objectFit: "contain" }}
           />
         ) : (
-          /* Emoji bubble for regular info cards */
+          /* Compact mark for regular info cards */
           <div style={{
             width: 110, height: 110, borderRadius: "var(--radius-xl)",
             background: "var(--color-primary-tint)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 56,
+            fontSize: 22,
+            fontWeight: 900,
+            letterSpacing: "0.08em",
+            color: "var(--color-primary)",
             boxShadow: "var(--shadow-btn-primary)",
           }}>
-            {question.infoEmoji}
+            FR
           </div>
         )}
       </m.div>

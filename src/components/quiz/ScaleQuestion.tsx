@@ -10,11 +10,11 @@ interface ScaleQuestionProps {
 }
 
 const SCALE = [
-  { id: "1", emoji: "😣", label: "1", desc: "Not at all" },
-  { id: "2", emoji: "😕", label: "2", desc: "Rarely"     },
-  { id: "3", emoji: "😐", label: "3", desc: "Sometimes"  },
-  { id: "4", emoji: "😟", label: "4", desc: "Often"      },
-  { id: "5", emoji: "😩", label: "5", desc: "Always"     },
+  { id: "1", label: "1", desc: "Not at all" },
+  { id: "2", label: "2", desc: "Rarely"     },
+  { id: "3", label: "3", desc: "Sometimes"  },
+  { id: "4", label: "4", desc: "Often"      },
+  { id: "5", label: "5", desc: "Always"     },
 ];
 
 export function ScaleQuestion({ question }: ScaleQuestionProps) {
@@ -98,7 +98,7 @@ export function ScaleQuestion({ question }: ScaleQuestionProps) {
           <span style={{ fontSize: 11, color: "var(--color-text-muted)", fontWeight: 500 }}>Strongly agree</span>
         </div>
 
-        {/* Emoji scale */}
+        {/* Pattern scale */}
         <div style={{
           display: "grid",
           gridTemplateColumns: "repeat(5, 1fr)",
@@ -115,9 +115,9 @@ export function ScaleQuestion({ question }: ScaleQuestionProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05, duration: 0.18 }}
                 whileTap={{ scale: 0.92 }}
-                whileHover={!chosen ? { y: -3 } : {}}
+                whileHover={!chosen ? { y: -1 } : {}}
                 style={{
-                  padding: "14px 4px 12px",
+                  padding: "10px 4px 11px",
                   borderRadius: 14,
                   border: `1.5px solid ${isSelected ? "var(--color-primary)" : "rgba(28,26,46,0.09)"}`,
                   background: isSelected
@@ -133,8 +133,20 @@ export function ScaleQuestion({ question }: ScaleQuestionProps) {
                   boxShadow: isSelected ? "var(--shadow-sel)" : "0 1px 3px rgba(28,26,46,0.04)",
                 }}
               >
-                <span style={{ fontSize: 30, lineHeight: 1 }}>
-                  {item.emoji}
+                <span style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: "var(--radius-pill)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 13,
+                  fontWeight: 850,
+                  color: isSelected ? "var(--color-bg-card)" : "var(--color-text)",
+                  background: isSelected ? "var(--color-primary)" : "var(--color-bg-card-2)",
+                  border: `1px solid ${isSelected ? "var(--color-primary)" : "var(--color-border)"}`,
+                }}>
+                  {item.label}
                 </span>
                 <span style={{
                   fontSize: 11,

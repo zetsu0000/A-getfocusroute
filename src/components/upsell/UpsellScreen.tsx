@@ -91,7 +91,8 @@ function UpsellCheckoutForm({ onSuccess, onDecline }: { onSuccess: () => void; o
       <m.button
         type="submit"
         disabled={!stripe || loading}
-        animate={loading ? {} : { scale: [1, 1.015, 1], transition: { repeat: Infinity, duration: 2.4, ease: "easeInOut" } }}
+        whileTap={{ scale: 0.975 }}
+        whileHover={loading ? undefined : { y: -1 }}
         style={{
           width: "100%", padding: "18px 24px", borderRadius: 16,
           background: loading ? "var(--color-border)" : "var(--color-accent)",

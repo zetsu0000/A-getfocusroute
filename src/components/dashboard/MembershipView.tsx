@@ -1,5 +1,5 @@
 ﻿import Link from "next/link";
-import { Crown } from "lucide-react";
+import { ArrowRight, Crown } from "lucide-react";
 
 import { DashboardMembershipSummary } from "@/components/dashboard/DashboardMembershipSummary";
 import type { DashboardSubscriptionRow } from "@/lib/dashboard/load-dashboard-context";
@@ -254,9 +254,11 @@ function RetakeAssessment({ hasRetakeQuiz }: { hasRetakeQuiz: boolean }) {
             fontSize: 13,
             fontWeight: 700,
             textDecoration: "none",
+            alignItems: "center",
+            gap: 6,
           }}
         >
-          Start retake →
+          Start retake <ArrowRight size={14} strokeWidth={2.4} />
         </Link>
       ) : (
         <p style={{ fontSize: 13, color: "var(--color-text-muted)", fontStyle: "italic" }}>
@@ -349,7 +351,7 @@ function MemberResources() {
               </p>
               <p style={{ fontSize: 12, color: "var(--color-text-muted)" }}>{item.desc}</p>
             </div>
-            <span style={{ fontSize: 14, color: "var(--color-primary)", flexShrink: 0 }}>→</span>
+            <ArrowRight size={15} color="var(--color-primary)" strokeWidth={2.4} style={{ flexShrink: 0 }} />
           </Link>
         ))}
       </div>
@@ -388,9 +390,11 @@ function AccountBilling({ email }: { email: string }) {
           fontSize: 13,
           fontWeight: 700,
           textDecoration: "none",
+          alignItems: "center",
+          gap: 6,
         }}
       >
-        Email support →
+        Email support <ArrowRight size={14} strokeWidth={2.4} />
       </a>
     </SectionCard>
   );

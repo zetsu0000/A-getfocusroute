@@ -15,7 +15,7 @@ const fadeUp = {
   hidden: { opacity: 0, y: 28 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
 };
-const stagger = { visible: { transition: { staggerChildren: 0.09 } } };
+const stagger = { visible: { transition: { staggerChildren: 0.035 } } };
 
 function SectionReveal({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -75,17 +75,16 @@ const FAQS = [
 function HeroVisual() {
   return (
     <div style={{ position: "relative", width: "100%", maxWidth: 420, margin: "0 auto", height: 300, perspective: 1200 }}>
-      <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 260, height: 260, borderRadius: "50%", background: "radial-gradient(circle,rgba(103,87,232,0.4) 0%,rgba(103,87,232,0) 70%)", filter: "blur(40px)", animation: "pulseGlow 3s ease-in-out infinite" }} />
+      <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 260, height: 260, borderRadius: "50%", background: "radial-gradient(circle,var(--color-cognitive-tint) 0%,rgba(255,255,255,0) 70%)", filter: "blur(42px)", opacity: 0.78 }} />
       {STEPS.map((step, i) => {
         const Icon = step.icon;
         return (
           <m.div
             key={step.num}
-            initial={{ opacity: 0, rotateX: 30, y: 60 }}
+            initial={{ opacity: 0, rotateX: 20, y: 42 }}
             animate={{ opacity: 1, rotateX: 0, y: i * 68 - 60 }}
-            transition={{ delay: 0.15 + i * 0.14, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            whileHover={{ scale: 1.04, zIndex: 10 }}
-            style={{ position: "absolute", left: "50%", top: "50%", transform: "translateX(-50%)", width: "94%", maxWidth: 340, background: "rgba(255,255,255,0.07)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: "1px solid rgba(255,255,255,0.11)", borderRadius: 18, padding: "15px 20px", display: "flex", alignItems: "center", gap: 14, boxShadow: `0 10px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08)`, cursor: "default", zIndex: STEPS.length - i }}
+            transition={{ delay: 0.12 + i * 0.08, duration: 0.52, ease: [0.22, 1, 0.36, 1] }}
+            style={{ position: "absolute", left: "50%", top: "50%", transform: "translateX(-50%)", width: "94%", maxWidth: 340, background: "rgba(255,255,255,0.075)", border: "1px solid rgba(255,255,255,0.13)", borderRadius: 18, padding: "15px 20px", display: "flex", alignItems: "center", gap: 14, boxShadow: `0 14px 38px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.08)`, cursor: "default", zIndex: STEPS.length - i }}
           >
             <div style={{ width: 40, height: 40, borderRadius: 12, background: step.tint.replace("0.12","0.3"), display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: `1px solid ${step.color}55` }}>
               <Icon size={18} color={step.color} />
@@ -109,22 +108,18 @@ export default function AboutPage() {
   return (
     <>
       <style>{`
-        @keyframes pulseGlow {
-          0%,100%{opacity:0.7;transform:translate(-50%,-50%) scale(1);}
-          50%{opacity:1;transform:translate(-50%,-50%) scale(1.14);}
-        }
         @media(prefers-reduced-motion:reduce){*{animation-duration:0.01ms!important;transition-duration:0.01ms!important;}}
         @media(max-width:420px){.about-nav-cta{display:none!important;}}
       `}</style>
-      <div style={{ background: "#F7F2EA", overflowX: "hidden" }}>
+      <div style={{ background: "var(--color-bg-page)", overflowX: "hidden" }}>
 
         {/* NAV */}
-        <nav style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(247,242,234,0.9)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: "1px solid #E2D8CA" }}>
+        <nav style={{ position: "sticky", top: 0, zIndex: 50, background: "color-mix(in srgb, var(--color-bg-page) 90%, transparent)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: "1px solid var(--color-border)" }}>
           <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 20px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <Link href="/" style={{ textDecoration: "none" }}>
-              <span style={{ fontSize: 15, fontWeight: 800, color: "#171421", letterSpacing: "-0.02em" }}>FocusRoute</span>
+              <span style={{ fontSize: 15, fontWeight: 800, color: "var(--color-text)", letterSpacing: "-0.02em" }}>FocusRoute</span>
             </Link>
-            <Link href="/assessment" className="about-nav-cta" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#171421", color: "#FFFFFF", fontSize: 13, fontWeight: 700, padding: "9px 18px", borderRadius: 999, textDecoration: "none", whiteSpace: "nowrap" }}>
+            <Link href="/assessment" className="about-nav-cta" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--color-text)", color: "var(--color-bg-card)", fontSize: 13, fontWeight: 700, padding: "9px 18px", borderRadius: 999, textDecoration: "none", whiteSpace: "nowrap" }}>
               Start Free <ChevronRight size={14} />
             </Link>
           </div>
@@ -149,7 +144,7 @@ export default function AboutPage() {
               Take the free 3-minute assessment. Get a complete cognitive map — and a 28-day action plan built around how your brain actually works.
             </m.p>
             <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, duration: 0.5 }} style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 56 }}>
-              <Link href="/assessment" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#6757E8", color: "#FFFFFF", fontSize: 17, fontWeight: 800, padding: "17px 30px", borderRadius: 999, textDecoration: "none", letterSpacing: "-0.02em", boxShadow: "0 10px 36px rgba(103,87,232,0.45)" }}>
+              <Link href="/assessment" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "var(--color-accent)", color: "var(--color-bg-card)", fontSize: 17, fontWeight: 800, padding: "17px 30px", borderRadius: 999, textDecoration: "none", letterSpacing: "-0.02em", boxShadow: "var(--shadow-btn-accent)" }}>
                 Start your free Brain Profile <ArrowRight size={18} />
               </Link>
               <a href="#how-it-works" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.8)", fontSize: 15, fontWeight: 600, padding: "17px 24px", borderRadius: 999, textDecoration: "none", border: "1px solid rgba(255,255,255,0.11)" }}>

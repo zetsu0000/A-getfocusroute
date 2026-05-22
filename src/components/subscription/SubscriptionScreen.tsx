@@ -122,7 +122,8 @@ function SubCheckoutForm({
       <m.button
         type="submit"
         disabled={!stripe || loading}
-        animate={loading ? {} : { scale: [1, 1.015, 1], transition: { repeat: Infinity, duration: 2.6, ease: "easeInOut" } }}
+        whileTap={{ scale: 0.975 }}
+        whileHover={loading ? undefined : { y: -1 }}
         style={{
           width: "100%", padding: "18px 24px", borderRadius: 16,
           background: loading ? "var(--color-border)" : "var(--color-accent)",
@@ -256,7 +257,8 @@ export function SubscriptionScreen() {
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <m.button
                 onClick={() => setShowPayment(true)}
-                animate={{ scale: [1, 1.016, 1], transition: { repeat: Infinity, duration: 2.6, ease: "easeInOut" } }}
+                whileTap={{ scale: 0.975 }}
+                whileHover={{ y: -1 }}
                 style={{
                   width: "100%", padding: "18px 24px", borderRadius: 16,
                   background: "var(--color-accent)", color: "#ffffff",

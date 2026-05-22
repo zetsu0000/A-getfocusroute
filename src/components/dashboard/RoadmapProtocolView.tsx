@@ -253,8 +253,10 @@ function DayCard({
         </div>
         <div
           style={{
-            borderLeft: "3px solid var(--color-border-2)",
-            paddingLeft: 12,
+            border: "1px solid var(--color-border)",
+            background: "var(--color-bg-card-2)",
+            borderRadius: 10,
+            padding: "12px 14px",
           }}
         >
           <p style={fieldLabel}>Reflection</p>

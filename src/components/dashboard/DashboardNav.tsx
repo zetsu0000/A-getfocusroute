@@ -14,8 +14,9 @@ const navLink: CSSProperties = {
   fontSize: 12,
   color: "var(--color-text)",
   textDecoration: "none",
-  padding: "10px 4px 8px",
-  borderBottom: "2px solid transparent",
+  padding: "8px 12px",
+  border: "1px solid transparent",
+  borderRadius: "var(--radius-pill)",
   whiteSpace: "nowrap",
   flexShrink: 0,
 };
@@ -36,8 +37,10 @@ function NavLink({
       style={{
         ...navLink,
         fontWeight: active ? 800 : 600,
-        color: active ? "var(--color-accent)" : "var(--color-text-body)",
-        borderBottomColor: active ? "var(--color-signal)" : "transparent",
+        color: active ? "var(--color-text)" : "var(--color-text-body)",
+        background: active ? "var(--color-bg-card)" : "transparent",
+        borderColor: active ? "var(--color-border-2)" : "transparent",
+        boxShadow: active ? "0 1px 8px rgba(20,17,31,0.06)" : "none",
       }}
     >
       {label}
@@ -112,9 +115,9 @@ export function DashboardNav({
         style={{
           display: "flex",
           flexWrap: "nowrap",
-          gap: "0 18px",
+          gap: 8,
           borderBottom: "1px solid var(--color-border)",
-          padding: "0 12px 0 12px",
+          padding: "0 12px 10px 12px",
           margin: "0 -2px",
           overflowX: "auto",
           scrollbarWidth: "none",

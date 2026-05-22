@@ -4,6 +4,9 @@ import Stripe from "stripe";
 
 import { grantProductByEmail } from "@/lib/access/entitlements";
 import type { ProductKey } from "@/lib/access/products";
+import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
+import { recordAnalyticsEvent } from "@/lib/analytics/server";
+import { sendMetaEvent } from "@/lib/meta/conversions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   parseEmailFromMetadata,
@@ -183,6 +186,72 @@ function piMetadataAsRecord(
   return { ...(meta ?? {}) };
 }
 
+async function emitPurchaseAnalytics(input: {
+  eventId: string;
+  paymentIntentId?: string | null;
+  checkoutSessionId?: string | null;
+  email: string;
+  productKey: ProductKey;
+  amount: number | null;
+  currency: string;
+  priceId?: string | null;
+  metadata?: Stripe.Metadata | null;
+}): Promise<void> {
+  const value =
+    typeof input.amount === "number" && input.amount > 0
+      ? input.amount / 100
+      : null;
+  const purchaseEventId = input.paymentIntentId
+    ? `purchase_${input.paymentIntentId}`
+    : `purchase_${input.eventId}`;
+  const meta = input.metadata ?? {};
+
+  try {
+    await recordAnalyticsEvent({
+      event_name: FIRST_PARTY_EVENTS.purchaseSucceeded,
+      anonymous_id: meta.anonymous_id,
+      session_id: meta.session_id,
+      fbp: meta.fbp,
+      fbc: meta.fbc,
+      meta_event_id: purchaseEventId,
+      metadata: {
+        product_key: input.productKey,
+        stripe_payment_intent_id: input.paymentIntentId ?? null,
+        stripe_checkout_session_id: input.checkoutSessionId ?? null,
+        stripe_event_id: input.eventId,
+        value,
+        currency: input.currency,
+      },
+    });
+
+    await sendMetaEvent({
+      event_name: "Purchase",
+      event_id: purchaseEventId,
+      event_source_url: "https://getfocusroute.com/assessment",
+      user_data: {
+        fbp: meta.fbp,
+        fbc: meta.fbc,
+        email: input.email,
+      },
+      custom_data: {
+        value,
+        currency: input.currency,
+        product_key: input.productKey,
+        content_name:
+          input.productKey === "roadmap_28_day"
+            ? "FocusRoute 28-Day Protocol"
+            : "FocusRoute Brain Profile",
+        content_ids: [input.priceId ?? input.productKey],
+        content_type: "product",
+      },
+    });
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn("[analytics] purchase_succeeded failed", error);
+    }
+  }
+}
+
 async function handlePaymentIntentSucceeded(event: Stripe.Event): Promise<void> {
   const pi = event.data.object as Stripe.PaymentIntent;
   const admin = createAdminClient();
@@ -253,6 +322,17 @@ async function handlePaymentIntentSucceeded(event: Stripe.Event): Promise<void> 
   if (insErr) {
     throw new Error(`purchases insert: ${insErr.message}`);
   }
+
+  await emitPurchaseAnalytics({
+    eventId: event.id,
+    paymentIntentId: pi.id,
+    email,
+    productKey,
+    amount,
+    currency: pi.currency ?? "usd",
+    priceId: metaFlat.priceId ?? null,
+    metadata: pi.metadata,
+  });
 }
 
 async function handleCheckoutSessionCompleted(
@@ -368,6 +448,17 @@ async function handleCheckoutSessionCompleted(
     if (insErr) {
       throw new Error(`purchases insert (checkout): ${insErr.message}`);
     }
+    await emitPurchaseAnalytics({
+      eventId: event.id,
+      paymentIntentId: piId ?? null,
+      checkoutSessionId: session.id,
+      email,
+      productKey,
+      amount: session.amount_total ?? null,
+      currency: session.currency ?? "usd",
+      priceId: meta?.priceId ?? null,
+      metadata: meta ?? null,
+    });
     return;
   }
 

@@ -10,7 +10,7 @@ export function QuizProfileCard({ answers }: { answers: QuizAnswer[] }) {
 
   const rows = [
     { label: "Pattern lens", value: "Inattentive-C (illustrative)" },
-    { label: "Friction snapshot", value: "78 / 100 (example scale)" },
+    { label: "Friction snapshot", value: "High pattern intensity" },
     { label: "Energy read", value: "High motion / low idle" },
     { label: "Support strategy", value: "Body-doubling" },
   ];

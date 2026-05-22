@@ -1,6 +1,8 @@
 "use client";
 
 import { safeNextPath } from "@/lib/auth/safe-next";
+import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
+import { trackEvent } from "@/lib/analytics/client";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -21,6 +23,10 @@ export function LoginForm() {
     setStatus("loading");
     setMessage(null);
     const trimmed = email.trim();
+    trackEvent(FIRST_PARTY_EVENTS.loginStarted, {
+      meta: false,
+      metadata: { next_path: nextAfterLogin },
+    });
     try {
       const supabase = createClient();
       const origin =
