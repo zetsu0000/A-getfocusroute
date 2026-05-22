@@ -1,7 +1,6 @@
 ﻿import { ImageResponse } from "next/og";
-import { BRAIN_OS } from "@/lib/positioning";
 
-export const alt = `${BRAIN_OS.lineTm} · Personalized ADHD Profile`;
+export const alt = "FocusRoute — Understand how your focus works.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -14,179 +13,122 @@ export default function Image() {
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
+          justifyContent: "space-between",
           background: "#F6F2EA",
-          backgroundImage:
-            "radial-gradient(circle, #E8E1D4 1px, transparent 1px)",
-          backgroundSize: "28px 28px",
-          padding: "64px",
+          padding: "72px 88px",
           position: "relative",
+          fontFamily: "sans-serif",
         }}
       >
-        {/* Decorative blobs */}
+        {/* Subtle warm accent */}
         <div
           style={{
             position: "absolute",
-            top: -120,
-            right: -120,
-            width: 400,
-            height: 400,
+            top: -180,
+            right: -180,
+            width: 520,
+            height: 520,
             borderRadius: "50%",
-            background: "rgba(54,96,122,0.10)",
+            background: "rgba(63,111,143,0.08)",
             display: "flex",
           }}
         />
         <div
           style={{
             position: "absolute",
-            bottom: -100,
-            left: -80,
-            width: 320,
-            height: 320,
+            bottom: -160,
+            left: -120,
+            width: 420,
+            height: 420,
             borderRadius: "50%",
-            background: "rgba(92,138,94,0.08)",
+            background: "rgba(92,138,94,0.06)",
             display: "flex",
           }}
         />
 
-        {/* Card */}
+        {/* Wordmark row */}
+        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+          <div
+            style={{
+              width: 18,
+              height: 18,
+              borderRadius: 999,
+              background: "#3F6F8F",
+              display: "flex",
+            }}
+          />
+          <span
+            style={{
+              fontSize: 34,
+              fontWeight: 800,
+              color: "#1C1A2E",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            FocusRoute
+          </span>
+        </div>
+
+        {/* Headline block */}
         <div
           style={{
             display: "flex",
             flexDirection: "column",
-            alignItems: "center",
-            background: "#FFFFFF",
-            borderRadius: "32px",
-            padding: "60px 80px",
-            boxShadow:
-              "0 1px 3px rgba(28,26,46,0.05), 0 32px 80px rgba(28,26,46,0.10)",
-            maxWidth: 900,
-            width: "100%",
+            gap: 24,
+            maxWidth: 920,
           }}
         >
-          {/* Logo row */}
-          <div
+          <span
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "16px",
-              marginBottom: "36px",
-            }}
-          >
-            <div
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: "16px",
-            background: "#3F6F8F",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <svg
-                width="32"
-                height="22"
-                viewBox="0 0 22 16"
-                fill="none"
-              >
-                <path
-                  d="M1 8 Q3 3 5 8 Q7 13 9 8 Q11 3 13 8 Q15 13 17 8 Q19 3 21 8"
-                  stroke="white"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-            <span
-              style={{
-                fontSize: 26,
-                fontWeight: 800,
-                color: "#1C1A2E",
-                letterSpacing: "-0.02em",
-              }}
-            >
-              FocusRoute
-            </span>
-          </div>
-
-          {/* Headline */}
-          <div
-            style={{
-              fontSize: 58,
+              fontSize: 84,
               fontWeight: 800,
               color: "#1C1A2E",
-              textAlign: "center",
-              lineHeight: 1.18,
-              letterSpacing: "-0.03em",
-              marginBottom: "20px",
-              display: "flex",
-              flexDirection: "column",
+              letterSpacing: "-0.035em",
+              lineHeight: 1.05,
             }}
           >
-            <span>{BRAIN_OS.heroTitleBefore}</span>
-            <span style={{ color: "#3F6F8F" }}>{BRAIN_OS.heroTitleAccent}</span>
-            <span>Map in ~12 minutes</span>
-          </div>
-
-          {/* Subline */}
-          <p
+            Understand how your
+          </span>
+          <span
             style={{
-              fontSize: 22,
+              fontSize: 84,
+              fontWeight: 800,
+              color: "#3F6F8F",
+              letterSpacing: "-0.035em",
+              lineHeight: 1.05,
+            }}
+          >
+            focus works.
+          </span>
+          <span
+            style={{
+              fontSize: 26,
               color: "#4A4A6A",
-              textAlign: "center",
-              lineHeight: 1.5,
-              marginBottom: "36px",
+              lineHeight: 1.45,
+              maxWidth: 780,
+              marginTop: 8,
             }}
           >
-            Cognitive Mapping Assessment™ · Brain Profile™ · 28-Day Protocol™
-          </p>
-
-          {/* Pill badges */}
-          <div
-            style={{
-              display: "flex",
-              gap: "16px",
-              alignItems: "center",
-            }}
-          >
-            {["🧠 Brain-first", "⏱ ~12 min", "📘 Personalized profile", "🛡 7-day guarantee"].map(
-              (label) => (
-                <div
-                  key={label}
-                  style={{
-                    padding: "10px 22px",
-                    borderRadius: "99px",
-                    background: "#E8F1F6",
-                    fontSize: 16,
-                    fontWeight: 700,
-                    color: "#3F6F8F",
-                    display: "flex",
-                  }}
-                >
-                  {label}
-                </div>
-              )
-            )}
-          </div>
+            A guided assessment and Brain Profile for self-understanding and productivity support.
+          </span>
         </div>
 
-        {/* Bottom CTA hint */}
-        <p
+        {/* Footer */}
+        <div
           style={{
-            position: "absolute",
-            bottom: 32,
-            fontSize: 16,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-end",
             color: "#9B9BB5",
+            fontSize: 18,
             letterSpacing: "0.08em",
             textTransform: "uppercase",
             fontWeight: 600,
           }}
         >
-          getfocusroute.com
-        </p>
+          <span>getfocusroute.com</span>
+          <span>Not a diagnosis.</span>
+        </div>
       </div>
     ),
     { ...size }

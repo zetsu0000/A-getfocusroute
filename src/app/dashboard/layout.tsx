@@ -1,8 +1,13 @@
-﻿import { headers } from "next/headers";
+import type { Metadata } from "next";
+import { headers } from "next/headers";
 import type { ReactNode } from "react";
 
 import { DashboardNav } from "@/components/dashboard/DashboardNav";
 import { requireDashboardLogin } from "@/lib/dashboard/require-dashboard";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false, googleBot: { index: false, follow: false } },
+};
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const snap = await requireDashboardLogin();

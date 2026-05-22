@@ -8,8 +8,10 @@ import { createClient } from "@/lib/supabase/server";
 import { LoginForm } from "./LoginForm";
 
 export const metadata: Metadata = {
-  title: "Sign in",
-  description: "Sign in to FocusRoute with a secure email link.",
+  title: { absolute: "Login | FocusRoute" },
+  description: "Securely access your FocusRoute dashboard.",
+  alternates: { canonical: "/login" },
+  robots: { index: false, follow: true, googleBot: { index: false, follow: true } },
 };
 
 function LoginFallback() {

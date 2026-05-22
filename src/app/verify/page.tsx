@@ -8,8 +8,10 @@ import { createClient } from "@/lib/supabase/server";
 import { VerifyForm } from "./VerifyForm";
 
 export const metadata: Metadata = {
-  title: "Enter login code",
-  description: "Verify your email with the code FocusRoute sent you.",
+  title: { absolute: "Verify Your Login | FocusRoute" },
+  description: "Enter your FocusRoute verification code to access your dashboard.",
+  alternates: { canonical: "/verify" },
+  robots: { index: false, follow: true, googleBot: { index: false, follow: true } },
 };
 
 function VerifyFallback() {

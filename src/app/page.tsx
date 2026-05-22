@@ -1,3 +1,4 @@
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -16,6 +17,27 @@ import {
   Target,
   Zap,
 } from "lucide-react";
+export const metadata: Metadata = {
+  title: {
+    absolute: "FocusRoute — Understand How Your Focus Works",
+  },
+  description:
+    "A guided assessment and Brain Profile to help you understand your focus patterns, friction points, and next best step.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: "FocusRoute — Understand How Your Focus Works",
+    description:
+      "A guided assessment and Brain Profile to help you understand your focus patterns, friction points, and next best step.",
+    url: "/",
+    type: "website",
+  },
+  twitter: {
+    title: "FocusRoute — Understand How Your Focus Works",
+    description:
+      "A guided assessment and Brain Profile to help you understand your focus patterns, friction points, and next best step.",
+  },
+};
+
 
 const navLinks = [
   { href: "#how-it-works", label: "How it works" },
