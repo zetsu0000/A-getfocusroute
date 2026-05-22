@@ -287,7 +287,7 @@ export function BrainProfileView({
             lineHeight: 1.5,
           }}
         >
-          Higher = stronger (less friction). Derived from self-reported quiz answers — not a clinical
+          Higher = more available capacity. Derived from self-reported pattern answers, not a clinical
           assessment.
         </p>
       </Card>

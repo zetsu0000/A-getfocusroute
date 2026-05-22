@@ -231,6 +231,53 @@ function Glyph({ sigilKey, color }: { sigilKey: SigilKey; color: string }) {
  *  - 6 vertex dots (rank pips)
  *  - Top notch indicator (class-mark)
  * ────────────────────────────────────────────────────────────────────────── */
+function MotifUnderlay({ sigilKey, color }: { sigilKey: SigilKey; color: string }) {
+  if (sigilKey === "thrust") {
+    return (
+      <g opacity="0.28" stroke={color} strokeLinecap="round">
+        <path d="M10 44 L28 38" strokeWidth="1.2" />
+        <path d="M12 50 L38 42" strokeWidth="1.2" />
+        <path d="M36 12 L52 8" strokeWidth="1" opacity="0.6" />
+      </g>
+    );
+  }
+
+  if (sigilKey === "blueprint") {
+    return (
+      <g opacity="0.2" stroke={color} strokeWidth="0.7">
+        <path d="M8 24 H56 M8 40 H56 M24 8 V56 M40 8 V56" />
+        <rect x="13" y="13" width="38" height="38" rx="2" fill="none" />
+      </g>
+    );
+  }
+
+  if (sigilKey === "burst") {
+    return (
+      <g opacity="0.24" stroke={color} strokeLinecap="round">
+        <path d="M32 5 V15 M32 49 V59 M5 32 H15 M49 32 H59" strokeWidth="1.2" />
+        <path d="M13 13 L20 20 M44 44 L51 51 M51 13 L44 20 M20 44 L13 51" strokeWidth="0.9" />
+      </g>
+    );
+  }
+
+  if (sigilKey === "ember") {
+    return (
+      <g opacity="0.22" stroke={color} fill="none">
+        <circle cx="32" cy="33" r="20" strokeWidth="0.9" />
+        <circle cx="32" cy="33" r="13" strokeWidth="0.7" />
+        <path d="M18 47 C25 54 39 54 46 47" strokeWidth="1.2" strokeLinecap="round" />
+      </g>
+    );
+  }
+
+  return (
+    <g opacity="0.24" stroke={color} fill="none">
+      <ellipse cx="32" cy="32" rx="27" ry="13" transform="rotate(-22 32 32)" strokeWidth="0.9" />
+      <ellipse cx="32" cy="32" rx="17" ry="8" transform="rotate(18 32 32)" strokeWidth="0.7" />
+    </g>
+  );
+}
+
 function MedallionFrame({
   color,
   gradientId,
@@ -367,6 +414,7 @@ export function SignatureSigil({
         {/* radial backdrop */}
         <circle cx="32" cy="32" r="28" fill={`url(#${glowId})`} />
         <MedallionFrame color={identity.accent} gradientId={gradientId} frameId={frameId} />
+        <MotifUnderlay sigilKey={identity.sigilKey} color={identity.accent} />
         <Glyph sigilKey={identity.sigilKey} color={identity.accent} />
       </svg>
     </div>

@@ -1,4 +1,6 @@
 import Link from "next/link";
+import type { ComponentType } from "react";
+import { ArrowRight, BookOpenCheck, Compass, FileText, Library, ReceiptText } from "lucide-react";
 
 import { DashboardMembershipSummary } from "@/components/dashboard/DashboardMembershipSummary";
 import { AccessBadge, PremiumCard, SectionEyebrow } from "@/components/dashboard/DashboardPrimitives";
@@ -21,6 +23,7 @@ function FeatureCard({
   locked,
   need,
   featured = false,
+  icon: Icon,
 }: {
   title: string;
   subtitle: string;
@@ -29,6 +32,7 @@ function FeatureCard({
   locked: boolean;
   need: string;
   featured?: boolean;
+  icon: ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 }) {
   const dest = locked
     ? (need === "roadmap_28_day" ? "/roadmap" : `/dashboard/upgrade?need=${encodeURIComponent(need)}`)
@@ -42,30 +46,39 @@ function FeatureCard({
         display: "block",
         borderRadius: 18,
         padding: featured ? "18px 18px" : "15px 15px",
-        background: "var(--color-bg-card)",
+        background: featured
+          ? "linear-gradient(180deg,var(--color-bg-card),var(--color-bg-card-2))"
+          : "var(--color-bg-card)",
         border: featured ? "1px solid var(--color-border-2)" : "1px solid var(--color-border)",
-        borderTop: featured ? "2px solid var(--color-cognitive)" : "1px solid var(--color-border)",
         boxShadow: featured ? "var(--shadow-card-strong)" : "var(--shadow-card)",
         textDecoration: "none",
         opacity: locked ? 0.92 : 1,
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
-        <div style={{ minWidth: 0 }}>
-          <p style={{ fontSize: 14, fontWeight: 800, color: "var(--color-text)", marginBottom: 4 }}>{title}</p>
-          <p style={{ fontSize: 12, color: "var(--color-text-body)", lineHeight: 1.5 }}>{subtitle}</p>
+        <div style={{ display: "flex", gap: 12, minWidth: 0 }}>
+          <span style={{ width: 34, height: 34, borderRadius: 11, background: locked ? "var(--color-bg-card-2)" : "var(--color-accent-tint)", border: "1px solid var(--color-border)", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Icon size={17} color={locked ? "var(--color-text-muted)" : "var(--color-accent)"} strokeWidth={2.3} />
+          </span>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ fontSize: 14, fontWeight: 800, color: "var(--color-text)", marginBottom: 4 }}>{title}</p>
+            <p style={{ fontSize: 12, color: "var(--color-text-body)", lineHeight: 1.5 }}>{subtitle}</p>
+          </div>
         </div>
         <AccessBadge unlocked={!locked} />
       </div>
       <p
         style={{
-          marginTop: 10,
+          marginTop: 12,
           fontSize: 12,
           fontWeight: 800,
           color: locked ? "var(--color-accent)" : "var(--color-signal)",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
         }}
       >
-        {cta}
+        {cta} <ArrowRight size={13} strokeWidth={2.4} />
       </p>
     </Link>
   );
@@ -122,6 +135,7 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
             locked={!profileOpen}
             need="brain_profile"
             featured
+            icon={FileText}
           />
           <FeatureCard
             title="28-Day Protocol"
@@ -130,6 +144,7 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
             href="/dashboard/roadmap"
             locked={!roadmapOpen}
             need="roadmap_28_day"
+            icon={Compass}
           />
           <FeatureCard
             title="Bonuses"
@@ -138,6 +153,7 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
             href="/dashboard/bonuses"
             locked={!bonusesOpen}
             need="bonus_toolkit"
+            icon={Library}
           />
           <FeatureCard
             title={membershipOpen ? "Your membership is active" : "Explore membership"}
@@ -146,6 +162,7 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
             href="/dashboard/membership"
             locked={!membershipOpen}
             need="membership"
+            icon={BookOpenCheck}
           />
           <Link
             href="/dashboard/membership"
@@ -160,11 +177,18 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
               textDecoration: "none",
             }}
           >
-            <p style={{ fontSize: 14, fontWeight: 800, color: "var(--color-text)", marginBottom: 4 }}>Billing</p>
+            <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+              <span style={{ width: 34, height: 34, borderRadius: 11, background: "var(--color-bg-card-2)", border: "1px solid var(--color-border)", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <ReceiptText size={17} color="var(--color-text-muted)" strokeWidth={2.3} />
+              </span>
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 800, color: "var(--color-text)", marginBottom: 4 }}>Billing</p>
             <p style={{ fontSize: 12, color: "var(--color-text-body)", lineHeight: 1.5, marginBottom: 8 }}>
               Purchases, subscription status, and account billing support.
             </p>
-            <p style={{ fontSize: 12, fontWeight: 800, color: "var(--color-signal)" }}>Open Billing</p>
+                <p style={{ fontSize: 12, fontWeight: 800, color: "var(--color-signal)", display: "inline-flex", alignItems: "center", gap: 6 }}>Open Billing <ArrowRight size={13} strokeWidth={2.4} /></p>
+              </div>
+            </div>
           </Link>
         </div>
       </section>

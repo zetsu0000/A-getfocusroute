@@ -5,7 +5,7 @@ import { SignatureSigil } from "./SignatureSigil";
 import { getSignatureIdentity } from "@/lib/signature-identity";
 
 /**
- * SignatureRevealCard — premium reveal moment for a Cognitive Signature.
+ * SignatureRevealCard: premium reveal moment for a Cognitive Signature.
  * Used in ChartScreen (post-quiz preview) and PaywallScreen (locked hero).
  *
  * Mobile-first. Respects reduced-motion preference. Uses pseudo-3D via
@@ -19,7 +19,7 @@ type Props = {
   signatureName: string;
   signatureEssence?: string;
   signatureSummary?: string;
-  /** Variant — "preview" (light card, post-quiz) or "paywall" (dark hero). */
+  /** Variant: "preview" (light card, post-quiz) or "paywall" (dark hero). */
   variant?: Variant;
   /** Override the displayed reveal statement. */
   revealStatement?: string;
@@ -148,7 +148,7 @@ export function SignatureRevealCard({
 
       <div style={{ position: "relative", padding: "24px 22px 26px", transformStyle: "preserve-3d" }}>
 
-        {/* class-index rail — collectible rank marker */}
+        {/* class-index rail */}
         <div
           style={{
             display: "flex",
@@ -179,7 +179,7 @@ export function SignatureRevealCard({
               fontVariantNumeric: "tabular-nums",
             }}
           >
-            Class · {identity.classIndex}
+            Class {identity.classIndex}
           </span>
         </div>
 
@@ -194,12 +194,34 @@ export function SignatureRevealCard({
           }}
         >
           <m.div
-            initial={reduce ? undefined : { opacity: 0, scale: 0.86, rotate: -5, rotateX: 12 }}
+            initial={reduce ? undefined : { opacity: 0, scale: 0.82, rotate: -4, rotateX: 16 }}
             animate={reduce ? undefined : { opacity: 1, scale: 1, rotate: 0, rotateX: 0 }}
-            transition={reduce ? undefined : { duration: 0.48, ease: [0.16, 1, 0.3, 1] }}
+            transition={reduce ? undefined : { duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             style={{ flexShrink: 0, transformStyle: "preserve-3d" }}
           >
-            <div style={{ transform: "translateZ(18px)" }}>
+            <div
+              style={{
+                position: "relative",
+                transform: "translateZ(18px)",
+                width: 104,
+                height: 104,
+                display: "grid",
+                placeItems: "center",
+              }}
+            >
+              <m.div
+                aria-hidden="true"
+                initial={reduce ? undefined : { opacity: 0, scale: 0.72, rotate: -18 }}
+                animate={reduce ? undefined : { opacity: 1, scale: 1, rotate: 0 }}
+                transition={reduce ? undefined : { duration: 0.42, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+                style={{
+                  position: "absolute",
+                  inset: 3,
+                  borderRadius: "50%",
+                  border: `1px solid rgba(${identity.accentRgb},0.42)`,
+                  boxShadow: `inset 0 1px 0 rgba(255,255,255,0.18), 0 14px 34px rgba(${identity.accentRgb},0.2)`,
+                }}
+              />
               <SignatureSigil signatureKey={identity.key} size={92} withGlow />
             </div>
           </m.div>
@@ -242,7 +264,7 @@ export function SignatureRevealCard({
               <m.h2
                 initial={reduce ? undefined : { opacity: 0, y: 10, rotateX: -8 }}
                 animate={reduce ? undefined : { opacity: 1, y: 0, rotateX: 0 }}
-                transition={reduce ? undefined : { duration: 0.42, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                transition={reduce ? undefined : { duration: 0.42, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
                 style={{
                   position: "relative",
                   fontSize: "clamp(30px, 9vw, 46px)",
@@ -269,7 +291,7 @@ export function SignatureRevealCard({
                   color: "rgba(255,255,255,0.6)",
                 }}
               >
-                Sigil · {identity.glyph}
+                Sigil / {identity.glyph}
               </span>
             </div>
           </div>
@@ -279,7 +301,7 @@ export function SignatureRevealCard({
         <m.div
           initial={reduce ? undefined : { opacity: 0, y: 8 }}
           animate={reduce ? undefined : { opacity: 1, y: 0 }}
-          transition={reduce ? undefined : { duration: 0.32, delay: 0.26, ease: [0.16, 1, 0.3, 1] }}
+          transition={reduce ? undefined : { duration: 0.32, delay: 0.34, ease: [0.16, 1, 0.3, 1] }}
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -298,7 +320,7 @@ export function SignatureRevealCard({
         <m.p
           initial={reduce ? undefined : { opacity: 0, y: 10 }}
           animate={reduce ? undefined : { opacity: 1, y: 0 }}
-          transition={reduce ? undefined : { duration: 0.38, delay: 0.34 }}
+          transition={reduce ? undefined : { duration: 0.38, delay: 0.44, ease: [0.16, 1, 0.3, 1] }}
           style={{
             fontSize: 15,
             fontWeight: 700,

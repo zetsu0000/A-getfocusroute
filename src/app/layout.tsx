@@ -8,7 +8,7 @@ import { SchemaMarkup } from "@/components/seo/SchemaMarkup";
 import { MotionProvider } from "@/components/providers/MotionProvider";
 
 /*
- * Plus Jakarta Sans — a modern, friendly, highly legible sans-serif.
+ * Plus Jakarta Sans - a modern, friendly, highly legible sans-serif.
  * Ideal for health & wellness apps: professional but approachable.
  * Weights 400 (body), 600 (labels), 700 (sub-headings), 800 (display).
  */
@@ -20,13 +20,13 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 const BASE_URL = "https://getfocusroute.com";
-const TITLE    = "FocusRoute · Cognitive Profile and Focus Assessment";
+const TITLE    = "FocusRoute / Cognitive Profile and Focus Assessment";
 const DESC     = "Understand your attention patterns, focus friction, and next best step with a private guided assessment.";
 
 export const metadata: Metadata = {
   title: {
     default:  TITLE,
-    template: "%s · FocusRoute",
+    template: "%s / FocusRoute",
   },
   description: DESC,
   metadataBase: new URL(BASE_URL),

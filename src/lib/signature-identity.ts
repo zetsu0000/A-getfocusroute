@@ -55,7 +55,7 @@ export const SIGNATURE_IDENTITY: Record<SignatureKey, SignatureIdentity> = {
   Sprinter: {
     key: "Sprinter",
     classIndex: "I",
-    classLabel: "Class · Activation",
+    classLabel: "Activation class",
     essence: "Activation-driven momentum",
     motif: "thrust",
     sigilKey: "thrust",
@@ -70,7 +70,7 @@ export const SIGNATURE_IDENTITY: Record<SignatureKey, SignatureIdentity> = {
   Archivist: {
     key: "Archivist",
     classIndex: "II",
-    classLabel: "Class · Depth",
+    classLabel: "Depth class",
     essence: "Depth-led precision",
     motif: "blueprint",
     sigilKey: "blueprint",
@@ -85,7 +85,7 @@ export const SIGNATURE_IDENTITY: Record<SignatureKey, SignatureIdentity> = {
   Spark: {
     key: "Spark",
     classIndex: "III",
-    classLabel: "Class · Signal",
+    classLabel: "Signal class",
     essence: "Novelty-powered synthesis",
     motif: "prism",
     sigilKey: "burst",
@@ -100,7 +100,7 @@ export const SIGNATURE_IDENTITY: Record<SignatureKey, SignatureIdentity> = {
   Reactor: {
     key: "Reactor",
     classIndex: "IV",
-    classLabel: "Class · Ember",
+    classLabel: "Ember class",
     essence: "Pressure-sensitive responsiveness",
     motif: "ember",
     sigilKey: "ember",
@@ -115,7 +115,7 @@ export const SIGNATURE_IDENTITY: Record<SignatureKey, SignatureIdentity> = {
   Drifter: {
     key: "Drifter",
     classIndex: "V",
-    classLabel: "Class · Orbit",
+    classLabel: "Orbit class",
     essence: "Anchor-seeking flexibility",
     motif: "orbit",
     sigilKey: "orbit",
@@ -133,7 +133,7 @@ export function getSignatureIdentity(key: string | null | undefined): SignatureI
   if (key && key in SIGNATURE_IDENTITY) {
     return SIGNATURE_IDENTITY[key as SignatureKey];
   }
-  // Fallback to Drifter palette — neutral & not alarming.
+  // Fallback to Drifter palette, neutral and not alarming.
   return SIGNATURE_IDENTITY.Drifter;
 }
 

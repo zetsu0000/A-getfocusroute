@@ -3,7 +3,7 @@ import { SignatureSigil } from "./SignatureSigil";
 import { getSignatureIdentity } from "@/lib/signature-identity";
 
 /**
- * SignatureHeroBadge — server-rendered premium hero card for the
+ * SignatureHeroBadge: server-rendered premium hero card for the
  * dashboard /profile page. No client APIs.
  *
  * Renders the sigil, archetype name, essence chip, and a short summary
@@ -81,7 +81,7 @@ export function SignatureHeroBadge({
           </span>
           <span style={{ flex: 1, height: 1, background: "linear-gradient(to right, rgba(255,255,255,0.18), rgba(255,255,255,0))" }} />
           <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.22em", textTransform: "uppercase", color: `rgba(${identity.accentRgb},1)`, fontVariantNumeric: "tabular-nums" }}>
-            Class · {identity.classIndex}
+            Class {identity.classIndex}
           </span>
         </div>
 
@@ -159,7 +159,7 @@ export function SignatureHeroBadge({
                 border: "1px solid rgba(255,255,255,0.14)",
               }}
             >
-              Overall strength: {overallScore}/100
+              Pattern strength: {overallScore}
             </span>
           )}
           {scoreLabel && (

@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-import { LockKeyhole } from "lucide-react";
+import { CheckCircle2, LockKeyhole } from "lucide-react";
 
 export function SectionEyebrow({ children }: { children: ReactNode }) {
   return (
@@ -34,8 +34,8 @@ export function AccessBadge({ unlocked }: { unlocked: boolean }) {
         border: "1px solid var(--color-border)",
       }}
     >
-      {unlocked ? null : <LockKeyhole size={10} />}
-      {unlocked ? "Available" : "Locked"}
+      {unlocked ? <CheckCircle2 size={10} /> : <LockKeyhole size={10} />}
+      {unlocked ? "Owned" : "Preview"}
     </span>
   );
 }
@@ -56,7 +56,6 @@ export function PremiumCard({
         padding: featured ? "20px 20px" : "16px 16px",
         background: "var(--color-bg-card)",
         border: featured ? "1px solid var(--color-border-2)" : "1px solid var(--color-border)",
-        borderTop: featured ? "2px solid var(--color-signal)" : undefined,
         boxShadow: featured ? "var(--shadow-card-strong)" : "var(--shadow-card)",
         ...style,
       }}

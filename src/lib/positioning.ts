@@ -1,5 +1,5 @@
 /**
- * FocusRoute Brain OS™ messaging — aligned with internal positioning doc.
+ * FocusRoute Brain OS messaging - aligned with internal positioning doc.
  * Stripe still charges whatever amount is on each Price ID; keep UI amounts in sync
  * with the dashboard (or override via NEXT_PUBLIC_UI_* env vars).
  */
@@ -18,33 +18,33 @@ const membershipAnnual = Number(process.env.NEXT_PUBLIC_UI_MEMBERSHIP_ANNUAL_USD
 export const BRAIN_OS = {
   /** Product line */
   line: "FocusRoute Brain OS",
-  lineTm: "FocusRoute Brain OS™",
+  lineTm: "FocusRoute Brain OS",
 
-  assessment: "Cognitive Mapping Assessment™",
-  brainProfile: "FocusRoute Brain Profile™",
-  radar: "Executive Function Radar™",
-  signature: "ADHD Signature™",
-  engine: "Profile-to-Protocol™ Engine",
-  protocol: "28-Day Protocol™",
-  mechanismTagline: "Profile-to-Protocol™ — we map your brain first, then build your plan.",
+  assessment: "Cognitive Mapping Assessment",
+  brainProfile: "FocusRoute Brain Profile",
+  radar: "Executive Function Radar",
+  signature: "ADHD Signature",
+  engine: "Profile-to-Protocol Engine",
+  protocol: "28-Day Protocol",
+  mechanismTagline: "Profile-to-Protocol - we map your brain first, then build your plan.",
 
-  /** Hero — Headline 01 + supporting line from positioning doc */
+  /** Hero - Headline 01 + supporting line from positioning doc */
   heroTitleBefore: "You're not lazy.",
   heroTitleAccent: "Your brain just needs a different operating system.",
   heroSub:
-    "Take the free 3-minute FocusRoute assessment to discover your ADHD-style brain profile — and see what kind of plan your brain actually needs.",
+    "Take the free 3-minute FocusRoute assessment to discover your ADHD-style brain profile - and see what kind of plan your brain actually needs.",
 
   headerEyebrow: "BRAIN OS",
 
   /** Badge on landing */
-  landingBadge: "FREE · 3 MINUTES · PRIVATE RESULTS",
+  landingBadge: "FREE / 3 MINUTES / PRIVATE RESULTS",
 
-  /** Guarantee — paywall / legal adjacent copy */
+  /** Guarantee - paywall / legal adjacent copy */
   guaranteeTitle: 'The "This Is Me" 7-Day Guarantee',
   guaranteeBody:
-    "Read your FocusRoute Brain Profile™. If it doesn't feel like the most accurate description of how your brain works, email us within 7 days for a full refund. No forms. No questions.",
+    "Read your FocusRoute Brain Profile. If it doesn't feel like the most accurate description of how your brain works, email us within 7 days for a full refund. No forms. No questions.",
 
-  /** Clinical contrast (marketing framing — not a medical claim) */
+  /** Clinical contrast (marketing framing - not a medical claim) */
   clinicalContrastShort: "Built to complement your support system, not replace clinical care.",
 
   /** Pricing labels shown in UI (must match Stripe Price amounts) */
@@ -63,12 +63,12 @@ export const BRAIN_OS = {
     membershipAnnual: usd(membershipAnnual),
   },
 
-  /** Value stack line items (paywall “what you unlock”) — condensed from doc */
+  /** Value stack line items (paywall "what you unlock") - condensed from doc */
   paywallUnlockBullets: [
-    `Full ${"FocusRoute Brain Profile™"} — narrative + ${"Executive Function Radar™"} + ${"ADHD Signature™"}`,
+    `Full ${"FocusRoute Brain Profile"} - narrative + ${"Executive Function Radar"} + ${"ADHD Signature"}`,
     `"Finally, An Explanation" plain-English letter`,
-    `${"Profile-to-Protocol™ Engine"} + ${"28-Day Protocol™"} — daily micro-actions calibrated to your profile`,
+    `${"Profile-to-Protocol Engine"} + ${"28-Day Protocol"} - daily micro-actions calibrated to your profile`,
     "Toolkit bundle + executive-function playsheets",
-    "Science-informed strategies — not generic planner advice",
+    "Science-informed strategies - not generic planner advice",
   ],
 } as const;

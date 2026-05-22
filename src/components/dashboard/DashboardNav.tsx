@@ -40,7 +40,8 @@ function NavLink({
         color: active ? "var(--color-text)" : "var(--color-text-body)",
         background: active ? "var(--color-bg-card)" : "transparent",
         borderColor: active ? "var(--color-border-2)" : "transparent",
-        boxShadow: active ? "0 1px 8px rgba(20,17,31,0.06)" : "none",
+        boxShadow: active ? "inset 0 -2px 0 var(--color-accent), 0 1px 8px rgba(20,17,31,0.05)" : "none",
+        transition: "background 150ms ease, color 150ms ease, box-shadow 150ms ease",
       }}
     >
       {label}
@@ -94,7 +95,7 @@ export function DashboardNav({
             letterSpacing: "0.08em",
           }}
         >
-          Dashboard
+          Product hub
         </span>
       </div>
 

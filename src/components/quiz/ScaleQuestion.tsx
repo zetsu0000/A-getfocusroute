@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
-import { m } from "framer-motion";
+import { m, useReducedMotion } from "framer-motion";
 import { QuizQuestion } from "@/types/quiz";
 import { useQuizStore } from "@/store/quizStore";
 
@@ -20,6 +20,7 @@ const SCALE = [
 export function ScaleQuestion({ question }: ScaleQuestionProps) {
   const { selectOption, submitAnswer } = useQuizStore();
   const [chosen, setChosen] = useState<string | null>(null);
+  const reduceMotion = useReducedMotion();
 
   const handleSelect = (id: string) => {
     if (chosen) return;
@@ -65,9 +66,9 @@ export function ScaleQuestion({ question }: ScaleQuestionProps) {
 
         {/* Quote card */}
         <m.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.24 }}
+          initial={reduceMotion ? undefined : { opacity: 0, y: 10 }}
+          animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+          transition={reduceMotion ? undefined : { duration: 0.24 }}
           style={{
             padding: "20px 20px",
             borderRadius: 16,
@@ -111,11 +112,11 @@ export function ScaleQuestion({ question }: ScaleQuestionProps) {
               <m.button
                 key={item.id}
                 onClick={() => handleSelect(item.id)}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05, duration: 0.18 }}
-                whileTap={{ scale: 0.92 }}
-                whileHover={!chosen ? { y: -1 } : {}}
+                initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
+                animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+                transition={reduceMotion ? undefined : { delay: i * 0.035, duration: 0.18 }}
+                whileTap={reduceMotion ? undefined : { scale: 0.97 }}
+                whileHover={!reduceMotion && !chosen ? { y: -1 } : undefined}
                 style={{
                   padding: "10px 4px 11px",
                   borderRadius: 14,

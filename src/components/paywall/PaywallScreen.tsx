@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { m, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Shield, Lock, Check, BadgeCheck, CreditCard } from "lucide-react";
+import { AlertCircle, Shield, Lock, Check, BadgeCheck, CreditCard } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js/pure";
 import {
   Elements,
@@ -22,7 +22,7 @@ import {
 } from "@/lib/analytics/client";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 
-// Lazy singleton — loadStripe (and the Stripe.js download) only fires
+// Lazy singleton - loadStripe (and the Stripe.js download) only fires
 // when the PaywallScreen first renders, not when the chunk is prefetched.
 let _stripePromise: ReturnType<typeof loadStripe> | null = null;
 function getStripePromise() {
@@ -94,7 +94,7 @@ const fullProfileReveals = [
   "A plain-English script for explaining your pattern",
 ];
 
-/* ── Locked result card ── */
+/* Locked result card */
 function LockedCard() {
   const answers = useQuizStore((s) => s.answers);
   const signature = getSignatureFromAnswers(answers);
@@ -187,10 +187,11 @@ function LockedCard() {
   );
 }
 
-/* ── Stripe checkout form ── */
+/* Stripe checkout form */
 function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
   const stripe   = useStripe();
   const elements = useElements();
+  const reduceMotion = useReducedMotion();
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState<string | null>(null);
 
@@ -245,19 +246,19 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
 
       {error && (
         <m.p
-          initial={{ opacity: 0, y: -6 }}
-          animate={{ opacity: 1, y: 0 }}
-        style={{ marginTop: 12, fontSize: 13, color: "var(--color-error)", textAlign: "center", background: "var(--color-error-tint)", borderRadius: 10, padding: "8px 14px" }}
+          initial={reduceMotion ? undefined : { opacity: 0, y: -6 }}
+          animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+        style={{ marginTop: 12, fontSize: 13, color: "var(--color-error)", textAlign: "center", background: "var(--color-error-tint)", borderRadius: 10, padding: "8px 14px", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}
         >
-          ⚠️ {error}
+          <AlertCircle size={15} /> {error}
         </m.p>
       )}
 
       <m.button
         type="submit"
         disabled={!stripe || loading}
-        whileTap={{ scale: 0.975 }}
-        whileHover={loading ? undefined : { y: -1 }}
+        whileTap={reduceMotion ? undefined : { scale: 0.985 }}
+        whileHover={reduceMotion || loading ? undefined : { y: -1 }}
         style={{
           marginTop: 16, width: "100%", padding: "18px 24px", borderRadius: "var(--radius-md)",
           background: loading
@@ -273,16 +274,16 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
         {loading ? (
           <>
             <m.span
-              animate={{ rotate: 360 }}
-              transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
+              animate={reduceMotion ? undefined : { rotate: 360 }}
+              transition={reduceMotion ? undefined : { duration: 0.9, repeat: Infinity, ease: "linear" }}
               style={{ display: "inline-block", width: 16, height: 16, border: "2px solid var(--color-text-muted)", borderTopColor: "transparent", borderRadius: "50%" }}
             />
-            Processing…
+            Processing...
           </>
         ) : (
           <>
             <Lock size={17} color="white" strokeWidth={2.5} />
-            Unlock My Full Pattern — {BRAIN_OS.price.paywall}
+            Unlock My Full Pattern ({BRAIN_OS.price.paywall})
           </>
         )}
       </m.button>
@@ -302,7 +303,7 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
       </div>
 
       <p style={{ marginTop: 10, fontSize: 11, color: "var(--color-text-muted)", textAlign: "center" }}>
-        One-time access · Backed by the &quot;This Is Me&quot; 7-Day Guarantee
+        One-time access / Backed by the &quot;This Is Me&quot; 7-Day Guarantee
       </p>
     </form>
   );
@@ -327,7 +328,7 @@ function PaywallStripeElements({
   );
 }
 
-/* ── Loading skeleton ── */
+/* Loading skeleton */
 function PaymentSkeleton() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -339,7 +340,7 @@ function PaymentSkeleton() {
   );
 }
 
-/* ── Main PaywallScreen ── */
+/* Main PaywallScreen */
 export function PaywallScreen() {
   const { name, email, setStep, quizResultId, answers } = useQuizStore();
   const displayName = safeName(name, "Your");
@@ -559,16 +560,16 @@ export function PaywallScreen() {
           >
             <Shield size={16} color="var(--color-primary)" />
             <p style={{ fontSize: 12, color: "var(--color-text-body)", lineHeight: 1.45 }}>
-              Secure checkout via Stripe · encrypted payment · instant profile access
+              Secure checkout via Stripe / encrypted payment / instant profile access
             </p>
           </m.div>
           <p style={{ textAlign: "center", fontSize: 11, color: "var(--color-text-muted)", marginTop: 6, lineHeight: 2 }}>
             <a href="/terms" style={{ color: "inherit", textDecoration: "none" }}>Terms</a>
-            {" · "}
+            {" / "}
             <a href="/privacy" style={{ color: "inherit", textDecoration: "none" }}>Privacy</a>
-            {" · "}
+            {" / "}
             <a href="/refund-policy" style={{ color: "inherit", textDecoration: "none" }}>Refunds</a>
-            {" · "}
+            {" / "}
             <a href="/disclaimer" style={{ color: "inherit", textDecoration: "none" }}>Disclaimer</a>
           </p>
         </div>
