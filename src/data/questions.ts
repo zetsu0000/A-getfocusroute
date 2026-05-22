@@ -1,47 +1,16 @@
-﻿import { QuizQuestion } from "@/types/quiz";
+import { QuizQuestion } from "@/types/quiz";
 
 /*
- * FULL FUNNEL â€” 20 quiz questions + info cards
+ * FULL FUNNEL - 20 quiz questions + info cards
  *
- * â”Œâ”€ BLOCK A: Regular style (Q1â€“Q10) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
- * â”‚  Q1  gender      â†’ profile context                         â”‚
- * â”‚  Q2  age         single                                     â”‚
- * â”‚  Q3  mood        single                                     â”‚
- * â”‚  Q4  struggles   multiple                                   â”‚
- * â”‚  Q5  distraction single                                     â”‚
- * â”‚  Q6  goals       multiple                                   â”‚
- * â”‚  Q7  sleep       single                                     â”‚
- * â”‚  Q8  experience  single                                     â”‚
- * â”‚  Q9  daily-impact multiple                                  â”‚
- * â”‚  Q10 time        single                                     â”‚
- * â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
- *   â†’ INFO CARD A  (after Q10)
- *
- * â”Œâ”€ BLOCK B: Emoji scale (Q11â€“Q16) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
- * â”‚  Q11 procrastination  scale                                 â”‚
- * â”‚  Q12 focus            scale                                 â”‚
- * â”‚  Q13 overwhelm        scale                                 â”‚
- * â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
- *   â†’ INFO CARD B  (every 3 scale questions)
- * â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
- * â”‚  Q14 organization     scale                                 â”‚
- * â”‚  Q15 memory           scale                                 â”‚
- * â”‚  Q16 emotions         scale                                 â”‚
- * â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
- *   â†’ INFO CARD C  (every 3 scale questions)
- *
- * â”Œâ”€ BLOCK C: Regular style cont. (Q17â€“Q20) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
- * â”‚  Q17 diagnosis   single                                     â”‚
- * â”‚  Q18 support     single                                     â”‚
- * â”‚  Q19 obstacles   multiple                                   â”‚
- * â”‚  Q20 motivation  single                                     â”‚
- * â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
- *   â†’ adhd-profile â†’ brain-comparison â†’ loading â†’ email â†’ paywall
+ * Block A: regular questions Q1-Q10, then info card A.
+ * Block B: scale questions Q11-Q16, with info cards after each group of 3.
+ * Block C: regular questions Q17-Q20, then profile preview cards and paywall.
  */
 
 export const questions: QuizQuestion[] = [
 
-  /* â•â•â•â•â•â•â•â•â•â•â•â•â• BLOCK A â€” Regular (Q1 â€“ Q10) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+  /* BLOCK A - Regular (Q1-Q10) */
 
   /* Q1 - Profile context */
   {
@@ -62,10 +31,10 @@ export const questions: QuizQuestion[] = [
     question: "What is your age range?",
     inputType: "single",
     options: [
-      { id: "18-24", label: "18 â€“ 24" },
-      { id: "25-34", label: "25 â€“ 34" },
-      { id: "35-44", label: "35 â€“ 44" },
-      { id: "45-60", label: "45 â€“ 60" },
+      { id: "18-24", label: "18-24" },
+      { id: "25-34", label: "25-34" },
+      { id: "35-44", label: "35-44" },
+      { id: "45-60", label: "45-60" },
       { id: "60+",   label: "60 or older" },
     ],
   },
@@ -170,7 +139,7 @@ export const questions: QuizQuestion[] = [
     ],
   },
 
-  /* Q10 â€” last regular question */
+  /* Q10 - last regular question */
   {
     id: "time",
     question: "How much focused implementation time can you commit daily?",
@@ -183,7 +152,7 @@ export const questions: QuizQuestion[] = [
     ],
   },
 
-  /* â”€â”€â”€ INFO CARD A â€” after Q10 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* INFO CARD A - after Q10 */
   {
     id: "info-match",
     question: "",
@@ -195,7 +164,7 @@ export const questions: QuizQuestion[] = [
       "Executive-function friction is common. We use your answers to build a profile-first plan instead of generic advice.",
   },
 
-  /* â•â•â•â•â•â•â•â•â•â•â•â•â• BLOCK B â€” Emoji Scale (Q11 â€“ Q16) â•â•â•â•â•â•â•â•â•â• */
+  /* BLOCK B - Scale (Q11-Q16) */
 
   /* Q11 */
   {
@@ -224,7 +193,7 @@ export const questions: QuizQuestion[] = [
     statement: "I feel overloaded when multiple priorities compete at once.",
   },
 
-  /* â”€â”€â”€ INFO CARD B â€” after Q13 (every 3 scale questions) â”€â”€â”€â”€â”€â”€ */
+  /* INFO CARD B - after Q13 */
   {
     id: "info-focus",
     question: "",
@@ -262,7 +231,7 @@ export const questions: QuizQuestion[] = [
     statement: "Emotional intensity can derail my task flow and decision-making.",
   },
 
-  /* â”€â”€â”€ INFO CARD C â€” after Q16 (every 3 scale questions) â”€â”€â”€â”€â”€â”€ */
+  /* INFO CARD C - after Q16 */
   {
     id: "info-adhd",
     question: "",
@@ -273,7 +242,7 @@ export const questions: QuizQuestion[] = [
       "Your profile maps patterns, not personality flaws. We design your next steps around how your brain works.",
   },
 
-  /* â•â•â•â•â•â•â•â•â•â•â•â•â• BLOCK C â€” Regular cont. (Q17 â€“ Q20) â•â•â•â•â•â•â•â• */
+  /* BLOCK C - Regular continued (Q17-Q20) */
 
   /* Q17 */
   {
@@ -328,13 +297,13 @@ export const questions: QuizQuestion[] = [
     ],
   },
 
-  /* â”€â”€â”€ Profile cards (just before email) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* Profile cards (just before email) */
   {
     id: "adhd-profile",
     question: "",
     inputType: "info",
     options: [],
-    infoStat: "Your FocusRoute Brain Profileâ„¢ preview is ready",
+    infoStat: "Your FocusRoute Brain Profile preview is ready",
     infoBody: "adhd-profile",
   },
 
@@ -343,7 +312,7 @@ export const questions: QuizQuestion[] = [
     question: "",
     inputType: "info",
     options: [],
-    infoStat: "Your Profile-to-Protocolâ„¢ preview is loading",
+    infoStat: "Your Profile-to-Protocol preview is loading",
     infoBody: "brain-comparison",
   },
 ];
