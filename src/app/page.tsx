@@ -97,16 +97,17 @@ function PrimaryCta({ children = "Start Assessment" }: { children?: string }) {
   return (
     <Link
       href="/assessment"
+      className="fr-primary-cta"
       style={{
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
         gap: 9,
-        minHeight: 48,
+        minHeight: 52,
         borderRadius: 14,
         background: "var(--color-accent)",
         color: "#fff",
-        padding: "13px 18px",
+        padding: "14px 20px",
         fontSize: 14,
         fontWeight: 900,
         textDecoration: "none",
@@ -139,17 +140,18 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function HeroVisual() {
   const layers = [
-    { label: "Attention pattern", value: "Mapped", icon: Brain },
-    { label: "Friction point", value: "Task entry", icon: Zap },
-    { label: "Next step", value: "Lower the start cost", icon: Target },
+    { label: "Attention pattern", value: "Start, stall, recover", icon: Brain },
+    { label: "Friction point", value: "Task entry drag", icon: Zap },
+    { label: "Protocol cue", value: "Lower the start cost", icon: Target },
   ];
 
   return (
     <div
       aria-hidden="true"
+      className="fr-product-preview"
       style={{
         position: "relative",
-        minHeight: 330,
+        minHeight: 352,
         borderRadius: 28,
         background: "linear-gradient(145deg, var(--color-primary-dark), var(--color-text))",
         border: "1px solid rgba(255,255,255,0.10)",
@@ -193,10 +195,10 @@ function HeroVisual() {
           }}
         >
           <p style={{ fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.46)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
-            FocusRoute preview
+            Brain Profile preview
           </p>
           <p style={{ fontSize: 22, fontWeight: 900, color: "#fff", lineHeight: 1.12, letterSpacing: "-0.02em" }}>
-            Cognitive map, not another productivity checklist.
+            A focused report, not another productivity checklist.
           </p>
         </div>
         {layers.map(({ label, value, icon: Icon }, index) => (
@@ -237,6 +239,30 @@ function HeroVisual() {
             </span>
           </div>
         ))}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+            gap: 10,
+          }}
+        >
+          {["Private results", "Educational use"].map((item) => (
+            <div
+              key={item}
+              style={{
+                borderRadius: 14,
+                background: "rgba(255,255,255,0.08)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                color: "rgba(255,255,255,0.72)",
+                fontSize: 12,
+                fontWeight: 800,
+                padding: "11px 12px",
+              }}
+            >
+              {item}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -253,21 +279,94 @@ export default function HomePage() {
         .fr-card-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         .fr-benefit-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .fr-card-grid > *, .fr-benefit-grid > * { min-width: 0; }
+        .fr-primary-cta,
+        .fr-secondary-cta,
+        .fr-nav-link,
+        .fr-menu-link,
+        .fr-interactive-card {
+          transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+            box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
+            border-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
+            background 180ms cubic-bezier(0.16, 1, 0.3, 1),
+            color 180ms cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .fr-primary-cta:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 14px 42px rgba(20, 17, 31, 0.36) !important;
+        }
+        .fr-primary-cta:active,
+        .fr-secondary-cta:active {
+          transform: scale(0.985);
+        }
+        .fr-secondary-cta:hover,
+        .fr-nav-link:hover,
+        .fr-menu-link:hover {
+          color: var(--color-accent) !important;
+          border-color: var(--color-border-2) !important;
+          background: var(--color-bg-card-2) !important;
+        }
+        .fr-interactive-card:hover {
+          transform: translateY(-2px);
+          box-shadow: var(--shadow-card-hover) !important;
+          border-color: var(--color-border-2) !important;
+        }
+        .fr-primary-cta:focus-visible,
+        .fr-secondary-cta:focus-visible,
+        .fr-nav-link:focus-visible,
+        .fr-menu-link:focus-visible,
+        .fr-mobile-menu summary:focus-visible {
+          outline: 3px solid var(--color-primary-ring);
+          outline-offset: 3px;
+        }
+        .fr-mobile-menu summary::-webkit-details-marker { display: none; }
+        .fr-mobile-menu-panel {
+          transform-origin: top right;
+        }
+        .fr-mobile-menu[open] .fr-mobile-menu-panel {
+          animation: fr-menu-in 180ms cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fr-menu-in {
+          from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
         @media (max-width: 820px) {
           .fr-desktop-nav { display: none !important; }
           .fr-mobile-menu { display: block !important; }
           .fr-grid-2, .fr-card-grid, .fr-benefit-grid { grid-template-columns: 1fr !important; }
+          .fr-hero-actions { align-items: stretch !important; }
+          .fr-hero-actions > * { flex: 1 1 180px; }
         }
         @media (max-width: 430px) {
           .fr-shell { padding-left: 16px !important; padding-right: 16px !important; }
-          .fr-hero-title { font-size: 34px !important; line-height: 1.03 !important; }
+          .fr-hero-title { font-size: 32px !important; line-height: 1.04 !important; letter-spacing: -0.035em !important; }
           .fr-section-title { font-size: 26px !important; }
           .fr-hero-visual { margin-top: 8px; }
+          .fr-product-preview { min-height: 330px !important; padding: 18px !important; }
+          .fr-hero-actions { flex-direction: column !important; }
+          .fr-hero-actions > * { width: 100%; flex: 1 1 auto !important; }
         }
         @media (max-width: 360px) {
           .fr-shell { padding-left: 14px !important; padding-right: 14px !important; }
-          .fr-hero-title { font-size: 31px !important; }
+          .fr-hero-title { font-size: 29px !important; }
           .fr-section-title { font-size: 24px !important; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .fr-primary-cta,
+          .fr-secondary-cta,
+          .fr-nav-link,
+          .fr-menu-link,
+          .fr-interactive-card,
+          .fr-mobile-menu-panel {
+            animation: none !important;
+            transition: none !important;
+          }
+          .fr-primary-cta:hover,
+          .fr-secondary-cta:hover,
+          .fr-interactive-card:hover,
+          .fr-primary-cta:active,
+          .fr-secondary-cta:active {
+            transform: none !important;
+          }
         }
       `}</style>
       <main style={{ minHeight: "100dvh", background: "var(--color-bg-page)", overflowX: "hidden" }}>
@@ -288,13 +387,13 @@ export default function HomePage() {
             </Link>
             <nav className="fr-desktop-nav" style={{ alignItems: "center", gap: 24 }}>
               {navLinks.map((link) => (
-                <Link key={link.href} href={link.href} style={{ color: "var(--color-text-body)", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
+                <Link key={link.href} href={link.href} className="fr-nav-link" style={{ color: "var(--color-text-body)", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
                   {link.label}
                 </Link>
               ))}
             </nav>
             <div className="fr-desktop-nav" style={{ alignItems: "center", gap: 10 }}>
-              <Link href="/login" style={{ color: "var(--color-text)", fontSize: 13, fontWeight: 800, textDecoration: "none", padding: "10px 12px" }}>
+              <Link href="/login" className="fr-nav-link" style={{ color: "var(--color-text)", fontSize: 13, fontWeight: 800, textDecoration: "none", padding: "10px 12px", borderRadius: 10 }}>
                 Login
               </Link>
               <PrimaryCta />
@@ -319,6 +418,7 @@ export default function HomePage() {
                 <Menu size={19} />
               </summary>
               <div
+                className="fr-mobile-menu-panel"
                 style={{
                   position: "absolute",
                   right: 0,
@@ -332,7 +432,7 @@ export default function HomePage() {
                 }}
               >
                 {[...navLinks, { href: "/login", label: "Login" }].map((link) => (
-                  <Link key={link.href} href={link.href} style={{ display: "block", color: "var(--color-text)", fontSize: 14, fontWeight: 800, textDecoration: "none", padding: "12px 10px", borderRadius: 10 }}>
+                  <Link key={link.href} href={link.href} className="fr-menu-link" style={{ display: "block", color: "var(--color-text)", fontSize: 14, fontWeight: 800, textDecoration: "none", padding: "12px 10px", borderRadius: 10 }}>
                     {link.label}
                   </Link>
                 ))}
@@ -349,14 +449,14 @@ export default function HomePage() {
             <div>
               <SectionLabel>Premium cognitive profiling</SectionLabel>
               <h1 className="fr-hero-title" style={{ fontSize: "clamp(46px, 7vw, 76px)", lineHeight: 0.98, letterSpacing: "-0.045em", fontWeight: 900, color: "var(--color-text)", maxWidth: 760, marginBottom: 22 }}>
-                Understand how your focus works.
+                Understand how your focus starts, stalls, and recovers.
               </h1>
               <p style={{ fontSize: 18, lineHeight: 1.7, color: "var(--color-text-body)", maxWidth: 610, marginBottom: 28, overflowWrap: "break-word" }}>
-                FocusRoute helps you understand your attention patterns, friction points, and next best step through a simple guided assessment.
+                A guided 3-minute assessment that maps your attention patterns, friction points, and next best step without turning it into a diagnosis.
               </p>
-              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, marginBottom: 16 }}>
+              <div className="fr-hero-actions" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, marginBottom: 16 }}>
                 <PrimaryCta />
-                <a href="#how-it-works" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: 48, borderRadius: 14, border: "1px solid var(--color-border-2)", color: "var(--color-text)", background: "var(--color-bg-card)", padding: "13px 17px", fontSize: 14, fontWeight: 900, textDecoration: "none" }}>
+                <a href="#how-it-works" className="fr-secondary-cta" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: 52, borderRadius: 14, border: "1px solid var(--color-border-2)", color: "var(--color-text)", background: "var(--color-bg-card)", padding: "14px 18px", fontSize: 14, fontWeight: 900, textDecoration: "none" }}>
                   How it works
                 </a>
               </div>
@@ -380,7 +480,7 @@ export default function HomePage() {
             <SectionLabel>Patterns people recognize</SectionLabel>
             <div className="fr-card-grid" style={{ display: "grid", gap: 12 }}>
               {recognition.map((item) => (
-                <div key={item} style={{ minHeight: 112, borderRadius: 18, background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderTop: "2px solid var(--color-signal)", boxShadow: "var(--shadow-card)", padding: 18, minWidth: 0 }}>
+                <div key={item} className="fr-interactive-card" style={{ minHeight: 112, borderRadius: 18, background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderTop: "2px solid var(--color-signal)", boxShadow: "var(--shadow-card)", padding: 18, minWidth: 0 }}>
                   <p style={{ color: "var(--color-text)", fontSize: 16, fontWeight: 900, lineHeight: 1.32, letterSpacing: "-0.01em", overflowWrap: "break-word" }}>{item}</p>
                 </div>
               ))}
@@ -401,7 +501,7 @@ export default function HomePage() {
             </div>
             <div className="fr-card-grid" style={{ display: "grid", gap: 14 }}>
               {profileCards.map(({ icon: Icon, title, body }, index) => (
-                <article key={title} style={{ borderRadius: 20, background: index === 0 ? "var(--color-bg-card-2)" : "var(--color-bg-card)", border: "1px solid var(--color-border)", boxShadow: index === 0 ? "var(--shadow-card-strong)" : "var(--shadow-card)", padding: 20, minWidth: 0 }}>
+                <article key={title} className="fr-interactive-card" style={{ borderRadius: 20, background: index === 0 ? "var(--color-bg-card-2)" : "var(--color-bg-card)", border: "1px solid var(--color-border)", boxShadow: index === 0 ? "var(--shadow-card-strong)" : "var(--shadow-card)", padding: 20, minWidth: 0 }}>
                   <span style={{ width: 42, height: 42, borderRadius: 13, display: "inline-flex", alignItems: "center", justifyContent: "center", color: index < 2 ? "var(--color-cognitive)" : "var(--color-signal)", background: index < 2 ? "var(--color-cognitive-tint)" : "var(--color-signal-tint)", marginBottom: 15 }}>
                     <Icon size={20} />
                   </span>
