@@ -4,6 +4,7 @@ export const FIRST_PARTY_EVENTS = {
   assessmentStarted: "assessment_started",
   recognitionCardClicked: "recognition_card_clicked",
   quizCompleted: "quiz_completed",
+  emailSubmitted: "email_submitted",
   resultPreviewViewed: "result_preview_viewed",
   paywallViewed: "paywall_viewed",
   paymentIntentCreated: "payment_intent_created",
@@ -31,13 +32,14 @@ export type MetaStandardEvent =
   | "Lead"
   | "CompleteRegistration"
   | "ViewContent"
+  | "AddToCart"
   | "InitiateCheckout"
   | "Purchase";
 
 export const META_EVENT_BY_FIRST_PARTY: Partial<
   Record<FirstPartyEventName, MetaStandardEvent>
 > = {
-  [FIRST_PARTY_EVENTS.assessmentStarted]: "Lead",
+  [FIRST_PARTY_EVENTS.emailSubmitted]: "Lead",
   [FIRST_PARTY_EVENTS.quizCompleted]: "CompleteRegistration",
   [FIRST_PARTY_EVENTS.paywallViewed]: "ViewContent",
   [FIRST_PARTY_EVENTS.paymentIntentCreated]: "InitiateCheckout",
@@ -51,6 +53,7 @@ export const META_CUSTOM_EVENT_BY_FIRST_PARTY: Partial<
   [FIRST_PARTY_EVENTS.assessmentView]: "AssessmentView",
   [FIRST_PARTY_EVENTS.assessmentStarted]: "AssessmentStarted",
   [FIRST_PARTY_EVENTS.recognitionCardClicked]: "RecognitionCardClicked",
+  [FIRST_PARTY_EVENTS.emailSubmitted]: "EmailSubmitted",
   [FIRST_PARTY_EVENTS.quizCompleted]: "QuizCompleted",
   [FIRST_PARTY_EVENTS.resultPreviewViewed]: "ResultPreviewViewed",
   [FIRST_PARTY_EVENTS.paywallViewed]: "PaywallViewed",
@@ -63,6 +66,7 @@ export const META_ALLOWED_FIRST_PARTY_EVENTS = new Set<string>([
   FIRST_PARTY_EVENTS.assessmentView,
   FIRST_PARTY_EVENTS.assessmentStarted,
   FIRST_PARTY_EVENTS.recognitionCardClicked,
+  FIRST_PARTY_EVENTS.emailSubmitted,
   FIRST_PARTY_EVENTS.quizCompleted,
   FIRST_PARTY_EVENTS.resultPreviewViewed,
   FIRST_PARTY_EVENTS.paywallViewed,

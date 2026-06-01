@@ -13,6 +13,12 @@ import {
 import { useQuizStore } from "@/store/quizStore";
 import { safeName } from "@/lib/personalization";
 import { BRAIN_OS } from "@/lib/positioning";
+import {
+  getAnalyticsContext,
+  getOrCreateActionEventId,
+  trackEvent,
+} from "@/lib/analytics/client";
+import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 
 let _stripePromise: ReturnType<typeof loadStripe> | null = null;
 function getStripePromise() {
@@ -97,11 +103,27 @@ function SubCheckoutForm({
         funnel_step: "subscription",
         quiz_result_id: quizResultId ?? "",
         user_name: userName.trim(),
+        analytics_event_id: getOrCreateActionEventId(`subscription_${priceId}`, "initiate_checkout"),
+        analytics_context: getAnalyticsContext(),
       }),
     });
     const data = await res.json();
 
     if (data.error) { setError(data.error); setLoading(false); return; }
+
+    trackEvent(FIRST_PARTY_EVENTS.paymentIntentCreated, {
+      eventId: getOrCreateActionEventId(`subscription_${priceId}`, "initiate_checkout"),
+      firstParty: false,
+      metadata: {
+        product_key: selectedProductKey(priceId),
+        content_name: "FocusRoute Membership",
+        content_ids: ["membership", priceId],
+        content_type: "subscription",
+        num_items: 1,
+        value: typeof data.value === "number" ? data.value : null,
+        currency: typeof data.currency === "string" ? data.currency.toUpperCase() : "USD",
+      },
+    });
 
     if (data.clientSecret) {
       const { error: confirmErr } = await stripe.confirmPayment({
@@ -140,6 +162,12 @@ function SubCheckoutForm({
       </p>
     </form>
   );
+}
+
+function selectedProductKey(priceId: string): "membership_annual" | "membership_monthly" | "membership" {
+  if (priceId === PLANS.annual.priceId) return "membership_annual";
+  if (priceId === PLANS.monthly.priceId) return "membership_monthly";
+  return "membership";
 }
 
 /* Plan selector card */
@@ -256,7 +284,19 @@ export function SubscriptionScreen() {
           {!showPayment ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <m.button
-                onClick={() => setShowPayment(true)}
+                onClick={() => {
+                  setShowPayment(true);
+                  trackEvent(FIRST_PARTY_EVENTS.paywallViewed, {
+                    metadata: {
+                      product_key: selectedProductKey(plan.priceId),
+                      content_name: "FocusRoute Membership",
+                      content_ids: ["membership", plan.priceId],
+                      content_type: "subscription",
+                      value: plan.amount / 100,
+                      currency: "USD",
+                    },
+                  });
+                }}
                 whileTap={{ scale: 0.975 }}
                 whileHover={{ y: -1 }}
                 style={{

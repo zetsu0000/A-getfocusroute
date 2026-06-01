@@ -1,9 +1,37 @@
 import Stripe from "stripe";
 
+import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
+import { recordAnalyticsEvent } from "@/lib/analytics/server";
+import { sendMetaEvent } from "@/lib/meta/conversions";
 import { buildStripeFunnelMetadata } from "@/lib/stripe/metadata";
 import { resolveMembershipProductKey } from "@/lib/stripe/productKeyPolicy";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+type AnalyticsContext = {
+  anonymous_id?: unknown;
+  session_id?: unknown;
+  path?: unknown;
+  referrer?: unknown;
+  utm_source?: unknown;
+  utm_medium?: unknown;
+  utm_campaign?: unknown;
+  utm_content?: unknown;
+  utm_term?: unknown;
+  fbclid?: unknown;
+  fbp?: unknown;
+  fbc?: unknown;
+};
+
+function asString(value: unknown, max = 500): string {
+  return typeof value === "string" ? value.trim().slice(0, max) : "";
+}
+
+function requestIp(request: Request): string | null {
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0]?.trim() ?? null;
+  return request.headers.get("x-real-ip");
+}
 
 export async function POST(request: Request) {
   try {
@@ -17,6 +45,14 @@ export async function POST(request: Request) {
       typeof body.quiz_result_id === "string" ? body.quiz_result_id : "";
     const user_name =
       typeof body.user_name === "string" ? body.user_name : "";
+    const analyticsEventId =
+      typeof body.analytics_event_id === "string"
+        ? body.analytics_event_id.slice(0, 200)
+        : "";
+    const analyticsContext =
+      body.analytics_context && typeof body.analytics_context === "object"
+        ? (body.analytics_context as AnalyticsContext)
+        : {};
 
     if (typeof priceId !== "string" || !priceId) {
       return Response.json({ error: "priceId required" }, { status: 400 });
@@ -78,11 +114,68 @@ export async function POST(request: Request) {
     const rawPI = invoice?.payment_intent;
     const paymentIntent =
       typeof rawPI === "string" ? null : (rawPI as Stripe.PaymentIntent | undefined);
+    const price = await stripe.prices.retrieve(priceId);
+
+    try {
+      await recordAnalyticsEvent({
+        event_name: FIRST_PARTY_EVENTS.paymentIntentCreated,
+        anonymous_id: asString(analyticsContext.anonymous_id, 128),
+        session_id: asString(analyticsContext.session_id, 128),
+        path: asString(analyticsContext.path, 1000),
+        referrer: asString(analyticsContext.referrer, 1000),
+        utm_source: asString(analyticsContext.utm_source, 200),
+        utm_medium: asString(analyticsContext.utm_medium, 200),
+        utm_campaign: asString(analyticsContext.utm_campaign, 300),
+        utm_content: asString(analyticsContext.utm_content, 300),
+        utm_term: asString(analyticsContext.utm_term, 300),
+        fbclid: asString(analyticsContext.fbclid, 500),
+        fbp: asString(analyticsContext.fbp, 300),
+        fbc: asString(analyticsContext.fbc, 600),
+        meta_event_id: analyticsEventId,
+        metadata: {
+          product_key: productKey,
+          stripe_subscription_id: subscription.id,
+          stripe_payment_intent_id: paymentIntent?.id ?? null,
+          value: typeof price.unit_amount === "number" ? price.unit_amount / 100 : null,
+          currency: price.currency,
+          funnel_step,
+        },
+      });
+
+      await sendMetaEvent({
+        event_name: "InitiateCheckout",
+        event_id: analyticsEventId,
+        event_source_url: asString(analyticsContext.path, 1000)
+          ? new URL(asString(analyticsContext.path, 1000), request.url).toString()
+          : request.url,
+        user_data: {
+          client_ip_address: requestIp(request),
+          client_user_agent: request.headers.get("user-agent"),
+          fbp: asString(analyticsContext.fbp, 300),
+          fbc: asString(analyticsContext.fbc, 600),
+          email,
+        },
+        custom_data: {
+          product_key: productKey,
+          content_name: "FocusRoute Membership",
+          content_ids: [productKey, priceId],
+          content_type: "subscription",
+          value: typeof price.unit_amount === "number" ? price.unit_amount / 100 : null,
+          currency: price.currency,
+        },
+      });
+    } catch (analyticsError) {
+      if (process.env.NODE_ENV === "development") {
+        console.warn("[analytics] subscription checkout failed", analyticsError);
+      }
+    }
 
     return Response.json({
       subscriptionId: subscription.id,
       clientSecret: paymentIntent?.client_secret ?? null,
       status: subscription.status,
+      value: typeof price.unit_amount === "number" ? price.unit_amount / 100 : null,
+      currency: price.currency,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";

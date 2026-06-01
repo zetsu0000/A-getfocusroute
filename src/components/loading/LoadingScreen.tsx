@@ -5,7 +5,7 @@ import { m, AnimatePresence } from "framer-motion";
 import { Star, CheckCircle2 } from "lucide-react";
 import { useQuizStore } from "@/store/quizStore";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
-import { trackEvent } from "@/lib/analytics/client";
+import { getOrCreateActionEventId, trackEvent } from "@/lib/analytics/client";
 import { getSignatureFromAnswers } from "@/lib/signature";
 
 const PHASES = [
@@ -41,6 +41,7 @@ export function LoadingScreen() {
   useEffect(() => {
     const signature = answers.length ? getSignatureFromAnswers(answers).signature : null;
     trackEvent(FIRST_PARTY_EVENTS.quizCompleted, {
+      eventId: getOrCreateActionEventId("quiz_completed", "complete_registration"),
       metadata: signature ? { signature_key: signature } : {},
     });
 

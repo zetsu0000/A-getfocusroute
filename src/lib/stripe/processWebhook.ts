@@ -203,7 +203,9 @@ async function emitPurchaseAnalytics(input: {
       : null;
   const purchaseEventId = input.paymentIntentId
     ? `purchase_${input.paymentIntentId}`
-    : `purchase_${input.eventId}`;
+    : input.checkoutSessionId
+      ? `purchase_${input.checkoutSessionId}`
+      : `purchase_${input.eventId}`;
   const meta = input.metadata ?? {};
 
   try {

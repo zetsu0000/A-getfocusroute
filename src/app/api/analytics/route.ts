@@ -14,7 +14,6 @@ import { sendMetaEvent } from "@/lib/meta/conversions";
 import { createClient } from "@/lib/supabase/server";
 
 const CAPI_FORWARDED_EVENTS = new Set<string>([
-  FIRST_PARTY_EVENTS.assessmentStarted,
   FIRST_PARTY_EVENTS.quizCompleted,
   FIRST_PARTY_EVENTS.paywallViewed,
 ]);
@@ -46,6 +45,20 @@ function requestIp(request: Request): string | null {
 function safeMetadata(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   return value as Record<string, unknown>;
+}
+
+function stringArray(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const cleaned = value
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 20);
+  return cleaned.length ? cleaned : undefined;
+}
+
+function numberValue(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 export async function POST(request: Request) {
@@ -112,10 +125,12 @@ export async function POST(request: Request) {
         custom_data:
           eventName === FIRST_PARTY_EVENTS.paywallViewed
             ? {
-                product_key: "brain_profile",
-                content_name: "FocusRoute Brain Profile",
-                content_ids: ["brain_profile"],
-                content_type: "product",
+                product_key: cleanString(metadata.product_key, 120) || undefined,
+                content_name: cleanString(metadata.content_name, 200) || undefined,
+                content_ids: stringArray(metadata.content_ids),
+                content_type: cleanString(metadata.content_type, 80) || undefined,
+                value: numberValue(metadata.value),
+                currency: cleanString(metadata.currency, 12) || undefined,
               }
             : undefined,
       });

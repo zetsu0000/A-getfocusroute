@@ -357,6 +357,11 @@ export function PaywallScreen() {
     trackEvent(FIRST_PARTY_EVENTS.paywallViewed, {
       metadata: {
         product_key: "brain_profile",
+        content_name: "FocusRoute Brain Profile",
+        content_ids: ["brain_profile", PRICE_ID],
+        content_type: "product",
+        value: BRAIN_OS.price.paywallValue,
+        currency: "USD",
         signature_key: signature.signature,
       },
     });
@@ -386,8 +391,12 @@ export function PaywallScreen() {
             firstParty: false,
             metadata: {
               product_key: "brain_profile",
+              content_name: "FocusRoute Brain Profile",
+              content_ids: ["brain_profile", PRICE_ID],
+              content_type: "product",
+              num_items: 1,
               value: typeof d.value === "number" ? d.value : null,
-              currency: typeof d.currency === "string" ? d.currency : "usd",
+              currency: typeof d.currency === "string" ? d.currency.toUpperCase() : "USD",
             },
           });
         }

@@ -8,6 +8,14 @@ import {
   type FirstPartyEventName,
   type MetaStandardEvent,
 } from "@/lib/analytics/events";
+import {
+  trackCompleteRegistration,
+  trackInitiateCheckout,
+  trackLead,
+  trackPageView as trackMetaPageView,
+  trackPurchase,
+  trackViewContent,
+} from "@/lib/metaPixel";
 
 type Primitive = string | number | boolean | null;
 type AnalyticsMetadata = Record<string, Primitive | Primitive[]>;
@@ -22,8 +30,7 @@ type TrackOptions = {
 
 declare global {
   interface Window {
-    fbq?: (command: string, eventName: string, params?: object, options?: object) => void;
-    _fbq?: unknown;
+    __focusrouteActionEventIds?: Record<string, string>;
   }
 }
 
@@ -39,6 +46,26 @@ export function createAnalyticsEventId(prefix = "evt"): string {
       ? crypto.randomUUID()
       : `${Date.now()}_${Math.random().toString(16).slice(2)}`;
   return `${prefix}_${random}`;
+}
+
+export function getOrCreateActionEventId(actionKey: string, prefix = "evt"): string {
+  if (typeof window === "undefined") return createAnalyticsEventId(prefix);
+  window.__focusrouteActionEventIds ??= {};
+  const memoryId = window.__focusrouteActionEventIds[actionKey];
+  if (memoryId) return memoryId;
+
+  const storageKey = `focusroute_event_id_${actionKey}`;
+  const storage = safeSessionStorage();
+  const existing = storage?.getItem(storageKey);
+  if (existing) {
+    window.__focusrouteActionEventIds[actionKey] = existing;
+    return existing;
+  }
+
+  const next = createAnalyticsEventId(prefix);
+  window.__focusrouteActionEventIds[actionKey] = next;
+  storage?.setItem(storageKey, next);
+  return next;
 }
 
 function safeLocalStorage(): Storage | null {
@@ -185,17 +212,20 @@ function fireMetaPixel(
   metadata: AnalyticsMetadata,
   override?: MetaStandardEvent,
 ): void {
-  if (!process.env.NEXT_PUBLIC_META_PIXEL_ID || !window.fbq) return;
+  if (!process.env.NEXT_PUBLIC_META_PIXEL_ID) return;
   if (!META_ALLOWED_FIRST_PARTY_EVENTS.has(eventName)) return;
 
   const standard = override ?? META_EVENT_BY_FIRST_PARTY[eventName];
   const custom = META_CUSTOM_EVENT_BY_FIRST_PARTY[eventName];
-  const params = { ...metadata };
-  const options = { eventID: eventId };
 
   try {
-    if (standard) window.fbq("track", standard, params, options);
-    if (custom) window.fbq("trackCustom", custom, params, options);
+    const params = { ...metadata };
+    if (standard === "Lead") trackLead(params, eventId);
+    if (standard === "CompleteRegistration") trackCompleteRegistration(params, eventId);
+    if (standard === "ViewContent") trackViewContent(params, eventId);
+    if (standard === "InitiateCheckout") trackInitiateCheckout(params, eventId);
+    if (standard === "Purchase") trackPurchase(params, eventId);
+    if (custom && window.fbq) window.fbq("trackCustom", custom, params, { eventID: eventId });
   } catch {
     // Ignore pixel failures.
   }
@@ -213,14 +243,10 @@ export function trackEvent(eventName: FirstPartyEventName, options: TrackOptions
   return eventId;
 }
 
-export function trackPageView(): void {
-  if (!process.env.NEXT_PUBLIC_META_PIXEL_ID || !window.fbq) return;
+export function trackPageView(routeKey?: string): void {
+  if (!process.env.NEXT_PUBLIC_META_PIXEL_ID) return;
   const eventId = createAnalyticsEventId("pageview");
-  try {
-    window.fbq("track", "PageView", {}, { eventID: eventId });
-  } catch {
-    // Ignore pixel failures.
-  }
+  trackMetaPageView(routeKey, eventId);
 }
 
 export function pageEventForPath(pathname: string): FirstPartyEventName | null {

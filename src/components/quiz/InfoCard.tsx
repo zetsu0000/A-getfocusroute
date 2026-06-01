@@ -6,6 +6,8 @@ import { QuizQuestion } from "@/types/quiz";
 import { useQuizStore } from "@/store/quizStore";
 import { EmailIcon } from "@/components/icons/EmailIcon";
 import { scoreFromAnswers, getSymptomLevel, LevelInfo } from "@/lib/symptom-level";
+import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
+import { getOrCreateActionEventId, trackEvent } from "@/lib/analytics/client";
 
 interface InfoCardProps {
   question: QuizQuestion;
@@ -617,7 +619,22 @@ export function InfoCard({ question }: InfoCardProps) {
   const variant = question.infoBody;
 
   const handleContinue = () => submitInfo();
-  const handleEmail    = (email: string) => { setEmail(email); submitInfo(); };
+  const handleEmail = (email: string) => {
+    const normalized = email.trim().toLowerCase();
+    if (!normalized.includes("@")) return;
+
+    setEmail(normalized);
+    trackEvent(FIRST_PARTY_EVENTS.emailSubmitted, {
+      eventId: getOrCreateActionEventId("lead_email_submitted", "lead"),
+      metadata: {
+        content_name: "FocusRoute assessment email capture",
+        content_type: "lead",
+        value: 0,
+        currency: "BRL",
+      },
+    });
+    submitInfo();
+  };
 
   return (
     <div

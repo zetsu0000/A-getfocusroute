@@ -12,6 +12,12 @@ import {
 import { CheckCircle2, Zap, Calendar, Target } from "lucide-react";
 import { useQuizStore } from "@/store/quizStore";
 import { BRAIN_OS } from "@/lib/positioning";
+import {
+  createAnalyticsEventId,
+  getAnalyticsContext,
+  trackEvent,
+} from "@/lib/analytics/client";
+import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 
 let _stripePromise: ReturnType<typeof loadStripe> | null = null;
 function getStripePromise() {
@@ -125,6 +131,18 @@ export function UpsellScreen() {
   const [loadingSecret, setLoadingSecret] = useState(true);
 
   useEffect(() => {
+    trackEvent(FIRST_PARTY_EVENTS.paywallViewed, {
+      metadata: {
+        product_key: "roadmap_28_day",
+        content_name: "FocusRoute 28-Day Protocol",
+        content_ids: ["roadmap_28_day", PRICE_ID],
+        content_type: "product",
+        value: BRAIN_OS.price.upsellValue,
+        currency: "USD",
+      },
+    });
+
+    const analyticsEventId = createAnalyticsEventId("initiate_checkout");
     fetch("/api/create-payment-intent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -134,10 +152,29 @@ export function UpsellScreen() {
         funnel_step: "upsell",
         quiz_result_id: quizResultId ?? "",
         user_name: name,
+        analytics_event_id: analyticsEventId,
+        analytics_context: getAnalyticsContext(),
       }),
     })
       .then((r) => r.json())
-      .then((data) => { if (data.clientSecret) setClientSecret(data.clientSecret); })
+      .then((data) => {
+        if (data.clientSecret) {
+          setClientSecret(data.clientSecret);
+          trackEvent(FIRST_PARTY_EVENTS.paymentIntentCreated, {
+            eventId: analyticsEventId,
+            firstParty: false,
+            metadata: {
+              product_key: "roadmap_28_day",
+              content_name: "FocusRoute 28-Day Protocol",
+              content_ids: ["roadmap_28_day", PRICE_ID],
+              content_type: "product",
+              num_items: 1,
+              value: typeof data.value === "number" ? data.value : null,
+              currency: typeof data.currency === "string" ? data.currency.toUpperCase() : "USD",
+            },
+          });
+        }
+      })
       .finally(() => setLoadingSecret(false));
   }, [email, name, quizResultId]);
 
