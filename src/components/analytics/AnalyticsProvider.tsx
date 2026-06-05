@@ -4,6 +4,7 @@ import Script from "next/script";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef } from "react";
 
+import { captureAttribution } from "@/lib/analytics/attribution";
 import { pageEventForPath, trackEvent, trackPageView } from "@/lib/analytics/client";
 import { getMetaPixelBootstrapCode, initMetaPixel } from "@/lib/metaPixel";
 
@@ -17,6 +18,11 @@ function RouteAnalyticsInner() {
     const routeKey = qs ? `${pathname}?${qs}` : pathname;
     if (lastTracked.current === routeKey) return;
     lastTracked.current = routeKey;
+
+    // Persist first/latest-touch attribution from the landing URL (no-op when
+    // the URL carries no campaign params). GA4 page_view is handled by GTM's
+    // History Change trigger, so we do not push page_view to the dataLayer here.
+    captureAttribution();
 
     trackPageView(routeKey);
     const pageEvent = pageEventForPath(pathname);

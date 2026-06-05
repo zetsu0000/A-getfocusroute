@@ -1,5 +1,6 @@
 "use client";
 
+import { bridgeFirstPartyEvent } from "@/lib/analytics/dataLayer";
 import {
   FIRST_PARTY_EVENTS,
   META_CUSTOM_EVENT_BY_FIRST_PARTY,
@@ -240,6 +241,10 @@ export function trackEvent(eventName: FirstPartyEventName, options: TrackOptions
   if (options.meta !== false) {
     fireMetaPixel(eventName, eventId, metadata, options.metaEventName);
   }
+  // Mirror mapped funnel events into the GTM dataLayer. This is separate from the
+  // Meta Pixel call above (fbq is untouched) and only fires for events that have
+  // a dataLayer mapping, so it never duplicates GA4 page_view.
+  bridgeFirstPartyEvent(eventName, metadata);
   return eventId;
 }
 

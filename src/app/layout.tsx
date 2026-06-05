@@ -4,6 +4,8 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
+import { GoogleTagManager } from "@/components/analytics/GoogleTagManager";
+import { MicrosoftClarity } from "@/components/analytics/MicrosoftClarity";
 import { SchemaMarkup } from "@/components/seo/SchemaMarkup";
 import { MotionProvider } from "@/components/providers/MotionProvider";
 
@@ -63,6 +65,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`light ${jakarta.variable}`}>
       <body className={jakarta.className}>
+        <GoogleTagManager />
+        <MicrosoftClarity />
         <SchemaMarkup />
         <AnalyticsProvider />
         <MotionProvider>{children}</MotionProvider>
