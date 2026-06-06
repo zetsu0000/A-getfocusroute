@@ -173,6 +173,41 @@ export async function claimEmailProductGrantsForUser(
   }
 
   await linkAnonymousQuizResultsToUser(userId, email);
+  await linkPurchasesAndSubscriptionsToUser(userId, email);
+}
+
+/**
+ * Attach Stripe purchase/subscription rows (written by webhooks with user_id = null)
+ * to the user account by normalized email, so the dashboard can display billing history.
+ * Non-fatal: a failure here must not block sign-in or entitlement access.
+ */
+export async function linkPurchasesAndSubscriptionsToUser(
+  userId: string,
+  email: string,
+): Promise<void> {
+  const admin = createAdminClient();
+  const normalized = normalizeEmail(email);
+
+  const { error: purchasesError } = await admin
+    .from("purchases")
+    .update({ user_id: userId })
+    .is("user_id", null)
+    .eq("email", normalized);
+  if (purchasesError) {
+    console.error("[entitlements] linkPurchasesToUser", purchasesError.message);
+  }
+
+  const { error: subscriptionsError } = await admin
+    .from("subscriptions")
+    .update({ user_id: userId })
+    .is("user_id", null)
+    .eq("email", normalized);
+  if (subscriptionsError) {
+    console.error(
+      "[entitlements] linkSubscriptionsToUser",
+      subscriptionsError.message,
+    );
+  }
 }
 
 /**
