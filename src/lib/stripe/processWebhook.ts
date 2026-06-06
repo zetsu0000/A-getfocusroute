@@ -8,6 +8,7 @@ import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 import { recordAnalyticsEvent } from "@/lib/analytics/server";
 import { sendMetaEvent } from "@/lib/meta/conversions";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getStripeClient } from "@/lib/stripe/client";
 import {
   parseEmailFromMetadata,
   parseFunnelMetadata,
@@ -19,8 +20,6 @@ import {
   resolvePriceIdToProductKey,
   subscriptionProductKeyMatchesPolicy,
 } from "@/lib/stripe/productKeyPolicy";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function beginStripeEventProcessing(
   event: Stripe.Event,
@@ -93,6 +92,7 @@ async function upsertSubscriptionRow(
   subInput: Stripe.Subscription,
   emailHint?: string | null,
 ): Promise<void> {
+  const stripe = getStripeClient();
   let sub = subInput;
   if (!sub.items?.data?.length) {
     sub = await stripe.subscriptions.retrieve(sub.id, {
@@ -175,6 +175,7 @@ async function resolveCustomerEmail(
   customerId: string | null | undefined,
 ): Promise<string | null> {
   if (!customerId) return null;
+  const stripe = getStripeClient();
   const cust = await stripe.customers.retrieve(customerId);
   if (cust.deleted || !("email" in cust) || !cust.email) return null;
   return cust.email.trim().toLowerCase();
@@ -342,6 +343,7 @@ async function handleCheckoutSessionCompleted(
 ): Promise<void> {
   const session = event.data.object as Stripe.Checkout.Session;
   const admin = createAdminClient();
+  const stripe = getStripeClient();
 
   const { data: existingBySession } = await admin
     .from("purchases")
@@ -539,6 +541,7 @@ async function handleInvoicePaymentSucceeded(
     return;
   }
 
+  const stripe = getStripeClient();
   let sub = await stripe.subscriptions.retrieve(subId);
   if (!sub.items?.data?.length) {
     sub = await stripe.subscriptions.retrieve(subId, {
@@ -552,6 +555,7 @@ async function handleInvoicePaymentSucceeded(
 async function handleSubscriptionUpsert(event: Stripe.Event): Promise<void> {
   let sub = event.data.object as Stripe.Subscription;
   const admin = createAdminClient();
+  const stripe = getStripeClient();
   if (!sub.items?.data?.length) {
     sub = await stripe.subscriptions.retrieve(sub.id, {
       expand: ["items.data"],
