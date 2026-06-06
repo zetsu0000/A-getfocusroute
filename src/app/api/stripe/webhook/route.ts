@@ -1,12 +1,12 @@
 import Stripe from "stripe";
 
+import { getStripeClient } from "@/lib/stripe/client";
 import {
   abortStripeEventProcessing,
   beginStripeEventProcessing,
   processStripeWebhookEvent,
 } from "@/lib/stripe/processWebhook";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 export async function POST(request: Request) {
@@ -22,6 +22,7 @@ export async function POST(request: Request) {
 
   let event: Stripe.Event;
   try {
+    const stripe = getStripeClient();
     event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Webhook signature error";

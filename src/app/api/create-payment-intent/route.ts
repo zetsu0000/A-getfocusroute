@@ -1,12 +1,9 @@
-import Stripe from "stripe";
-
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 import { recordAnalyticsEvent } from "@/lib/analytics/server";
 import { sendMetaEvent } from "@/lib/meta/conversions";
+import { getStripeClient } from "@/lib/stripe/client";
 import { buildStripeFunnelMetadata } from "@/lib/stripe/metadata";
 import { resolveOneTimeProductKey } from "@/lib/stripe/productKeyPolicy";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 type AnalyticsContext = {
   anonymous_id?: unknown;
@@ -35,6 +32,7 @@ function requestIp(request: Request): string | null {
 
 export async function POST(request: Request) {
   try {
+    const stripe = getStripeClient();
     const body = (await request.json()) as Record<string, unknown>;
     const priceId = body.priceId;
     const email = typeof body.email === "string" ? body.email : "";

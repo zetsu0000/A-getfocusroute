@@ -1,8 +1,5 @@
 import "server-only";
 
-import { appendFileSync } from "node:fs";
-import { join } from "node:path";
-
 import type { User } from "@supabase/supabase-js";
 import { cache } from "react";
 
@@ -64,25 +61,6 @@ export function isDashboardLoggedIn(
   return snap.user !== null;
 }
 
-const AGENT_DEBUG_LOG = join(process.cwd(), "debug-8b4af7.log");
-
-function agentServerLog(payload: Record<string, unknown>) {
-  // #region agent log
-  try {
-    appendFileSync(
-      AGENT_DEBUG_LOG,
-      JSON.stringify({
-        sessionId: "8b4af7",
-        timestamp: Date.now(),
-        ...payload,
-      }) + "\n",
-    );
-  } catch {
-    /* ignore */
-  }
-  // #endregion
-}
-
 async function ensureProfileRow(user: User) {
   const supabase = await createClient();
   const { data: existing, error: selErr } = await supabase
@@ -98,14 +76,6 @@ async function ensureProfileRow(user: User) {
   if (existing) return;
 
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    // #region agent log
-    agentServerLog({
-      hypothesisId: "H7",
-      location: "load-dashboard-context.ts:ensureProfileRow",
-      message: "Skip profile upsert: SUPABASE_SERVICE_ROLE_KEY unset",
-      runId: "post-fix",
-    });
-    // #endregion
     console.warn(
       "[dashboard] SUPABASE_SERVICE_ROLE_KEY missing; skip profile upsert (dev-friendly)",
     );
@@ -138,14 +108,6 @@ export const getDashboardSnapshot = cache(async (): Promise<DashboardSnapshot> =
   const pubUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const pubAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!pubUrl || !pubAnon) {
-    // #region agent log
-    agentServerLog({
-      hypothesisId: "H6",
-      location: "load-dashboard-context.ts:getDashboardSnapshot",
-      message: "Return anonymous snapshot: public Supabase env missing",
-      runId: "post-fix",
-    });
-    // #endregion
     console.warn(
       "[dashboard] NEXT_PUBLIC_SUPABASE_URL / ANON_KEY missing; treating as logged out",
     );
