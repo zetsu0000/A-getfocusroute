@@ -1,34 +1,106 @@
 import { QuizQuestion } from "@/types/quiz";
 
 /*
- * FULL FUNNEL - 20 quiz questions + info cards
+ * FULL FUNNEL — 21 quiz questions + info cards
  *
- * Block A: regular questions Q1-Q10, then info card A.
- * Block B: scale questions Q11-Q16, with info cards after each group of 3.
- * Block C: regular questions Q17-Q20, then profile preview cards and paywall.
+ * Copy is intentionally warm, short, and pain-driven. SCORING NOTE:
+ * scoring/personalization reads ONLY question `id`s and option `id`s — never
+ * the visible text. So every title/subtitle/label below is free to change as
+ * long as the `id` fields stay stable. Reordering is also safe (the signature
+ * hash sorts by questionId before hashing).
+ *
+ * Block 1 — Pain hook (warm single-selects; paid traffic lands here).
+ * Block 2 — Quick setup (pronoun + age, once the user is invested).
+ * Block 3 — Deeper pattern, then info card A.
+ * Block 4 — Scale block (6 statements) with info cards B and C.
+ * Block 5 — Context + readiness, then profile preview cards and paywall.
+ *
+ * Scored ids (do not rename): mood, distraction, sleep, experience,
+ * daily-impact, time, support, obstacles, scale-*.
+ * Hash-only ids (labels free, ids kept stable): focus-feeling, gender, age,
+ * struggles, goals, diagnosis, motivation.
  */
 
 export const questions: QuizQuestion[] = [
 
-  /* BLOCK A - Regular (Q1-Q10) */
+  /* ── BLOCK 1 — Pain hook ─────────────────────────────────────── */
 
-  /* Q1 - Profile context */
+  /* Q1 — Pain opener (personalization only; first screen for paid traffic) */
   {
-    id: "gender",
-    question: "Choose the version that fits your context.",
-    subtitle: "This only helps tailor the language in your report.",
+    id: "focus-feeling",
+    question: "What feels most true lately?",
     inputType: "single",
     options: [
-      { id: "male",   label: "Male" },
-      { id: "female", label: "Female" },
-      { id: "other",  label: "Non-binary / Prefer not to say" },
+      { id: "cant-start", label: "I know what to do, but I can't start." },
+      { id: "stall",      label: "I start strong, then stall." },
+      { id: "heavy",      label: "Simple tasks feel weirdly heavy." },
+      { id: "behind",     label: "I'm busy all day, but still behind." },
     ],
   },
 
-  /* Q2 */
+  /* Q2 — mood (SCORED: recovery) */
+  {
+    id: "mood",
+    question: "When your day gets knocked off track, what happens?",
+    inputType: "single",
+    options: [
+      { id: "never",     label: "I bounce back pretty fast." },
+      { id: "rarely",    label: "A short reset usually does it." },
+      { id: "sometimes", label: "Depends how much is piled on." },
+      { id: "often",     label: "I stay off track longer than I'd like." },
+      { id: "always",    label: "Once I'm derailed, I'm done for the day." },
+    ],
+  },
+
+  /* Q3 — distraction (SCORED: symptom score + recovery copy) */
+  {
+    id: "distraction",
+    question: "How often does time just… disappear?",
+    inputType: "single",
+    options: [
+      { id: "never",     label: "Almost never." },
+      { id: "rarely",    label: "Once in a while." },
+      { id: "sometimes", label: "A few times a week." },
+      { id: "often",     label: "Most days." },
+      { id: "always",    label: "All day, every day." },
+    ],
+  },
+
+  /* Q4 — struggles (hash-only; strong "that's me" multi) */
+  {
+    id: "struggles",
+    question: "Where does it usually fall apart?",
+    subtitle: "Pick all that feel true.",
+    inputType: "multiple",
+    options: [
+      { id: "anxiety",    label: "Starting when the stakes feel high." },
+      { id: "depression", label: "Following through after the first push." },
+      { id: "burnout",    label: "Keeping the whole week from slipping." },
+      { id: "ocd",        label: "Holding details without feeling buried." },
+      { id: "other",      label: "Staying steady when plans change." },
+      { id: "none",       label: "Honestly, none of these right now." },
+    ],
+  },
+
+  /* ── BLOCK 2 — Quick setup ───────────────────────────────────── */
+
+  /* Q5 — pronoun (hash-only) */
+  {
+    id: "gender",
+    question: "Quick setup before your results",
+    subtitle: "What wording should we use for you?",
+    inputType: "single",
+    options: [
+      { id: "male",   label: "He / him" },
+      { id: "female", label: "She / her" },
+      { id: "other",  label: "Keep it neutral" },
+    ],
+  },
+
+  /* Q6 — age (hash-only) */
   {
     id: "age",
-    question: "What is your age range?",
+    question: "And roughly where are you in life?",
     inputType: "single",
     options: [
       { id: "18-24", label: "18-24" },
@@ -39,265 +111,224 @@ export const questions: QuizQuestion[] = [
     ],
   },
 
-  /* Q3 */
-  {
-    id: "mood",
-    question: "When your day gets disrupted, how quickly do you recover your focus?",
-    inputType: "single",
-    options: [
-      { id: "never", label: "I recover quickly most days" },
-      { id: "rarely", label: "I usually recover with a short reset" },
-      { id: "sometimes", label: "It depends on how much is on my plate" },
-      { id: "often", label: "I often stay off track longer than I want" },
-      { id: "always", label: "I struggle to recover once derailed" },
-    ],
-  },
+  /* ── BLOCK 3 — Deeper pattern ────────────────────────────────── */
 
-  /* Q4 */
-  {
-    id: "struggles",
-    question: "Where does focus usually get stuck for you?",
-    subtitle: "Select all that apply.",
-    inputType: "multiple",
-    options: [
-      { id: "anxiety", label: "Starting tasks when the stakes feel high" },
-      { id: "depression", label: "Following through after the first burst" },
-      { id: "burnout", label: "Keeping plans organized through the week" },
-      { id: "ocd", label: "Remembering details without feeling overloaded" },
-      { id: "other", label: "Staying steady when plans change" },
-      { id: "none", label: "None of these right now" },
-    ],
-  },
-
-  /* Q5 */
-  {
-    id: "distraction",
-    question: "How often does time slip away when you switch tasks?",
-    inputType: "single",
-    options: [
-      { id: "never", label: "Almost never" },
-      { id: "rarely", label: "Occasionally" },
-      { id: "sometimes", label: "A few times each week" },
-      { id: "often", label: "Most days" },
-      { id: "always", label: "Multiple times every day" },
-    ],
-  },
-
-  /* Q6 */
-  {
-    id: "goals",
-    question: "What outcomes matter most right now?",
-    subtitle: "Select all that apply.",
-    inputType: "multiple",
-    options: [
-      { id: "focus", label: "More consistent focus blocks" },
-      { id: "memory", label: "Better working memory in daily tasks" },
-      { id: "adhd", label: "A system that fits my focus-pattern style" },
-      { id: "reasoning", label: "Cleaner task prioritization" },
-      { id: "stress", label: "Less overwhelm and faster resets" },
-      { id: "creativity", label: "Finishing what I start" },
-    ],
-  },
-
-  /* Q7 */
+  /* Q7 — sleep (SCORED: focus conditions) */
   {
     id: "sleep",
-    question: "How does your energy curve affect your execution?",
+    question: "What does your energy usually do?",
     inputType: "single",
     options: [
-      { id: "poor", label: "My energy crashes and disrupts plans" },
-      { id: "medium", label: "Inconsistent energy makes routines hard" },
-      { id: "good", label: "Mostly stable, with occasional dips" },
-      { id: "great", label: "Stable energy supports my routines" },
+      { id: "poor",   label: "It crashes and wrecks my plans." },
+      { id: "medium", label: "It's all over the place." },
+      { id: "good",   label: "Mostly steady, with some dips." },
+      { id: "great",  label: "Pretty stable, honestly." },
     ],
   },
 
-  /* Q8 */
+  /* Q8 — experience (SCORED: initiation style) */
   {
     id: "experience",
-    question: "Which support format have you used before?",
+    question: "Have you tried to fix this before?",
     inputType: "single",
     options: [
-      { id: "never", label: "I am starting from scratch" },
-      { id: "tried", label: "I tried systems but could not sustain them" },
-      { id: "yes", label: "I use routines, but want better fit" },
+      { id: "never", label: "I'm starting from scratch." },
+      { id: "tried", label: "I've tried systems, but couldn't stick with them." },
+      { id: "yes",   label: "I have routines — they just don't fit right." },
     ],
   },
 
-  /* Q9 */
+  /* Q9 — daily-impact (SCORED: focus conditions) */
   {
     id: "daily-impact",
-    question: "Where do focus-pattern challenges show up the most?",
-    subtitle: "Select all that apply.",
+    question: "Where does this cost you the most?",
+    subtitle: "Pick all that apply.",
     inputType: "multiple",
     options: [
-      { id: "work", label: "Work or studies" },
-      { id: "relations", label: "Relationships and communication" },
-      { id: "finances", label: "Money and admin responsibilities" },
-      { id: "health", label: "Health and self-care routines" },
+      { id: "work",       label: "Work or studies" },
+      { id: "relations",  label: "Relationships and communication" },
+      { id: "finances",   label: "Money and the boring admin stuff" },
+      { id: "health",     label: "Health and taking care of myself" },
       { id: "creativity", label: "Personal projects and goals" },
     ],
   },
 
-  /* Q10 - last regular question */
+  /* Q10 — goals (hash-only) */
+  {
+    id: "goals",
+    question: "What would actually feel like relief?",
+    subtitle: "Pick all that apply.",
+    inputType: "multiple",
+    options: [
+      { id: "focus",      label: "Focus that actually holds." },
+      { id: "memory",     label: "Not dropping the details." },
+      { id: "adhd",       label: "A system that fits how I work." },
+      { id: "reasoning",  label: "Knowing what to do first." },
+      { id: "stress",     label: "Less overwhelm, faster resets." },
+      { id: "creativity", label: "Finally finishing what I start." },
+    ],
+  },
+
+  /* Q11 — time (SCORED: focus conditions) */
   {
     id: "time",
-    question: "How much focused implementation time can you commit daily?",
+    question: "How much time can you realistically give this?",
     inputType: "single",
     options: [
-      { id: "5min", label: "5 min/day", badge: "Starter" },
+      { id: "5min",  label: "5 min/day", badge: "Starter" },
       { id: "10min", label: "10 min/day", badge: "Consistent" },
       { id: "20min", label: "20 min/day", badge: "Committed" },
       { id: "30min", label: "30 min/day", badge: "Intensive" },
     ],
   },
 
-  /* INFO CARD A - after Q10 */
+  /* INFO CARD A — after the pattern block */
   {
     id: "info-match",
     question: "",
     inputType: "info",
     options: [],
-    infoStat: "You're not alone!",
+    infoStat: "You're not broken — your focus just works differently.",
     infoHighlight: undefined,
     infoBody:
-      "Executive-function friction is common. We use your answers to build a profile-first plan instead of generic advice.",
+      "What you're describing is incredibly common. We'll use your answers to build a plan around how your brain actually works — not generic advice.",
   },
 
-  /* BLOCK B - Scale (Q11-Q16) */
-
-  /* Q11 */
-  {
-    id: "scale-procrastination",
-    question: "Do you agree with the statement below?",
-    inputType: "scale",
-    options: [],
-    statement: "I delay starting important tasks, even when I care about the outcome.",
-  },
+  /* ── BLOCK 4 — Scale block (6 statements) ────────────────────── */
 
   /* Q12 */
   {
-    id: "scale-focus",
-    question: "Do you agree with the statement below?",
+    id: "scale-procrastination",
+    question: "How true is this for you?",
     inputType: "scale",
     options: [],
-    statement: "My focus drops quickly when a task is repetitive or low-stimulation.",
+    statement: "I put off the things I care about — even when I really want to do them.",
   },
 
   /* Q13 */
   {
-    id: "scale-overwhelm",
-    question: "Do you agree with the statement below?",
+    id: "scale-focus",
+    question: "And this one?",
     inputType: "scale",
     options: [],
-    statement: "I feel overloaded when multiple priorities compete at once.",
+    statement: "The moment something gets boring, my focus is gone.",
   },
 
-  /* INFO CARD B - after Q13 */
+  /* Q14 */
+  {
+    id: "scale-overwhelm",
+    question: "This one?",
+    inputType: "scale",
+    options: [],
+    statement: "When too much piles up at once, I freeze instead of starting.",
+  },
+
+  /* INFO CARD B — after the first three statements */
   {
     id: "info-focus",
     question: "",
     inputType: "info",
     options: [],
-    infoStat: "Your focus consistency can improve with the right operating system",
+    infoStat: "The right small change can shift everything.",
     infoBody:
-      "Small implementation shifts often create early momentum. Your protocol will prioritize fast wins you can sustain.",
-  },
-
-  /* Q14 */
-  {
-    id: "scale-organization",
-    question: "Do you agree with the statement below?",
-    inputType: "scale",
-    options: [],
-    statement: "I struggle to translate plans into a clear next action.",
+      "Tiny adjustments tend to create the fastest momentum. Your plan starts with quick wins you can actually keep.",
   },
 
   /* Q15 */
   {
-    id: "scale-memory",
-    question: "Do you agree with the statement below?",
+    id: "scale-organization",
+    question: "Keep going — how true is this?",
     inputType: "scale",
     options: [],
-    statement: "I lose track of details unless I externalize them quickly.",
+    statement: "I know what I want to do, but not the next step.",
   },
 
   /* Q16 */
   {
-    id: "scale-emotions",
-    question: "Do you agree with the statement below?",
+    id: "scale-memory",
+    question: "This one?",
     inputType: "scale",
     options: [],
-    statement: "Emotional intensity can derail my task flow and decision-making.",
+    statement: "If I don't write it down right away, it's gone.",
   },
 
-  /* INFO CARD C - after Q16 */
+  /* Q17 */
+  {
+    id: "scale-emotions",
+    question: "Last few — true for you?",
+    inputType: "scale",
+    options: [],
+    statement: "A rough mood can wreck my whole day's work.",
+  },
+
+  /* INFO CARD C — after the scale block */
   {
     id: "info-adhd",
     question: "",
     inputType: "info",
     options: [],
-    infoStat: "Many people discover these patterns later in life",
+    infoStat: "Most people only spot these patterns later in life.",
     infoBody:
-      "Your profile maps patterns, not personality flaws. We design your next steps around how your brain works.",
+      "This maps patterns, not personality flaws. Your next steps are built around how your brain actually works.",
   },
 
-  /* BLOCK C - Regular continued (Q17-Q20) */
+  /* ── BLOCK 5 — Context + readiness ───────────────────────────── */
 
-  /* Q17 */
+  /* Q18 — diagnosis (hash-only) */
   {
     id: "diagnosis",
-    question: "How would you describe your current focus-pattern context?",
+    question: "How well do you feel you understand your focus right now?",
     inputType: "single",
     options: [
-      { id: "yes", label: "I have formal context for these patterns" },
-      { id: "suspected", label: "I strongly relate to focus-pattern friction" },
-      { id: "no", label: "I am exploring focus and execution patterns" },
+      { id: "yes",       label: "I get it — I know what's going on." },
+      { id: "suspected", label: "I kind of see it, but it's fuzzy." },
+      { id: "no",        label: "Honestly, still figuring it out." },
     ],
   },
 
-  /* Q18 */
+  /* Q19 — support (SCORED: focus conditions + initiation) */
   {
     id: "support",
-    question: "What support do you currently use?",
+    question: "What's in your corner right now?",
     inputType: "single",
     options: [
-      { id: "therapy", label: "Therapist or counselor" },
-      { id: "psychiatry", label: "Medical support / medication management" },
-      { id: "coaching", label: "Coach, mentor, or accountability partner" },
-      { id: "none", label: "No formal support right now" },
+      { id: "therapy",    label: "A therapist or counselor." },
+      { id: "psychiatry", label: "Medical or medication support." },
+      { id: "coaching",   label: "A coach, mentor, or accountability buddy." },
+      { id: "none",       label: "Nothing formal — just me." },
     ],
   },
 
-  /* Q19 */
+  /* Q20 — obstacles (SCORED: initiation style) */
   {
     id: "obstacles",
-    question: "What blocks consistency the most right now?",
-    subtitle: "Select all that apply.",
+    question: "What keeps breaking your streak?",
+    subtitle: "Pick all that apply.",
     inputType: "multiple",
     options: [
-      { id: "consistency", label: "I cannot maintain routines" },
-      { id: "motivation", label: "I lose momentum after day one" },
-      { id: "time", label: "My schedule feels too fragmented" },
-      { id: "method", label: "I need a clearer protocol" },
-      { id: "distraction", label: "Context switching and distractions" },
+      { id: "consistency", label: "I can't keep routines going." },
+      { id: "motivation",  label: "Day-one energy fades fast." },
+      { id: "time",        label: "My schedule's too chopped up." },
+      { id: "method",      label: "I need a clearer plan to follow." },
+      { id: "distraction", label: "Distractions and constant switching." },
     ],
   },
 
-  /* Q20 */
+  /* Q21 — motivation (hash-only) */
   {
     id: "motivation",
-    question: "How ready are you to implement a profile-based plan now?",
+    question: "Ready to see what actually fits you?",
     inputType: "single",
     options: [
-      { id: "very", label: "Ready now. I want to start today." },
-      { id: "mostly", label: "Ready with a clear step-by-step system." },
-      { id: "some", label: "Cautiously ready; I need small wins first." },
-      { id: "unsure", label: "I am still exploring what will fit." },
+      { id: "very",   label: "Yes — I want to start today." },
+      { id: "mostly", label: "Yes, if it's clear and step-by-step." },
+      { id: "some",   label: "Almost — I need a few small wins first." },
+      { id: "unsure", label: "Still exploring what fits." },
     ],
   },
 
-  /* Profile cards (just before email) */
+  /* Profile cards (just before email) — infoBody is a VARIANT KEY here,
+     consumed by InfoCard.tsx. Do NOT change these two infoBody values. */
   {
     id: "adhd-profile",
     question: "",
