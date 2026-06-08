@@ -37,7 +37,7 @@ const PLANS = {
     savings:    BRAIN_OS.price.membershipMonthlyValue > 0
       ? `Save ${Math.max(0, Math.round(((BRAIN_OS.price.membershipMonthlyValue * 12 - BRAIN_OS.price.membershipAnnualValue) / (BRAIN_OS.price.membershipMonthlyValue * 12)) * 100))}%`
       : null,
-    badge:      "⭐ BEST VALUE",
+    badge:      "BEST VALUE",
     highlight:  true,
   },
   monthly: {

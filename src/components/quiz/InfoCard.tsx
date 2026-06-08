@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { m } from "framer-motion";
+import { Sparkles, Compass, type LucideIcon } from "lucide-react";
 import { QuizQuestion } from "@/types/quiz";
 import { useQuizStore } from "@/store/quizStore";
 import { EmailIcon } from "@/components/icons/EmailIcon";
@@ -489,6 +490,29 @@ function HighlightedStat({ stat, highlight }: { stat: string; highlight?: string
    Generic Info Card — LEFT-ALIGNED, Impulse-style
    illustration at top, bold title with optional % highlight, CTA
 ───────────────────────────────────────────────────────────────── */
+/* Distinct visual per interstitial so the same illustration never repeats.
+   Only one real illustration asset exists (people-group.png); it stays on the
+   first "you're not alone" card, later cards get their own themed icon. */
+const STAGE_ICON: Record<string, LucideIcon> = {
+  "info-focus": Sparkles,
+  "info-adhd": Compass,
+};
+
+function BrandMark() {
+  return (
+    <div style={{
+      width: 110, height: 110, borderRadius: "var(--radius-xl)",
+      background: "var(--color-primary-tint)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontSize: 22, fontWeight: 900, letterSpacing: "0.08em",
+      color: "var(--color-primary)",
+      boxShadow: "var(--shadow-btn-primary)",
+    }}>
+      FR
+    </div>
+  );
+}
+
 function GenericInfoCard({
   question,
   onContinue,
@@ -496,6 +520,12 @@ function GenericInfoCard({
   question: QuizQuestion;
   onContinue: () => void;
 }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const StageIcon = STAGE_ICON[question.id];
+  // Only the first interstitial uses the photo; if it ever fails to load we
+  // fall back to the brand mark so a broken-image placeholder never appears.
+  const showPhoto = !StageIcon && !imgFailed;
+
   return (
     <div style={{
       height: "100%",
@@ -522,30 +552,31 @@ function GenericInfoCard({
           paddingBottom: 16,
         }}
       >
-        {!question.infoEmoji ? (
-          /* People-group illustration when no compact mark is set */
+        {showPhoto ? (
+          /* People-group illustration — first interstitial only */
           // eslint-disable-next-line @next/next/no-img-element -- static marketing asset; next/image adds little value here
           <img
             src="/illustrations/people-group.png"
             alt=""
             loading="eager"
             fetchPriority="high"
+            onError={() => setImgFailed(true)}
             style={{ width: "100%", maxWidth: 320, height: "auto", objectFit: "contain" }}
           />
-        ) : (
-          /* Compact mark for regular info cards */
+        ) : StageIcon ? (
+          /* Themed icon for later interstitials (no repeated illustration) */
           <div style={{
             width: 110, height: 110, borderRadius: "var(--radius-xl)",
             background: "var(--color-primary-tint)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 22,
-            fontWeight: 900,
-            letterSpacing: "0.08em",
             color: "var(--color-primary)",
             boxShadow: "var(--shadow-btn-primary)",
           }}>
-            FR
+            <StageIcon size={46} strokeWidth={1.8} />
           </div>
+        ) : (
+          /* Graceful fallback if the photo ever fails */
+          <BrandMark />
         )}
       </m.div>
 
