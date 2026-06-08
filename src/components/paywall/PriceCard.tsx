@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { m } from "framer-motion";
-import { Check } from "lucide-react";
+import { Check, Star } from "lucide-react";
 
 interface PriceCardProps {
   plan: "annual" | "monthly";
@@ -40,8 +40,9 @@ export function PriceCard({ plan, isSelected, onSelect }: PriceCardProps) {
           color: "#fff",
           fontSize: 12, fontWeight: 700,
           textAlign: "center", letterSpacing: "0.05em",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
         }}>
-          ⭐ MOST POPULAR — SAVE 72%
+          <Star size={12} fill="#fff" color="#fff" aria-hidden /> MOST POPULAR — SAVE 72%
         </div>
       )}
 

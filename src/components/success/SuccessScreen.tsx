@@ -93,7 +93,7 @@ export function SuccessScreen() {
         transition={{ delay: 0.30 }}
         style={{ fontSize: 28, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.25, marginBottom: 12 }}
       >
-        You&apos;re all set, {displayName}! 🎉
+        You&apos;re all set, {displayName}!
       </m.h1>
 
       <m.p

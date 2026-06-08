@@ -97,7 +97,10 @@ export function QuizEngine() {
 
         <div className="flex-1 flex flex-col gap-1">
           {!isInfo && <ProgressBar currentIndex={currentQuestionIndex} />}
-          {!isInfo && (
+          {/* Hold back the numeric count on the first few steps so paid traffic
+             doesn't see "1 / 21" up front (reads as "this is long"). The bar
+             still shows momentum; the explicit count returns once invested. */}
+          {!isInfo && answeredCount > 3 && (
             <p style={{ fontSize: 11, fontWeight: 600, color: "var(--color-text-muted)", textAlign: "right", letterSpacing: "0.04em" }}>
               {answeredCount} / {totalCount}
             </p>

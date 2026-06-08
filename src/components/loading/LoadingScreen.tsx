@@ -245,7 +245,7 @@ export function LoadingScreen() {
                   fontSize: 17, fontWeight: 800, color: "var(--color-text)",
                   textAlign: "center", lineHeight: 1.4, marginBottom: 22,
                 }}>
-                  Quick pulse check: does profile clarity help you take action faster?
+                  Want your next step to feel more specific?
                 </h2>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                   {["No", "Yes"].map((opt) => (

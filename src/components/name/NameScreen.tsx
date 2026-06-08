@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { m } from "framer-motion";
+import { Lock } from "lucide-react";
 import { useQuizStore } from "@/store/quizStore";
 
 const NAME_REGEX = /^[a-zA-ZÀ-ÿ\s'-]{2,30}$/;
@@ -118,8 +119,8 @@ export function NameScreen() {
         </button>
 
         {/* Privacy note */}
-        <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", lineHeight: 1.6 }}>
-          🔒 Your name stays private and is used only for personalization
+        <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", lineHeight: 1.6, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+          <Lock size={12} aria-hidden /> Your name stays private and is used only for personalization
         </p>
 
       </div>
