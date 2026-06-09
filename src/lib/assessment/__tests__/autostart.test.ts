@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { shouldAutoStartAssessment } from "../autostart";
+import { isPaidAssessmentTraffic, shouldAutoStartAssessment } from "../autostart";
 
 describe("shouldAutoStartAssessment", () => {
   it("auto-starts for Meta paid assessment traffic", () => {
@@ -26,5 +26,20 @@ describe("shouldAutoStartAssessment", () => {
     expect(shouldAutoStartAssessment({ start: "quiz" })).toBe(true);
     expect(shouldAutoStartAssessment({ auto_start: "1" })).toBe(true);
     expect(shouldAutoStartAssessment({ auto_start: "true" })).toBe(true);
+  });
+});
+
+describe("isPaidAssessmentTraffic", () => {
+  it("classifies paid assessment UTM traffic", () => {
+    expect(isPaidAssessmentTraffic({ utm_source: "meta" })).toBe(true);
+    expect(isPaidAssessmentTraffic({ utm_medium: "paid_social" })).toBe(true);
+    expect(isPaidAssessmentTraffic({ utm_campaign: "sales_broad_us_starting_problem" })).toBe(true);
+  });
+
+  it("does not classify explicit start flags or organic traffic as paid", () => {
+    expect(isPaidAssessmentTraffic({ start: "quiz" })).toBe(false);
+    expect(isPaidAssessmentTraffic({ auto_start: "true" })).toBe(false);
+    expect(isPaidAssessmentTraffic({ utm_source: "newsletter" })).toBe(false);
+    expect(isPaidAssessmentTraffic(new URLSearchParams(""))).toBe(false);
   });
 });

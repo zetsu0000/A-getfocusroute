@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { m, AnimatePresence, useReducedMotion } from "framer-motion";
 import { AlertCircle, Shield, Lock, Check, BadgeCheck, CreditCard } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js/pure";
@@ -18,6 +18,7 @@ import { SignatureRevealCard } from "@/components/signature/SignatureRevealCard"
 import {
   createAnalyticsEventId,
   getAnalyticsContext,
+  getOrCreateActionEventId,
   trackEvent,
 } from "@/lib/analytics/client";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
@@ -194,12 +195,28 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
   const reduceMotion = useReducedMotion();
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState<string | null>(null);
+  const checkoutTracked = useRef(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements) return;
     setLoading(true);
     setError(null);
+    if (!checkoutTracked.current) {
+      checkoutTracked.current = true;
+      trackEvent(FIRST_PARTY_EVENTS.checkoutIntent, {
+        eventId: getOrCreateActionEventId("paywall_checkout_intent", "initiate_checkout"),
+        metadata: {
+          product_key: "brain_profile",
+          content_name: "FocusRoute Brain Profile",
+          content_ids: ["brain_profile", PRICE_ID],
+          content_type: "product",
+          num_items: 1,
+          value: BRAIN_OS.price.paywallValue,
+          currency: "USD",
+        },
+      });
+    }
 
     const { error: submitErr } = await elements.submit();
     if (submitErr) {
@@ -386,19 +403,6 @@ export function PaywallScreen() {
       .then((d) => {
         if (d.clientSecret) {
           setClientSecret(d.clientSecret);
-          trackEvent(FIRST_PARTY_EVENTS.paymentIntentCreated, {
-            eventId: analyticsEventId,
-            firstParty: false,
-            metadata: {
-              product_key: "brain_profile",
-              content_name: "FocusRoute Brain Profile",
-              content_ids: ["brain_profile", PRICE_ID],
-              content_type: "product",
-              num_items: 1,
-              value: typeof d.value === "number" ? d.value : null,
-              currency: typeof d.currency === "string" ? d.currency.toUpperCase() : "USD",
-            },
-          });
         }
       })
       .finally(() => setLoadingSecret(false));

@@ -92,7 +92,7 @@ export async function POST(request: Request) {
         submittedEmailPresent: submittedEmailRaw.includes("@"),
         emailOverridden:
           submittedNormalized.length > 0 && submittedNormalized !== email,
-        finalEmail: email,
+        finalEmailPresent: true,
       });
     } else {
       if (!submittedEmailRaw || !submittedEmailRaw.includes("@")) {
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
         authenticated: false,
         submittedEmailPresent: true,
         emailOverridden: false,
-        finalEmail: email,
+        finalEmailPresent: true,
       });
     }
 
