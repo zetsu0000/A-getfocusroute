@@ -54,3 +54,17 @@ export function shouldAutoStartAssessment(
     hasPaidCampaignIntent(utmCampaign)
   );
 }
+
+export function isPaidAssessmentTraffic(
+  searchParams: URLSearchParams | AssessmentSearchParams,
+): boolean {
+  const utmSource = firstParamValue(searchParams, "utm_source");
+  const utmMedium = firstParamValue(searchParams, "utm_medium");
+  const utmCampaign = firstParamValue(searchParams, "utm_campaign");
+
+  return (
+    utmSource === "meta" ||
+    utmMedium === "paid_social" ||
+    hasPaidCampaignIntent(utmCampaign)
+  );
+}

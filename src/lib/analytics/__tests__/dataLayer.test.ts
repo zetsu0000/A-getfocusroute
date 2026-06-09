@@ -65,7 +65,10 @@ describe("dataLayerEventForFirstParty", () => {
       DATA_LAYER_EVENTS.paywallViewed,
     );
     expect(
-      dataLayerEventForFirstParty(FIRST_PARTY_EVENTS.paymentIntentCreated),
+      dataLayerEventForFirstParty(FIRST_PARTY_EVENTS.quizMilestoneReached),
+    ).toBe(DATA_LAYER_EVENTS.quizStepCompleted);
+    expect(
+      dataLayerEventForFirstParty(FIRST_PARTY_EVENTS.checkoutIntent),
     ).toBe(DATA_LAYER_EVENTS.checkoutStarted);
     expect(
       dataLayerEventForFirstParty(FIRST_PARTY_EVENTS.paymentElementLoaded),
@@ -75,6 +78,7 @@ describe("dataLayerEventForFirstParty", () => {
   it("returns null for page-view style events (no GA4 page_view duplication)", () => {
     expect(dataLayerEventForFirstParty(FIRST_PARTY_EVENTS.homepageView)).toBeNull();
     expect(dataLayerEventForFirstParty(FIRST_PARTY_EVENTS.dashboardViewed)).toBeNull();
+    expect(dataLayerEventForFirstParty(FIRST_PARTY_EVENTS.paymentIntentCreated)).toBeNull();
   });
 });
 

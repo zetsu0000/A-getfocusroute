@@ -14,8 +14,10 @@ import { sendMetaEvent } from "@/lib/meta/conversions";
 import { createClient } from "@/lib/supabase/server";
 
 const CAPI_FORWARDED_EVENTS = new Set<string>([
+  FIRST_PARTY_EVENTS.emailSubmitted,
   FIRST_PARTY_EVENTS.quizCompleted,
   FIRST_PARTY_EVENTS.paywallViewed,
+  FIRST_PARTY_EVENTS.checkoutIntent,
 ]);
 
 type AnalyticsRequest = {
@@ -123,7 +125,9 @@ export async function POST(request: Request) {
           fbc: event.fbc,
         },
         custom_data:
-          eventName === FIRST_PARTY_EVENTS.paywallViewed
+          eventName === FIRST_PARTY_EVENTS.paywallViewed ||
+          eventName === FIRST_PARTY_EVENTS.checkoutIntent ||
+          eventName === FIRST_PARTY_EVENTS.emailSubmitted
             ? {
                 product_key: cleanString(metadata.product_key, 120) || undefined,
                 content_name: cleanString(metadata.content_name, 200) || undefined,

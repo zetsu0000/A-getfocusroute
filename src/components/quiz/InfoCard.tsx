@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { m } from "framer-motion";
 import { Sparkles, Compass, type LucideIcon } from "lucide-react";
@@ -554,12 +555,12 @@ function GenericInfoCard({
       >
         {showPhoto ? (
           /* People-group illustration — first interstitial only */
-          // eslint-disable-next-line @next/next/no-img-element -- static marketing asset; next/image adds little value here
-          <img
+          <Image
             src="/illustrations/people-group.png"
             alt=""
-            loading="eager"
-            fetchPriority="high"
+            width={320}
+            height={180}
+            sizes="(max-width: 520px) 80vw, 320px"
             onError={() => setImgFailed(true)}
             style={{ width: "100%", maxWidth: 320, height: "auto", objectFit: "contain" }}
           />

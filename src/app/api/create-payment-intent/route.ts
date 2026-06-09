@@ -1,6 +1,5 @@
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 import { recordAnalyticsEvent } from "@/lib/analytics/server";
-import { sendMetaEvent } from "@/lib/meta/conversions";
 import { getStripeClient } from "@/lib/stripe/client";
 import { buildStripeFunnelMetadata } from "@/lib/stripe/metadata";
 import { resolveOneTimeProductKey } from "@/lib/stripe/productKeyPolicy";
@@ -22,12 +21,6 @@ type AnalyticsContext = {
 
 function asString(value: unknown, max = 500): string {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
-}
-
-function requestIp(request: Request): string | null {
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0]?.trim() ?? null;
-  return request.headers.get("x-real-ip");
 }
 
 export async function POST(request: Request) {
@@ -122,31 +115,6 @@ export async function POST(request: Request) {
         },
       });
 
-      await sendMetaEvent({
-        event_name: "InitiateCheckout",
-        event_id: analyticsEventId,
-        event_source_url: asString(analyticsContext.path, 1000)
-          ? new URL(asString(analyticsContext.path, 1000), request.url).toString()
-          : request.url,
-        user_data: {
-          client_ip_address: requestIp(request),
-          client_user_agent: request.headers.get("user-agent"),
-          fbp: asString(analyticsContext.fbp, 300),
-          fbc: asString(analyticsContext.fbc, 600),
-          email: emailNorm,
-        },
-        custom_data: {
-          product_key: productKey,
-          content_name:
-            productKey === "brain_profile"
-              ? "FocusRoute Brain Profile"
-              : "FocusRoute 28-Day Protocol",
-          content_ids: [productKey, priceId],
-          content_type: "product",
-          value: amount / 100,
-          currency: price.currency,
-        },
-      });
     } catch (analyticsError) {
       if (process.env.NODE_ENV === "development") {
         console.warn("[analytics] payment_intent_created failed", analyticsError);

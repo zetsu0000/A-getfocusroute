@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { m } from "framer-motion";
 import { Check, Star, Shield, RotateCcw } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js/pure";
@@ -80,12 +80,27 @@ function SubCheckoutForm({
   const elements = useElements();
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState<string | null>(null);
+  const checkoutTracked = useRef(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements) return;
+    const checkoutEventId = getOrCreateActionEventId(`subscription_${priceId}`, "initiate_checkout");
     setLoading(true);
     setError(null);
+    if (!checkoutTracked.current) {
+      checkoutTracked.current = true;
+      trackEvent(FIRST_PARTY_EVENTS.checkoutIntent, {
+        eventId: checkoutEventId,
+        metadata: {
+          product_key: selectedProductKey(priceId),
+          content_name: "FocusRoute Membership",
+          content_ids: ["membership", priceId],
+          content_type: "subscription",
+          num_items: 1,
+        },
+      });
+    }
 
     const { error: submitErr } = await elements.submit();
     if (submitErr) { setError(submitErr.message ?? "Error"); setLoading(false); return; }
@@ -103,27 +118,13 @@ function SubCheckoutForm({
         funnel_step: "subscription",
         quiz_result_id: quizResultId ?? "",
         user_name: userName.trim(),
-        analytics_event_id: getOrCreateActionEventId(`subscription_${priceId}`, "initiate_checkout"),
+        analytics_event_id: checkoutEventId,
         analytics_context: getAnalyticsContext(),
       }),
     });
     const data = await res.json();
 
     if (data.error) { setError(data.error); setLoading(false); return; }
-
-    trackEvent(FIRST_PARTY_EVENTS.paymentIntentCreated, {
-      eventId: getOrCreateActionEventId(`subscription_${priceId}`, "initiate_checkout"),
-      firstParty: false,
-      metadata: {
-        product_key: selectedProductKey(priceId),
-        content_name: "FocusRoute Membership",
-        content_ids: ["membership", priceId],
-        content_type: "subscription",
-        num_items: 1,
-        value: typeof data.value === "number" ? data.value : null,
-        currency: typeof data.currency === "string" ? data.currency.toUpperCase() : "USD",
-      },
-    });
 
     if (data.clientSecret) {
       const { error: confirmErr } = await stripe.confirmPayment({

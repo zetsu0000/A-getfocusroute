@@ -63,7 +63,7 @@ export function ChartScreen() {
           console.info("[ChartScreen] quiz-result email resolve", {
             authenticated: Boolean(authEmail),
             submittedEmailPresent: Boolean(funnelEmail),
-            finalEmail: resolved ?? null,
+            finalEmailPresent: Boolean(resolved),
           });
         }
 

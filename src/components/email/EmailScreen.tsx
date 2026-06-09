@@ -1,20 +1,35 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { m } from "framer-motion";
 import { useQuizStore } from "@/store/quizStore";
 import { EmailIcon } from "@/components/icons/EmailIcon";
+import { getOrCreateActionEventId, trackEvent } from "@/lib/analytics/client";
+import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 
 export function EmailScreen() {
   const { setEmail, setStep } = useQuizStore();
   const [local, setLocal]     = useState("");
   const [touched, setTouched] = useState(false);
+  const submittedRef = useRef(false);
   const valid   = local.includes("@") && local.includes(".");
   const hasError = touched && local.length > 0 && !valid;
 
   const handleContinue = () => {
     if (!valid) return;
-    setEmail(local);
+    setEmail(local.trim().toLowerCase());
+    if (!submittedRef.current) {
+      submittedRef.current = true;
+      trackEvent(FIRST_PARTY_EVENTS.emailSubmitted, {
+        eventId: getOrCreateActionEventId("lead_email_submitted", "lead"),
+        metadata: {
+          content_name: "FocusRoute assessment email capture",
+          content_type: "lead",
+          value: 0,
+          currency: "USD",
+        },
+      });
+    }
     setStep("name");
   };
 

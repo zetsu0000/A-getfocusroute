@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { m } from "framer-motion";
 import { loadStripe } from "@stripe/stripe-js/pure";
 import {
@@ -15,6 +15,7 @@ import { BRAIN_OS } from "@/lib/positioning";
 import {
   createAnalyticsEventId,
   getAnalyticsContext,
+  getOrCreateActionEventId,
   trackEvent,
 } from "@/lib/analytics/client";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
@@ -65,12 +66,28 @@ function UpsellCheckoutForm({ onSuccess, onDecline }: { onSuccess: () => void; o
   const elements = useElements();
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState<string | null>(null);
+  const checkoutTracked = useRef(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements) return;
     setLoading(true);
     setError(null);
+    if (!checkoutTracked.current) {
+      checkoutTracked.current = true;
+      trackEvent(FIRST_PARTY_EVENTS.checkoutIntent, {
+        eventId: getOrCreateActionEventId("upsell_checkout_intent", "initiate_checkout"),
+        metadata: {
+          product_key: "roadmap_28_day",
+          content_name: "FocusRoute 28-Day Protocol",
+          content_ids: ["roadmap_28_day", PRICE_ID],
+          content_type: "product",
+          num_items: 1,
+          value: BRAIN_OS.price.upsellValue,
+          currency: "USD",
+        },
+      });
+    }
 
     const { error: submitErr } = await elements.submit();
     if (submitErr) { setError(submitErr.message ?? "Error"); setLoading(false); return; }
@@ -160,19 +177,6 @@ export function UpsellScreen() {
       .then((data) => {
         if (data.clientSecret) {
           setClientSecret(data.clientSecret);
-          trackEvent(FIRST_PARTY_EVENTS.paymentIntentCreated, {
-            eventId: analyticsEventId,
-            firstParty: false,
-            metadata: {
-              product_key: "roadmap_28_day",
-              content_name: "FocusRoute 28-Day Protocol",
-              content_ids: ["roadmap_28_day", PRICE_ID],
-              content_type: "product",
-              num_items: 1,
-              value: typeof data.value === "number" ? data.value : null,
-              currency: typeof data.currency === "string" ? data.currency.toUpperCase() : "USD",
-            },
-          });
         }
       })
       .finally(() => setLoadingSecret(false));

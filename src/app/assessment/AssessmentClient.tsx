@@ -262,9 +262,13 @@ const fade = (isFirst = false) => ({
 
 interface AssessmentClientProps {
   autoStartQuiz?: boolean;
+  paidAutoStart?: boolean;
 }
 
-export default function AssessmentClient({ autoStartQuiz = false }: AssessmentClientProps) {
+export default function AssessmentClient({
+  autoStartQuiz = false,
+  paidAutoStart = false,
+}: AssessmentClientProps) {
   const step = useQuizStore((s) => s.currentStep);
   const currentQuestionIndex = useQuizStore((s) => s.currentQuestionIndex);
   const retakeMode = useQuizStore((s) => s.retakeMode);
@@ -292,7 +296,12 @@ export default function AssessmentClient({ autoStartQuiz = false }: AssessmentCl
     trackEvent(FIRST_PARTY_EVENTS.assessmentStarted, {
       metadata: { cta_location: "assessment_entry", auto_start: true },
     });
-  }, [autoStartQuiz, currentQuestionIndex, retakeMode, step]);
+    if (paidAutoStart) {
+      trackEvent(FIRST_PARTY_EVENTS.paidAutoStarted, {
+        metadata: { auto_start: true },
+      });
+    }
+  }, [autoStartQuiz, currentQuestionIndex, paidAutoStart, retakeMode, step]);
 
   useEffect(() => {
     const id = getPersistedQuizResultId();

@@ -195,7 +195,9 @@ const DATA_LAYER_EVENT_BY_FIRST_PARTY: Partial<
   [FIRST_PARTY_EVENTS.emailSubmitted]: DATA_LAYER_EVENTS.emailSubmitted,
   [FIRST_PARTY_EVENTS.quizCompleted]: DATA_LAYER_EVENTS.quizCompleted,
   [FIRST_PARTY_EVENTS.paywallViewed]: DATA_LAYER_EVENTS.paywallViewed,
-  [FIRST_PARTY_EVENTS.paymentIntentCreated]: DATA_LAYER_EVENTS.checkoutStarted,
+  [FIRST_PARTY_EVENTS.quizMilestoneReached]:
+    DATA_LAYER_EVENTS.quizStepCompleted,
+  [FIRST_PARTY_EVENTS.checkoutIntent]: DATA_LAYER_EVENTS.checkoutStarted,
   [FIRST_PARTY_EVENTS.paymentElementLoaded]:
     DATA_LAYER_EVENTS.stripeCheckoutOpened,
 };

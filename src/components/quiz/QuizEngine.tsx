@@ -8,6 +8,8 @@ import { useQuizStore } from "@/store/quizStore";
 import { questions } from "@/data/questions";
 import { ProgressBar } from "./ProgressBar";
 import { QuestionCard } from "./QuestionCard";
+import { getOrCreateActionEventId, trackEvent } from "@/lib/analytics/client";
+import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 
 // InfoCard only renders for `info`-type questions (first one appears after Q10),
 // and ScaleQuestion only renders for `scale`-type questions (first one at Q11).
@@ -21,6 +23,8 @@ const InfoCard = dynamic(
   { ssr: false },
 );
 
+const QUIZ_MILESTONES = [25, 50, 75] as const;
+
 const slideVariants = {
   enter:  (d: number) => ({ x: d > 0 ? "100%" : "-100%", opacity: 0 }),
   center: { x: 0, opacity: 1 },
@@ -28,9 +32,10 @@ const slideVariants = {
 };
 
 export function QuizEngine() {
-  const { currentQuestionIndex, selectedOptions, submitAnswer, goBack } = useQuizStore();
+  const { answers, currentQuestionIndex, selectedOptions, submitAnswer, goBack } = useQuizStore();
   const [direction, setDirection] = useState(1);
   const prevIndex = useRef(currentQuestionIndex);
+  const sentMilestones = useRef<Set<number>>(new Set());
 
   const question = questions[currentQuestionIndex];
   const isInfo = question.inputType === "info";
@@ -42,6 +47,40 @@ export function QuizEngine() {
     .slice(0, currentQuestionIndex + 1)
     .filter((q) => q.inputType !== "info").length;
   const totalCount = questions.filter((q) => q.inputType !== "info").length;
+
+  useEffect(() => {
+    const answeredCount = answers.filter((answer) => {
+      const answeredQuestion = questions.find((q) => q.id === answer.questionId);
+      return answeredQuestion && answeredQuestion.inputType !== "info";
+    }).length;
+    if (answeredCount === 0 || totalCount === 0) return;
+
+    for (const milestone of QUIZ_MILESTONES) {
+      const threshold = Math.ceil((totalCount * milestone) / 100);
+      if (answeredCount < threshold || sentMilestones.current.has(milestone)) continue;
+
+      const storageKey = `focusroute_quiz_milestone_${milestone}`;
+      try {
+        if (window.sessionStorage.getItem(storageKey)) {
+          sentMilestones.current.add(milestone);
+          continue;
+        }
+        window.sessionStorage.setItem(storageKey, "1");
+      } catch {
+        // In restricted storage contexts, the in-memory guard still prevents render spam.
+      }
+
+      sentMilestones.current.add(milestone);
+      trackEvent(FIRST_PARTY_EVENTS.quizMilestoneReached, {
+        eventId: getOrCreateActionEventId(`quiz_milestone_${milestone}`, "quiz_milestone"),
+        metadata: {
+          milestone_percent: milestone,
+          answered_count: answeredCount,
+          total_questions: totalCount,
+        },
+      });
+    }
+  }, [answers, totalCount]);
 
   // Slide direction follows question index; syncing in an effect avoids reading refs during render (react-hooks/refs).
   useEffect(() => {
