@@ -4,17 +4,21 @@ import { QuizQuestion } from "@/types/quiz";
  * FULL FUNNEL — 21 quiz questions + info cards
  *
  * Copy is intentionally warm, short, and scannable (focus-friendly): titles
- * ~4-7 words, options under ~7 words, no multi-clause options. SCORING NOTE:
+ * ~3-6 words, options under ~6 words, no multi-clause options. SCORING NOTE:
  * scoring/personalization reads ONLY question `id`s and option `id`s — never
  * the visible text. So every title/subtitle/label below is free to change as
  * long as the `id` fields stay stable. Reordering is also safe (the signature
  * hash sorts by questionId before hashing).
  *
+ * INFO CARDS are purely presentational — `submitInfo` never writes to `answers`,
+ * so info cards never affect scoring or the signature hash. They can be added,
+ * removed, reordered, or reworded freely.
+ *
  * Block 1 — Pain hook (warm single-selects; paid traffic lands here).
  * Block 2 — Quick setup (pronoun + age, once the user is invested).
- * Block 3 — Deeper pattern, then info card A.
- * Block 4 — Scale block (6 statements) with info cards B and C.
- * Block 5 — Context + readiness, then profile preview cards and paywall.
+ * Block 3 — Deeper pattern, then info card A (belonging).
+ * Block 4 — Scale block (6 statements) with info card B (momentum) mid-block.
+ * Block 5 — Context + readiness, info card C (almost-there bridge), snapshot.
  *
  * Scored ids (do not rename): mood, distraction, sleep, experience,
  * daily-impact, time, support, obstacles, scale-*.
@@ -42,7 +46,7 @@ export const questions: QuizQuestion[] = [
   /* Q2 — mood (SCORED: recovery) */
   {
     id: "mood",
-    question: "When your day gets derailed?",
+    question: "When a day goes sideways?",
     inputType: "single",
     options: [
       { id: "never",     label: "I bounce back fast." },
@@ -87,8 +91,7 @@ export const questions: QuizQuestion[] = [
   /* Q5 — pronoun (hash-only) */
   {
     id: "gender",
-    question: "Quick setup before your results",
-    subtitle: "What wording should we use?",
+    question: "How should we refer to you?",
     inputType: "single",
     options: [
       { id: "male",   label: "He / him" },
@@ -133,7 +136,7 @@ export const questions: QuizQuestion[] = [
     inputType: "single",
     options: [
       { id: "never", label: "Starting from scratch." },
-      { id: "tried", label: "Tried, but it didn't stick." },
+      { id: "tried", label: "Tried, didn't stick." },
       { id: "yes",   label: "My routines don't fit." },
     ],
   },
@@ -180,7 +183,7 @@ export const questions: QuizQuestion[] = [
     ],
   },
 
-  /* INFO CARD A — after the pattern block */
+  /* INFO CARD A — belonging (after the pattern block) */
   {
     id: "info-match",
     question: "",
@@ -189,7 +192,7 @@ export const questions: QuizQuestion[] = [
     infoStat: "You're not broken — your focus just works differently.",
     infoHighlight: undefined,
     infoBody:
-      "What you're describing is common. We'll build your plan around how your brain actually works.",
+      "What you're describing is common. Your plan will fit how your brain actually works.",
   },
 
   /* ── BLOCK 4 — Scale block (6 statements) ────────────────────── */
@@ -200,7 +203,7 @@ export const questions: QuizQuestion[] = [
     question: "How true is this for you?",
     inputType: "scale",
     options: [],
-    statement: "I put off things I care about, even when I want to do them.",
+    statement: "I put off things I actually care about.",
   },
 
   /* Q13 */
@@ -209,7 +212,7 @@ export const questions: QuizQuestion[] = [
     question: "And this one?",
     inputType: "scale",
     options: [],
-    statement: "When something gets boring, my focus is gone.",
+    statement: "Once it's boring, my focus is gone.",
   },
 
   /* Q14 */
@@ -218,10 +221,10 @@ export const questions: QuizQuestion[] = [
     question: "This one?",
     inputType: "scale",
     options: [],
-    statement: "Too much at once and I freeze instead of starting.",
+    statement: "Too much at once and I freeze.",
   },
 
-  /* INFO CARD B — after the first three statements */
+  /* INFO CARD B — momentum (breaks up the scale block) */
   {
     id: "info-focus",
     question: "",
@@ -229,7 +232,7 @@ export const questions: QuizQuestion[] = [
     options: [],
     infoStat: "The right small change can shift everything.",
     infoBody:
-      "Small changes create the fastest momentum. Your plan starts with quick wins you can keep.",
+      "Small changes build the fastest momentum. Your plan starts with quick wins.",
   },
 
   /* Q15 */
@@ -238,7 +241,7 @@ export const questions: QuizQuestion[] = [
     question: "Keep going — how true?",
     inputType: "scale",
     options: [],
-    statement: "I know what I want to do, but not the next step.",
+    statement: "I know the goal, not the next step.",
   },
 
   /* Q16 */
@@ -256,18 +259,18 @@ export const questions: QuizQuestion[] = [
     question: "Last one — true for you?",
     inputType: "scale",
     options: [],
-    statement: "A bad mood can wreck my whole day's work.",
+    statement: "A bad mood can wreck my whole day.",
   },
 
-  /* INFO CARD C — after the scale block */
+  /* INFO CARD C — almost-there bridge (after the scale block) */
   {
     id: "info-adhd",
     question: "",
     inputType: "info",
     options: [],
-    infoStat: "Most people only spot these patterns later in life.",
+    infoStat: "Almost there — just a few more.",
     infoBody:
-      "These are patterns, not flaws. Your next steps fit how your brain works.",
+      "These last answers fine-tune your plan. Then we'll show you your pattern.",
   },
 
   /* ── BLOCK 5 — Context + readiness ───────────────────────────── */
@@ -324,24 +327,15 @@ export const questions: QuizQuestion[] = [
     ],
   },
 
-  /* Profile cards (just before email) — infoBody is a VARIANT KEY here,
-     consumed by InfoCard.tsx. Do NOT change these two infoBody values. */
+  /* Snapshot card (just before email) — infoBody is a VARIANT KEY here,
+     consumed by InfoCard.tsx. Do NOT change this infoBody value. */
   {
     id: "adhd-profile",
     question: "",
     inputType: "info",
     options: [],
-    infoStat: "Your FocusRoute Brain Profile preview is ready",
+    infoStat: "Here's your focus snapshot",
     infoBody: "adhd-profile",
-  },
-
-  {
-    id: "brain-comparison",
-    question: "",
-    inputType: "info",
-    options: [],
-    infoStat: "Your Profile-to-Protocol preview is loading",
-    infoBody: "brain-comparison",
   },
 ];
 
