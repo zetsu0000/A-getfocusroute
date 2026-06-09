@@ -43,14 +43,14 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
       sub: "Start, sustain, reset",
     },
     {
-      label: "Friction load",
+      label: "Daily drag",
       value: score >= 60 ? "High" : score >= 40 ? "Moderate" : "Low",
       sub: score >= 60 ? "Often shows up" : score >= 40 ? "Shows under demand" : "Usually lighter",
     },
     {
-      label: "Response index",
+      label: "Focus score",
       value: score.toFixed(0),
-      sub: "pattern strength",
+      sub: "overall",
     },
   ];
 
@@ -81,7 +81,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
               fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.65)",
               letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4,
             }}>
-              Pattern Preview
+              Your snapshot
             </p>
             <h2 style={{
               fontSize: 20, fontWeight: 800, color: "#ffffff", lineHeight: 1.15,
@@ -105,7 +105,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
               {score.toFixed(0)}
             </p>
             <p style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", fontWeight: 600, marginTop: 2 }}>
-              index
+              score
             </p>
           </m.div>
         </div>
@@ -114,7 +114,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
         <div style={{ padding: "20px 24px 0" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
             <p style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text-body)" }}>
-              Pattern intensity
+              Where you land
             </p>
             <m.span
               initial={{ opacity: 0, x: 8 }}

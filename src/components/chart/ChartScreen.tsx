@@ -240,7 +240,7 @@ export function ChartScreen() {
               marginBottom: 10,
             }}
           >
-            Unlock your full FocusRoute Brain Profile™
+            Unlock your full focus plan
           </p>
           <div
             style={{
@@ -291,7 +291,7 @@ export function ChartScreen() {
             }}
           >
             <span style={{ color: "var(--color-cognitive)" }}>{displayName},</span>{" "}
-            your full Profile-to-Protocol™ plan is ready to unlock.
+            your full focus plan is ready to unlock.
           </p>
         </m.div>
 
@@ -335,7 +335,7 @@ export function ChartScreen() {
               boxShadow: "var(--shadow-btn-accent)",
             }}
           >
-            Unlock My Brain Profile
+            Unlock My Full Plan
           </m.button>
         )}
       </div>

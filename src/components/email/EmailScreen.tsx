@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useRef, useState } from "react";
 import { m } from "framer-motion";
@@ -7,8 +7,18 @@ import { EmailIcon } from "@/components/icons/EmailIcon";
 import { getOrCreateActionEventId, trackEvent } from "@/lib/analytics/client";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 
+function toTitleCase(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : w))
+    .join(" ");
+}
+
 export function EmailScreen() {
-  const { setEmail, setStep } = useQuizStore();
+  const { setEmail, setName, setStep } = useQuizStore();
+  const [localName, setLocalName] = useState("");
   const [local, setLocal]     = useState("");
   const [touched, setTouched] = useState(false);
   const submittedRef = useRef(false);
@@ -18,6 +28,13 @@ export function EmailScreen() {
   const handleContinue = () => {
     if (!valid) return;
     setEmail(local.trim().toLowerCase());
+
+    // Name is optional — only store it if the user actually typed one.
+    const cleanedName = localName.trim();
+    if (cleanedName.length >= 2) {
+      setName(toTitleCase(cleanedName));
+    }
+
     if (!submittedRef.current) {
       submittedRef.current = true;
       trackEvent(FIRST_PARTY_EVENTS.emailSubmitted, {
@@ -30,7 +47,8 @@ export function EmailScreen() {
         },
       });
     }
-    setStep("name");
+    // Name capture is merged here, so we skip straight to the result reveal.
+    setStep("chart");
   };
 
   return (
@@ -46,23 +64,48 @@ export function EmailScreen() {
         padding: "40px 24px",
       }}
     >
-      <div style={{ width: "100%", maxWidth: 520, display: "flex", flexDirection: "column", gap: 20 }}>
+      <div style={{ width: "100%", maxWidth: 520, display: "flex", flexDirection: "column", gap: 18 }}>
 
         {/* Title */}
-        <div style={{ textAlign: "center", marginBottom: 8 }}>
+        <div style={{ textAlign: "center", marginBottom: 6 }}>
           <h1 style={{
             fontSize: 22, fontWeight: 800,
             color: "var(--color-primary)",
             lineHeight: 1.3,
           }}>
-            Save your{" "}
-            <span style={{ color: "var(--color-cognitive)" }}>
-              FocusRoute Brain Profile™
-            </span>
+            Where should we send your results?
           </h1>
-          <p style={{ marginTop: 12, fontSize: 14, color: "var(--color-text-muted)" }}>
-            We&apos;ll save your partial reveal and send secure access details for your full report.
+          <p style={{ marginTop: 12, fontSize: 14, color: "var(--color-text-muted)", lineHeight: 1.5 }}>
+            Your focus snapshot is ready. Add your email so you can come back to it anytime.
           </p>
+        </div>
+
+        {/* Name (optional) */}
+        <div>
+          <input
+            type="text"
+            placeholder="First name (optional)"
+            value={localName}
+            onChange={(e) => setLocalName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleContinue()}
+            style={{
+              width: "100%", padding: "16px 16px",
+              borderRadius: 14,
+              background: "var(--color-bg-card)",
+              border: "1.5px solid var(--color-border)",
+              color: "var(--color-primary)",
+              fontSize: 15, outline: "none",
+              transition: "border-color 0.15s, box-shadow 0.15s",
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = "var(--color-primary)";
+              e.currentTarget.style.boxShadow   = "0 0 0 3px var(--color-primary-ring)";
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = "var(--color-border)";
+              e.currentTarget.style.boxShadow   = "none";
+            }}
+          />
         </div>
 
         {/* Email input */}
@@ -129,7 +172,7 @@ export function EmailScreen() {
               : { background: "var(--color-border)", color: "var(--color-text-muted)" }),
           }}
         >
-          Save My FocusRoute Brain Profile™
+          See My Results
         </button>
 
         {/* Privacy card */}
@@ -152,7 +195,7 @@ export function EmailScreen() {
             </svg>
           </div>
           <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.6 }}>
-            Private by default. We only use this email for FocusRoute Brain OS™ access and relevant updates.
+            Private by default. We only use this to give you access to your results and relevant updates.
           </p>
         </div>
 

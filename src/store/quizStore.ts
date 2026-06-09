@@ -27,8 +27,10 @@ interface QuizState {
   setQuizResultId: (id: string | null) => void;
 }
 
-/* Step order after loading */
-const POST_LOADING: FunnelStep[] = ["email", "name", "chart", "paywall", "upsell", "subscription", "success"];
+/* Step order after loading. Name capture is merged into the email step, so the
+   standalone "name" screen is no longer part of the forward flow (it stays in
+   the FunnelStep union and remains reachable for retake/legacy paths). */
+const POST_LOADING: FunnelStep[] = ["email", "chart", "paywall", "upsell", "subscription", "success"];
 
 export const useQuizStore = create<QuizState>()(
   persist(
