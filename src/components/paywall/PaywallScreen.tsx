@@ -92,7 +92,7 @@ function revealsFor(planFocus: string): string[] {
     `A plan focused on ${planFocus}`,
     "Your top focus friction points, named in plain language",
     "Your first next step — what to try when starting feels heavy",
-    "A 28-day plan in short daily steps (even 10 minutes counts)",
+    "Your Executive Function Radar — where focus holds, where it slips",
     "A simple way to explain your pattern to someone",
   ];
 }
@@ -499,6 +499,10 @@ export function PaywallScreen() {
               </div>
             </div>
 
+            <p style={{ fontSize: 12, color: "var(--color-text-muted)", lineHeight: 1.5, marginBottom: 12 }}>
+              Why {BRAIN_OS.price.paywall} instead of {BRAIN_OS.price.paywallAnchor}? Finishing the assessment did the mapping work — so you get completer pricing for this results session.
+            </p>
+
             <p style={{ fontSize: 12, fontWeight: 850, color: "var(--color-text)", marginBottom: 10 }}>
               What&apos;s in your full plan
             </p>
@@ -543,8 +547,8 @@ export function PaywallScreen() {
               {[
                 { q: "Is this just another quiz?", a: "No — your plan is built from your answers, not generic tips." },
                 { q: "Is this a diagnosis?", a: "No. It's a focus pattern and a practical plan, not a medical assessment." },
-                { q: "What do I actually get?", a: "Your full pattern breakdown and a 28-day, day-by-day plan — instantly." },
-                { q: "Will this be too much work?", a: "No — short daily steps. Even 10 minutes counts." },
+                { q: "What do I actually get?", a: "Your full pattern breakdown, your radar map, and your first next steps — instantly in your account." },
+                { q: "Will this be too much work?", a: "No — plain language and small steps, built for short attention." },
                 { q: "What if it doesn't fit?", a: "7-day refund. If it's not you, email us — no questions." },
               ].map(({ q, a }) => (
                 <div key={q}>
@@ -584,6 +588,24 @@ export function PaywallScreen() {
                 </div>
               ))}
             </div>
+          </m.div>
+
+          <m.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.115 }}
+            style={{
+              background: "var(--color-bg-card)",
+              borderRadius: "var(--radius-lg)",
+              border: "1px solid var(--color-border)",
+              boxShadow: "var(--shadow-card)",
+              padding: "16px 18px",
+            }}
+          >
+            <p style={{ fontSize: 14, fontStyle: "italic", color: "var(--color-text-body)", lineHeight: 1.7, marginBottom: 8 }}>
+              &quot;The profile language felt uncannily accurate. For the first time, I had a step-by-step system that matched how I actually work.&quot;
+            </p>
+            <p style={{ fontSize: 13, color: "var(--color-text-muted)" }}>— Sarah M., verified customer</p>
           </m.div>
 
           <m.div
