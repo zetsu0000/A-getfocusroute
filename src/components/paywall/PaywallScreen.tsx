@@ -89,10 +89,11 @@ const stripeAppearance = {
 
 function revealsFor(planFocus: string): string[] {
   return [
-    `Your plan focuses on ${planFocus}`,
-    "What conditions help your focus switch on",
-    "Where pressure helps you and where it backfires",
-    "A plain-English way to explain your pattern to someone",
+    `A plan focused on ${planFocus}`,
+    "Your top focus friction points, named in plain language",
+    "Your first next step — what to try when starting feels heavy",
+    "A 28-day plan in short daily steps (even 10 minutes counts)",
+    "A simple way to explain your pattern to someone",
   ];
 }
 
@@ -321,7 +322,7 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
       </div>
 
       <p style={{ marginTop: 10, fontSize: 11, color: "var(--color-text-muted)", textAlign: "center" }}>
-        One-time access / Backed by the &quot;This Is Me&quot; 7-Day Guarantee
+        One-time payment / Instant access in your account / 7-day refund
       </p>
     </form>
   );
@@ -482,10 +483,10 @@ export function PaywallScreen() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 12 }}>
               <div>
                 <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.09em", color: "var(--color-text-muted)", fontWeight: 700 }}>
-                  Unlock the full explanation
+                  Your full plan
                 </p>
                 <p style={{ fontSize: 13, color: "var(--color-text-body)", marginTop: 2 }}>
-                  See what your pattern means
+                  Built from your answers, not a generic guide
                 </p>
               </div>
               <div style={{ textAlign: "right" }}>
@@ -543,11 +544,43 @@ export function PaywallScreen() {
                 { q: "Is this just another quiz?", a: "No — your plan is built from your answers, not generic tips." },
                 { q: "Is this a diagnosis?", a: "No. It's a focus pattern and a practical plan, not a medical assessment." },
                 { q: "What do I actually get?", a: "Your full pattern breakdown and a 28-day, day-by-day plan — instantly." },
+                { q: "Will this be too much work?", a: "No — short daily steps. Even 10 minutes counts." },
                 { q: "What if it doesn't fit?", a: "7-day refund. If it's not you, email us — no questions." },
               ].map(({ q, a }) => (
                 <div key={q}>
                   <p style={{ fontSize: 13, fontWeight: 800, color: "var(--color-text)", marginBottom: 2 }}>{q}</p>
                   <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.5 }}>{a}</p>
+                </div>
+              ))}
+            </div>
+          </m.div>
+
+          <m.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.11 }}
+            style={{
+              background: "var(--color-bg-card)",
+              borderRadius: "var(--radius-lg)",
+              border: "1px solid var(--color-border)",
+              boxShadow: "var(--shadow-card)",
+              padding: "16px 18px",
+            }}
+          >
+            <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.09em", color: "var(--color-text-muted)", fontWeight: 700, marginBottom: 10 }}>
+              After you pay
+            </p>
+            <div style={{ display: "grid", gap: 8 }}>
+              {[
+                "Your full plan unlocks in your account the moment you pay.",
+                "We email you a copy, so it's easy to come back to.",
+                "Start with one short first step — no overwhelm.",
+              ].map((line) => (
+                <div key={line} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <div style={{ width: 18, height: 18, borderRadius: "var(--radius-pill)", background: "var(--color-signal-tint)", display: "flex", alignItems: "center", justifyContent: "center", marginTop: 1, flexShrink: 0 }}>
+                    <Check size={11} color="var(--color-signal)" strokeWidth={3} />
+                  </div>
+                  <span style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.45 }}>{line}</span>
                 </div>
               ))}
             </div>
@@ -602,7 +635,7 @@ export function PaywallScreen() {
           >
             <Shield size={16} color="var(--color-primary)" />
             <p style={{ fontSize: 12, color: "var(--color-text-body)", lineHeight: 1.45 }}>
-              Secure checkout via Stripe / encrypted payment / instant profile access
+              Secure checkout via Stripe / encrypted payment / instant access to your plan
             </p>
           </m.div>
           <p style={{ textAlign: "center", fontSize: 11, color: "var(--color-text-muted)", marginTop: 6, lineHeight: 2 }}>
