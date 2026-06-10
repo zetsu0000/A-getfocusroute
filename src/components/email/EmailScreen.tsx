@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { m } from "framer-motion";
 import { useQuizStore } from "@/store/quizStore";
+import { getSignatureFromAnswers } from "@/lib/signature";
 import { EmailIcon } from "@/components/icons/EmailIcon";
 import { getOrCreateActionEventId, trackEvent } from "@/lib/analytics/client";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
@@ -17,7 +18,8 @@ function toTitleCase(name: string): string {
 }
 
 export function EmailScreen() {
-  const { setEmail, setName, setStep } = useQuizStore();
+  const { answers, setEmail, setName, setStep } = useQuizStore();
+  const signature = getSignatureFromAnswers(answers);
   const [localName, setLocalName] = useState("");
   const [local, setLocal]     = useState("");
   const [touched, setTouched] = useState(false);
@@ -73,10 +75,10 @@ export function EmailScreen() {
             color: "var(--color-primary)",
             lineHeight: 1.3,
           }}>
-            Where should we send your results?
+            Your <span style={{ color: "var(--color-accent)" }}>{signature.signature}</span> profile is ready.
           </h1>
           <p style={{ marginTop: 12, fontSize: 14, color: "var(--color-text-muted)", lineHeight: 1.5 }}>
-            Your focus snapshot is ready. Add your email so you can come back to it anytime.
+            Add your email so we can save your results — and so you can come back to them anytime.
           </p>
         </div>
 

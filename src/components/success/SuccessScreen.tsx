@@ -155,7 +155,7 @@ export function SuccessScreen() {
           {[
             { step: "1", text: "Open your account to see your full focus pattern and plan." },
             { step: "2", text: "Start with your first step — what to try when starting feels heavy." },
-            { step: "3", text: "Follow the 28-day plan at your pace. Even 10 minutes counts." },
+            { step: "3", text: "Work through your plan at your pace. Even 10 minutes counts." },
           ].map(({ step, text }) => (
             <div key={step} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
               <div style={{ width: 28, height: 28, borderRadius: 8, background: "var(--color-primary-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>

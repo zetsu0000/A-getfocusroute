@@ -62,13 +62,4 @@ export const BRAIN_OS = {
     membershipMonthly: usd(membershipMonthly),
     membershipAnnual: usd(membershipAnnual),
   },
-
-  /** Value stack line items (paywall "what you unlock") - condensed from doc */
-  paywallUnlockBullets: [
-    `Full ${"FocusRoute Brain Profile"} - narrative + ${"Executive Function Radar"} + ${"Cognitive Signature"}`,
-    `"Finally, An Explanation" plain-English letter`,
-    `${"Profile-to-Protocol Engine"} + ${"28-Day Protocol"} - daily micro-actions calibrated to your profile`,
-    "Toolkit bundle + executive-function playsheets",
-    "Science-informed strategies - not generic planner advice",
-  ],
 } as const;

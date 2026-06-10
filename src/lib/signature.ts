@@ -50,7 +50,7 @@ const SIGNATURES: Record<BrainSignature, Omit<SignatureResult, "signature">> = {
     unlockTeaser: [
       "Your full focus-pattern breakdown",
       "A consistency plan that doesn't depend on last-minute pressure",
-      "A 28-day, day-by-day routine you can actually keep",
+      "How to finish routine work without a deadline pushing you",
     ],
     frictionLine:
       "Your momentum tends to break on routine, low-urgency tasks once the pressure is off.",
@@ -68,7 +68,7 @@ const SIGNATURES: Record<BrainSignature, Omit<SignatureResult, "signature">> = {
     unlockTeaser: [
       "Your full focus-pattern breakdown",
       "A clear order-of-operations for when tasks pile up",
-      "A 28-day plan to cut overwhelm and finish cleanly",
+      "How to cut overwhelm and finish tasks cleanly",
     ],
     frictionLine:
       "Your momentum tends to break when tasks stack up and priorities get unclear.",
@@ -86,7 +86,7 @@ const SIGNATURES: Record<BrainSignature, Omit<SignatureResult, "signature">> = {
     unlockTeaser: [
       "Your full focus-pattern breakdown",
       "A follow-through system for when the novelty fades",
-      "A 28-day plan that turns starts into finishes",
+      "How to turn strong starts into real finishes",
     ],
     frictionLine:
       "Your momentum tends to break the moment a task stops feeling new or interesting.",
@@ -104,7 +104,7 @@ const SIGNATURES: Record<BrainSignature, Omit<SignatureResult, "signature">> = {
     unlockTeaser: [
       "Your full focus-pattern breakdown",
       "A reset routine for high-stress, low-focus days",
-      "A 28-day plan to keep one rough moment from sinking the day",
+      "How to keep one rough moment from sinking the day",
     ],
     frictionLine:
       "Your momentum tends to break when stress or a bad mood takes over the day.",
@@ -122,7 +122,7 @@ const SIGNATURES: Record<BrainSignature, Omit<SignatureResult, "signature">> = {
     unlockTeaser: [
       "Your full focus-pattern breakdown",
       "Simple anchors that make it easier to start",
-      "A 28-day plan to hold attention without relying on willpower",
+      "How to hold attention without leaning on willpower",
     ],
     frictionLine:
       "Your momentum tends to break when there's nothing concrete pulling your attention back.",
