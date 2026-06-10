@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 const ARTICLES = [
   {
     slug: "types-of-adhd",
-    title: "5 ADHD Signature™ Patterns Explained",
+    title: "5 Cognitive Signature™ Patterns Explained",
     description:
       "Learn the Sprinter, Archivist, Spark, Reactor, and Drifter profile signatures used inside FocusRoute Brain OS™.",
     readTime: "4 min read",

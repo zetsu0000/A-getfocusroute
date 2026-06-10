@@ -11,7 +11,7 @@ export type ExplainScriptBlock = {
 export type ExplainScriptBundle = {
   title: string;
   subtitle: string;
-  /** Opening line(s) for copy — includes ADHD Signature™ when `signatureName` is provided. */
+  /** Opening line(s) for copy — includes Cognitive Signature™ when `signatureName` is provided. */
   opener: string;
   openerFollowUp: string;
   blocks: ExplainScriptBlock[];
@@ -19,7 +19,7 @@ export type ExplainScriptBundle = {
 };
 
 /**
- * Builds the Explain-It script with optional FocusRoute ADHD Signature™ label from saved quiz results.
+ * Builds the Explain-It script with optional FocusRoute Cognitive Signature™ label from saved quiz results.
  */
 export function getExplainScriptBundle(
   signatureName: string | null | undefined,

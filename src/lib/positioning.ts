@@ -23,7 +23,7 @@ export const BRAIN_OS = {
   assessment: "Cognitive Mapping Assessment",
   brainProfile: "FocusRoute Brain Profile",
   radar: "Executive Function Radar",
-  signature: "ADHD Signature",
+  signature: "Cognitive Signature",
   engine: "Profile-to-Protocol Engine",
   protocol: "28-Day Protocol",
   mechanismTagline: "Profile-to-Protocol - we map your brain first, then build your plan.",
@@ -65,7 +65,7 @@ export const BRAIN_OS = {
 
   /** Value stack line items (paywall "what you unlock") - condensed from doc */
   paywallUnlockBullets: [
-    `Full ${"FocusRoute Brain Profile"} - narrative + ${"Executive Function Radar"} + ${"ADHD Signature"}`,
+    `Full ${"FocusRoute Brain Profile"} - narrative + ${"Executive Function Radar"} + ${"Cognitive Signature"}`,
     `"Finally, An Explanation" plain-English letter`,
     `${"Profile-to-Protocol Engine"} + ${"28-Day Protocol"} - daily micro-actions calibrated to your profile`,
     "Toolkit bundle + executive-function playsheets",
