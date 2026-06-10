@@ -224,15 +224,15 @@ export const questions: QuizQuestion[] = [
     statement: "Too much at once and I freeze.",
   },
 
-  /* INFO CARD B — momentum (breaks up the scale block) */
+  /* INFO CARD B — pattern hint (breaks up the scale block) */
   {
     id: "info-focus",
     question: "",
     inputType: "info",
     options: [],
-    infoStat: "The right small change can shift everything.",
+    infoStat: "A pattern is forming in your answers.",
     infoBody:
-      "Small changes build the fastest momentum. Your plan starts with quick wins.",
+      "This looks like a focus pattern — not a willpower problem. A few more answers and we can name it.",
   },
 
   /* Q15 */
@@ -253,10 +253,10 @@ export const questions: QuizQuestion[] = [
     statement: "If I don't write it down, it's gone.",
   },
 
-  /* Q17 */
+  /* Q17 — last of the scale block, but 4 questions still follow; don't say "last" */
   {
     id: "scale-emotions",
-    question: "Last one — true for you?",
+    question: "One more like this?",
     inputType: "scale",
     options: [],
     statement: "A bad mood can wreck my whole day.",

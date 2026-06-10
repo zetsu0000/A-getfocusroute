@@ -51,7 +51,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 
 const STEPS = [
   { num: "01", icon: Brain, color: "#6757E8", tint: "rgba(103,87,232,0.12)", title: "Take the free assessment", desc: "3 minutes. 28 questions. Maps your attention style, executive function patterns, and focus friction points.", label: "Free · Private · Instant" },
-  { num: "02", icon: BarChart3, color: "#3B82B8", tint: "rgba(59,130,184,0.12)", title: "Receive your Brain Profile", desc: "Your full cognitive map: narrative report, Executive Function Radar, and ADHD Signature — explained in plain English.", label: "Personalized · Detailed" },
+  { num: "02", icon: BarChart3, color: "#3B82B8", tint: "rgba(59,130,184,0.12)", title: "Receive your Brain Profile", desc: "Your full cognitive map: narrative report, Executive Function Radar, and Cognitive Signature — explained in plain English.", label: "Personalized · Detailed" },
   { num: "03", icon: Target, color: "#2F8B63", tint: "rgba(47,139,99,0.12)", title: "Follow your Protocol", desc: "28 days of daily micro-actions, reflection prompts, and focus recovery tools — built specifically for your profile.", label: "Actionable · Day-by-day" },
 ];
 

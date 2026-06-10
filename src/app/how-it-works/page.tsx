@@ -41,7 +41,7 @@ const FAQ = [
   },
   {
     q: "What does the assessment measure?",
-    a: "The Cognitive Mapping Assessment™ measures self-reported patterns across focus consistency, task initiation, planning friction, and emotional load. Results are used to build your ADHD Signature™ and protocol preview.",
+    a: "The Cognitive Mapping Assessment™ measures self-reported patterns across focus consistency, task initiation, planning friction, and emotional load. Results are used to build your Cognitive Signature™ and protocol preview.",
   },
   {
     q: "Can I take the test more than once?",
@@ -53,7 +53,7 @@ const FAQ = [
   },
   {
     q: "How is the detailed report different from the free results?",
-    a: "The free result shows a partial signature reveal. The full report includes a complete Executive Function Radar™, ADHD Signature™, and the Profile-to-Protocol™ Engine output with a day-by-day 28-Day Protocol™.",
+    a: "The free result shows a partial signature reveal. The full report includes a complete Executive Function Radar™, Cognitive Signature™, and the Profile-to-Protocol™ Engine output with a day-by-day 28-Day Protocol™.",
   },
 ];
 

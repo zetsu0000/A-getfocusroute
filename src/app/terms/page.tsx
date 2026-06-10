@@ -66,7 +66,7 @@ export default function TermsPage() {
       <section style={section}>
         <h2 style={h2}>3. Not Medical Advice</h2>
         <p style={p}>
-          Nothing in the Service — including the quiz, Brain Profile, ADHD Signature™, Executive
+          Nothing in the Service — including the quiz, Brain Profile, Cognitive Signature™, Executive
           Function Radar™, 28-Day Protocol, bonus content, or any other material — is medical advice.
           All content is for informational and self-educational purposes only.
         </p>

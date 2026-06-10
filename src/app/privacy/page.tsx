@@ -63,7 +63,7 @@ export default function PrivacyPage() {
         <p style={p}>
           When you complete the FocusRoute assessment, we collect your self-reported answers about
           focus patterns, attention, energy, executive function, and related experiences. These
-          answers are used to generate your Brain Profile, ADHD Signature™, and Executive Function
+          answers are used to generate your Brain Profile, Cognitive Signature™, and Executive Function
           Radar™. This data is sensitive by nature — we treat it with care, store it securely, and
           do not use it for advertising profiling or sell it to third parties.
         </p>
