@@ -13,7 +13,7 @@ import {
 import { useQuizStore } from "@/store/quizStore";
 import { safeName } from "@/lib/personalization";
 import { BRAIN_OS } from "@/lib/positioning";
-import { getSignatureFromAnswers } from "@/lib/signature";
+import { getSignatureFromAnswers, echoSentence } from "@/lib/signature";
 import { SignatureRevealCard } from "@/components/signature/SignatureRevealCard";
 import {
   createAnalyticsEventId,
@@ -87,13 +87,14 @@ const stripeAppearance = {
   },
 };
 
-const fullProfileReveals = [
-  "Why you start fast, stall, or avoid certain tasks",
-  "What conditions help your focus switch on",
-  "Where pressure helps and where it backfires",
-  "How your recovery style affects consistency",
-  "A plain-English script for explaining your pattern",
-];
+function revealsFor(planFocus: string): string[] {
+  return [
+    `Your plan focuses on ${planFocus}`,
+    "What conditions help your focus switch on",
+    "Where pressure helps you and where it backfires",
+    "A plain-English way to explain your pattern to someone",
+  ];
+}
 
 /* Locked result card */
 function LockedCard() {
@@ -135,7 +136,7 @@ function LockedCard() {
 
       <div style={{ padding: "16px 18px 18px" }}>
         <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.6, marginBottom: 12 }}>
-          This preview points to how your focus system tends to react under demand, not as a diagnosis, but as a pattern map.
+          {signature.frictionLine} It&apos;s a focus pattern, not a diagnosis.
         </p>
 
         <div style={{ display: "grid", gap: 8, marginBottom: 14 }}>
@@ -300,7 +301,7 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
         ) : (
           <>
             <Lock size={17} color="white" strokeWidth={2.5} />
-            Unlock My Full Pattern ({BRAIN_OS.price.paywall})
+            Unlock My Full Plan ({BRAIN_OS.price.paywall})
           </>
         )}
       </m.button>
@@ -362,6 +363,7 @@ export function PaywallScreen() {
   const { name, email, setStep, quizResultId, answers } = useQuizStore();
   const displayName = safeName(name, "Your");
   const signature = getSignatureFromAnswers(answers);
+  const echo = echoSentence(answers);
 
   const handlePaywallSuccess = () => {
     setStep("upsell");
@@ -428,7 +430,7 @@ export function PaywallScreen() {
               border: "1px solid var(--color-border-2)",
             }}
           >
-            {["Private assessment data", "Not a diagnosis", "Instant access"].map((item) => (
+            {["Private results", "Not a diagnosis", "Instant access"].map((item) => (
               <span key={item} style={{ fontSize: 12, color: "var(--color-text-body)", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5 }}>
                 <BadgeCheck size={13} color="var(--color-text-muted)" strokeWidth={2.5} />
                 {item}
@@ -450,13 +452,13 @@ export function PaywallScreen() {
           >
             <div style={{ padding: "18px 20px 14px" }}>
               <p style={{ fontSize: 11, letterSpacing: "0.09em", textTransform: "uppercase", fontWeight: 700, color: "var(--color-text-muted)", marginBottom: 8 }}>
-                Pattern found
+                Your pattern: {signature.title}
               </p>
               <h1 style={{ fontSize: 24, fontWeight: 900, color: "var(--color-text)", lineHeight: 1.22, letterSpacing: "-0.02em" }}>
-                Now see what your pattern means.
+                {displayName === "Your" ? "Now turn this into a plan built for you." : `${displayName}, now turn this into a plan built for you.`}
               </h1>
               <p style={{ marginTop: 8, fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.62 }}>
-                {displayName === "Your" ? "Your" : `${displayName}, your`} preview shows the signature. The full Brain Profile explains the focus patterns, friction points, recovery style, and next steps behind it.
+                {echo ? `${echo} ` : ""}Your full plan focuses on {signature.planFocus}.
               </p>
             </div>
 
@@ -497,10 +499,10 @@ export function PaywallScreen() {
             </div>
 
             <p style={{ fontSize: 12, fontWeight: 850, color: "var(--color-text)", marginBottom: 10 }}>
-              What your full profile reveals
+              What&apos;s in your full plan
             </p>
             <div style={{ marginBottom: 12, display: "grid", gap: 8 }}>
-              {fullProfileReveals.map((item) => (
+              {revealsFor(signature.planFocus).map((item) => (
                 <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
                   <div style={{ width: 18, height: 18, borderRadius: "var(--radius-pill)", background: "var(--color-signal-tint)", display: "flex", alignItems: "center", justifyContent: "center", marginTop: 1, flexShrink: 0 }}>
                     <Check size={11} color="var(--color-signal)" strokeWidth={3} />
@@ -521,6 +523,33 @@ export function PaywallScreen() {
               <p style={{ fontSize: 11, color: "var(--color-text-muted)", lineHeight: 1.5, marginTop: 8 }}>
                 FocusRoute is educational self-understanding and productivity support. It is not a diagnosis or medical treatment.
               </p>
+            </div>
+          </m.div>
+
+          <m.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.10 }}
+            style={{
+              background: "var(--color-bg-card)",
+              borderRadius: "var(--radius-lg)",
+              border: "1px solid var(--color-border)",
+              boxShadow: "var(--shadow-card)",
+              padding: "16px 18px",
+            }}
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {[
+                { q: "Is this just another quiz?", a: "No — your plan is built from your answers, not generic tips." },
+                { q: "Is this a diagnosis?", a: "No. It's a focus pattern and a practical plan, not a medical assessment." },
+                { q: "What do I actually get?", a: "Your full pattern breakdown and a 28-day, day-by-day plan — instantly." },
+                { q: "What if it doesn't fit?", a: "7-day refund. If it's not you, email us — no questions." },
+              ].map(({ q, a }) => (
+                <div key={q}>
+                  <p style={{ fontSize: 13, fontWeight: 800, color: "var(--color-text)", marginBottom: 2 }}>{q}</p>
+                  <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.5 }}>{a}</p>
+                </div>
+              ))}
             </div>
           </m.div>
 
