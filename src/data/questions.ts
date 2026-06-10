@@ -1,29 +1,29 @@
 import { QuizQuestion } from "@/types/quiz";
 
 /*
- * FULL FUNNEL — 21 quiz questions + info cards
+ * FULL FUNNEL — 20 quiz questions + info cards
  *
  * Copy is intentionally warm, short, and scannable (focus-friendly): titles
  * ~3-6 words, options under ~6 words, no multi-clause options. SCORING NOTE:
  * scoring/personalization reads ONLY question `id`s and option `id`s — never
  * the visible text. So every title/subtitle/label below is free to change as
- * long as the `id` fields stay stable. Reordering is also safe (the signature
- * hash sorts by questionId before hashing).
+ * long as the `id` fields stay stable. Reordering is also safe.
  *
  * INFO CARDS are purely presentational — `submitInfo` never writes to `answers`,
- * so info cards never affect scoring or the signature hash. They can be added,
- * removed, reordered, or reworded freely.
+ * so info cards never affect scoring. They can be added, removed, reordered,
+ * or reworded freely.
  *
- * Block 1 — Pain hook (warm single-selects; paid traffic lands here).
+ * Block 1 — Pain hook (warm single-selects; paid traffic lands here),
+ *           then info card 0 (acknowledgment + setup pre-frame).
  * Block 2 — Quick setup (pronoun + age, once the user is invested).
  * Block 3 — Deeper pattern, then info card A (belonging).
- * Block 4 — Scale block (6 statements) with info card B (momentum) mid-block.
+ * Block 4 — Scale block (6 statements) with info card B (pattern tease) mid-block.
  * Block 5 — Context + readiness, info card C (almost-there bridge), snapshot.
  *
  * Scored ids (do not rename): mood, distraction, sleep, experience,
  * daily-impact, time, support, obstacles, scale-*.
- * Hash-only ids (labels free, ids kept stable): focus-feeling, gender, age,
- * struggles, goals, diagnosis, motivation.
+ * Personalization-only ids (labels free, ids kept stable): focus-feeling,
+ * gender, age, struggles, goals, motivation.
  */
 
 export const questions: QuizQuestion[] = [
@@ -86,12 +86,24 @@ export const questions: QuizQuestion[] = [
     ],
   },
 
+  /* INFO CARD 0 — early acknowledgment + setup pre-frame (after the pain block) */
+  {
+    id: "info-seen",
+    question: "",
+    inputType: "info",
+    options: [],
+    infoStat: "Sound familiar? You're in the right place.",
+    infoBody:
+      "Your first answers already sketch a pattern. Two quick setup questions, then we map what's driving it.",
+  },
+
   /* ── BLOCK 2 — Quick setup ───────────────────────────────────── */
 
-  /* Q5 — pronoun (hash-only) */
+  /* Q5 — pronoun (personalization only) */
   {
     id: "gender",
     question: "How should we refer to you?",
+    subtitle: "So your plan sounds like you.",
     inputType: "single",
     options: [
       { id: "male",   label: "He / him" },
@@ -275,19 +287,7 @@ export const questions: QuizQuestion[] = [
 
   /* ── BLOCK 5 — Context + readiness ───────────────────────────── */
 
-  /* Q18 — diagnosis (hash-only) */
-  {
-    id: "diagnosis",
-    question: "How well do you know your focus?",
-    inputType: "single",
-    options: [
-      { id: "yes",       label: "I get it." },
-      { id: "suspected", label: "Sort of — it's fuzzy." },
-      { id: "no",        label: "Still figuring it out." },
-    ],
-  },
-
-  /* Q19 — support (SCORED: focus conditions + initiation) */
+  /* Q18 — support (SCORED: focus conditions + initiation) */
   {
     id: "support",
     question: "What's in your corner?",
@@ -300,7 +300,7 @@ export const questions: QuizQuestion[] = [
     ],
   },
 
-  /* Q20 — obstacles (SCORED: initiation style) */
+  /* Q19 — obstacles (SCORED: initiation style) */
   {
     id: "obstacles",
     question: "What keeps breaking your streak?",
@@ -314,7 +314,7 @@ export const questions: QuizQuestion[] = [
     ],
   },
 
-  /* Q21 — motivation (hash-only) */
+  /* Q20 — motivation (personalization only) */
   {
     id: "motivation",
     question: "Ready to see what fits?",
