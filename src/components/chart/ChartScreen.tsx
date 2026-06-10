@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { m } from "framer-motion";
 import { useQuizStore } from "@/store/quizStore";
 import { safeName } from "@/lib/personalization";
-import { getSignatureFromAnswers } from "@/lib/signature";
+import { getSignatureFromAnswers, echoSentence } from "@/lib/signature";
 import { SignatureRevealCard } from "@/components/signature/SignatureRevealCard";
 import { setPersistedQuizResultId } from "@/lib/quizResultId";
 import { createClient } from "@/lib/supabase/client";
@@ -26,6 +26,7 @@ export function ChartScreen() {
   const router = useRouter();
   const displayName = safeName(name, "you");
   const signature = getSignatureFromAnswers(answers);
+  const echo = echoSentence(answers);
   const saveStarted = useRef(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [saveEmail, setSaveEmail] = useState<string | null>(null);
@@ -172,6 +173,38 @@ export function ChartScreen() {
           signatureSummary={signature.preview}
           variant="preview"
         />
+
+        <div
+          style={{
+            background: "var(--color-bg-card)",
+            borderRadius: "var(--radius-lg)",
+            padding: "18px 20px",
+            boxShadow: "var(--shadow-card)",
+            border: "1px solid var(--color-border)",
+            borderLeft: "3px solid var(--color-cognitive)",
+          }}
+        >
+          <p
+            style={{
+              fontSize: 10,
+              fontWeight: 800,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: "var(--color-text-muted)",
+              marginBottom: 8,
+            }}
+          >
+            What your answers point to
+          </p>
+          <p style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text)", lineHeight: 1.5 }}>
+            {signature.frictionLine}
+          </p>
+          {echo && (
+            <p style={{ marginTop: 8, fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.6 }}>
+              {echo}
+            </p>
+          )}
+        </div>
 
         <div
           style={{
