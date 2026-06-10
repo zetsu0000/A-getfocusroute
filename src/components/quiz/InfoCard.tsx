@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { m } from "framer-motion";
-import { Sparkles, Compass, type LucideIcon } from "lucide-react";
+import { Fingerprint, Sparkles, Compass, type LucideIcon } from "lucide-react";
 import { QuizQuestion } from "@/types/quiz";
 import { useQuizStore } from "@/store/quizStore";
 import { scoreFromAnswers, getSymptomLevel, LevelInfo } from "@/lib/symptom-level";
@@ -276,8 +276,9 @@ function HighlightedStat({ stat, highlight }: { stat: string; highlight?: string
 ───────────────────────────────────────────────────────────────── */
 /* Distinct visual per interstitial so the same illustration never repeats.
    Only one real illustration asset exists (people-group.png); it stays on the
-   first "you're not alone" card, later cards get their own themed icon. */
+   "you're not alone" belonging card, other cards get their own themed icon. */
 const STAGE_ICON: Record<string, LucideIcon> = {
+  "info-seen": Fingerprint,
   "info-focus": Sparkles,
   "info-adhd": Compass,
 };

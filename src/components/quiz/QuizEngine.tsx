@@ -11,8 +11,8 @@ import { QuestionCard } from "./QuestionCard";
 import { getOrCreateActionEventId, trackEvent } from "@/lib/analytics/client";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 
-// InfoCard only renders for `info`-type questions (first one appears after Q10),
-// and ScaleQuestion only renders for `scale`-type questions (first one at Q11).
+// InfoCard only renders for `info`-type questions (first one appears after Q4),
+// and ScaleQuestion only renders for `scale`-type questions (mid-quiz).
 // Defer both so the landing-page chunk doesn't carry them.
 const ScaleQuestion = dynamic(
   () => import("./ScaleQuestion").then(m => ({ default: m.ScaleQuestion })),
@@ -101,10 +101,24 @@ export function QuizEngine() {
   return (
     <div className="min-h-screen flex flex-col">
 
+      {/* ── Brand anchor — paid traffic lands straight on a question,
+          so this is the only "where am I?" cue during the quiz. */}
+      <p style={{
+        textAlign: "center",
+        paddingTop: 14,
+        fontSize: 11,
+        fontWeight: 800,
+        letterSpacing: "0.08em",
+        textTransform: "uppercase",
+        color: "var(--color-signal)",
+      }}>
+        FocusRoute
+      </p>
+
       {/* ── Top bar ────────────────────────────────────────── */}
       <div
         className="flex-shrink-0 flex items-center gap-3 w-full"
-        style={{ padding: "20px 20px 14px" }}
+        style={{ padding: "10px 20px 14px" }}
       >
         <m.button
           onClick={currentQuestionIndex > 0 ? goBack : undefined}
@@ -136,10 +150,10 @@ export function QuizEngine() {
 
         <div className="flex-1 flex flex-col gap-1">
           {!isInfo && <ProgressBar currentIndex={currentQuestionIndex} />}
-          {/* Hold back the numeric count on the first few steps so paid traffic
-             doesn't see "1 / 21" up front (reads as "this is long"). The bar
-             still shows momentum; the explicit count returns once invested. */}
-          {!isInfo && answeredCount > 3 && (
+          {/* Hold back the numeric count until past the halfway mark: early
+             counts read as "this is long", while "11 / 20" reads as momentum.
+             The bar alone carries progress until then. */}
+          {!isInfo && answeredCount * 2 > totalCount && (
             <p style={{ fontSize: 11, fontWeight: 600, color: "var(--color-text-muted)", textAlign: "right", letterSpacing: "0.04em" }}>
               {answeredCount} / {totalCount}
             </p>
