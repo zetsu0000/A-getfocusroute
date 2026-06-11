@@ -183,7 +183,13 @@ export function UpsellScreen() {
   }, [email, name, quizResultId]);
 
   const handleSuccess = () => setStep("subscription");
-  const handleDecline = () => setStep("subscription");
+  const handleDecline = () => {
+    trackEvent(FIRST_PARTY_EVENTS.upsellSkipped, {
+      meta: false,
+      metadata: { product_key: "roadmap_28_day" },
+    });
+    setStep("subscription");
+  };
 
   return (
     <m.div

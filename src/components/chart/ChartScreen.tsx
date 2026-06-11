@@ -354,7 +354,13 @@ export function ChartScreen() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            onClick={() => setStep("paywall")}
+            onClick={() => {
+              trackEvent(FIRST_PARTY_EVENTS.resultUnlockClicked, {
+                meta: false,
+                metadata: { signature_key: signature.signature },
+              });
+              setStep("paywall");
+            }}
             style={{
               width: "100%",
               padding: "18px",

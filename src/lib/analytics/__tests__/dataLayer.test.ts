@@ -80,6 +80,15 @@ describe("dataLayerEventForFirstParty", () => {
     expect(dataLayerEventForFirstParty(FIRST_PARTY_EVENTS.dashboardViewed)).toBeNull();
     expect(dataLayerEventForFirstParty(FIRST_PARTY_EVENTS.paymentIntentCreated)).toBeNull();
   });
+
+  it("does not bridge high-volume funnel-depth events into the dataLayer", () => {
+    expect(dataLayerEventForFirstParty(FIRST_PARTY_EVENTS.questionViewed)).toBeNull();
+    expect(dataLayerEventForFirstParty(FIRST_PARTY_EVENTS.infoCardViewed)).toBeNull();
+    expect(dataLayerEventForFirstParty(FIRST_PARTY_EVENTS.resultUnlockClicked)).toBeNull();
+    expect(dataLayerEventForFirstParty(FIRST_PARTY_EVENTS.upsellSkipped)).toBeNull();
+    expect(dataLayerEventForFirstParty(FIRST_PARTY_EVENTS.subscriptionSkipped)).toBeNull();
+    expect(dataLayerEventForFirstParty(FIRST_PARTY_EVENTS.successViewed)).toBeNull();
+  });
 });
 
 describe("pushDataLayerEvent", () => {

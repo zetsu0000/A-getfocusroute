@@ -6,6 +6,8 @@ import { m } from "framer-motion";
 import { CheckCircle2, Mail, LayoutDashboard } from "lucide-react";
 import { useQuizStore } from "@/store/quizStore";
 import { safeName } from "@/lib/personalization";
+import { trackEvent } from "@/lib/analytics/client";
+import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 
 function ConfettiCanvas() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -67,6 +69,11 @@ function ConfettiCanvas() {
 export function SuccessScreen() {
   const { name, email } = useQuizStore();
   const displayName = safeName(name, "there");
+
+  /* Client-side confirmation the buyer reached the end state. First-party only. */
+  useEffect(() => {
+    trackEvent(FIRST_PARTY_EVENTS.successViewed, { meta: false });
+  }, []);
 
   return (
     <m.div

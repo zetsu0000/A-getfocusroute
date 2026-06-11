@@ -25,4 +25,20 @@ describe("first-party funnel event registry", () => {
     expect(META_ALLOWED_FIRST_PARTY_EVENTS.has(FIRST_PARTY_EVENTS.paymentIntentCreated)).toBe(false);
     expect(META_EVENT_BY_FIRST_PARTY[FIRST_PARTY_EVENTS.paymentIntentCreated]).toBeUndefined();
   });
+
+  it("registers the funnel-depth events as first-party only (never Meta)", () => {
+    const depthEvents = [
+      FIRST_PARTY_EVENTS.questionViewed,
+      FIRST_PARTY_EVENTS.infoCardViewed,
+      FIRST_PARTY_EVENTS.resultUnlockClicked,
+      FIRST_PARTY_EVENTS.upsellSkipped,
+      FIRST_PARTY_EVENTS.subscriptionSkipped,
+      FIRST_PARTY_EVENTS.successViewed,
+    ] as const;
+    for (const eventName of depthEvents) {
+      expect(isAllowedFirstPartyEvent(eventName)).toBe(true);
+      expect(META_ALLOWED_FIRST_PARTY_EVENTS.has(eventName)).toBe(false);
+      expect(META_EVENT_BY_FIRST_PARTY[eventName]).toBeUndefined();
+    }
+  });
 });
