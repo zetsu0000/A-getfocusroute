@@ -250,7 +250,13 @@ export function SubscriptionScreen() {
   const handleSuccess = () => {
     setStep("success");
   };
-  const handleSkip = () => setStep("success");
+  const handleSkip = () => {
+    trackEvent(FIRST_PARTY_EVENTS.subscriptionSkipped, {
+      meta: false,
+      metadata: { product_key: selectedProductKey(plan.priceId) },
+    });
+    setStep("success");
+  };
 
   return (
     <m.div

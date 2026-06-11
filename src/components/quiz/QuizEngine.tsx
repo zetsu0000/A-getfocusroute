@@ -82,6 +82,28 @@ export function QuizEngine() {
     }
   }, [answers, totalCount]);
 
+  /* Per-question visibility — the drop-off signal the 25/50/75 milestones can't
+     give. Fires once per screen shown (re-fires on back-navigation, which is
+     itself useful signal). First-party only, never bridged to Meta/GTM. */
+  useEffect(() => {
+    if (isInfo) {
+      trackEvent(FIRST_PARTY_EVENTS.infoCardViewed, {
+        meta: false,
+        metadata: { card_id: question.id },
+      });
+    } else {
+      trackEvent(FIRST_PARTY_EVENTS.questionViewed, {
+        meta: false,
+        metadata: {
+          question_id: question.id,
+          question_index: answeredCount,
+          total_questions: totalCount,
+          input_type: question.inputType,
+        },
+      });
+    }
+  }, [question, isInfo, answeredCount, totalCount]);
+
   // Slide direction follows question index; syncing in an effect avoids reading refs during render (react-hooks/refs).
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- AnimatePresence direction tracks zustand index delta
