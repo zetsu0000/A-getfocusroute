@@ -21,6 +21,13 @@ export const FIRST_PARTY_EVENTS = {
   roadmapLandingViewed: "roadmap_landing_viewed",
   roadmapCtaClicked: "roadmap_cta_clicked",
   purchaseSucceeded: "purchase_succeeded",
+  // Funnel-depth events — first-party only (high volume / diagnostic; never sent to Meta).
+  questionViewed: "question_viewed",
+  infoCardViewed: "info_card_viewed",
+  resultUnlockClicked: "result_unlock_clicked",
+  upsellSkipped: "upsell_skipped",
+  subscriptionSkipped: "subscription_skipped",
+  successViewed: "success_viewed",
 } as const;
 
 export type FirstPartyEventName =
