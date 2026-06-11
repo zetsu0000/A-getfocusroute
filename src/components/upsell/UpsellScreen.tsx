@@ -220,8 +220,29 @@ export function UpsellScreen() {
             <span style={{ color: "var(--color-accent)" }}>Turn insight into a daily system.</span>
           </h1>
           <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.65 }}>
-            Your {BRAIN_OS.assessment} mapped your signature pattern. The {BRAIN_OS.protocol} gives you practical daily actions personalized to that map.
+            This is a separate, optional add-on — not the profile you just unlocked.
           </p>
+        </m.div>
+
+        {/* Already-yours vs. adds — kills "am I buying the same thing twice?" */}
+        <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
+          style={{ background: "var(--color-bg-card)", borderRadius: 18, border: "1px solid var(--color-border)", boxShadow: "var(--shadow-card)", overflow: "hidden" }}>
+          <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--color-border)" }}>
+            <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-muted)", marginBottom: 4 }}>
+              Already yours
+            </p>
+            <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.55 }}>
+              Your Brain Profile — your pattern, your radar map, and your first next steps.
+            </p>
+          </div>
+          <div style={{ padding: "14px 18px", background: "var(--color-bg-card-2)" }}>
+            <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-accent)", marginBottom: 4 }}>
+              This adds
+            </p>
+            <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.55 }}>
+              The {BRAIN_OS.protocol} — a day-by-day practice system built on that profile: 28 short daily actions instead of figuring out each day yourself.
+            </p>
+          </div>
         </m.div>
 
         {/* What's inside */}

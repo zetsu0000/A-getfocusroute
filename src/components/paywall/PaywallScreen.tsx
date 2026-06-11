@@ -111,8 +111,16 @@ function LockedCard() {
   };
   const profileBand = profileBandBySignature[signature.signature] ?? profileBandBySignature.Drifter;
 
+  /* First locked row names the user's own pattern; the rest stay generic. */
+  const lockedPatternRow: Record<string, string> = {
+    Sprinter: "Your pressure-to-momentum pattern",
+    Archivist: "Your overload threshold pattern",
+    Spark: "Your novelty-to-follow-through pattern",
+    Reactor: "Your mood-to-focus pattern",
+    Drifter: "Your attention anchor pattern",
+  };
   const rows = [
-    { label: "Your pressure response pattern", value: "Preview hidden" },
+    { label: lockedPatternRow[signature.signature] ?? "Your pressure response pattern", value: "Preview hidden" },
     { label: "Your best starting conditions", value: "Preview hidden" },
     { label: "Your recovery rhythm", value: "Preview hidden" },
     { label: "Your explain-it-to-someone script", value: "Preview hidden" },
@@ -549,6 +557,7 @@ export function PaywallScreen() {
                 { q: "Is this a diagnosis?", a: "No. It's a focus pattern and a practical plan, not a medical assessment." },
                 { q: "What do I actually get?", a: "Your full pattern breakdown, your radar map, and your first next steps — instantly in your account." },
                 { q: "Will this be too much work?", a: "No — plain language and small steps, built for short attention." },
+                { q: "How long until I see something change?", a: "Your first next step is small enough to try today. The plan works in short steps — you don't have to finish a program before anything shifts." },
                 { q: "What if it doesn't fit?", a: "7-day refund. If it's not you, email us — no questions." },
               ].map(({ q, a }) => (
                 <div key={q}>
