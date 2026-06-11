@@ -68,3 +68,19 @@ export function isPaidAssessmentTraffic(
     hasPaidCampaignIntent(utmCampaign)
   );
 }
+
+/**
+ * Paid ads sometimes point at "/" instead of /assessment. Returns the
+ * /assessment path (full query preserved) when homepage traffic carries paid
+ * markers, or null when the request should pass through untouched.
+ * Consumed by the proxy, so it must stay pure and edge-safe.
+ */
+export function paidHomepageRedirectPath(
+  pathname: string,
+  searchParams: URLSearchParams,
+): string | null {
+  if (pathname !== "/") return null;
+  if (!isPaidAssessmentTraffic(searchParams)) return null;
+  const query = searchParams.toString();
+  return query ? `/assessment?${query}` : "/assessment";
+}

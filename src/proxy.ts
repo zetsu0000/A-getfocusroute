@@ -1,7 +1,19 @@
 ﻿import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { paidHomepageRedirectPath } from "@/lib/assessment/autostart";
 
 export async function proxy(request: NextRequest) {
+  // Paid ads sometimes point at "/" — route that click into the quiz before
+  // rendering anything, with every query param intact so the existing
+  // /assessment auto-start and attribution capture take over.
+  const paidRedirect = paidHomepageRedirectPath(
+    request.nextUrl.pathname,
+    request.nextUrl.searchParams,
+  );
+  if (paidRedirect) {
+    return NextResponse.redirect(new URL(paidRedirect, request.url));
+  }
+
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-pathname", request.nextUrl.pathname);
 
