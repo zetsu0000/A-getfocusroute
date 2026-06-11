@@ -4,7 +4,7 @@ import { BRAIN_OS } from "@/lib/positioning";
 
 export const metadata: Metadata = {
   title: `How ${BRAIN_OS.lineTm} Works`,
-  description: "See how FocusRoute maps your cognitive profile and turns it into a personalized 28-Day Protocol™.",
+  description: "See how FocusRoute maps your focus pattern and turns it into a practical, personalized plan.",
 };
 
 const STEPS = [
@@ -12,13 +12,13 @@ const STEPS = [
     number: "01",
     title: "Map your brain",
     description:
-      `Complete the ${BRAIN_OS.assessment} to map attention, executive function, emotional regulation, and daily behavior patterns. Most people finish in about 12 minutes.`,
+      `Complete the ${BRAIN_OS.assessment} to map attention, executive function, emotional regulation, and daily behavior patterns. Most people finish in about 3 minutes.`,
   },
   {
     number: "02",
     title: "Read your Brain Profile",
     description:
-      `Instantly receive your ${BRAIN_OS.brainProfile} with your ${BRAIN_OS.radar} and ${BRAIN_OS.signature} — a personalized explanation of how your mind works under pressure, focus, and planning.`,
+      `Unlock your ${BRAIN_OS.brainProfile} with your ${BRAIN_OS.radar} and ${BRAIN_OS.signature} — a personalized explanation of how your mind works under pressure, focus, and planning.`,
   },
   {
     number: "03",
@@ -41,7 +41,7 @@ const FAQ = [
   },
   {
     q: "What does the assessment measure?",
-    a: "The Cognitive Mapping Assessment™ measures self-reported patterns across focus consistency, task initiation, planning friction, and emotional load. Results are used to build your Cognitive Signature™ and protocol preview.",
+    a: "The Cognitive Mapping Assessment measures self-reported patterns across focus consistency, task initiation, planning friction, and emotional load. Results are used to build your Cognitive Signature and profile preview.",
   },
   {
     q: "Can I take the test more than once?",
@@ -53,7 +53,7 @@ const FAQ = [
   },
   {
     q: "How is the detailed report different from the free results?",
-    a: "The free result shows a partial signature reveal. The full report includes a complete Executive Function Radar™, Cognitive Signature™, and the Profile-to-Protocol™ Engine output with a day-by-day 28-Day Protocol™.",
+    a: "The free result shows a partial signature reveal. The full report unlocks your complete Executive Function Radar, your Cognitive Signature breakdown, and your first next steps. The 28-Day Protocol is a separate, optional add-on for day-by-day structure.",
   },
 ];
 

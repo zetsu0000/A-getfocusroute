@@ -28,11 +28,9 @@ export const BRAIN_OS = {
   protocol: "28-Day Protocol",
   mechanismTagline: "Profile-to-Protocol - we map your brain first, then build your plan.",
 
-  /** Hero - Headline 01 + supporting line from positioning doc */
+  /** Hero - Headline 01 from positioning doc */
   heroTitleBefore: "You're not lazy.",
   heroTitleAccent: "Your brain just needs a different operating system.",
-  heroSub:
-    "Take the free 3-minute FocusRoute assessment to discover your ADHD-style brain profile - and see what kind of plan your brain actually needs.",
 
   headerEyebrow: "BRAIN OS",
 

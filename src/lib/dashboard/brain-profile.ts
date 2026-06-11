@@ -124,13 +124,13 @@ const SIG_DATA: Record<string, SigEntry> = {
 
 const DEFAULT_SIG: SigEntry = {
   title: "Attention-driven execution pattern",
-  desc: "Your profile reflects an ADHD-style processing style with distinct strengths and friction points mapped below.",
+  desc: "Your profile reflects a distinct attention and execution style, with strengths and friction points mapped below.",
   profileExplanation:
     "Your brain processes attention, motivation, and execution through a pattern that differs from the neurotypical model. Some things come easily — deep engagement, pattern recognition, fast responses under pressure — while others like task initiation, sustained routine work, and follow-through require deliberate scaffolding.",
   narrative: [
     "If you've spent years trying to explain why your brain works the way it does — to others, or to yourself — this profile maps what you've been experiencing.",
     "The patterns here aren't excuses. They're descriptions. Understanding them is the first step toward designing conditions that actually fit.",
-    "The gap between knowing what to do and doing it is one of the most frustrating experiences ADHD-style brains describe. You're not alone, and it isn't permanent.",
+    "The gap between knowing what to do and doing it is one of the most frustrating experiences people with this pattern describe. You're not alone, and it isn't permanent.",
     "The right system doesn't demand you become a different person. It meets you where you are and builds from there.",
   ],
 };

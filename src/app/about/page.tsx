@@ -143,7 +143,7 @@ export default function AboutPage() {
               <span style={{ color: "#9B8EFF" }}>Your brain just needs a different operating system.</span>
             </m.h1>
             <m.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.17, duration: 0.5 }} style={{ fontSize: "clamp(15px,3.5vw,18px)", color: "rgba(255,255,255,0.58)", lineHeight: 1.65, marginBottom: 38, maxWidth: 540 }}>
-              Take the free 3-minute assessment. Get a complete cognitive map — and a 28-day action plan built around how your brain actually works.
+              Take the free 3-minute assessment. Get a complete map of how your brain actually works — and see the practical plan built from it.
             </m.p>
             <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, duration: 0.5 }} style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 56 }}>
               <Link href="/assessment" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "var(--color-accent)", color: "var(--color-bg-card)", fontSize: 17, fontWeight: 800, padding: "17px 30px", borderRadius: 999, textDecoration: "none", letterSpacing: "-0.02em", boxShadow: "var(--shadow-btn-accent)" }}>

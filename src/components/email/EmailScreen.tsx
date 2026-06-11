@@ -157,7 +157,7 @@ export function EmailScreen() {
           By continuing, you agree to our{" "}
           <a href="/terms" style={{ color: "var(--color-primary)", textDecoration: "underline" }}>Terms & Conditions</a>,{" "}
           <a href="/privacy" style={{ color: "var(--color-primary)", textDecoration: "underline" }}>Privacy Policy</a>, and{" "}
-          <a href="/refund-policy" style={{ color: "var(--color-primary)", textDecoration: "underline" }}>Subscription Policy</a>.
+          <a href="/refund-policy" style={{ color: "var(--color-primary)", textDecoration: "underline" }}>Refund Policy</a>.
         </p>
 
         {/* CTA */}
