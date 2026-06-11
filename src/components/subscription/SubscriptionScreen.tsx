@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { m } from "framer-motion";
-import { Check, Star, Shield, RotateCcw } from "lucide-react";
+import { Check, Shield, RotateCcw } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js/pure";
 import {
   Elements,
@@ -82,6 +82,13 @@ function SubCheckoutForm({
   const [error,   setError]   = useState<string | null>(null);
   const checkoutTracked = useRef(false);
 
+  const trackPaymentError = (stage: string) => {
+    trackEvent(FIRST_PARTY_EVENTS.paymentError, {
+      meta: false,
+      metadata: { product_key: selectedProductKey(priceId), stage },
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements) return;
@@ -103,10 +110,10 @@ function SubCheckoutForm({
     }
 
     const { error: submitErr } = await elements.submit();
-    if (submitErr) { setError(submitErr.message ?? "Error"); setLoading(false); return; }
+    if (submitErr) { setError(submitErr.message ?? "Error"); trackPaymentError("element_submit"); setLoading(false); return; }
 
     const { paymentMethod, error: pmErr } = await stripe.createPaymentMethod({ elements });
-    if (pmErr || !paymentMethod) { setError(pmErr?.message ?? "Error creating payment"); setLoading(false); return; }
+    if (pmErr || !paymentMethod) { setError(pmErr?.message ?? "Error creating payment"); trackPaymentError("create_payment_method"); setLoading(false); return; }
 
     const res  = await fetch("/api/create-subscription", {
       method: "POST",
@@ -124,7 +131,7 @@ function SubCheckoutForm({
     });
     const data = await res.json();
 
-    if (data.error) { setError(data.error); setLoading(false); return; }
+    if (data.error) { setError(data.error); trackPaymentError("create_subscription"); setLoading(false); return; }
 
     if (data.clientSecret) {
       const { error: confirmErr } = await stripe.confirmPayment({
@@ -132,7 +139,7 @@ function SubCheckoutForm({
         confirmParams: { return_url: window.location.origin + "/assessment?step=success" },
         redirect: "if_required",
       });
-      if (confirmErr) { setError(confirmErr.message ?? "Payment failed"); setLoading(false); return; }
+      if (confirmErr) { setError(confirmErr.message ?? "Payment failed"); trackPaymentError("confirm_payment"); setLoading(false); return; }
     }
 
     onSuccess();
@@ -319,10 +326,9 @@ export function SubscriptionScreen() {
                 {[
                   { icon: Shield,    label: "SSL Secure" },
                   { icon: RotateCcw, label: "Cancel anytime" },
-                  { icon: Star,      label: "4.9 / 5" },
                 ].map(({ icon: Icon, label }) => (
                   <div key={label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                    <Icon size={16} color={label === "4.9 / 5" ? "var(--color-warning)" : "var(--color-primary)"} />
+                    <Icon size={16} color="var(--color-primary)" />
                     <span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>{label}</span>
                   </div>
                 ))}
@@ -356,9 +362,9 @@ export function SubscriptionScreen() {
         {/* Skip */}
         <button
           onClick={handleSkip}
-          style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "var(--color-text-muted)", textDecoration: "underline", textAlign: "center", padding: "4px 0" }}
+          style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "var(--color-text-body)", textDecoration: "underline", textAlign: "center", padding: "10px 0" }}
         >
-          No thanks, skip this step
+          No thanks — take me to my plan
         </button>
 
       </div>

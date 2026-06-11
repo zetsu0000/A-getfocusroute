@@ -90,7 +90,15 @@ function UpsellCheckoutForm({ onSuccess, onDecline }: { onSuccess: () => void; o
     }
 
     const { error: submitErr } = await elements.submit();
-    if (submitErr) { setError(submitErr.message ?? "Error"); setLoading(false); return; }
+    if (submitErr) {
+      setError(submitErr.message ?? "Error");
+      trackEvent(FIRST_PARTY_EVENTS.paymentError, {
+        meta: false,
+        metadata: { product_key: "roadmap_28_day", stage: "element_submit" },
+      });
+      setLoading(false);
+      return;
+    }
 
     const { error: confirmErr } = await stripe.confirmPayment({
       elements,
@@ -100,6 +108,10 @@ function UpsellCheckoutForm({ onSuccess, onDecline }: { onSuccess: () => void; o
 
     if (confirmErr) {
       setError(confirmErr.message ?? "Payment failed");
+      trackEvent(FIRST_PARTY_EVENTS.paymentError, {
+        meta: false,
+        metadata: { product_key: "roadmap_28_day", stage: "confirm_payment" },
+      });
       setLoading(false);
     } else {
       onSuccess();
@@ -131,9 +143,9 @@ function UpsellCheckoutForm({ onSuccess, onDecline }: { onSuccess: () => void; o
       <button
         type="button"
         onClick={onDecline}
-        style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "var(--color-text-muted)", textDecoration: "underline", padding: "4px 0" }}
+        style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "var(--color-text-body)", textDecoration: "underline", padding: "10px 0" }}
       >
-        Skip for now
+        No thanks — continue without it
       </button>
     </form>
   );
@@ -290,6 +302,10 @@ export function UpsellScreen() {
               <p style={{ fontSize: 28, fontWeight: 800, color: "var(--color-accent)", lineHeight: 1 }}>{BRAIN_OS.price.upsell}</p>
             </div>
           </div>
+
+          <p style={{ fontSize: 12, color: "var(--color-text-muted)", lineHeight: 1.5, marginTop: 8 }}>
+            Why {BRAIN_OS.price.upsell} instead of {BRAIN_OS.price.upsellAnchor}? The Protocol is generated from the profile you already own — so you get its add-on price in this session.
+          </p>
 
           <div style={{ height: 1, background: "var(--color-border)", margin: "14px 0" }} />
 
