@@ -159,7 +159,7 @@ function SubCheckoutForm({
         {loading ? "Processing..." : ctaLabel}
       </m.button>
       <p style={{ fontSize: 11, color: "var(--color-text-muted)", textAlign: "center" }}>
-        Day-7 momentum offer · cancel anytime
+        Cancel anytime — manage it from your dashboard
       </p>
     </form>
   );
