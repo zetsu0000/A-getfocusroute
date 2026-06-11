@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { isPaidAssessmentTraffic, shouldAutoStartAssessment } from "../autostart";
+import {
+  isPaidAssessmentTraffic,
+  paidHomepageRedirectPath,
+  shouldAutoStartAssessment,
+} from "../autostart";
 
 describe("shouldAutoStartAssessment", () => {
   it("auto-starts for Meta paid assessment traffic", () => {
@@ -41,5 +45,41 @@ describe("isPaidAssessmentTraffic", () => {
     expect(isPaidAssessmentTraffic({ auto_start: "true" })).toBe(false);
     expect(isPaidAssessmentTraffic({ utm_source: "newsletter" })).toBe(false);
     expect(isPaidAssessmentTraffic(new URLSearchParams(""))).toBe(false);
+  });
+});
+
+describe("paidHomepageRedirectPath", () => {
+  it("routes paid Meta homepage traffic to /assessment with the full query preserved", () => {
+    const query =
+      "utm_source=meta&utm_medium=paid_social&utm_campaign=sales_broad_us_starting_problem&utm_content=c4_starting_hook1_video&utm_term=broad_starting&fbclid=abc123";
+
+    expect(paidHomepageRedirectPath("/", new URLSearchParams(query))).toBe(
+      `/assessment?${query}`,
+    );
+  });
+
+  it("routes paid campaign-intent homepage traffic", () => {
+    expect(
+      paidHomepageRedirectPath("/", new URLSearchParams("utm_campaign=spring_retargeting_us")),
+    ).toBe("/assessment?utm_campaign=spring_retargeting_us");
+  });
+
+  it("leaves organic and direct homepage traffic alone", () => {
+    expect(paidHomepageRedirectPath("/", new URLSearchParams(""))).toBeNull();
+    expect(
+      paidHomepageRedirectPath("/", new URLSearchParams("utm_source=newsletter")),
+    ).toBeNull();
+    expect(
+      paidHomepageRedirectPath("/", new URLSearchParams("utm_medium=organic_social")),
+    ).toBeNull();
+  });
+
+  it("never redirects routes other than the homepage", () => {
+    expect(
+      paidHomepageRedirectPath("/assessment", new URLSearchParams("utm_source=meta")),
+    ).toBeNull();
+    expect(
+      paidHomepageRedirectPath("/about", new URLSearchParams("utm_source=meta")),
+    ).toBeNull();
   });
 });

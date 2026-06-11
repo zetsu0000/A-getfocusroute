@@ -38,7 +38,7 @@ declare global {
   }
 }
 
-const DEFAULT_CURRENCY = "BRL";
+const DEFAULT_CURRENCY = "USD";
 const SENSITIVE_QUERY_PARAMS = new Set([
   "email",
   "phone",

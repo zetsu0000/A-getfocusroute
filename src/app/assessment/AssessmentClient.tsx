@@ -62,7 +62,7 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
     "Focus friction map",
     "Best starting conditions",
     "Recovery style",
-    "Explain-It-To-Someone Script after unlock",
+    "Explain-It-To-Someone Script",
   ];
 
   const steps = [
