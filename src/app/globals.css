@@ -405,6 +405,69 @@ h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-
   from { transform: translateY(-110%); }
   to   { transform: translateY(1100%); }
 }
+@keyframes v2-radar-spin { to { transform: rotate(360deg); } }
+@keyframes v2-pulse-gold {
+  0%   { box-shadow: 0 0 0 0 rgba(var(--v2-gold-rgb), 0.5); }
+  70%  { box-shadow: 0 0 0 13px rgba(var(--v2-gold-rgb), 0); }
+  100% { box-shadow: 0 0 0 0 rgba(var(--v2-gold-rgb), 0); }
+}
+/* gold scanline sweeping across the locked dossier */
+@keyframes v2-gold-scan {
+  0%       { transform: translateY(-120%); opacity: 0; }
+  8%       { opacity: 1; }
+  62%      { opacity: 1; }
+  78%, 100% { transform: translateY(560%); opacity: 0; }
+}
+/* aurora veil — two slow-drifting blurred signal blobs */
+@keyframes v2-aurora-a {
+  0%, 100% { transform: translate(-12%, -6%) scale(1); }
+  50%      { transform: translate(10%, 8%) scale(1.18); }
+}
+@keyframes v2-aurora-b {
+  0%, 100% { transform: translate(8%, 10%) scale(1.1); }
+  50%      { transform: translate(-10%, -8%) scale(0.92); }
+}
+
+/* Shader-like ambient veil. Position: absolute within any v2 section. */
+.v2-aurora {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.v2-aurora::before,
+.v2-aurora::after {
+  content: "";
+  position: absolute;
+  width: 58%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  filter: blur(70px);
+  will-change: transform;
+}
+.v2-aurora::before {
+  left: -8%;
+  top: -16%;
+  background: radial-gradient(circle, rgba(124, 138, 255, 0.16) 0%, transparent 65%);
+  animation: v2-aurora-a 26s ease-in-out infinite;
+}
+.v2-aurora::after {
+  right: -10%;
+  bottom: -18%;
+  background: radial-gradient(circle, rgba(155, 232, 255, 0.10) 0%, transparent 65%);
+  animation: v2-aurora-b 32s ease-in-out infinite;
+}
+
+/* Route stations: dormant → activated as the drawn line reaches them */
+.v2-station {
+  transition: border-color 0.5s, box-shadow 0.5s, color 0.5s, background 0.5s;
+}
+.v2-station.is-active {
+  border-color: rgba(155, 232, 255, 0.85) !important;
+  color: #fff !important;
+  background: rgba(124, 138, 255, 0.16) !important;
+  box-shadow: 0 0 0 4px rgba(124, 138, 255, 0.14), 0 0 34px rgba(124, 138, 255, 0.55) !important;
+}
 
 /* Dark scrollbar inside V2 surfaces */
 .v2-screen ::-webkit-scrollbar-track { background: var(--v2-bg-raise); }

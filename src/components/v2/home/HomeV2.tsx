@@ -19,7 +19,9 @@ import {
 } from "lucide-react";
 import { RouteScene } from "@/components/v2/RouteScene";
 import { FocusField } from "@/components/v2/FocusField";
+import { FocusRadar } from "@/components/v2/FocusRadar";
 import { Magnetic } from "@/components/v2/Magnetic";
+import { TiltCard } from "@/components/v2/TiltCard";
 import { HudLabel, TelemetryChip, SignalRule } from "@/components/v2/primitives";
 
 /**
@@ -109,6 +111,25 @@ function PrimaryCta({ children = "Begin the Assessment" }: { children?: string }
   );
 }
 
+/** Splits text into word spans the hero timeline can choreograph in 3D. */
+function HeroWords({ text, className }: { text: string; className?: string }) {
+  const words = text.split(" ");
+  return (
+    <>
+      {words.map((w, i) => (
+        <span
+          key={`${w}-${i}`}
+          data-hero-word
+          className={className}
+          style={{ display: "inline-block", whiteSpace: "pre", willChange: "transform" }}
+        >
+          {w + (i < words.length - 1 ? " " : "")}
+        </span>
+      ))}
+    </>
+  );
+}
+
 export default function HomeV2() {
   const rootRef = useRef<HTMLDivElement>(null);
   const heroProgress = useRef(0);
@@ -140,16 +161,28 @@ export default function HomeV2() {
         });
 
         mm.add("(prefers-reduced-motion: no-preference)", () => {
-          // Hero text settles in.
-          gsap.from("[data-hero-stagger] > *", {
-            y: 34,
-            opacity: 0,
-            filter: "blur(8px)",
-            duration: 1.1,
-            stagger: 0.09,
-            ease: "power3.out",
-            delay: 0.15,
-          });
+          // Cinematic hero entrance: eyebrow → headline words rising out of
+          // 3D space → supporting copy → CTAs → telemetry chips.
+          const intro = gsap.timeline({ defaults: { ease: "power3.out" }, delay: 0.18 });
+          intro
+            .from("[data-hero-eyebrow]", { y: 18, opacity: 0, duration: 0.7 })
+            .from(
+              "[data-hero-word]",
+              {
+                yPercent: 85,
+                opacity: 0,
+                rotateX: -55,
+                filter: "blur(7px)",
+                transformPerspective: 700,
+                transformOrigin: "50% 100%",
+                duration: 0.9,
+                stagger: 0.065,
+              },
+              "-=0.35",
+            )
+            .from("[data-hero-sub]", { y: 26, opacity: 0, filter: "blur(6px)", duration: 0.8 }, "-=0.5")
+            .from("[data-hero-actions]", { y: 22, opacity: 0, duration: 0.7 }, "-=0.55")
+            .from("[data-hero-chips]", { y: 14, opacity: 0, duration: 0.6 }, "-=0.45");
 
           // Hero content recedes into depth while scrolling past.
           gsap.to("[data-hero-inner]", {
@@ -187,6 +220,49 @@ export default function HomeV2() {
               scrollTrigger: { trigger: grid, start: "top 84%" },
             });
           });
+
+          // Instrument panel: cards swing in from 3D space.
+          gsap.utils.toArray<HTMLElement>("[data-reveal-3d]").forEach((grid) => {
+            gsap.from(grid.children, {
+              y: 48,
+              opacity: 0,
+              rotateY: -16,
+              rotateX: 5,
+              transformPerspective: 900,
+              transformOrigin: "left center",
+              duration: 1.0,
+              stagger: 0.09,
+              ease: "power3.out",
+              scrollTrigger: { trigger: grid, start: "top 82%" },
+            });
+          });
+
+          // Stations light up as the route line reaches them.
+          gsap.utils.toArray<HTMLElement>("[data-station]").forEach((station) => {
+            const marker = station.querySelector(".v2-station");
+            if (!marker) return;
+            ScrollTrigger.create({
+              trigger: station,
+              start: "top 64%",
+              onEnter: () => marker.classList.add("is-active"),
+              onLeaveBack: () => marker.classList.remove("is-active"),
+            });
+          });
+
+          // The floating radar drifts against scroll for depth.
+          const radar = document.querySelector("[data-radar-float]");
+          if (radar) {
+            gsap.to(radar, {
+              y: -70,
+              ease: "none",
+              scrollTrigger: {
+                trigger: "#brain-profile",
+                start: "top bottom",
+                end: "bottom top",
+                scrub: 0.8,
+              },
+            });
+          }
 
           // The route line between stations draws itself in.
           const path = document.querySelector<SVGPathElement>("[data-route-path]");
@@ -235,6 +311,9 @@ export default function HomeV2() {
         .v2h-menu-link { display: block; color: var(--v2-ink); font-size: 14px; font-weight: 700; text-decoration: none; padding: 12px 10px; border-radius: 10px; }
         .v2h-menu-link:hover { background: var(--v2-glass-2); }
         .v2h-mobile-menu summary::-webkit-details-marker { display: none; }
+        @media (max-width: 1080px) {
+          .v2h-radar { display: none; }
+        }
         @media (max-width: 880px) {
           .v2h-desktop-nav { display: none !important; }
           .v2h-mobile-menu { display: block !important; }
@@ -388,10 +467,12 @@ export default function HomeV2() {
           />
 
           <div data-hero-inner className="v2h-shell" style={{ position: "relative", width: "100%", zIndex: 2 }}>
-            <div data-hero-stagger style={{ maxWidth: 880, paddingTop: 66 }}>
-              <HudLabel tone="signal" style={{ marginBottom: 22 }}>
-                Focus pattern intelligence — free 3-minute assessment
-              </HudLabel>
+            <div style={{ maxWidth: 880, paddingTop: 66 }}>
+              <div data-hero-eyebrow>
+                <HudLabel tone="signal" style={{ marginBottom: 22 }}>
+                  Focus pattern intelligence — free 3-minute assessment
+                </HudLabel>
+              </div>
               <h1
                 className="v2-display"
                 style={{
@@ -400,15 +481,17 @@ export default function HomeV2() {
                   fontWeight: 550,
                   letterSpacing: "-0.03em",
                   marginBottom: 26,
+                  perspective: 700,
                 }}
               >
-                Your focus isn&apos;t broken.
+                <HeroWords text="Your focus isn't broken." />
                 <br />
-                <em className="v2-text-signal" style={{ fontStyle: "italic", fontWeight: 500 }}>
-                  It&apos;s unmapped.
+                <em style={{ fontStyle: "italic", fontWeight: 500 }}>
+                  <HeroWords text="It's unmapped." className="v2-text-signal" />
                 </em>
               </h1>
               <p
+                data-hero-sub
                 style={{
                   fontSize: "clamp(16px, 2vw, 19px)",
                   lineHeight: 1.7,
@@ -422,6 +505,7 @@ export default function HomeV2() {
                 into a diagnosis.
               </p>
               <div
+                data-hero-actions
                 className="v2h-hero-actions"
                 style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", marginBottom: 30 }}
               >
@@ -430,7 +514,7 @@ export default function HomeV2() {
                   How it works
                 </a>
               </div>
-              <div style={{ display: "flex", gap: "10px 22px", flexWrap: "wrap" }}>
+              <div data-hero-chips style={{ display: "flex", gap: "10px 22px", flexWrap: "wrap" }}>
                 <TelemetryChip>Free</TelemetryChip>
                 <TelemetryChip>3 minutes</TelemetryChip>
                 <TelemetryChip>Private results</TelemetryChip>
@@ -489,28 +573,46 @@ export default function HomeV2() {
         </div>
         <div data-reveal-grid className="v2h-grid-recognition">
           {recognition.map((item, i) => (
-            <div
-              key={item}
-              className="v2-panel v2h-card"
-              style={{ padding: "22px 20px", minHeight: 150, display: "flex", flexDirection: "column", gap: 14 }}
-            >
-              <span className="v2-hud" style={{ color: "var(--v2-signal-2)", fontSize: 10 }}>
-                {String(i + 1).padStart(2, "0")} / NOISE
-              </span>
-              <p
-                className="v2-display"
-                style={{ fontSize: 19, fontWeight: 500, lineHeight: 1.3, letterSpacing: "-0.015em" }}
+            <TiltCard key={item} maxTilt={6} style={{ height: "100%" }}>
+              <div
+                className="v2-panel v2h-card"
+                style={{
+                  padding: "22px 20px",
+                  minHeight: 150,
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 14,
+                }}
               >
-                {item}
-              </p>
-            </div>
+                <span className="v2-hud" style={{ color: "var(--v2-signal-2)", fontSize: 10 }}>
+                  {String(i + 1).padStart(2, "0")} / NOISE
+                </span>
+                <p
+                  className="v2-display"
+                  style={{ fontSize: 19, fontWeight: 500, lineHeight: 1.3, letterSpacing: "-0.015em" }}
+                >
+                  {item}
+                </p>
+              </div>
+            </TiltCard>
           ))}
         </div>
       </section>
 
       {/* ── Instrument panel: what you get ──────────────────────── */}
       <section id="brain-profile" style={{ position: "relative", borderBlock: "1px solid var(--v2-line)", background: "rgba(8,10,20,0.5)" }}>
-        <div className="v2h-shell" style={{ padding: "90px 26px" }}>
+        <div className="v2-aurora" aria-hidden="true" />
+        {/* floating focus-map instrument, drifting against scroll */}
+        <div
+          data-radar-float
+          className="v2h-radar"
+          aria-hidden="true"
+          style={{ position: "absolute", right: "4%", top: 40, opacity: 0.85, pointerEvents: "none" }}
+        >
+          <FocusRadar size={300} />
+        </div>
+        <div className="v2h-shell" style={{ position: "relative", padding: "90px 26px" }}>
           <div data-reveal style={{ maxWidth: 680, marginBottom: 44 }}>
             <HudLabel tone="signal" style={{ marginBottom: 16 }}>
               The instrument panel
@@ -528,43 +630,45 @@ export default function HomeV2() {
             </p>
           </div>
 
-          <div data-reveal-grid className="v2h-grid-cards">
+          <div data-reveal-3d className="v2h-grid-cards" style={{ perspective: 1200 }}>
             {profileCards.map(({ icon: Icon, title, body }, index) => (
-              <article
-                key={title}
-                className="v2-panel v2h-card"
-                style={{
-                  padding: "24px 22px",
-                  ...(index === 0
-                    ? {
-                        borderColor: "rgba(124,138,255,0.4)",
-                        boxShadow:
-                          "inset 0 1px 0 rgba(255,255,255,0.1), 0 24px 60px rgba(2,3,10,0.55), 0 0 56px rgba(124,138,255,0.18)",
-                      }
-                    : null),
-                }}
-              >
-                <span
+              <TiltCard key={title} maxTilt={5} style={{ height: "100%" }}>
+                <article
+                  className="v2-panel v2h-card"
                   style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 14,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "var(--v2-signal-2)",
-                    background: "rgba(124,138,255,0.10)",
-                    border: "1px solid rgba(124,138,255,0.25)",
-                    marginBottom: 18,
+                    padding: "24px 22px",
+                    height: "100%",
+                    ...(index === 0
+                      ? {
+                          borderColor: "rgba(124,138,255,0.4)",
+                          boxShadow:
+                            "inset 0 1px 0 rgba(255,255,255,0.1), 0 24px 60px rgba(2,3,10,0.55), 0 0 56px rgba(124,138,255,0.18)",
+                        }
+                      : null),
                   }}
                 >
-                  <Icon size={20} strokeWidth={1.8} />
-                </span>
-                <h3 className="v2-display" style={{ fontSize: 20, fontWeight: 550, marginBottom: 8 }}>
-                  {title}
-                </h3>
-                <p style={{ fontSize: 14, lineHeight: 1.65, color: "var(--v2-ink-dim)" }}>{body}</p>
-              </article>
+                  <span
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 14,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "var(--v2-signal-2)",
+                      background: "rgba(124,138,255,0.10)",
+                      border: "1px solid rgba(124,138,255,0.25)",
+                      marginBottom: 18,
+                    }}
+                  >
+                    <Icon size={20} strokeWidth={1.8} />
+                  </span>
+                  <h3 className="v2-display" style={{ fontSize: 20, fontWeight: 550, marginBottom: 8 }}>
+                    {title}
+                  </h3>
+                  <p style={{ fontSize: 14, lineHeight: 1.65, color: "var(--v2-ink-dim)" }}>{body}</p>
+                </article>
+              </TiltCard>
             ))}
           </div>
         </div>
@@ -615,9 +719,10 @@ export default function HomeV2() {
 
           <div style={{ display: "grid", gap: 56, paddingLeft: 86 }}>
             {stations.map(([num, title, body]) => (
-              <div data-reveal key={num} style={{ position: "relative" }}>
+              <div data-reveal data-station key={num} style={{ position: "relative" }}>
                 <span
                   aria-hidden="true"
+                  className="v2-station"
                   style={{
                     position: "absolute",
                     left: -66,
@@ -752,8 +857,9 @@ export default function HomeV2() {
       </section>
 
       {/* ── Trust grid ──────────────────────────────────────────── */}
-      <section style={{ borderBlock: "1px solid var(--v2-line)", background: "rgba(8,10,20,0.5)" }}>
-        <div className="v2h-shell" style={{ padding: "70px 26px" }}>
+      <section style={{ position: "relative", borderBlock: "1px solid var(--v2-line)", background: "rgba(8,10,20,0.5)" }}>
+        <div className="v2-aurora" aria-hidden="true" />
+        <div className="v2h-shell" style={{ position: "relative", padding: "70px 26px" }}>
           <div data-reveal-grid className="v2h-grid-trust">
             {trustCards.map(({ icon: Icon, title, body }) => (
               <div key={title} className="v2-panel v2h-card" style={{ padding: "22px 20px" }}>
@@ -770,7 +876,7 @@ export default function HomeV2() {
 
       {/* ── Final CTA ───────────────────────────────────────────── */}
       <section style={{ position: "relative", overflow: "hidden" }}>
-        <FocusField coherence={0.9} showRoute intensity={0.8} />
+        <FocusField coherence={0.9} showRoute intensity={0.8} interactive />
         <div
           className="v2h-shell"
           style={{ position: "relative", maxWidth: 820, padding: "120px 26px", textAlign: "center" }}

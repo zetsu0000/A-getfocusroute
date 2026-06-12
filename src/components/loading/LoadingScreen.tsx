@@ -117,6 +117,27 @@ export function LoadingScreen() {
               border: "1px dashed rgba(124,138,255,0.35)",
             }}
           />
+          {/* radar sweep — the system actively scanning */}
+          <span
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 6,
+              borderRadius: "50%",
+              background:
+                "conic-gradient(from 0deg, rgba(155,232,255,0.20) 0deg, rgba(155,232,255,0.04) 46deg, transparent 80deg)",
+              animation: "v2-radar-spin 3.2s linear infinite",
+            }}
+          />
+          <span
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 26,
+              borderRadius: "50%",
+              border: "1px solid rgba(163,178,255,0.16)",
+            }}
+          />
           <svg width="148" height="148" viewBox="0 0 148 148" style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}>
             <circle cx="74" cy="74" r="63" fill="none" stroke="rgba(163,178,255,0.14)" strokeWidth="2.5" />
             <circle

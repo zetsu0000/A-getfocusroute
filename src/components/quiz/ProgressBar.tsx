@@ -8,8 +8,26 @@ interface ProgressBarProps { currentIndex: number }
 /**
  * V2 route-line progress: a dashed route track that fills with the luminous
  * signal gradient, led by a glowing head node — progress as a path being
- * traced, not a loading bar.
+ * traced, not a loading bar. Info-card interstitials appear as station
+ * diamonds along the route and light up as the head passes them.
  */
+
+/* Station positions (percent along the route) — one per info interstitial. */
+const STATIONS: number[] = (() => {
+  const total = progressQuestions.length;
+  const out: number[] = [];
+  let answered = 0;
+  for (const q of questions) {
+    if (q.inputType === "info") {
+      out.push(Math.round((answered / total) * 100));
+    } else {
+      answered++;
+    }
+  }
+  // de-dup + drop ends so markers never collide with start/head cap
+  return [...new Set(out)].filter((p) => p > 4 && p < 96);
+})();
+
 export function ProgressBar({ currentIndex }: ProgressBarProps) {
   const answered = questions
     .slice(0, currentIndex + 1)
@@ -43,6 +61,31 @@ export function ProgressBar({ currentIndex }: ProgressBarProps) {
           marginTop: -1,
         }}
       />
+      {/* station diamonds — interstitial waypoints on the route */}
+      {STATIONS.map((pos) => {
+        const passed = progress >= pos;
+        return (
+          <span
+            key={pos}
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              left: `${pos}%`,
+              top: "50%",
+              transform: "translate(-50%, -50%) rotate(45deg)",
+              width: 6,
+              height: 6,
+              borderRadius: 1.5,
+              background: passed ? "var(--v2-signal-2)" : "rgba(163,178,255,0.25)",
+              border: `1px solid ${passed ? "var(--v2-signal-2)" : "rgba(163,178,255,0.4)"}`,
+              boxShadow: passed ? "0 0 10px rgba(155,232,255,0.8)" : "none",
+              transition: "background 0.4s, box-shadow 0.4s, border-color 0.4s",
+              zIndex: 1,
+            }}
+          />
+        );
+      })}
+
       {/* traced signal */}
       <m.div
         initial={{ width: 0 }}
@@ -54,6 +97,7 @@ export function ProgressBar({ currentIndex }: ProgressBarProps) {
           borderRadius: 999,
           background: "var(--v2-grad-signal)",
           boxShadow: "0 0 12px rgba(124,138,255,0.55)",
+          zIndex: 2,
         }}
       >
         {/* head node */}
@@ -69,6 +113,7 @@ export function ProgressBar({ currentIndex }: ProgressBarProps) {
             borderRadius: 999,
             background: "var(--v2-signal-2)",
             boxShadow: "0 0 10px var(--v2-signal-2), 0 0 22px rgba(155,232,255,0.5)",
+            animation: "v2-pulse-ring 2.2s ease-out infinite",
           }}
         />
       </m.div>

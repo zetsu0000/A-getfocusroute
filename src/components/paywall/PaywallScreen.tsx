@@ -203,6 +203,22 @@ function LockedCard() {
             background: "linear-gradient(180deg, rgba(14,18,32,0.8), rgba(8,10,18,0.9))",
           }}
         >
+          {/* gold scanline — the system continuously reading the sealed layer */}
+          <span
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: 0,
+              height: "18%",
+              background:
+                "linear-gradient(to bottom, transparent, rgba(217,188,127,0.10) 45%, rgba(240,220,174,0.16) 50%, rgba(217,188,127,0.10) 55%, transparent)",
+              animation: "v2-gold-scan 4.2s ease-in-out infinite",
+              pointerEvents: "none",
+              zIndex: 2,
+            }}
+          />
           <div style={{ userSelect: "none", pointerEvents: "none", display: "flex", flexDirection: "column", gap: 8, padding: 12 }}>
             {rows.map(({ label }) => (
               <div
@@ -256,6 +272,7 @@ function LockedCard() {
                 alignItems: "center",
                 justifyContent: "center",
                 boxShadow: "0 10px 34px rgba(217,188,127,0.25), inset 0 1px 0 rgba(255,248,226,0.3)",
+                animation: "v2-pulse-gold 2.8s ease-out infinite",
               }}
             >
               <Lock size={19} color="var(--v2-gold-bright)" strokeWidth={2.4} />

@@ -28,6 +28,8 @@ type Props = {
   showRoute?: boolean;
   /** Particles per 10k px² baseline (auto-reduced on small screens). */
   density?: number;
+  /** Particles yield around the pointer — attention parting the noise. */
+  interactive?: boolean;
   style?: React.CSSProperties;
   className?: string;
 };
@@ -49,6 +51,7 @@ export function FocusField({
   intensity = 1,
   showRoute = false,
   density = 1,
+  interactive = false,
   style,
   className,
 }: Props) {
@@ -76,6 +79,10 @@ export function FocusField({
     let t = Math.random() * 1000;
     // Eased coherence so prop jumps (question advance) glide instead of snap.
     let eased = coherenceRef.current;
+    // Pointer state in canvas space (interactive mode only).
+    let px = -9999;
+    let py = -9999;
+    let pointerActive = false;
 
     // Pre-rendered tinted glow sprites — drawImage is far cheaper than
     // per-particle radial gradients.
@@ -168,6 +175,21 @@ export function FocusField({
 
         p.vx += ((chaosVx * (1 - c) + flowVx * c) - p.vx) * 0.06;
         p.vy += ((chaosVy * (1 - c) + flowVy * c) - p.vy) * 0.06;
+
+        // Pointer repulsion — the field parts gently around attention.
+        if (pointerActive) {
+          const dx = p.x - px;
+          const dy = p.y - py;
+          const d2 = dx * dx + dy * dy;
+          const R = 130;
+          if (d2 < R * R && d2 > 0.01) {
+            const d = Math.sqrt(d2);
+            const force = ((R - d) / R) * 0.9;
+            p.vx += (dx / d) * force;
+            p.vy += (dy / d) * force;
+          }
+        }
+
         p.x += p.vx;
         p.y += p.vy;
 
@@ -237,11 +259,30 @@ export function FocusField({
     };
     document.addEventListener("visibilitychange", onVis);
 
+    // The canvas itself is pointer-events:none, so interactive mode tracks
+    // the window and maps into canvas space.
+    const onPointer = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse") return;
+      const rect = canvas!.getBoundingClientRect();
+      px = e.clientX - rect.left;
+      py = e.clientY - rect.top;
+      pointerActive = px >= -60 && py >= -60 && px <= rect.width + 60 && py <= rect.height + 60;
+    };
+    const onPointerLeave = () => { pointerActive = false; };
+    if (interactive && !reduceMotion) {
+      window.addEventListener("pointermove", onPointer, { passive: true });
+      window.addEventListener("pointerleave", onPointerLeave, { passive: true });
+    }
+
     return () => {
       stop();
       ro.disconnect();
       io.disconnect();
       document.removeEventListener("visibilitychange", onVis);
+      if (interactive && !reduceMotion) {
+        window.removeEventListener("pointermove", onPointer);
+        window.removeEventListener("pointerleave", onPointerLeave);
+      }
     };
     // Atmosphere layer: configuration props are stable per mount; coherence flows through a ref.
     // eslint-disable-next-line react-hooks/exhaustive-deps

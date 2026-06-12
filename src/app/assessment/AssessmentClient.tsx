@@ -77,17 +77,24 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
 
   return (
     <div style={{ position: "relative", minHeight: "100dvh", overflowX: "hidden", width: "100%", maxWidth: "100%" }}>
-      {/* scattered attention field — the state the user arrives in */}
+      {/* scattered attention field — the state the user arrives in; parts
+          gently around the pointer */}
       <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-        <FocusField coherence={0.12} intensity={0.85} />
+        <FocusField coherence={0.12} intensity={0.85} interactive />
       </div>
+      <div className="v2-aurora" aria-hidden="true" />
 
       <section style={{ position: "relative", padding: "54px 20px 30px" }}>
         <div style={{ maxWidth: 640, margin: "0 auto", minWidth: 0 }}>
-          <HudLabel tone="signal" style={{ marginBottom: 22 }}>
-            FocusRoute — pattern mapping · free · 3 min
-          </HudLabel>
-          <h1
+          <m.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}>
+            <HudLabel tone="signal" style={{ marginBottom: 22 }}>
+              FocusRoute — pattern mapping · free · 3 min
+            </HudLabel>
+          </m.div>
+          <m.h1
+            initial={{ opacity: 0, y: 26, filter: "blur(8px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            transition={{ duration: 0.75, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
             className="v2-display"
             style={{
               fontSize: "clamp(36px, 10vw, 62px)",
@@ -103,8 +110,11 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
             <em className="v2-text-signal" style={{ fontStyle: "italic" }}>
               Your focus system is overloaded.
             </em>
-          </h1>
-          <p
+          </m.h1>
+          <m.p
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
             style={{
               fontSize: 16,
               color: "var(--v2-ink-dim)",
@@ -116,24 +126,35 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
           >
             Take the free 3-minute FocusRoute assessment to map your focus patterns,
             friction points, and best next step.
-          </p>
-          <Magnetic style={{ width: "100%", maxWidth: 380 }}>
-            <button
-              type="button"
-              onClick={onStart}
-              className="v2-cta"
-              style={{ width: "100%", minHeight: 60, fontSize: 16, animation: "v2-pulse-ring 2.6s ease-out infinite" }}
-            >
-              Find My Focus Pattern
-              <ArrowRight size={17} strokeWidth={2.6} />
-            </button>
-          </Magnetic>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "9px 20px", marginTop: 20 }}>
+          </m.p>
+          <m.div
+            initial={{ opacity: 0, y: 16, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.55, delay: 0.34, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <Magnetic style={{ width: "100%", maxWidth: 380 }}>
+              <button
+                type="button"
+                onClick={onStart}
+                className="v2-cta"
+                style={{ width: "100%", minHeight: 60, fontSize: 16, animation: "v2-pulse-ring 2.6s ease-out infinite" }}
+              >
+                Find My Focus Pattern
+                <ArrowRight size={17} strokeWidth={2.6} />
+              </button>
+            </Magnetic>
+          </m.div>
+          <m.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.48 }}
+            style={{ display: "flex", flexWrap: "wrap", gap: "9px 20px", marginTop: 20 }}
+          >
             <TelemetryChip>Free</TelemetryChip>
             <TelemetryChip>3 minutes</TelemetryChip>
             <TelemetryChip>Private results</TelemetryChip>
             <TelemetryChip color="var(--v2-ink-faint)">Not a diagnosis</TelemetryChip>
-          </div>
+          </m.div>
         </div>
       </section>
 

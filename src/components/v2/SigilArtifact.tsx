@@ -4,6 +4,7 @@ import { m, useReducedMotion } from "framer-motion";
 import { SignatureSigil } from "@/components/signature/SignatureSigil";
 import { getSignatureIdentity } from "@/lib/signature-identity";
 import { TiltCard } from "./TiltCard";
+import { SparkBurst } from "./SparkBurst";
 
 /**
  * SigilArtifact — the V2 premium identity artifact.
@@ -49,7 +50,16 @@ export function SigilArtifact({
   const shownStatement = revealStatement ?? identity.revealStatement;
 
   return (
-    <TiltCard maxTilt={isPaywall ? 4 : 7} style={{ width: "100%" }}>
+    <div
+      style={{
+        position: "relative",
+        // the artifact hovers — a held object, not a flat card
+        animation: !reduce && !isPaywall ? "v2-float 7s ease-in-out infinite" : undefined,
+      }}
+    >
+      {/* signature locking in — one radial burst behind the reveal */}
+      {!isPaywall && <SparkBurst accentRgb={identity.accentRgb} delay={650} />}
+    <TiltCard maxTilt={isPaywall ? 4 : 8} style={{ width: "100%" }}>
       <div
         style={{
           position: "relative",
@@ -290,5 +300,6 @@ export function SigilArtifact({
         </div>
       </div>
     </TiltCard>
+    </div>
   );
 }
