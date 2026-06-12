@@ -109,12 +109,14 @@
 
 /* ── Reset ───────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { color-scheme: light; }
+html { color-scheme: dark; }
 
+/* The whole visible product is V2 dark now — keep the document canvas dark so
+   overscroll, resize gaps, and short pages never flash the old beige. */
 html, body {
   height: 100%;
-  background-color: var(--color-bg-page);
-  color: var(--color-text);
+  background-color: var(--v2-bg);
+  color: var(--v2-ink);
   font-family: var(--font-jakarta, "Inter", -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, "Helvetica Neue", sans-serif);
   font-size: 16px;
@@ -130,10 +132,7 @@ html, body {
 
 /* Warm dot-grid on parchment — POLA-like texture */
 body {
-  background-image: radial-gradient(
-    circle, var(--color-bg-dots) 1px, transparent 1px
-  );
-  background-size: 28px 28px;
+  background-image: none;
 }
 
 /* Scrollbar */

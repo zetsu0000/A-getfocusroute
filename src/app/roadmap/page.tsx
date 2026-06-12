@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import Link from "next/link";
-import { m, useInView, AnimatePresence, useReducedMotion } from "framer-motion";
+import { m, useInView, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, ChevronRight, Zap, Target, Calendar,
   Brain, CheckCircle2, Shield, Lock, Clock, Repeat,
@@ -60,12 +60,15 @@ const fadeUp = {
 };
 const stagger = { visible: { transition: { staggerChildren: 0.035 } } };
 
+/* Always render the animation props — the global MotionConfig (reducedMotion
+   "user") tones motion down for prefers-reduced-motion. Stripping initial/
+   animate per-client desyncs from the SSR markup and leaves content stuck at
+   the server-rendered opacity 0. */
 function SectionReveal({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
-  const reduceMotion = useReducedMotion();
   return (
-    <m.div ref={ref} variants={reduceMotion ? undefined : stagger} initial={reduceMotion ? undefined : "hidden"} animate={reduceMotion ? undefined : (inView ? "visible" : "hidden")}>
+    <m.div ref={ref} variants={stagger} initial="hidden" animate={inView ? "visible" : "hidden"}>
       {children}
     </m.div>
   );
@@ -93,14 +96,13 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 }
 
 function HeroVisual() {
-  const reduceMotion = useReducedMotion();
   return (
-    <div style={{ position: "relative", width: "100%", maxWidth: 380, margin: "0 auto", height: 280, perspective: 1000 }}>
+    <div style={{ position: "relative", width: "100%", maxWidth: 380, margin: "0 auto", height: 280 }}>
       <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 240, height: 240, borderRadius: "50%", background: "radial-gradient(circle, rgba(124,138,255,0.18) 0%, transparent 70%)", filter: "blur(34px)" }} />
       {PHASES.map((phase, i) => {
         const Icon = phase.icon;
         return (
-          <m.div key={phase.id} initial={reduceMotion ? undefined : { opacity: 0, y: 28 }} animate={reduceMotion ? undefined : { opacity: 1, y: i * 54 - 50 }} transition={reduceMotion ? undefined : { delay: 0.12 + i * 0.08, duration: 0.48, ease: [0.22, 1, 0.36, 1] }} style={{ position: "absolute", left: "50%", top: "50%", transform: reduceMotion ? `translate(-50%, ${i * 54 - 50}px)` : "translateX(-50%)", width: "92%", maxWidth: 320, background: "linear-gradient(165deg, rgba(148,163,255,0.10), rgba(148,163,255,0.04))", border: "1px solid var(--v2-line-bright)", borderRadius: 16, padding: "13px 18px", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 16px 44px rgba(2,3,10,0.55), inset 0 1px 0 rgba(255,255,255,0.07)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", cursor: "default", zIndex: PHASES.length - i }}>
+          <m.div key={phase.id} initial={{ opacity: 0, y: i * 54 - 22 }} animate={{ opacity: 1, y: i * 54 - 50 }} transition={{ delay: 0.12 + i * 0.08, duration: 0.48, ease: [0.22, 1, 0.36, 1] }} style={{ position: "absolute", left: "50%", top: "50%", x: "-50%", width: "92%", maxWidth: 320, background: "linear-gradient(165deg, rgba(20,25,44,0.92), rgba(13,16,30,0.94))", border: "1px solid var(--v2-line-bright)", borderRadius: 16, padding: "13px 18px", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 16px 44px rgba(2,3,10,0.55), inset 0 1px 0 rgba(255,255,255,0.07)", cursor: "default", zIndex: PHASES.length - i }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: `rgba(${phase.rgb},0.12)`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: `1px solid rgba(${phase.rgb},0.35)` }}>
               <Icon size={17} color={phase.color} />
             </div>
