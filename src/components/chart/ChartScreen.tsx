@@ -235,7 +235,7 @@ export function ChartScreen() {
           className="v2-panel"
           style={{ padding: "19px 20px" }}
         >
-          <HudLabel style={{ marginBottom: 14 }}>Signature strengths</HudLabel>
+          <HudLabel style={{ marginBottom: 14 }}>Pattern strengths</HudLabel>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {signature.strengths.map((bullet, i) => (
               <m.div
