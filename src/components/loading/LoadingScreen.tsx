@@ -17,7 +17,9 @@ const PHASES = [
   { label: "Putting your results together", end: 100 },
 ];
 
-const TOTAL_MS = 3500;
+/* Long enough to read as real computation, short enough that a user who just
+   answered 20 questions never feels padded (audit: artificial-wait risk). */
+const TOTAL_MS = 2200;
 
 const REVIEWS = [
   {
@@ -54,7 +56,7 @@ export function LoadingScreen() {
         setTimeout(() => {
           const { retakeMode } = useQuizStore.getState();
           setStep(retakeMode ? "chart" : "email");
-        }, 400);
+        }, 300);
       }
     };
 
