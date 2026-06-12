@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { m } from "framer-motion";
 import { Star, Check } from "lucide-react";
 import { useQuizStore } from "@/store/quizStore";
@@ -34,6 +34,8 @@ export function LoadingScreen() {
   const answers = useQuizStore((s) => s.answers);
 
   const [progress, setProgress] = useState(0);
+  const loadingTracked = useRef(false);
+  const completedTracked = useRef(false);
 
   useEffect(() => {
     const signature = answers.length ? getSignatureFromAnswers(answers).signature : null;
@@ -41,6 +43,15 @@ export function LoadingScreen() {
       eventId: getOrCreateActionEventId("quiz_completed", "complete_registration"),
       metadata: signature ? { signature_key: signature } : {},
     });
+    /* Loading beat instrumentation: viewed vs completed separates "left
+       during the computation moment" from "left at the email gate". */
+    if (!loadingTracked.current) {
+      loadingTracked.current = true;
+      trackEvent(FIRST_PARTY_EVENTS.resultLoadingViewed, {
+        meta: false,
+        metadata: { duration_ms: TOTAL_MS },
+      });
+    }
 
     let frame: number;
     const start = Date.now();
@@ -53,6 +64,10 @@ export function LoadingScreen() {
       if (pct < 100) {
         frame = requestAnimationFrame(tick);
       } else {
+        if (!completedTracked.current) {
+          completedTracked.current = true;
+          trackEvent(FIRST_PARTY_EVENTS.resultLoadingCompleted, { meta: false });
+        }
         setTimeout(() => {
           const { retakeMode } = useQuizStore.getState();
           setStep(retakeMode ? "chart" : "email");

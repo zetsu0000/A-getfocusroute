@@ -28,6 +28,22 @@ export const FIRST_PARTY_EVENTS = {
   upsellSkipped: "upsell_skipped",
   subscriptionSkipped: "subscription_skipped",
   successViewed: "success_viewed",
+  // Analytics-depth pass — first-party only. These separate stages the
+  // funnel previously couldn't distinguish: answering vs viewing a question,
+  // the loading beat, the free preview vs the full result, physically
+  // reaching the checkout section vs merely rendering the paywall (the
+  // payment intent is created on paywall render and must never be read as
+  // buyer intent), and the first meaningful post-purchase action.
+  questionAnswered: "question_answered",
+  resultLoadingViewed: "result_loading_viewed",
+  resultLoadingCompleted: "result_loading_completed",
+  emailFieldFocused: "email_field_focused",
+  fullResultViewed: "full_result_viewed",
+  checkoutSectionReached: "checkout_section_reached",
+  checkoutCtaClicked: "checkout_cta_clicked",
+  upsellViewed: "upsell_viewed",
+  subscriptionViewed: "subscription_viewed",
+  dashboardFirstActionClicked: "dashboard_first_action_clicked",
 } as const;
 
 export type FirstPartyEventName =
