@@ -184,20 +184,6 @@ export default function HomeV2() {
             .from("[data-hero-actions]", { y: 22, opacity: 0, duration: 0.7 }, "-=0.55")
             .from("[data-hero-chips]", { y: 14, opacity: 0, duration: 0.6 }, "-=0.45");
 
-          // Hero content recedes into depth while scrolling past.
-          gsap.to("[data-hero-inner]", {
-            opacity: 0,
-            scale: 0.94,
-            yPercent: -6,
-            ease: "none",
-            scrollTrigger: {
-              trigger: "[data-hero]",
-              start: "12% top",
-              end: "bottom 35%",
-              scrub: true,
-            },
-          });
-
           // Generic reveal-on-scroll blocks.
           gsap.utils.toArray<HTMLElement>("[data-reveal]").forEach((el) => {
             gsap.from(el, {
@@ -281,6 +267,24 @@ export default function HomeV2() {
             });
           }
         });
+
+        // Hero content recedes into depth while scrolling past — desktop only.
+        // On mobile the hero isn't pinned, so fading it with scroll would
+        // dissolve the text while the user is still reading it.
+        mm.add("(min-width: 881px) and (prefers-reduced-motion: no-preference)", () => {
+          gsap.to("[data-hero-inner]", {
+            opacity: 0,
+            scale: 0.94,
+            yPercent: -6,
+            ease: "none",
+            scrollTrigger: {
+              trigger: "[data-hero]",
+              start: "12% top",
+              end: "bottom 35%",
+              scrub: true,
+            },
+          });
+        });
       }, rootRef);
     })();
 
@@ -296,6 +300,12 @@ export default function HomeV2() {
         .v2h-shell { max-width: 1180px; margin: 0 auto; padding-left: 26px; padding-right: 26px; min-width: 0; }
         .v2h-desktop-nav { display: flex; }
         .v2h-mobile-menu { display: none; }
+        /* Hero runway: the extra height beyond 100svh is how long the pinned
+           stage "holds" while scrolling. Kept moderate so desktop feels
+           cinematic without trapping the scroll. */
+        .v2h-hero { position: relative; height: 150svh; }
+        .v2h-hero-sticky { position: sticky; top: 0; height: 100svh; overflow: hidden; display: flex; align-items: center; }
+        .v2h-scroll-cue { display: flex; flex-direction: column; align-items: center; gap: 10px; }
         .v2h-grid-cards { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
         .v2h-grid-recognition { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; }
         .v2h-grid-trust { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; }
@@ -321,6 +331,12 @@ export default function HomeV2() {
           .v2h-grid-recognition { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
           .v2h-grid-trust { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
           .v2h-benefit-grid { grid-template-columns: 1fr !important; }
+          /* Mobile: no pinned hero. Natural scroll, content can never clip
+             against a fixed-height stage, and the scroll cue goes away so
+             nothing collides with the trust chips. */
+          .v2h-hero { height: auto; }
+          .v2h-hero-sticky { position: relative; height: auto; min-height: 100svh; padding-top: 90px; padding-bottom: 56px; }
+          .v2h-scroll-cue { display: none; }
         }
         @media (max-width: 560px) {
           .v2h-shell { padding-left: 18px; padding-right: 18px; }
@@ -441,17 +457,8 @@ export default function HomeV2() {
       </header>
 
       {/* ── Hero: the route nebula ──────────────────────────────── */}
-      <section data-hero style={{ position: "relative", height: "172svh" }}>
-        <div
-          style={{
-            position: "sticky",
-            top: 0,
-            height: "100svh",
-            overflow: "hidden",
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
+      <section data-hero className="v2h-hero">
+        <div className="v2h-hero-sticky">
           <RouteScene progressRef={heroProgress} />
 
           {/* readability scrim — quiets the particle field behind the
@@ -536,18 +543,15 @@ export default function HomeV2() {
             </div>
           </div>
 
-          {/* scroll cue */}
+          {/* scroll cue — desktop only; the class hides it on mobile */}
           <div
             aria-hidden="true"
+            className="v2h-scroll-cue"
             style={{
               position: "absolute",
               bottom: 26,
               left: "50%",
               transform: "translateX(-50%)",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 10,
               zIndex: 2,
             }}
           >
