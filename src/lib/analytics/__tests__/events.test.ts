@@ -34,11 +34,47 @@ describe("first-party funnel event registry", () => {
       FIRST_PARTY_EVENTS.upsellSkipped,
       FIRST_PARTY_EVENTS.subscriptionSkipped,
       FIRST_PARTY_EVENTS.successViewed,
+      // analytics-depth pass
+      FIRST_PARTY_EVENTS.questionAnswered,
+      FIRST_PARTY_EVENTS.resultLoadingViewed,
+      FIRST_PARTY_EVENTS.resultLoadingCompleted,
+      FIRST_PARTY_EVENTS.emailFieldFocused,
+      FIRST_PARTY_EVENTS.fullResultViewed,
+      FIRST_PARTY_EVENTS.checkoutSectionReached,
+      FIRST_PARTY_EVENTS.checkoutCtaClicked,
+      FIRST_PARTY_EVENTS.upsellViewed,
+      FIRST_PARTY_EVENTS.subscriptionViewed,
+      FIRST_PARTY_EVENTS.dashboardFirstActionClicked,
     ] as const;
     for (const eventName of depthEvents) {
       expect(isAllowedFirstPartyEvent(eventName)).toBe(true);
       expect(META_ALLOWED_FIRST_PARTY_EVENTS.has(eventName)).toBe(false);
       expect(META_EVENT_BY_FIRST_PARTY[eventName]).toBeUndefined();
     }
+  });
+
+  it("keeps checkout funnel stages distinguishable by name", () => {
+    // Reaching the payment section, the payment intent existing, and the
+    // Payment Element rendering are three different facts — none may alias.
+    const distinct = new Set([
+      FIRST_PARTY_EVENTS.paywallViewed,
+      FIRST_PARTY_EVENTS.checkoutSectionReached,
+      FIRST_PARTY_EVENTS.checkoutCtaClicked,
+      FIRST_PARTY_EVENTS.paymentIntentCreated,
+      FIRST_PARTY_EVENTS.paymentElementLoaded,
+      FIRST_PARTY_EVENTS.checkoutIntent,
+    ]);
+    expect(distinct.size).toBe(6);
+    // Only the explicit buyer action maps to Meta InitiateCheckout.
+    expect(META_EVENT_BY_FIRST_PARTY[FIRST_PARTY_EVENTS.checkoutSectionReached]).toBeUndefined();
+    expect(META_EVENT_BY_FIRST_PARTY[FIRST_PARTY_EVENTS.checkoutCtaClicked]).toBeUndefined();
+    expect(META_EVENT_BY_FIRST_PARTY[FIRST_PARTY_EVENTS.checkoutIntent]).toBe("InitiateCheckout");
+  });
+
+  it("separates the free preview from the full result", () => {
+    expect(FIRST_PARTY_EVENTS.resultPreviewViewed).not.toBe(FIRST_PARTY_EVENTS.fullResultViewed);
+    // full_result_viewed is diagnostic-only; the preview keeps its Meta bridge.
+    expect(META_ALLOWED_FIRST_PARTY_EVENTS.has(FIRST_PARTY_EVENTS.resultPreviewViewed)).toBe(true);
+    expect(META_ALLOWED_FIRST_PARTY_EVENTS.has(FIRST_PARTY_EVENTS.fullResultViewed)).toBe(false);
   });
 });
