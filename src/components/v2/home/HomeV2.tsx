@@ -22,6 +22,7 @@ import { FocusField } from "@/components/v2/FocusField";
 import { FocusRadar } from "@/components/v2/FocusRadar";
 import { Magnetic } from "@/components/v2/Magnetic";
 import { TiltCard } from "@/components/v2/TiltCard";
+import { SignalModule } from "@/components/v2/SignalModule";
 import { HudLabel, TelemetryChip, SignalRule } from "@/components/v2/primitives";
 
 /**
@@ -102,12 +103,69 @@ const trustCards = [
 
 function PrimaryCta({ children = "Begin the Assessment" }: { children?: string }) {
   return (
-    <Magnetic>
-      <Link href="/assessment" className="v2-cta">
+    <Magnetic strength={9}>
+      <Link
+        href="/assessment"
+        className="v2-cta v2-cta-halo v2-cta-breathe"
+        onPointerMove={(e) => {
+          if (e.pointerType !== "mouse") return;
+          const rect = e.currentTarget.getBoundingClientRect();
+          e.currentTarget.style.setProperty("--cta-x", `${e.clientX - rect.left}px`);
+          e.currentTarget.style.setProperty("--cta-y", `${e.clientY - rect.top}px`);
+        }}
+      >
         {children}
         <ArrowRight size={16} strokeWidth={2.6} />
       </Link>
     </Magnetic>
+  );
+}
+
+/* Rail stations — the fixed wayfinder mirrors the page's journey. */
+const RAIL = ["Entry", "Noise", "Report", "Route", "Arrival"] as const;
+
+function RouteRail() {
+  return (
+    <div className="v2-rail" aria-hidden="true" data-rail>
+      <span className="v2-rail-track" />
+      <span className="v2-rail-fill" data-rail-fill />
+      {RAIL.map((label, i) => (
+        <span key={label} style={{ position: "absolute", left: 0, right: 0, top: `${(i / (RAIL.length - 1)) * 100}%` }}>
+          <span className="v2-rail-dot" data-rail-dot={i} style={{ top: 0 }} />
+          <span className="v2-rail-label">
+            {String(i + 1).padStart(2, "0")} {label}
+          </span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/* Restless noise sparkline — each recognition card carries its own
+   detected-pattern trace. */
+function NoiseTrace({ seed }: { seed: number }) {
+  const pts = Array.from({ length: 12 }, (_, i) => {
+    const x = (i / 11) * 72;
+    const y = 9 + Math.sin(seed * 3.7 + i * 1.9) * 5.5 + Math.sin(seed * 1.3 + i * 0.7) * 2;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+  return (
+    <svg aria-hidden="true" width="72" height="18" viewBox="0 0 72 18" fill="none" style={{ opacity: 0.85 }}>
+      <polyline
+        className="v2-noise-line"
+        points={pts}
+        stroke="url(#v2h-noise-grad)"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+      <defs>
+        <linearGradient id="v2h-noise-grad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#7C8AFF" stopOpacity="0.3" />
+          <stop offset="60%" stopColor="#9BE8FF" stopOpacity="0.9" />
+          <stop offset="100%" stopColor="#7C8AFF" stopOpacity="0.3" />
+        </linearGradient>
+      </defs>
+    </svg>
   );
 }
 
@@ -139,13 +197,14 @@ export default function HomeV2() {
     let cancelled = false;
 
     (async () => {
-      const [{ default: gsap }, { ScrollTrigger }] = await Promise.all([
+      const [{ default: gsap }, { ScrollTrigger }, { MotionPathPlugin }] = await Promise.all([
         import("gsap"),
         import("gsap/ScrollTrigger"),
+        import("gsap/MotionPathPlugin"),
       ]);
       if (cancelled || !rootRef.current) return;
 
-      gsap.registerPlugin(ScrollTrigger);
+      gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
 
       ctx = gsap.context(() => {
         const mm = gsap.matchMedia();
@@ -198,6 +257,37 @@ export default function HomeV2() {
             },
           });
 
+          // Scroll cue dissolves the moment the journey starts.
+          gsap.to("[data-scroll-cue]", {
+            opacity: 0,
+            ease: "none",
+            scrollTrigger: { trigger: "[data-hero]", start: "4% top", end: "14% top", scrub: true },
+          });
+
+          // Route rail: the wayfinder line draws with overall page progress.
+          gsap.to("[data-rail-fill]", {
+            scaleY: 1,
+            ease: "none",
+            scrollTrigger: {
+              trigger: rootRef.current,
+              start: "top top",
+              end: "bottom bottom",
+              scrub: 0.5,
+            },
+          });
+          // Rail dots light as their section of the journey is reached.
+          gsap.utils.toArray<HTMLElement>("[data-rail-section]").forEach((section) => {
+            const idx = section.getAttribute("data-rail-section");
+            const dot = document.querySelector(`[data-rail-dot="${idx}"]`);
+            if (!dot) return;
+            ScrollTrigger.create({
+              trigger: section,
+              start: "top 62%",
+              onEnter: () => dot.classList.add("is-active"),
+              onLeaveBack: () => dot.classList.remove("is-active"),
+            });
+          });
+
           // Generic reveal-on-scroll blocks.
           gsap.utils.toArray<HTMLElement>("[data-reveal]").forEach((el) => {
             gsap.from(el, {
@@ -209,17 +299,55 @@ export default function HomeV2() {
             });
           });
 
-          // Staggered card grids.
+          // Staggered card grids — cards arrive from depth, not just below.
           gsap.utils.toArray<HTMLElement>("[data-reveal-grid]").forEach((grid) => {
             gsap.from(grid.children, {
-              y: 38,
+              y: 44,
               opacity: 0,
-              duration: 0.8,
-              stagger: 0.08,
+              scale: 0.93,
+              filter: "blur(5px)",
+              duration: 0.95,
+              stagger: 0.09,
               ease: "power3.out",
               scrollTrigger: { trigger: grid, start: "top 84%" },
             });
           });
+
+          // Ambient veils drift slower than content — spatial parallax.
+          gsap.utils.toArray<HTMLElement>(".v2-aurora").forEach((veil) => {
+            gsap.fromTo(
+              veil,
+              { yPercent: -6 },
+              {
+                yPercent: 6,
+                ease: "none",
+                scrollTrigger: {
+                  trigger: veil.parentElement ?? veil,
+                  start: "top bottom",
+                  end: "bottom top",
+                  scrub: 0.9,
+                },
+              },
+            );
+          });
+
+          // Arrival: the final CTA lands like a destination, not a block.
+          const arrival = document.querySelector("[data-arrival]");
+          if (arrival) {
+            const tl = gsap.timeline({
+              scrollTrigger: { trigger: arrival, start: "top 74%" },
+              defaults: { ease: "power3.out" },
+            });
+            tl.from("[data-arrival-ring]", { scale: 0.35, opacity: 0, duration: 1.3, ease: "power2.out" })
+              .from("[data-arrival] [data-reveal-soft]", {
+                y: 34,
+                opacity: 0,
+                scale: 0.96,
+                filter: "blur(6px)",
+                duration: 1.0,
+                stagger: 0.12,
+              }, "-=1.0");
+          }
 
           // Instrument panel: cards swing in from 3D space.
           gsap.utils.toArray<HTMLElement>("[data-reveal-3d]").forEach((grid) => {
@@ -264,21 +392,27 @@ export default function HomeV2() {
             });
           }
 
-          // The route line between stations draws itself in.
+          // The route line between stations draws itself in, and a luminous
+          // pulse rides the head of the drawn path.
           const path = document.querySelector<SVGPathElement>("[data-route-path]");
           if (path) {
             const len = path.getTotalLength();
             gsap.set(path, { strokeDasharray: len, strokeDashoffset: len });
-            gsap.to(path, {
-              strokeDashoffset: 0,
-              ease: "none",
-              scrollTrigger: {
-                trigger: "[data-stations]",
-                start: "top 70%",
-                end: "bottom 60%",
-                scrub: 0.6,
-              },
-            });
+            const routeScrub = {
+              trigger: "[data-stations]",
+              start: "top 70%",
+              end: "bottom 60%",
+              scrub: 0.6,
+            };
+            gsap.to(path, { strokeDashoffset: 0, ease: "none", scrollTrigger: routeScrub });
+            const pulse = document.querySelector("[data-route-pulse]");
+            if (pulse) {
+              gsap.to(pulse, {
+                motionPath: { path, align: path, alignOrigin: [0.5, 0.5] },
+                ease: "none",
+                scrollTrigger: routeScrub,
+              });
+            }
           }
         });
       }, rootRef);
@@ -440,8 +574,11 @@ export default function HomeV2() {
         </div>
       </header>
 
+      {/* ── Route rail wayfinder (desktop) ──────────────────────── */}
+      <RouteRail />
+
       {/* ── Hero: the route nebula ──────────────────────────────── */}
-      <section data-hero style={{ position: "relative", height: "172svh" }}>
+      <section data-hero data-rail-section="0" style={{ position: "relative", height: "172svh" }}>
         <div
           style={{
             position: "sticky",
@@ -487,7 +624,7 @@ export default function HomeV2() {
                 <HeroWords text="Your focus isn't broken." />
                 <br />
                 <em style={{ fontStyle: "italic", fontWeight: 500 }}>
-                  <HeroWords text="It's unmapped." className="v2-text-signal" />
+                  <HeroWords text="It's unmapped." className="v2-text-signal v2-text-pan" />
                 </em>
               </h1>
               <p
@@ -526,6 +663,7 @@ export default function HomeV2() {
           {/* scroll cue */}
           <div
             aria-hidden="true"
+            data-scroll-cue
             style={{
               position: "absolute",
               bottom: 26,
@@ -566,42 +704,62 @@ export default function HomeV2() {
       </section>
 
       {/* ── Signal readings: recognition ────────────────────────── */}
-      <section className="v2h-shell" style={{ padding: "30px 26px 90px", position: "relative" }}>
+      <section data-rail-section="1" className="v2h-shell" style={{ padding: "30px 26px 90px", position: "relative" }}>
         <div data-reveal style={{ marginBottom: 30 }}>
           <HudLabel style={{ marginBottom: 14 }}>Signal readings — patterns people recognize</HudLabel>
           <SignalRule />
         </div>
-        <div data-reveal-grid className="v2h-grid-recognition">
+        <div data-reveal-grid className="v2h-grid-recognition" style={{ perspective: 1200 }}>
           {recognition.map((item, i) => (
-            <TiltCard key={item} maxTilt={6} style={{ height: "100%" }}>
-              <div
-                className="v2-panel v2h-card"
-                style={{
-                  padding: "22px 20px",
-                  minHeight: 150,
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 14,
-                }}
-              >
-                <span className="v2-hud" style={{ color: "var(--v2-signal-2)", fontSize: 10 }}>
-                  {String(i + 1).padStart(2, "0")} / NOISE
-                </span>
-                <p
-                  className="v2-display"
-                  style={{ fontSize: 19, fontWeight: 500, lineHeight: 1.3, letterSpacing: "-0.015em" }}
+            <div key={item} style={{ height: "100%" }}>
+              {/* float lives on its own layer so the reveal tween owns the
+                  outer transform without fighting the CSS animation */}
+              <div style={{ height: "100%", animation: `v2-float ${7 + i * 0.9}s ease-in-out ${i * 0.7}s infinite` }}>
+              <TiltCard maxTilt={7} style={{ height: "100%" }}>
+                <SignalModule
+                  pad="22px 20px"
+                  style={{ minHeight: 170, height: "100%" }}
                 >
-                  {item}
-                </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14, height: "100%" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                      <span className="v2-hud" style={{ color: "var(--v2-signal-2)", fontSize: 10 }}>
+                        {String(i + 1).padStart(2, "0")} / NOISE
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: 999,
+                          background: "var(--v2-signal-2)",
+                          boxShadow: "0 0 9px var(--v2-signal-2)",
+                          animation: `v2-blink ${1.6 + i * 0.4}s ease-in-out infinite`,
+                        }}
+                      />
+                    </div>
+                    <p
+                      className="v2-display"
+                      style={{ fontSize: 19, fontWeight: 500, lineHeight: 1.3, letterSpacing: "-0.015em", flex: 1 }}
+                    >
+                      {item}
+                    </p>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <NoiseTrace seed={i + 1} />
+                      <span className="v2-hud" style={{ fontSize: 8, color: "var(--v2-ink-ghost)" }}>
+                        Detected
+                      </span>
+                    </div>
+                  </div>
+                </SignalModule>
+              </TiltCard>
               </div>
-            </TiltCard>
+            </div>
           ))}
         </div>
       </section>
 
       {/* ── Instrument panel: what you get ──────────────────────── */}
-      <section id="brain-profile" style={{ position: "relative", borderBlock: "1px solid var(--v2-line)", background: "rgba(8,10,20,0.5)" }}>
+      <section id="brain-profile" data-rail-section="2" style={{ position: "relative", borderBlock: "1px solid var(--v2-line)", background: "rgba(8,10,20,0.5)" }}>
         <div className="v2-aurora" aria-hidden="true" />
         {/* floating focus-map instrument, drifting against scroll */}
         <div
@@ -633,41 +791,47 @@ export default function HomeV2() {
           <div data-reveal-3d className="v2h-grid-cards" style={{ perspective: 1200 }}>
             {profileCards.map(({ icon: Icon, title, body }, index) => (
               <TiltCard key={title} maxTilt={5} style={{ height: "100%" }}>
-                <article
-                  className="v2-panel v2h-card"
+                <SignalModule
+                  pad="24px 22px"
                   style={{
-                    padding: "24px 22px",
                     height: "100%",
                     ...(index === 0
                       ? {
-                          borderColor: "rgba(124,138,255,0.4)",
+                          borderColor: "rgba(124,138,255,0.45)",
                           boxShadow:
-                            "inset 0 1px 0 rgba(255,255,255,0.1), 0 24px 60px rgba(2,3,10,0.55), 0 0 56px rgba(124,138,255,0.18)",
+                            "inset 0 1px 0 rgba(255,255,255,0.12), 0 24px 60px rgba(2,3,10,0.6), 0 0 60px rgba(124,138,255,0.20)",
                         }
                       : null),
                   }}
                 >
-                  <span
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 14,
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "var(--v2-signal-2)",
-                      background: "rgba(124,138,255,0.10)",
-                      border: "1px solid rgba(124,138,255,0.25)",
-                      marginBottom: 18,
-                    }}
-                  >
-                    <Icon size={20} strokeWidth={1.8} />
-                  </span>
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 18 }}>
+                    {/* instrument icon in a luminous ring */}
+                    <span
+                      style={{
+                        position: "relative",
+                        width: 48,
+                        height: 48,
+                        borderRadius: 15,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "var(--v2-signal-2)",
+                        background: "linear-gradient(150deg, rgba(124,138,255,0.18), rgba(155,232,255,0.05))",
+                        border: "1px solid rgba(124,138,255,0.4)",
+                        boxShadow: "0 8px 26px rgba(124,138,255,0.22), inset 0 1px 0 rgba(255,255,255,0.14)",
+                      }}
+                    >
+                      <Icon size={20} strokeWidth={1.8} />
+                    </span>
+                    <span className="v2-hud" style={{ fontSize: 8.5, color: "var(--v2-ink-ghost)" }}>
+                      M.{String(index + 1).padStart(2, "0")}
+                    </span>
+                  </div>
                   <h3 className="v2-display" style={{ fontSize: 20, fontWeight: 550, marginBottom: 8 }}>
                     {title}
                   </h3>
                   <p style={{ fontSize: 14, lineHeight: 1.65, color: "var(--v2-ink-dim)" }}>{body}</p>
-                </article>
+                </SignalModule>
               </TiltCard>
             ))}
           </div>
@@ -675,7 +839,7 @@ export default function HomeV2() {
       </section>
 
       {/* ── Route stations: how it works ────────────────────────── */}
-      <section id="how-it-works" className="v2h-shell" style={{ padding: "96px 26px" }}>
+      <section id="how-it-works" data-rail-section="3" className="v2h-shell" style={{ padding: "96px 26px" }}>
         <div data-reveal style={{ maxWidth: 640, marginBottom: 50 }}>
           <HudLabel tone="signal" style={{ marginBottom: 16 }}>
             The route
@@ -701,6 +865,15 @@ export default function HomeV2() {
               stroke="rgba(163,178,255,0.12)"
               strokeWidth="1.5"
             />
+            {/* soft glow under the drawn line */}
+            <path
+              d="M30 10 C 50 120, 10 200, 30 300 C 50 400, 10 480, 30 590"
+              fill="none"
+              stroke="rgba(124,138,255,0.18)"
+              strokeWidth="7"
+              strokeLinecap="round"
+              style={{ filter: "blur(4px)" }}
+            />
             <path
               data-route-path
               d="M30 10 C 50 120, 10 200, 30 300 C 50 400, 10 480, 30 590"
@@ -709,6 +882,8 @@ export default function HomeV2() {
               strokeWidth="2"
               strokeLinecap="round"
             />
+            {/* luminous pulse riding the head of the drawn route */}
+            <circle data-route-pulse cx="30" cy="10" r="4" fill="#9BE8FF" style={{ filter: "drop-shadow(0 0 7px #9BE8FF)" }} />
             <defs>
               <linearGradient id="v2h-route-grad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#7C8AFF" />
@@ -742,12 +917,17 @@ export default function HomeV2() {
                 >
                   {num}
                 </span>
-                <h3 className="v2-display" style={{ fontSize: 23, fontWeight: 550, marginBottom: 8 }}>
-                  {title}
-                </h3>
-                <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--v2-ink-dim)", maxWidth: 520 }}>
-                  {body}
-                </p>
+                <SignalModule pad="20px 22px" style={{ maxWidth: 560 }}>
+                  <span className="v2-hud" style={{ fontSize: 8.5, color: "var(--v2-signal-2)", display: "block", marginBottom: 8 }}>
+                    Station {num}
+                  </span>
+                  <h3 className="v2-display" style={{ fontSize: 23, fontWeight: 550, marginBottom: 8 }}>
+                    {title}
+                  </h3>
+                  <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--v2-ink-dim)" }}>
+                    {body}
+                  </p>
+                </SignalModule>
               </div>
             ))}
           </div>
@@ -862,37 +1042,84 @@ export default function HomeV2() {
         <div className="v2h-shell" style={{ position: "relative", padding: "70px 26px" }}>
           <div data-reveal-grid className="v2h-grid-trust">
             {trustCards.map(({ icon: Icon, title, body }) => (
-              <div key={title} className="v2-panel v2h-card" style={{ padding: "22px 20px" }}>
+              <SignalModule key={title} pad="22px 20px" glowSize={240}>
                 <Icon size={18} color="var(--v2-signal-2)" strokeWidth={1.8} />
                 <h3 style={{ fontSize: 15, fontWeight: 800, color: "var(--v2-ink)", marginTop: 14, marginBottom: 7 }}>
                   {title}
                 </h3>
                 <p style={{ fontSize: 13, lineHeight: 1.6, color: "var(--v2-ink-faint)" }}>{body}</p>
-              </div>
+              </SignalModule>
             ))}
+          </div>
+          {/* payment trust, woven into the system instead of floating */}
+          <div
+            data-reveal
+            style={{
+              marginTop: 26,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "10px 26px",
+              flexWrap: "wrap",
+            }}
+          >
+            <TelemetryChip>Secure checkout via Stripe</TelemetryChip>
+            <TelemetryChip>SSL encrypted</TelemetryChip>
+            <TelemetryChip color="var(--v2-ink-faint)">7-day refund</TelemetryChip>
           </div>
         </div>
       </section>
 
-      {/* ── Final CTA ───────────────────────────────────────────── */}
-      <section style={{ position: "relative", overflow: "hidden" }}>
+      {/* ── Final CTA: arrival ──────────────────────────────────── */}
+      <section data-arrival data-rail-section="4" style={{ position: "relative", overflow: "hidden" }}>
         <FocusField coherence={0.9} showRoute intensity={0.8} interactive />
+        {/* destination ring expanding behind the CTA */}
+        <div
+          data-arrival-ring
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            width: "min(620px, 90vw)",
+            aspectRatio: "1",
+            transform: "translate(-50%, -50%)",
+            borderRadius: "50%",
+            border: "1px solid rgba(124,138,255,0.22)",
+            boxShadow: "inset 0 0 80px rgba(124,138,255,0.10), 0 0 90px rgba(124,138,255,0.10)",
+            pointerEvents: "none",
+          }}
+        >
+          <span
+            style={{
+              position: "absolute",
+              inset: "12%",
+              borderRadius: "50%",
+              border: "1px dashed rgba(163,178,255,0.25)",
+              animation: "v2-radar-spin 40s linear infinite",
+            }}
+          />
+        </div>
         <div
           className="v2h-shell"
-          style={{ position: "relative", maxWidth: 820, padding: "120px 26px", textAlign: "center" }}
+          style={{ position: "relative", maxWidth: 820, padding: "130px 26px", textAlign: "center" }}
         >
-          <div data-reveal>
-            <HudLabel tone="signal" style={{ marginBottom: 18 }}>
-              Start here — station 01
-            </HudLabel>
+          <div>
+            <div data-reveal-soft>
+              <HudLabel tone="signal" style={{ marginBottom: 18 }}>
+                Final station — your route begins here
+              </HudLabel>
+            </div>
             <h2
+              data-reveal-soft
               className="v2-display"
               style={{ fontSize: "clamp(34px, 5.6vw, 62px)", lineHeight: 1.04, marginBottom: 20 }}
             >
               Start with a clearer picture of{" "}
-              <em className="v2-text-signal" style={{ fontStyle: "italic" }}>how your focus works</em>.
+              <em className="v2-text-signal v2-text-pan" style={{ fontStyle: "italic" }}>how your focus works</em>.
             </h2>
             <p
+              data-reveal-soft
               style={{
                 fontSize: 16,
                 lineHeight: 1.7,
@@ -904,7 +1131,9 @@ export default function HomeV2() {
               Take the free assessment first. You decide whether the full profile is
               useful after you see the preview.
             </p>
-            <PrimaryCta>Find My Focus Pattern</PrimaryCta>
+            <div data-reveal-soft>
+              <PrimaryCta>Find My Focus Pattern</PrimaryCta>
+            </div>
           </div>
         </div>
       </section>

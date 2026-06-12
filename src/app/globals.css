@@ -302,7 +302,44 @@ h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-
     0 14px 52px rgba(var(--v2-signal-rgb), 0.48),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
-.v2-cta:active { transform: scale(0.98); }
+.v2-cta:active { transform: scale(0.965) translateY(1px); }
+/* arrow leans into the route on hover */
+.v2-cta svg {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.v2-cta:hover svg { transform: translateX(4px); }
+/* pointer halo — set --cta-x/--cta-y from JS */
+.v2-cta-halo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    130px circle at var(--cta-x, 50%) var(--cta-y, 50%),
+    rgba(var(--v2-cyan-rgb), 0.22),
+    transparent 65%
+  );
+  opacity: 0;
+  transition: opacity 0.35s;
+  pointer-events: none;
+}
+.v2-cta-halo:hover::before { opacity: 1; }
+/* idle breathing glow for hero-grade CTAs */
+@keyframes v2-cta-breathe {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(4,5,12,0.4), 0 10px 38px rgba(var(--v2-signal-rgb), 0.30), inset 0 1px 0 rgba(255,255,255,0.14); }
+  50%      { box-shadow: 0 0 0 1px rgba(4,5,12,0.4), 0 12px 52px rgba(var(--v2-signal-rgb), 0.50), inset 0 1px 0 rgba(255,255,255,0.2); }
+}
+.v2-cta-breathe { animation: v2-cta-breathe 3.2s ease-in-out infinite; }
+
+/* hero gradient words shimmer once settled */
+@keyframes v2-gradient-pan {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.v2-text-pan {
+  background-size: 200% 100%;
+  animation: v2-gradient-pan 7s linear infinite;
+}
 .v2-cta::after {
   content: "";
   position: absolute;
@@ -467,6 +504,78 @@ h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-
   color: #fff !important;
   background: rgba(124, 138, 255, 0.16) !important;
   box-shadow: 0 0 0 4px rgba(124, 138, 255, 0.14), 0 0 34px rgba(124, 138, 255, 0.55) !important;
+}
+
+/* ── Route rail — fixed wayfinder that draws with scroll ─────────── */
+.v2-rail {
+  position: fixed;
+  left: 26px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 46vh;
+  width: 20px;
+  z-index: 40;
+  pointer-events: none;
+}
+.v2-rail-track {
+  position: absolute;
+  left: 9px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(163, 178, 255, 0.16);
+}
+.v2-rail-fill {
+  position: absolute;
+  left: 9px;
+  top: 0;
+  width: 1px;
+  height: 100%;
+  background: var(--v2-grad-signal);
+  box-shadow: 0 0 10px rgba(124, 138, 255, 0.7);
+  transform-origin: top;
+  transform: scaleY(0);
+}
+.v2-rail-dot {
+  position: absolute;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  border-radius: 999px;
+  border: 1px solid rgba(163, 178, 255, 0.45);
+  background: var(--v2-bg);
+  transition: background 0.45s, box-shadow 0.45s, border-color 0.45s;
+}
+.v2-rail-dot.is-active {
+  background: var(--v2-signal-2);
+  border-color: var(--v2-signal-2);
+  box-shadow: 0 0 12px rgba(155, 232, 255, 0.9);
+}
+.v2-rail-label {
+  position: absolute;
+  left: 18px;
+  top: -3px;
+  font-family: var(--v2-font-mono);
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: var(--v2-ink-ghost);
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: color 0.45s;
+}
+.v2-rail-dot.is-active + .v2-rail-label { color: var(--v2-signal-2); }
+@media (max-width: 1180px) {
+  .v2-rail { display: none; }
+}
+
+/* noise sparkline on recognition cards — restless until "detected" */
+@keyframes v2-noise-drift {
+  to { stroke-dashoffset: -64; }
+}
+.v2-noise-line {
+  stroke-dasharray: 3 5;
+  animation: v2-noise-drift 2.6s linear infinite;
 }
 
 /* Dark scrollbar inside V2 surfaces */

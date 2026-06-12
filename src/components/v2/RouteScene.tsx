@@ -125,9 +125,9 @@ export function RouteScene({ progressRef, style, className }: Props) {
       /* ── orbital focus-map — the instrument hanging in the nebula ── */
       const orbital = new THREE.Group();
       const ringDefs = [
-        { r: 1.55, tube: 0.0048, color: 0x7c8aff, opacity: 0.5, tiltX: Math.PI / 2.25, tiltZ: 0.0 },
-        { r: 1.15, tube: 0.0040, color: 0x9be8ff, opacity: 0.38, tiltX: Math.PI / 1.75, tiltZ: 0.7 },
-        { r: 0.78, tube: 0.0036, color: 0x7c8aff, opacity: 0.30, tiltX: Math.PI / 2.9, tiltZ: -0.5 },
+        { r: 1.55, tube: 0.0052, color: 0x7c8aff, opacity: 0.62, tiltX: Math.PI / 2.25, tiltZ: 0.0 },
+        { r: 1.15, tube: 0.0044, color: 0x9be8ff, opacity: 0.48, tiltX: Math.PI / 1.75, tiltZ: 0.7 },
+        { r: 0.78, tube: 0.0040, color: 0x7c8aff, opacity: 0.38, tiltX: Math.PI / 2.9, tiltZ: -0.5 },
       ];
       const ringMeshes = ringDefs.map((d) => {
         const geo = new THREE.TorusGeometry(d.r, d.tube, 6, 110);
@@ -230,6 +230,28 @@ export function RouteScene({ progressRef, style, className }: Props) {
       head.scale.setScalar(0.55);
       scene.add(head);
 
+      // signal packets — luminous motes streaming along the drawn route,
+      // the literal "noise becoming signal" current
+      const flowCount = isSmall ? 8 : 16;
+      const flows: { sprite: import("three").Sprite; mat: import("three").SpriteMaterial; offset: number; speed: number; scale: number }[] = [];
+      for (let i = 0; i < flowCount; i++) {
+        const mat = new THREE.SpriteMaterial({
+          map: i % 2 === 0 ? headTex : texIndigo,
+          transparent: true,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+        });
+        const sprite = new THREE.Sprite(mat);
+        scene.add(sprite);
+        flows.push({
+          sprite,
+          mat,
+          offset: i / flowCount,
+          speed: 0.022 + (i % 5) * 0.007,
+          scale: 0.10 + (i % 3) * 0.05,
+        });
+      }
+
       /* ── interaction state ────────────────────────────────────── */
       let pointerX = 0;
       let pointerY = 0;
@@ -265,23 +287,40 @@ export function RouteScene({ progressRef, style, className }: Props) {
         const pulse = 0.5 + Math.sin(t * 18) * 0.12;
         head.scale.setScalar(pulse);
 
+        // signal packets ride only the drawn portion of the route
+        for (const f of flows) {
+          f.offset = (f.offset + f.speed * 0.016 * 60 * 0.016) % 1;
+          const u = f.offset * Math.max(0.02, Math.min(0.999, drawn));
+          f.sprite.position.copy(curve.getPointAt(u));
+          // bright at mid-journey, fading near ends
+          const edge = Math.min(u / 0.08, (Math.max(0.02, drawn) - u) / 0.08, 1);
+          f.mat.opacity = Math.max(0, edge) * (0.5 + Math.sin(t * 6 + f.offset * 40) * 0.25);
+          f.sprite.scale.setScalar(f.scale * (0.8 + Math.sin(t * 5 + f.offset * 30) * 0.2));
+        }
+
         // nebula breathing + per-layer pointer parallax (deeper layer moves
-        // less, near motes move most — real volumetric depth read)
-        cloudA.points.rotation.y = t * 0.16;
-        cloudA.points.rotation.x = Math.sin(t * 0.4) * 0.04;
+        // less, near motes move most — real volumetric depth read).
+        // Scroll calms and gathers the noise: rotation slows, the cloud
+        // tightens — disorder organizing as the user moves.
+        const p = progressRef?.current ?? 0;
+        const calm = 1 - p * 0.55;
+        cloudA.points.rotation.y = t * 0.16 * calm;
+        cloudA.points.rotation.x = Math.sin(t * 0.4) * 0.04 * calm;
         cloudA.points.position.x = -pointerX * 0.12;
         cloudA.points.position.y = pointerY * 0.08;
-        cloudB.points.rotation.y = -t * 0.1;
-        cloudB.points.position.y = Math.sin(t * 0.6) * 0.2 + pointerY * 0.18;
+        cloudA.points.scale.setScalar(1 - p * 0.12);
+        cloudB.points.rotation.y = -t * 0.1 * calm;
+        cloudB.points.position.y = Math.sin(t * 0.6) * 0.2 * calm + pointerY * 0.18;
         cloudB.points.position.x = -pointerX * 0.26;
+        cloudB.points.scale.setScalar(1 - p * 0.10);
         cloudC.points.position.x = -pointerX * 0.85;
         cloudC.points.position.y = Math.sin(t * 0.5) * 0.12 + pointerY * 0.6;
         cloudC.points.rotation.z = t * 0.02;
 
-        // orbital instrument: slow precession, scroll tightens the system
-        const p = progressRef?.current ?? 0;
-        orbital.rotation.y = t * 0.3 + p * 1.6;
-        orbital.rotation.x = Math.sin(t * 0.22) * 0.08 + p * 0.35;
+        // orbital instrument: slow precession, scroll tightens the system,
+        // and the whole instrument leans gently toward the pointer
+        orbital.rotation.y = t * 0.3 + p * 1.6 + pointerX * 0.22;
+        orbital.rotation.x = Math.sin(t * 0.22) * 0.08 + p * 0.35 + pointerY * 0.14;
         orbital.position.y = (isSmall ? 1.7 : 0.25) + Math.sin(t * 0.55) * 0.07 - p * 0.9;
         const tighten = 1 - p * 0.25;
         orbital.scale.setScalar(tighten);
@@ -382,6 +421,7 @@ export function RouteScene({ progressRef, style, className }: Props) {
           r.mat.dispose();
         }
         for (const n of nodes) n.mat.dispose();
+        for (const f of flows) f.mat.dispose();
         coreGlowMat.dispose();
         coreGeo.dispose();
         coreMat.dispose();
