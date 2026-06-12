@@ -137,7 +137,7 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
                 type="button"
                 onClick={onStart}
                 className="v2-cta"
-                style={{ width: "100%", minHeight: 60, fontSize: 16, animation: "v2-pulse-ring 2.6s ease-out infinite" }}
+                style={{ width: "100%", minHeight: 60, fontSize: 16, animation: "v2-cta-pulse 2.6s ease-out infinite" }}
               >
                 Find My Focus Pattern
                 <ArrowRight size={17} strokeWidth={2.6} />

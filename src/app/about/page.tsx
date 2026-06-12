@@ -31,17 +31,17 @@ function SectionReveal({ children }: { children: React.ReactNode }) {
 function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div style={{ borderBottom: "1px solid #E2D8CA" }}>
+    <div style={{ borderBottom: "1px solid var(--v2-line)" }}>
       <button onClick={() => setOpen(!open)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "18px 0", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
-        <span style={{ fontSize: 15, fontWeight: 700, color: "#171421", lineHeight: 1.4 }}>{q}</span>
-        <m.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }} style={{ flexShrink: 0, color: "#6757E8" }}>
+        <span style={{ fontSize: 15, fontWeight: 700, color: "var(--v2-ink)", lineHeight: 1.4 }}>{q}</span>
+        <m.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }} style={{ flexShrink: 0, color: "var(--v2-signal-2)" }}>
           <ChevronDown size={18} />
         </m.span>
       </button>
       <AnimatePresence initial={false}>
         {open && (
           <m.div key="c" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.28, ease: "easeInOut" }}>
-            <p style={{ fontSize: 14, color: "#444058", lineHeight: 1.7, paddingBottom: 18 }}>{a}</p>
+            <p style={{ fontSize: 14, color: "var(--v2-ink-dim)", lineHeight: 1.7, paddingBottom: 18 }}>{a}</p>
           </m.div>
         )}
       </AnimatePresence>
@@ -50,18 +50,18 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 }
 
 const STEPS = [
-  { num: "01", icon: Brain, color: "#6757E8", tint: "rgba(103,87,232,0.12)", title: "Take the free assessment", desc: "3 minutes. 28 questions. Maps your attention style, executive function patterns, and focus friction points.", label: "Free · Private · Instant" },
-  { num: "02", icon: BarChart3, color: "#3B82B8", tint: "rgba(59,130,184,0.12)", title: "Receive your Brain Profile", desc: "Your full cognitive map: narrative report, Executive Function Radar, and Cognitive Signature — explained in plain English.", label: "Personalized · Detailed" },
-  { num: "03", icon: Target, color: "#2F8B63", tint: "rgba(47,139,99,0.12)", title: "Follow your Protocol", desc: "28 days of daily micro-actions, reflection prompts, and focus recovery tools — built specifically for your profile.", label: "Actionable · Day-by-day" },
+  { num: "01", icon: Brain, color: "#7C8AFF", tint: "rgba(124,138,255,0.12)", title: "Take the free assessment", desc: "3 minutes. 28 questions. Maps your attention style, executive function patterns, and focus friction points.", label: "Free · Private · Instant" },
+  { num: "02", icon: BarChart3, color: "#9BE8FF", tint: "rgba(155,232,255,0.12)", title: "Receive your Brain Profile", desc: "Your full cognitive map: narrative report, Executive Function Radar, and Cognitive Signature — explained in plain English.", label: "Personalized · Detailed" },
+  { num: "03", icon: Target, color: "#7FE0B2", tint: "rgba(127,224,178,0.12)", title: "Follow your Protocol", desc: "28 days of daily micro-actions, reflection prompts, and focus recovery tools — built specifically for your profile.", label: "Actionable · Day-by-day" },
 ];
 
 const WHAT_YOU_GET = [
-  { icon: Brain, color: "#6757E8", tint: "rgba(103,87,232,0.08)", title: "Brain Profile Report", desc: "A detailed narrative of how your brain processes attention, starts tasks, handles time, and recovers from distraction." },
-  { icon: BarChart3, color: "#3B82B8", tint: "rgba(59,130,184,0.08)", title: "Executive Function Radar", desc: "A visual map of 6 core cognitive domains — so you can see exactly where your system underperforms and why." },
-  { icon: Layers, color: "#2F8B63", tint: "rgba(47,139,99,0.08)", title: "28-Day Protocol", desc: "28 daily actions calibrated to your profile. Structured phases. No willpower required — just follow the next step." },
-  { icon: Zap, color: "#C88322", tint: "rgba(200,131,34,0.08)", title: "Focus Toolkit Bundle", desc: "Playsheets, planners, reset rituals, and decision templates designed for your cognitive signature." },
-  { icon: Lightbulb, color: "#6757E8", tint: "rgba(103,87,232,0.08)", title: "Profile-to-Protocol Engine", desc: "The system that bridges insight and action — matching your profile output to daily practical strategies." },
-  { icon: Repeat, color: "#C64545", tint: "rgba(198,69,69,0.08)", title: "Focus Recovery Tools", desc: "Cues, rituals, and re-entry protocols for the moments when everything falls apart." },
+  { icon: Brain, color: "#7C8AFF", tint: "rgba(124,138,255,0.10)", title: "Brain Profile Report", desc: "A detailed narrative of how your brain processes attention, starts tasks, handles time, and recovers from distraction." },
+  { icon: BarChart3, color: "#9BE8FF", tint: "rgba(155,232,255,0.10)", title: "Executive Function Radar", desc: "A visual map of 6 core cognitive domains — so you can see exactly where your system underperforms and why." },
+  { icon: Layers, color: "#7FE0B2", tint: "rgba(127,224,178,0.10)", title: "28-Day Protocol", desc: "28 daily actions calibrated to your profile. Structured phases. No willpower required — just follow the next step." },
+  { icon: Zap, color: "#FFB28B", tint: "rgba(255,178,139,0.10)", title: "Focus Toolkit Bundle", desc: "Playsheets, planners, reset rituals, and decision templates designed for your cognitive signature." },
+  { icon: Lightbulb, color: "#B39BFF", tint: "rgba(179,155,255,0.10)", title: "Profile-to-Protocol Engine", desc: "The system that bridges insight and action — matching your profile output to daily practical strategies." },
+  { icon: Repeat, color: "#FF8B8B", tint: "rgba(255,139,139,0.10)", title: "Focus Recovery Tools", desc: "Cues, rituals, and re-entry protocols for the moments when everything falls apart." },
 ];
 
 const FAQS = [
@@ -113,7 +113,7 @@ export default function AboutPage() {
         @media(prefers-reduced-motion:reduce){*{animation-duration:0.01ms!important;transition-duration:0.01ms!important;}}
         @media(max-width:420px){.about-nav-cta{display:none!important;}}
       `}</style>
-      <div style={{ background: "var(--color-bg-page)", overflowX: "hidden" }}>
+      <div className="v2-screen v2-grain v2-skin" style={{ overflowX: "hidden" }}>
 
         {/* NAV */}
         <nav style={{ position: "sticky", top: 0, zIndex: 50, background: "color-mix(in srgb, var(--color-bg-page) 90%, transparent)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: "1px solid var(--color-border)" }}>
@@ -146,7 +146,7 @@ export default function AboutPage() {
               Take the free 3-minute assessment. Get a complete map of how your brain actually works — and see the practical plan built from it.
             </m.p>
             <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, duration: 0.5 }} style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 56 }}>
-              <Link href="/assessment" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "var(--color-accent)", color: "var(--color-bg-card)", fontSize: 17, fontWeight: 800, padding: "17px 30px", borderRadius: 999, textDecoration: "none", letterSpacing: "-0.02em", boxShadow: "var(--shadow-btn-accent)" }}>
+              <Link href="/assessment" className="v2-cta" style={{ fontSize: 17, padding: "17px 30px" }}>
                 Start your free Brain Profile <ArrowRight size={18} />
               </Link>
               <a href="#how-it-works" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.8)", fontSize: 15, fontWeight: 600, padding: "17px 24px", borderRadius: 999, textDecoration: "none", border: "1px solid rgba(255,255,255,0.11)" }}>
@@ -167,12 +167,12 @@ export default function AboutPage() {
         </section>
 
         {/* HOW IT WORKS */}
-        <section id="how-it-works" style={{ padding: "80px 20px", background: "#F7F2EA" }}>
+        <section id="how-it-works" style={{ padding: "80px 20px" }}>
           <div style={{ maxWidth: 820, margin: "0 auto" }}>
             <SectionReveal>
               <m.div variants={fadeUp} style={{ textAlign: "center", marginBottom: 56 }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: "#6757E8", letterSpacing: "0.12em", textTransform: "uppercase" as const, marginBottom: 12 }}>How it works</p>
-                <h2 style={{ fontSize: "clamp(26px,5vw,40px)", fontWeight: 800, color: "#171421", lineHeight: 1.15, letterSpacing: "-0.025em", maxWidth: 480, margin: "0 auto" }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: "var(--v2-signal-2)", letterSpacing: "0.12em", textTransform: "uppercase" as const, marginBottom: 12 }}>How it works</p>
+                <h2 style={{ fontSize: "clamp(26px,5vw,40px)", fontWeight: 800, color: "var(--v2-ink)", lineHeight: 1.15, letterSpacing: "-0.025em", maxWidth: 480, margin: "0 auto" }}>
                   Map first. Protocol second.
                 </h2>
               </m.div>
@@ -192,10 +192,10 @@ export default function AboutPage() {
                       <div style={{ paddingBottom: i < STEPS.length - 1 ? 40 : 0 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
                           <span style={{ fontSize: 11, fontWeight: 700, color: step.color, background: step.tint, borderRadius: 6, padding: "3px 10px", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>Step {step.num}</span>
-                          <span style={{ fontSize: 11, color: "#9A94AA", fontWeight: 500 }}>{step.label}</span>
+                          <span style={{ fontSize: 11, color: "var(--v2-ink-faint)", fontWeight: 500 }}>{step.label}</span>
                         </div>
-                        <h3 style={{ fontSize: 20, fontWeight: 800, color: "#171421", letterSpacing: "-0.02em", marginBottom: 8 }}>{step.title}</h3>
-                        <p style={{ fontSize: 15, color: "#6F6A80", lineHeight: 1.65 }}>{step.desc}</p>
+                        <h3 style={{ fontSize: 20, fontWeight: 800, color: "var(--v2-ink)", letterSpacing: "-0.02em", marginBottom: 8 }}>{step.title}</h3>
+                        <p style={{ fontSize: 15, color: "var(--v2-ink-dim)", lineHeight: 1.65 }}>{step.desc}</p>
                       </div>
                     </m.div>
                   );
@@ -245,26 +245,26 @@ export default function AboutPage() {
         </section>
 
         {/* WHAT YOU GET */}
-        <section style={{ padding: "80px 20px", background: "#FFFFFF" }}>
+        <section style={{ padding: "80px 20px" }}>
           <div style={{ maxWidth: 960, margin: "0 auto" }}>
             <SectionReveal>
               <m.div variants={fadeUp} style={{ textAlign: "center", marginBottom: 52 }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: "#6757E8", letterSpacing: "0.12em", textTransform: "uppercase" as const, marginBottom: 12 }}>What you get</p>
-                <h2 style={{ fontSize: "clamp(26px,5vw,40px)", fontWeight: 800, color: "#171421", lineHeight: 1.15, letterSpacing: "-0.025em", maxWidth: 500, margin: "0 auto 14px" }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: "var(--v2-signal-2)", letterSpacing: "0.12em", textTransform: "uppercase" as const, marginBottom: 12 }}>What you get</p>
+                <h2 style={{ fontSize: "clamp(26px,5vw,40px)", fontWeight: 800, color: "var(--v2-ink)", lineHeight: 1.15, letterSpacing: "-0.025em", maxWidth: 500, margin: "0 auto 14px" }}>
                   A complete cognitive operating system.
                 </h2>
-                <p style={{ fontSize: 16, color: "#6F6A80", maxWidth: 440, margin: "0 auto" }}>
+                <p style={{ fontSize: 16, color: "var(--v2-ink-dim)", maxWidth: 440, margin: "0 auto" }}>
                   Not generic advice. Not a template. A full system built around your actual brain.
                 </p>
               </m.div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 16 }}>
                 {WHAT_YOU_GET.map(({ icon: Icon, color, tint, title, desc }) => (
-                  <m.div key={title} variants={fadeUp} style={{ background: "#F7F2EA", borderRadius: 20, padding: "24px 22px", border: "1px solid #E2D8CA" }}>
+                  <m.div key={title} variants={fadeUp} className="v2-panel" style={{ borderRadius: 20, padding: "24px 22px" }}>
                     <div style={{ width: 46, height: 46, borderRadius: 14, background: tint, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
                       <Icon size={21} color={color} />
                     </div>
-                    <h3 style={{ fontSize: 16, fontWeight: 800, color: "#171421", marginBottom: 8, letterSpacing: "-0.01em" }}>{title}</h3>
-                    <p style={{ fontSize: 14, color: "#6F6A80", lineHeight: 1.6 }}>{desc}</p>
+                    <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--v2-ink)", marginBottom: 8, letterSpacing: "-0.01em" }}>{title}</h3>
+                    <p style={{ fontSize: 14, color: "var(--v2-ink-faint)", lineHeight: 1.6 }}>{desc}</p>
                   </m.div>
                 ))}
               </div>
@@ -273,12 +273,12 @@ export default function AboutPage() {
         </section>
 
         {/* TRUST */}
-        <section style={{ padding: "64px 20px", background: "#F7F2EA" }}>
+        <section style={{ padding: "64px 20px", background: "rgba(12,15,28,0.6)" }}>
           <div style={{ maxWidth: 700, margin: "0 auto" }}>
             <SectionReveal>
               <m.div variants={fadeUp} style={{ textAlign: "center", marginBottom: 40 }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: "#6757E8", letterSpacing: "0.12em", textTransform: "uppercase" as const, marginBottom: 10 }}>Built to trust</p>
-                <h2 style={{ fontSize: "clamp(22px,4vw,32px)", fontWeight: 800, color: "#171421", letterSpacing: "-0.02em" }}>Private. Honest. Guaranteed.</h2>
+                <p style={{ fontSize: 11, fontWeight: 700, color: "var(--v2-signal-2)", letterSpacing: "0.12em", textTransform: "uppercase" as const, marginBottom: 10 }}>Built to trust</p>
+                <h2 style={{ fontSize: "clamp(22px,4vw,32px)", fontWeight: 800, color: "var(--v2-ink)", letterSpacing: "-0.02em" }}>Private. Honest. Guaranteed.</h2>
               </m.div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 14 }}>
                 {[
@@ -287,12 +287,12 @@ export default function AboutPage() {
                   { icon: Clock, title: "Not a diagnosis", desc: "Educational tool only. Not a substitute for professional medical or mental health care." },
                   { icon: Zap, title: "Instant access", desc: "Results, profile, and protocol are available immediately after you complete the assessment." },
                 ].map(({ icon: Icon, title, desc }) => (
-                  <m.div key={title} variants={fadeUp} style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 10, background: "#FFFFFF", borderRadius: 18, padding: "22px 18px", border: "1px solid #E2D8CA" }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 13, background: "rgba(103,87,232,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <Icon size={19} color="#6757E8" />
+                  <m.div key={title} variants={fadeUp} className="v2-panel" style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 10, borderRadius: 18, padding: "22px 18px" }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 13, background: "rgba(124,138,255,0.10)", border: "1px solid rgba(124,138,255,0.28)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Icon size={19} color="var(--v2-signal-2)" />
                     </div>
-                    <p style={{ fontSize: 14, fontWeight: 800, color: "#171421" }}>{title}</p>
-                    <p style={{ fontSize: 12, color: "#9A94AA", lineHeight: 1.6 }}>{desc}</p>
+                    <p style={{ fontSize: 14, fontWeight: 800, color: "var(--v2-ink)" }}>{title}</p>
+                    <p style={{ fontSize: 12, color: "var(--v2-ink-faint)", lineHeight: 1.6 }}>{desc}</p>
                   </m.div>
                 ))}
               </div>
@@ -332,12 +332,12 @@ export default function AboutPage() {
         </section>
 
         {/* FAQ */}
-        <section style={{ padding: "80px 20px", background: "#F7F2EA" }}>
+        <section style={{ padding: "80px 20px" }}>
           <div style={{ maxWidth: 640, margin: "0 auto" }}>
             <SectionReveal>
               <m.div variants={fadeUp} style={{ marginBottom: 40 }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: "#6757E8", letterSpacing: "0.12em", textTransform: "uppercase" as const, marginBottom: 12 }}>FAQ</p>
-                <h2 style={{ fontSize: "clamp(24px,4.5vw,34px)", fontWeight: 800, color: "#171421", lineHeight: 1.2, letterSpacing: "-0.02em" }}>Common questions.</h2>
+                <p style={{ fontSize: 11, fontWeight: 700, color: "var(--v2-signal-2)", letterSpacing: "0.12em", textTransform: "uppercase" as const, marginBottom: 12 }}>FAQ</p>
+                <h2 style={{ fontSize: "clamp(24px,4.5vw,34px)", fontWeight: 800, color: "var(--v2-ink)", lineHeight: 1.2, letterSpacing: "-0.02em" }}>Common questions.</h2>
               </m.div>
               <m.div variants={fadeUp}>
                 {FAQS.map((faq) => <FAQItem key={faq.q} q={faq.q} a={faq.a} />)}
@@ -347,16 +347,16 @@ export default function AboutPage() {
         </section>
 
         {/* FOOTER */}
-        <section style={{ padding: "48px 20px", background: "#FFFFFF", borderTop: "1px solid #E2D8CA" }}>
+        <section style={{ padding: "48px 20px", borderTop: "1px solid var(--v2-line)" }}>
           <div style={{ maxWidth: 480, margin: "0 auto", textAlign: "center" }}>
-            <p style={{ fontSize: 18, fontWeight: 800, color: "#171421", letterSpacing: "-0.02em", marginBottom: 8 }}>Ready to understand your brain?</p>
-            <p style={{ fontSize: 14, color: "#9A94AA", marginBottom: 22 }}>Free assessment. 3 minutes. Your cognitive map, instantly.</p>
-            <Link href="/assessment" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#171421", color: "#FFFFFF", fontSize: 15, fontWeight: 800, padding: "14px 26px", borderRadius: 999, textDecoration: "none", letterSpacing: "-0.02em" }}>
+            <p style={{ fontSize: 18, fontWeight: 800, color: "var(--v2-ink)", letterSpacing: "-0.02em", marginBottom: 8 }}>Ready to understand your brain?</p>
+            <p style={{ fontSize: 14, color: "var(--v2-ink-faint)", marginBottom: 22 }}>Free assessment. 3 minutes. Your cognitive map, instantly.</p>
+            <Link href="/assessment" className="v2-cta" style={{ fontSize: 15 }}>
               Start your free Brain Profile <ArrowRight size={16} />
             </Link>
-            <div style={{ marginTop: 32, paddingTop: 24, borderTop: "1px solid #E2D8CA", display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
+            <div style={{ marginTop: 32, paddingTop: 24, borderTop: "1px solid var(--v2-line)", display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
               {[{href:"/roadmap",label:"28-Day Protocol"},{href:"/privacy",label:"Privacy"},{href:"/terms",label:"Terms"},{href:"/disclaimer",label:"Disclaimer"}].map(({href,label}) => (
-                <Link key={href} href={href} style={{ fontSize: 12, color: "#9A94AA", textDecoration: "none" }}>{label}</Link>
+                <Link key={href} href={href} style={{ fontSize: 12, color: "var(--v2-ink-faint)", textDecoration: "none" }}>{label}</Link>
               ))}
             </div>
           </div>

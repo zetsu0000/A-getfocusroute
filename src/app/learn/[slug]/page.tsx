@@ -267,7 +267,7 @@ export default async function ArticlePage({
   if (!article) notFound();
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--color-bg-page)", padding: "0 0 80px" }}>
+    <div className="v2-screen v2-grain v2-skin" style={{ minHeight: "100vh", padding: "0 0 80px" }}>
       <header
         style={{
           background: "var(--color-bg-card)",

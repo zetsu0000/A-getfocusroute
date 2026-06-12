@@ -12,7 +12,7 @@ import {
 
 const navLink: CSSProperties = {
   fontSize: 12,
-  color: "var(--color-text)",
+  color: "var(--v2-ink)",
   textDecoration: "none",
   padding: "8px 12px",
   border: "1px solid transparent",
@@ -38,10 +38,10 @@ function NavLink({
       style={{
         ...navLink,
         fontWeight: active ? 800 : 600,
-        color: active ? "var(--color-text)" : "var(--color-text-body)",
-        background: active ? "var(--color-bg-card)" : "transparent",
-        borderColor: active ? "var(--color-border-2)" : "transparent",
-        boxShadow: active ? "inset 0 -2px 0 var(--color-accent), 0 1px 8px rgba(20,17,31,0.05)" : "none",
+        color: active ? "var(--v2-signal-2)" : "var(--v2-ink-dim)",
+        background: active ? "rgba(124,138,255,0.12)" : "transparent",
+        borderColor: active ? "rgba(155,232,255,0.35)" : "transparent",
+        boxShadow: active ? "0 0 18px rgba(124,138,255,0.18)" : "none",
         transition: "background 150ms ease, color 150ms ease, box-shadow 150ms ease",
       }}
     >
@@ -80,7 +80,7 @@ export function DashboardNav({
             alignItems: "center",
             gap: 6,
             fontSize: 13,
-            color: "var(--color-text-muted)",
+            color: "var(--v2-ink-faint)",
             textDecoration: "none",
           }}
         >
@@ -88,37 +88,31 @@ export function DashboardNav({
           Home
         </Link>
         <span
-          style={{
-            fontSize: 12,
-            fontWeight: 700,
-            color: "var(--color-signal)",
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-          }}
+          className="v2-hud"
+          style={{ color: "var(--v2-signal-2)" }}
         >
-          Dashboard
+          Your observatory
         </span>
       </div>
 
       <h1
+        className="v2-display"
         style={{
-          fontSize: 20,
-          fontWeight: 800,
-          color: "var(--color-text)",
-          lineHeight: 1.25,
+          fontSize: "clamp(22px, 4vw, 27px)",
+          lineHeight: 1.2,
           marginBottom: 5,
         }}
       >
         {displayName ? <>Welcome back, {displayName}</> : "Welcome back"}
       </h1>
-      <p style={{ fontSize: 13, color: "var(--color-text-muted)", marginBottom: 20, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>{snap.user.email}</p>
+      <p style={{ fontSize: 13, color: "var(--v2-ink-faint)", marginBottom: 20, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>{snap.user.email}</p>
 
       <nav
         style={{
           display: "flex",
           flexWrap: "nowrap",
           gap: 8,
-          borderBottom: "1px solid var(--color-border)",
+          borderBottom: "1px solid var(--v2-line)",
           padding: "0 16px 10px 12px",
           margin: "0 -2px",
           overflowX: "auto",

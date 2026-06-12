@@ -64,7 +64,7 @@ export function RouteScene({ progressRef, style, className }: Props) {
       mount.appendChild(renderer.domElement);
 
       const scene = new THREE.Scene();
-      scene.fog = new THREE.FogExp2(0x06070d, 0.16);
+      scene.fog = new THREE.FogExp2(0x06070d, 0.19);
 
       const camera = new THREE.PerspectiveCamera(58, 1, 0.1, 60);
       camera.position.set(0, 0.1, 7.2);
@@ -109,15 +109,18 @@ export function RouteScene({ progressRef, style, className }: Props) {
         return { points: new THREE.Points(geo, mat), positions, phases, geo, mat };
       }
 
+      // Deliberately sparse: fewer, slightly larger points read as intentional
+      // signals instead of visual noise competing with the headline.
       const texIndigo = makeSpriteTexture(124, 138, 255);
       const texCyan = makeSpriteTexture(155, 232, 255);
-      const cloudA = makeCloud(isSmall ? 420 : 900, texIndigo, 0.085, [16, 9, 12]);
-      const cloudB = makeCloud(isSmall ? 180 : 380, texCyan, 0.06, [18, 10, 14]);
+      const cloudA = makeCloud(isSmall ? 200 : 380, texIndigo, 0.105, [16, 9, 12]);
+      const cloudB = makeCloud(isSmall ? 80 : 150, texCyan, 0.08, [18, 10, 14]);
+      (cloudB.mat as import("three").PointsMaterial).opacity = 0.7;
       // sparse near layer — big soft motes drifting close to camera for
       // strong pointer parallax (the layer that sells the depth)
-      const cloudC = makeCloud(isSmall ? 26 : 60, texCyan, 0.30, [13, 7, 4]);
+      const cloudC = makeCloud(isSmall ? 10 : 22, texCyan, 0.30, [13, 7, 4]);
       cloudC.points.position.z = 4.2;
-      (cloudC.mat as import("three").PointsMaterial).opacity = 0.32;
+      (cloudC.mat as import("three").PointsMaterial).opacity = 0.22;
       scene.add(cloudA.points);
       scene.add(cloudB.points);
       scene.add(cloudC.points);
