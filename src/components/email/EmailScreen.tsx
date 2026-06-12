@@ -2,9 +2,11 @@
 
 import { useRef, useState } from "react";
 import { m } from "framer-motion";
+import { Lock } from "lucide-react";
 import { useQuizStore } from "@/store/quizStore";
 import { getSignatureFromAnswers } from "@/lib/signature";
 import { getSignatureIdentity } from "@/lib/signature-identity";
+import { firstStepTeaserFor } from "@/lib/first-step-teaser";
 import { EmailIcon } from "@/components/icons/EmailIcon";
 import { getOrCreateActionEventId, trackEvent } from "@/lib/analytics/client";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
@@ -19,6 +21,13 @@ function toTitleCase(name: string): string {
     .join(" ");
 }
 
+/**
+ * Email capture as a preview-first save gate (funnel audit): the user sees
+ * real result value — their pattern name, one concrete insight, one
+ * consequence, and one specific locked next step — BEFORE being asked for
+ * an email. The ask is framed as saving/access, not a tollbooth. The funnel
+ * step order (loading → email → chart) and the Lead event are unchanged.
+ */
 export function EmailScreen() {
   const { answers, setEmail, setName, setStep } = useQuizStore();
   const signature = getSignatureFromAnswers(answers);
@@ -67,7 +76,7 @@ export function EmailScreen() {
         minHeight: "100dvh",
         display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center",
-        padding: "40px 24px",
+        padding: "36px 20px 44px",
       }}
     >
       {/* ambient accent in the user's signature color */}
@@ -81,25 +90,81 @@ export function EmailScreen() {
         }}
       />
 
-      <div style={{ position: "relative", width: "100%", maxWidth: 520, display: "flex", flexDirection: "column", gap: 18 }}>
+      <div style={{ position: "relative", width: "100%", maxWidth: 520, display: "flex", flexDirection: "column", gap: 16 }}>
 
-        {/* Title */}
-        <div style={{ textAlign: "center", marginBottom: 8 }}>
-          <HudLabel tone="signal" style={{ marginBottom: 14 }}>
-            Route file compiled
+        {/* ── The free preview — value before the ask ─────────── */}
+        <div style={{ textAlign: "center" }}>
+          <HudLabel tone="signal" style={{ marginBottom: 12 }}>
+            Pattern identified — your free preview
           </HudLabel>
           <h1
             className="v2-display"
-            style={{ fontSize: "clamp(25px, 6.6vw, 32px)", fontWeight: 550, lineHeight: 1.22 }}
+            style={{ fontSize: "clamp(26px, 7vw, 34px)", fontWeight: 550, lineHeight: 1.15 }}
           >
-            Your{" "}
+            You&apos;re a{signature.signature === "Archivist" ? "n" : ""}{" "}
             <em style={{ fontStyle: "italic", color: identity.accent, textShadow: `0 0 24px rgba(${identity.accentRgb},0.5)` }}>
               {signature.signature}
-            </em>{" "}
-            profile is ready.
+            </em>
           </h1>
-          <p style={{ marginTop: 12, fontSize: 14, color: "var(--v2-ink-faint)", lineHeight: 1.6 }}>
-            Add your email so we can save your results — and so you can come back to them anytime.
+          <p style={{ marginTop: 6, fontSize: 13.5, color: "var(--v2-ink-dim)", fontWeight: 600 }}>
+            {signature.title}
+          </p>
+        </div>
+
+        <div
+          className="v2-panel"
+          style={{ padding: "18px 18px", borderColor: `rgba(${identity.accentRgb},0.30)` }}
+        >
+          {/* one concrete insight */}
+          <HudLabel style={{ marginBottom: 8, fontSize: 9.5 }}>What we found</HudLabel>
+          <p style={{ fontSize: 14, color: "var(--v2-ink)", fontWeight: 600, lineHeight: 1.6 }}>
+            {signature.preview}
+          </p>
+
+          {/* the consequence of the pattern */}
+          <div
+            style={{
+              marginTop: 13,
+              padding: "11px 13px",
+              borderRadius: 12,
+              background: `rgba(${identity.accentRgb},0.08)`,
+              borderLeft: `3px solid ${identity.accent}`,
+            }}
+          >
+            <p style={{ fontSize: 13, color: "var(--v2-ink-dim)", lineHeight: 1.55 }}>
+              {signature.frictionLine}
+            </p>
+          </div>
+
+          {/* one specific locked next step */}
+          <div
+            style={{
+              marginTop: 10,
+              padding: "11px 13px",
+              borderRadius: 12,
+              background: "rgba(148,163,255,0.05)",
+              border: "1px dashed rgba(217,188,127,0.4)",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 10,
+            }}
+          >
+            <Lock size={13} color="var(--v2-gold)" style={{ flexShrink: 0, marginTop: 2 }} />
+            <div>
+              <p className="v2-hud" style={{ fontSize: 8.5, color: "var(--v2-gold)", marginBottom: 3 }}>
+                In your full breakdown
+              </p>
+              <p style={{ fontSize: 13, color: "var(--v2-ink-dim)", lineHeight: 1.5 }}>
+                {firstStepTeaserFor(signature.signature)}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── The save gate ───────────────────────────────────── */}
+        <div style={{ textAlign: "center", marginTop: 2 }}>
+          <p style={{ fontSize: 14, color: "var(--v2-ink-dim)", lineHeight: 1.6 }}>
+            Save your results to see the full breakdown — and to come back to them anytime.
           </p>
         </div>
 
@@ -145,14 +210,6 @@ export function EmailScreen() {
           />
         </div>
 
-        {/* Legal */}
-        <p style={{ fontSize: 12, color: "var(--v2-ink-faint)", textAlign: "center", lineHeight: 1.6 }}>
-          By continuing, you agree to our{" "}
-          <a href="/terms" style={{ color: "var(--v2-ink-dim)", textDecoration: "underline" }}>Terms & Conditions</a>,{" "}
-          <a href="/privacy" style={{ color: "var(--v2-ink-dim)", textDecoration: "underline" }}>Privacy Policy</a>, and{" "}
-          <a href="/refund-policy" style={{ color: "var(--v2-ink-dim)", textDecoration: "underline" }}>Refund Policy</a>.
-        </p>
-
         {/* CTA */}
         <button
           onClick={handleContinue}
@@ -175,13 +232,21 @@ export function EmailScreen() {
                 }),
           }}
         >
-          See My Results
+          Save &amp; See My Full Results
         </button>
+
+        {/* Legal */}
+        <p style={{ fontSize: 12, color: "var(--v2-ink-faint)", textAlign: "center", lineHeight: 1.6 }}>
+          By continuing, you agree to our{" "}
+          <a href="/terms" style={{ color: "var(--v2-ink-dim)", textDecoration: "underline" }}>Terms &amp; Conditions</a>,{" "}
+          <a href="/privacy" style={{ color: "var(--v2-ink-dim)", textDecoration: "underline" }}>Privacy Policy</a>, and{" "}
+          <a href="/refund-policy" style={{ color: "var(--v2-ink-dim)", textDecoration: "underline" }}>Refund Policy</a>.
+        </p>
 
         {/* Privacy card */}
         <div className="v2-panel" style={{
           display: "flex", alignItems: "flex-start", gap: 14,
-          padding: "16px 18px",
+          padding: "14px 16px",
         }}>
           <div style={{
             width: 30, height: 30, borderRadius: 9, flexShrink: 0,
@@ -194,7 +259,7 @@ export function EmailScreen() {
               <path d="m9 12 2 2 4-4"/>
             </svg>
           </div>
-          <p style={{ fontSize: 13, color: "var(--v2-ink-dim)", lineHeight: 1.6 }}>
+          <p style={{ fontSize: 12.5, color: "var(--v2-ink-dim)", lineHeight: 1.55 }}>
             Private by default. We only use this to give you access to your results and relevant updates.
           </p>
         </div>
