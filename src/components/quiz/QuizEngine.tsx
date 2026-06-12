@@ -8,6 +8,7 @@ import { useQuizStore } from "@/store/quizStore";
 import { questions } from "@/data/questions";
 import { ProgressBar } from "./ProgressBar";
 import { QuestionCard } from "./QuestionCard";
+import { FocusField } from "@/components/v2/FocusField";
 import { getOrCreateActionEventId, trackEvent } from "@/lib/analytics/client";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 
@@ -47,6 +48,9 @@ export function QuizEngine() {
     .slice(0, currentQuestionIndex + 1)
     .filter((q) => q.inputType !== "info").length;
   const totalCount = questions.filter((q) => q.inputType !== "info").length;
+
+  /* The attention field organizes as the user progresses: noise → signal. */
+  const fieldCoherence = Math.min(0.85, (answeredCount / totalCount) * 0.9);
 
   useEffect(() => {
     const answeredCount = answers.filter((answer) => {
@@ -121,26 +125,32 @@ export function QuizEngine() {
   }, [selectedOptions, isMultiple, isInfo, isScale, submitAnswer]);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ position: "relative" }}>
+
+      {/* ── Calibration field — scattered attention organizing into a route
+          as answers accumulate. Pure backdrop, zero pointer interception. */}
+      <div aria-hidden="true" style={{ position: "fixed", inset: 0, pointerEvents: "none" }}>
+        <FocusField coherence={fieldCoherence} intensity={0.55} showRoute />
+      </div>
 
       {/* ── Brand anchor — paid traffic lands straight on a question,
           so this is the only "where am I?" cue during the quiz. */}
-      <p style={{
-        textAlign: "center",
-        paddingTop: 14,
-        fontSize: 11,
-        fontWeight: 800,
-        letterSpacing: "0.08em",
-        textTransform: "uppercase",
-        color: "var(--color-signal)",
-      }}>
+      <p
+        className="v2-hud"
+        style={{
+          position: "relative",
+          textAlign: "center",
+          paddingTop: 16,
+          color: "var(--v2-signal-2)",
+        }}
+      >
         FocusRoute
       </p>
 
       {/* ── Top bar ────────────────────────────────────────── */}
       <div
         className="flex-shrink-0 flex items-center gap-3 w-full"
-        style={{ padding: "10px 20px 14px" }}
+        style={{ position: "relative", padding: "10px 20px 14px" }}
       >
         <m.button
           onClick={currentQuestionIndex > 0 ? goBack : undefined}
@@ -149,21 +159,23 @@ export function QuizEngine() {
           whileTap={{ scale: 0.88 }}
           className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
           style={{
-            color: "var(--color-text-muted)",
+            color: "var(--v2-ink-faint)",
             background: "transparent",
-            border: "none",
+            border: "1px solid transparent",
             cursor: currentQuestionIndex > 0 ? "pointer" : "default",
             pointerEvents: currentQuestionIndex > 0 ? "auto" : "none",
-            transition: "background 0.15s, color 0.15s",
+            transition: "background 0.15s, color 0.15s, border-color 0.15s",
             visibility: currentQuestionIndex > 0 ? "visible" : "hidden",
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "var(--color-bg-card)";
-            (e.currentTarget as HTMLElement).style.color      = "var(--color-primary)";
+            (e.currentTarget as HTMLElement).style.background = "rgba(124,138,255,0.10)";
+            (e.currentTarget as HTMLElement).style.borderColor = "rgba(163,178,255,0.3)";
+            (e.currentTarget as HTMLElement).style.color      = "var(--v2-ink)";
           }}
           onMouseLeave={(e) => {
             (e.currentTarget as HTMLElement).style.background = "transparent";
-            (e.currentTarget as HTMLElement).style.color      = "var(--color-text-muted)";
+            (e.currentTarget as HTMLElement).style.borderColor = "transparent";
+            (e.currentTarget as HTMLElement).style.color      = "var(--v2-ink-faint)";
           }}
           aria-label="Back"
         >
@@ -176,8 +188,16 @@ export function QuizEngine() {
              counts read as "this is long", while "11 / 20" reads as momentum.
              The bar alone carries progress until then. */}
           {!isInfo && answeredCount * 2 > totalCount && (
-            <p style={{ fontSize: 11, fontWeight: 600, color: "var(--color-text-muted)", textAlign: "right", letterSpacing: "0.04em" }}>
-              {answeredCount} / {totalCount}
+            <p
+              style={{
+                fontFamily: "var(--v2-font-mono)",
+                fontSize: 10.5,
+                color: "var(--v2-ink-faint)",
+                textAlign: "right",
+                letterSpacing: "0.14em",
+              }}
+            >
+              {String(answeredCount).padStart(2, "0")} / {totalCount}
             </p>
           )}
         </div>

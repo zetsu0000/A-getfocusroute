@@ -1,12 +1,16 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { m } from "framer-motion";
+import { Lock } from "lucide-react";
 import { useQuizStore } from "@/store/quizStore";
 import { safeName } from "@/lib/personalization";
 import { getSignatureFromAnswers, echoSentence } from "@/lib/signature";
-import { SignatureRevealCard } from "@/components/signature/SignatureRevealCard";
+import { getSignatureIdentity } from "@/lib/signature-identity";
+import { SigilArtifact } from "@/components/v2/SigilArtifact";
+import { FocusField } from "@/components/v2/FocusField";
+import { HudLabel } from "@/components/v2/primitives";
 import { setPersistedQuizResultId } from "@/lib/quizResultId";
 import { createClient } from "@/lib/supabase/client";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
@@ -26,6 +30,7 @@ export function ChartScreen() {
   const router = useRouter();
   const displayName = safeName(name, "you");
   const signature = getSignatureFromAnswers(answers);
+  const identity = getSignatureIdentity(signature.signature);
   const echo = echoSentence(answers);
   const saveStarted = useRef(false);
   const [authChecked, setAuthChecked] = useState(false);
@@ -149,135 +154,137 @@ export function ChartScreen() {
       exit={{ opacity: 0, x: -40 }}
       transition={{ duration: 0.28 }}
       style={{
+        position: "relative",
         minHeight: "100dvh",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: "40px 24px",
+        padding: "44px 24px",
+        overflow: "hidden",
       }}
     >
+      {/* fully-organized field in the user's accent — the route has been found */}
+      <div aria-hidden="true" style={{ position: "fixed", inset: 0, pointerEvents: "none" }}>
+        <FocusField
+          coherence={0.95}
+          intensity={0.5}
+          showRoute
+          accentRgb={identity.accentRgb}
+          accentRgb2="155,232,255"
+        />
+      </div>
+
       <div
         style={{
+          position: "relative",
           width: "100%",
           maxWidth: 520,
           display: "flex",
           flexDirection: "column",
-          gap: 24,
+          gap: 22,
         }}
       >
-        <SignatureRevealCard
+        <div style={{ textAlign: "center" }}>
+          <HudLabel tone="signal">Route located — preview unlocked</HudLabel>
+        </div>
+
+        <SigilArtifact
           signatureKey={signature.signature}
           signatureName={signature.signature}
-          signatureEssence={signature.title}
-          signatureSummary={signature.preview}
-          variant="preview"
+          essence={signature.title}
+          summary={signature.preview}
+          variant="reveal"
         />
 
-        <div
-          style={{
-            background: "var(--color-bg-card)",
-            borderRadius: "var(--radius-lg)",
-            padding: "18px 20px",
-            boxShadow: "var(--shadow-card)",
-            border: "1px solid var(--color-border)",
-            borderLeft: "3px solid var(--color-cognitive)",
-          }}
+        {/* What the answers point to */}
+        <m.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.55, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="v2-panel"
+          style={{ position: "relative", padding: "19px 20px", overflow: "hidden" }}
         >
-          <p
+          <span
+            aria-hidden="true"
             style={{
-              fontSize: 10,
-              fontWeight: 800,
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: "var(--color-text-muted)",
-              marginBottom: 8,
+              position: "absolute",
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: 3,
+              background: `linear-gradient(to bottom, ${identity.accent}, transparent)`,
             }}
-          >
-            What your answers point to
-          </p>
-          <p style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text)", lineHeight: 1.5 }}>
+          />
+          <HudLabel style={{ marginBottom: 10 }}>What your answers point to</HudLabel>
+          <p style={{ fontSize: 15, fontWeight: 700, color: "var(--v2-ink)", lineHeight: 1.55 }}>
             {signature.frictionLine}
           </p>
           {echo && (
-            <p style={{ marginTop: 8, fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.6 }}>
+            <p style={{ marginTop: 8, fontSize: 13, color: "var(--v2-ink-dim)", lineHeight: 1.65 }}>
               {echo}
             </p>
           )}
-        </div>
+        </m.div>
 
-        <div
-          style={{
-            background: "var(--color-bg-card)",
-            borderRadius: "var(--radius-lg)",
-            padding: "18px 20px",
-            boxShadow: "var(--shadow-card)",
-            border: "1px solid var(--color-border)",
-          }}
+        {/* Strengths */}
+        <m.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.65, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="v2-panel"
+          style={{ padding: "19px 20px" }}
         >
-          <p
-            style={{
-              fontSize: 10,
-              fontWeight: 800,
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: "var(--color-text-muted)",
-              marginBottom: 12,
-            }}
-          >
-            Signature strengths
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {signature.strengths.map((bullet) => (
-              <div
+          <HudLabel style={{ marginBottom: 14 }}>Signature strengths</HudLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {signature.strengths.map((bullet, i) => (
+              <m.div
                 key={bullet}
-                style={{ display: "flex", alignItems: "flex-start", gap: 10 }}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.75 + i * 0.1, duration: 0.4 }}
+                style={{ display: "flex", alignItems: "flex-start", gap: 11 }}
               >
                 <span
+                  aria-hidden="true"
                   style={{
-                    marginTop: 4,
-                    width: 8,
-                    height: 8,
-                    borderRadius: "var(--radius-pill)",
-                    background: "var(--color-cognitive)",
+                    marginTop: 5,
+                    width: 7,
+                    height: 7,
+                    borderRadius: 999,
+                    background: identity.accent,
+                    boxShadow: `0 0 10px ${identity.accent}`,
+                    flexShrink: 0,
                   }}
                 />
                 <p
                   style={{
-                    fontSize: 13,
-                    color: "var(--color-text-body)",
-                    lineHeight: 1.5,
+                    fontSize: 13.5,
+                    color: "var(--v2-ink-dim)",
+                    lineHeight: 1.55,
                   }}
                 >
                   {bullet}
                 </p>
-              </div>
+              </m.div>
             ))}
           </div>
-        </div>
+        </m.div>
 
-        <div
-          style={{
-            background: "var(--color-bg-card)",
-            borderRadius: 24,
-            padding: "18px 18px",
-            boxShadow: "var(--shadow-card)",
-            border: "1px solid var(--color-border)",
-          }}
+        {/* Locked continuation */}
+        <m.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="v2-panel"
+          style={{ padding: "19px 20px", position: "relative", overflow: "hidden" }}
         >
-          <p
-            style={{
-              fontSize: 13,
-              fontWeight: 800,
-              color: "var(--color-text)",
-              marginBottom: 10,
-            }}
-          >
-            Unlock your full focus plan
-          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 12 }}>
+            <Lock size={13} color="var(--v2-gold)" />
+            <HudLabel tone="gold">Locked — full focus plan</HudLabel>
+          </div>
           <div
             style={{
-              filter: "blur(0.3px)",
               display: "flex",
               flexDirection: "column",
               gap: 8,
@@ -287,43 +294,49 @@ export function ChartScreen() {
               <div
                 key={line}
                 style={{
-                  borderRadius: "var(--radius-sm)",
-                  background: "var(--color-cognitive-tint)",
-                  border: "1px solid var(--color-border)",
-                  padding: "10px 12px",
+                  borderRadius: 12,
+                  background: "rgba(148,163,255,0.05)",
+                  border: "1px solid var(--v2-line)",
+                  padding: "11px 13px",
+                  position: "relative",
+                  overflow: "hidden",
                 }}
               >
-                <p style={{ fontSize: 12, color: "var(--color-text-body)" }}>
+                <p style={{ fontSize: 12.5, color: "var(--v2-ink-dim)", filter: "blur(0.4px)" }}>
                   {line}
                 </p>
+                <span
+                  aria-hidden="true"
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    background: "linear-gradient(90deg, transparent 55%, rgba(6,7,13,0.7))",
+                    pointerEvents: "none",
+                  }}
+                />
               </div>
             ))}
           </div>
-          <p
-            style={{
-              fontSize: 11,
-              color: "var(--color-text-muted)",
-              marginTop: 10,
-            }}
-          >
+          <p style={{ fontSize: 11, color: "var(--v2-ink-ghost)", marginTop: 10 }}>
             This preview is educational and not a medical diagnosis.
           </p>
-        </div>
+        </m.div>
 
         <m.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.9 }}
         >
           <p
+            className="v2-display"
             style={{
-              fontSize: 18,
-              fontWeight: 800,
-              color: "var(--color-text)",
-              lineHeight: 1.4,
+              fontSize: 19,
+              fontWeight: 550,
+              color: "var(--v2-ink)",
+              lineHeight: 1.45,
             }}
           >
-            <span style={{ color: "var(--color-cognitive)" }}>{displayName},</span>{" "}
+            <em style={{ fontStyle: "italic", color: identity.accent }}>{displayName},</em>{" "}
             your full focus plan is ready to unlock.
           </p>
         </m.div>
@@ -332,20 +345,10 @@ export function ChartScreen() {
           <m.button
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 1.0 }}
             onClick={handleRetakeDone}
-            style={{
-              width: "100%",
-              padding: "18px",
-              borderRadius: "var(--radius-md)",
-              fontSize: 16,
-              fontWeight: 700,
-              border: "none",
-              cursor: "pointer",
-              background: "var(--color-primary)",
-              color: "#fff",
-              boxShadow: "var(--shadow-btn-primary)",
-            }}
+            className="v2-cta"
+            style={{ width: "100%", minHeight: 58, fontSize: 16 }}
           >
             Save New Profile Preview
           </m.button>
@@ -353,7 +356,7 @@ export function ChartScreen() {
           <m.button
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 1.0 }}
             onClick={() => {
               trackEvent(FIRST_PARTY_EVENTS.resultUnlockClicked, {
                 meta: false,
@@ -361,19 +364,10 @@ export function ChartScreen() {
               });
               setStep("paywall");
             }}
-            style={{
-              width: "100%",
-              padding: "18px",
-              borderRadius: "var(--radius-md)",
-              fontSize: 16,
-              fontWeight: 700,
-              border: "none",
-              cursor: "pointer",
-              background: "var(--color-accent)",
-              color: "#fff",
-              boxShadow: "var(--shadow-btn-accent)",
-            }}
+            className="v2-cta v2-cta-gold"
+            style={{ width: "100%", minHeight: 58, fontSize: 16 }}
           >
+            <Lock size={15} strokeWidth={2.4} />
             Unlock My Full Plan
           </m.button>
         )}
@@ -381,6 +375,3 @@ export function ChartScreen() {
     </m.div>
   );
 }
-
-
-

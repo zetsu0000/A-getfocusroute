@@ -26,28 +26,33 @@ export function QuestionCard({ question }: QuestionCardProps) {
       gap: "clamp(24px, 5vh, 42px)",
     }}>
 
-      {/* ── Title — top, centered, dark ──────────────────────── */}
+      {/* ── Title — top, centered, editorial serif ───────────── */}
       <div style={{
         padding: "0 24px",
         textAlign: "center",
-        maxWidth: 520,
+        maxWidth: 560,
         margin: "0 auto",
         width: "100%",
       }}>
-        <h2 style={{
-          fontSize: "clamp(18px, 4.5vw, 22px)",
-          fontWeight: 700,
-          color: "var(--color-text)",
-          lineHeight: 1.28,
-          letterSpacing: "-0.02em",
-        }}>
+        <m.h2
+          initial={{ opacity: 0, y: 10, filter: "blur(4px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="v2-display"
+          style={{
+            fontSize: "clamp(23px, 6vw, 31px)",
+            fontWeight: 550,
+            lineHeight: 1.18,
+            letterSpacing: "-0.022em",
+          }}
+        >
           {question.question}
-        </h2>
+        </m.h2>
         {question.subtitle && (
           <p style={{
             fontSize: 13,
-            color: "var(--color-text-muted)",
-            marginTop: 6,
+            color: "var(--v2-ink-faint)",
+            marginTop: 8,
             lineHeight: 1.5,
           }}>
             {question.subtitle}
@@ -62,14 +67,14 @@ export function QuestionCard({ question }: QuestionCardProps) {
         width: "100%",
         display: "flex",
         flexDirection: "column",
-        gap: 8,
+        gap: 9,
       }}>
         {question.options.map((option, i) => (
           <m.div
             key={option.id}
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.04, duration: 0.18 }}
+            transition={{ delay: i * 0.045, duration: 0.2 }}
           >
             <OptionButton
               option={option}
@@ -92,25 +97,22 @@ export function QuestionCard({ question }: QuestionCardProps) {
               transition={{ duration: 0.18 }}
               onClick={() => canContinue && submitAnswer()}
               disabled={!canContinue}
+              className={canContinue ? "v2-cta" : undefined}
               style={{
                 width: "100%",
-                marginTop: 4,
+                marginTop: 6,
+                minHeight: 56,
                 padding: "16px 24px",
-                borderRadius: 14,
+                borderRadius: 999,
                 fontSize: 15,
-                fontWeight: 700,
-                border: "none",
+                fontWeight: 800,
                 cursor: canContinue ? "pointer" : "not-allowed",
-                transition: "background 0.18s, box-shadow 0.18s",
                 ...(canContinue
-                  ? {
-                      background: "var(--color-accent)",
-                      color: "#ffffff",
-                      boxShadow: "var(--shadow-btn-accent)",
-                    }
+                  ? {}
                   : {
-                      background: "var(--color-border)",
-                      color: "var(--color-text-muted)",
+                      background: "rgba(148,163,255,0.05)",
+                      border: "1px solid var(--v2-line)",
+                      color: "var(--v2-ink-ghost)",
                     }),
               }}
             >

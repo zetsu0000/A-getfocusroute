@@ -14,7 +14,9 @@ import { useQuizStore } from "@/store/quizStore";
 import { safeName } from "@/lib/personalization";
 import { BRAIN_OS } from "@/lib/positioning";
 import { getSignatureFromAnswers, echoSentence } from "@/lib/signature";
-import { SignatureRevealCard } from "@/components/signature/SignatureRevealCard";
+import { getSignatureIdentity } from "@/lib/signature-identity";
+import { SigilArtifact } from "@/components/v2/SigilArtifact";
+import { HudLabel } from "@/components/v2/primitives";
 import {
   createAnalyticsEventId,
   getAnalyticsContext,
@@ -32,15 +34,17 @@ function getStripePromise() {
 }
 const PRICE_ID = process.env.NEXT_PUBLIC_PRICE_ASSESSMENT!;
 
+/* V2 dark-vault Stripe appearance. The Payment Element renders in an iframe,
+   so values must be literal colors (CSS variables don't cross the boundary). */
 const stripeAppearance = {
-  theme: "flat" as const,
+  theme: "night" as const,
   variables: {
-    colorPrimary: "var(--color-accent)",
-    colorBackground: "var(--color-bg-card)",
-    colorText: "var(--color-text)",
-    colorTextSecondary: "var(--color-text-body)",
-    colorTextPlaceholder: "var(--color-text-soft)",
-    colorDanger: "var(--color-error)",
+    colorPrimary: "#9BE8FF",
+    colorBackground: "#10131F",
+    colorText: "#EEF1FF",
+    colorTextSecondary: "#A9B0CC",
+    colorTextPlaceholder: "#5A6079",
+    colorDanger: "#FF8B8B",
     fontFamily: "inherit",
     fontSizeBase: "15px",
     spacingUnit: "5px",
@@ -50,38 +54,38 @@ const stripeAppearance = {
   },
   rules: {
     ".Input": {
-      border: "1.5px solid var(--color-border)",
-      backgroundColor: "var(--color-bg-card-2)",
+      border: "1.5px solid rgba(163,178,255,0.18)",
+      backgroundColor: "#0B0E18",
       padding: "12px 14px",
       fontSize: "15px",
       boxShadow: "none",
       transition: "border-color 0.15s",
     },
     ".Input:focus": {
-      border: "1.5px solid var(--color-accent)",
-      boxShadow: "0 0 0 3px var(--color-primary-ring)",
+      border: "1.5px solid rgba(155,232,255,0.7)",
+      boxShadow: "0 0 0 3px rgba(124,138,255,0.18)",
       outline: "none",
     },
     ".Label": {
       fontSize: "12px",
       fontWeight: "600",
-      color: "var(--color-text-body)",
+      color: "#A9B0CC",
       marginBottom: "5px",
     },
     ".Tab": {
-      border: "1.5px solid var(--color-border)",
-      backgroundColor: "var(--color-bg-card-2)",
+      border: "1.5px solid rgba(163,178,255,0.18)",
+      backgroundColor: "#0B0E18",
       padding: "10px 16px",
       fontWeight: "600",
     },
     ".Tab--selected": {
-      border: "1.5px solid var(--color-accent)",
-      backgroundColor: "var(--color-accent-tint)",
-      color: "var(--color-accent)",
+      border: "1.5px solid rgba(155,232,255,0.7)",
+      backgroundColor: "rgba(124,138,255,0.12)",
+      color: "#EEF1FF",
       boxShadow: "none",
     },
     ".Error": {
-      color: "var(--color-error)",
+      color: "#FF8B8B",
       fontSize: "12px",
     },
   },
@@ -97,17 +101,18 @@ function revealsFor(planFocus: string): string[] {
   ];
 }
 
-/* Locked result card */
+/* Locked result card — the artifact under glass */
 function LockedCard() {
   const answers = useQuizStore((s) => s.answers);
   const signature = getSignatureFromAnswers(answers);
+  const identity = getSignatureIdentity(signature.signature);
   const reduceMotion = useReducedMotion();
-  const profileBandBySignature: Record<string, { label: string; pct: number; color: string; bg: string; shadow: string }> = {
-    Sprinter: { label: "Fast-cycle",     pct: 68, color: "var(--color-sig-sprinter)",  bg: "var(--color-sig-sprinter-tint)",  shadow: "var(--shadow-sig-sprinter)"  },
-    Archivist: { label: "Detail-led",   pct: 46, color: "var(--color-sig-archivist)", bg: "var(--color-sig-archivist-tint)", shadow: "var(--shadow-sig-archivist)" },
-    Spark: { label: "Novelty-led",      pct: 76, color: "var(--color-sig-spark)",     bg: "var(--color-sig-spark-tint)",     shadow: "var(--shadow-sig-spark)"     },
-    Reactor: { label: "Adaptive",       pct: 58, color: "var(--color-sig-reactor)",   bg: "var(--color-sig-reactor-tint)",   shadow: "var(--shadow-sig-reactor)"   },
-    Drifter: { label: "Anchor-seeking", pct: 39, color: "var(--color-sig-drifter)",   bg: "var(--color-sig-drifter-tint)",   shadow: "var(--shadow-sig-drifter)"   },
+  const profileBandBySignature: Record<string, { label: string; pct: number }> = {
+    Sprinter:  { label: "Fast-cycle",     pct: 68 },
+    Archivist: { label: "Detail-led",     pct: 46 },
+    Spark:     { label: "Novelty-led",    pct: 76 },
+    Reactor:   { label: "Adaptive",       pct: 58 },
+    Drifter:   { label: "Anchor-seeking", pct: 39 },
   };
   const profileBand = profileBandBySignature[signature.signature] ?? profileBandBySignature.Drifter;
 
@@ -134,63 +139,134 @@ function LockedCard() {
   ];
 
   return (
-    <div style={{ borderRadius: "var(--radius-lg)", overflow: "hidden", background: "var(--color-bg-card)", boxShadow: "var(--shadow-card-strong)", border: "1px solid var(--color-border-2)" }}>
-      <SignatureRevealCard
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <SigilArtifact
         signatureKey={signature.signature}
         signatureName={signature.signature}
-        signatureEssence={signature.title}
-        signatureSummary={signature.preview}
+        essence={signature.title}
+        summary={signature.preview}
         variant="paywall"
       />
 
-      <div style={{ padding: "16px 18px 18px" }}>
-        <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.6, marginBottom: 12 }}>
+      <div>
+        <p style={{ fontSize: 13, color: "var(--v2-ink-dim)", lineHeight: 1.65, marginBottom: 14 }}>
           {signature.frictionLine} It&apos;s a focus pattern, not a diagnosis.
         </p>
 
-        <div style={{ display: "grid", gap: 8, marginBottom: 14 }}>
+        <div style={{ display: "grid", gap: 9, marginBottom: 16 }}>
           {curiosityBullets.map((item) => (
-            <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
-              <span style={{ width: 18, height: 18, borderRadius: "50%", background: "var(--color-cognitive-tint)", color: "var(--color-cognitive)", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
-                <Check size={11} strokeWidth={3} />
+            <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+              <span style={{ width: 18, height: 18, borderRadius: "50%", background: `rgba(${identity.accentRgb},0.16)`, border: `1px solid rgba(${identity.accentRgb},0.4)`, color: identity.accent, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+                <Check size={10} strokeWidth={3} />
               </span>
-              <span style={{ fontSize: 13, color: "var(--color-text)", fontWeight: 750, lineHeight: 1.45 }}>{item}</span>
+              <span style={{ fontSize: 13, color: "var(--v2-ink)", fontWeight: 700, lineHeight: 1.45 }}>{item}</span>
             </div>
           ))}
         </div>
 
-        <div style={{ height: 8, borderRadius: "var(--radius-pill)", background: "linear-gradient(to right, var(--color-primary-tint), var(--color-signal-tint), var(--color-cognitive-tint))", position: "relative", marginBottom: 16 }}>
+        {/* profile band */}
+        <div
+          style={{
+            height: 7,
+            borderRadius: 999,
+            background: "linear-gradient(to right, rgba(155,232,255,0.3), rgba(124,138,255,0.35), rgba(179,155,255,0.3))",
+            position: "relative",
+            marginBottom: 18,
+          }}
+        >
           <m.div
             initial={reduceMotion ? undefined : { opacity: 0, scale: 0.9 }}
             animate={reduceMotion ? undefined : { opacity: 1, scale: 1 }}
             transition={reduceMotion ? undefined : { delay: 0.35, duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-            style={{ position: "absolute", left: `${profileBand.pct}%`, top: "50%", transform: "translate(-50%,-50%)", width: 18, height: 18, borderRadius: "50%", background: "var(--color-bg-card)", border: `3px solid ${profileBand.color}`, boxShadow: profileBand.shadow }}
+            style={{
+              position: "absolute",
+              left: `${profileBand.pct}%`,
+              top: "50%",
+              transform: "translate(-50%,-50%)",
+              width: 17,
+              height: 17,
+              borderRadius: "50%",
+              background: "#0B0E1A",
+              border: `3px solid ${identity.accent}`,
+              boxShadow: `0 0 16px rgba(${identity.accentRgb},0.7)`,
+            }}
           />
         </div>
 
-        <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", border: "1px solid var(--color-border)", background: "linear-gradient(180deg,var(--color-bg-card),var(--color-bg-card-2))" }}>
+        {/* locked dossier rows */}
+        <div
+          style={{
+            position: "relative",
+            borderRadius: 16,
+            overflow: "hidden",
+            border: "1px solid rgba(217,188,127,0.22)",
+            background: "linear-gradient(180deg, rgba(14,18,32,0.8), rgba(8,10,18,0.9))",
+          }}
+        >
           <div style={{ userSelect: "none", pointerEvents: "none", display: "flex", flexDirection: "column", gap: 8, padding: 12 }}>
-          {rows.map(({ label }) => (
-            <div key={label} style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 74px", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: "var(--radius-sm)", background: "rgba(255,255,255,0.66)", border: "1px solid var(--color-border)" }}>
-              <span style={{ fontSize: 12, color: "var(--color-text)", fontWeight: 750, overflowWrap: "break-word" }}>{label}</span>
-              <span aria-hidden="true" style={{ height: 8, borderRadius: "var(--radius-pill)", background: "linear-gradient(90deg,var(--color-border),var(--color-primary-ring))" }} />
-            </div>
-          ))}
+            {rows.map(({ label }) => (
+              <div
+                key={label}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "minmax(0,1fr) 74px",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "11px 13px",
+                  borderRadius: 11,
+                  background: "rgba(148,163,255,0.05)",
+                  border: "1px solid var(--v2-line)",
+                }}
+              >
+                <span style={{ fontSize: 12, color: "var(--v2-ink-dim)", fontWeight: 700, overflowWrap: "break-word" }}>{label}</span>
+                <span
+                  aria-hidden="true"
+                  style={{
+                    height: 7,
+                    borderRadius: 999,
+                    background: "repeating-linear-gradient(90deg, rgba(163,178,255,0.25) 0 6px, rgba(163,178,255,0.08) 6px 12px)",
+                  }}
+                />
+              </div>
+            ))}
           </div>
 
-          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, background: "linear-gradient(180deg,rgba(255,255,255,0.54),rgba(255,255,255,0.84))", backdropFilter: "blur(2px)" }}>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10,
+              background: "linear-gradient(180deg, rgba(6,7,13,0.35), rgba(6,7,13,0.78))",
+              backdropFilter: "blur(2.5px)",
+              WebkitBackdropFilter: "blur(2.5px)",
+            }}
+          >
             <div
-              style={{ width: 44, height: 44, borderRadius: 14, background: "linear-gradient(135deg,var(--color-accent),var(--color-accent-dark))", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "var(--shadow-btn-accent)" }}
+              style={{
+                width: 46,
+                height: 46,
+                borderRadius: 15,
+                background: "linear-gradient(140deg, rgba(217,188,127,0.3), rgba(168,132,60,0.18))",
+                border: "1px solid rgba(217,188,127,0.55)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 10px 34px rgba(217,188,127,0.25), inset 0 1px 0 rgba(255,248,226,0.3)",
+              }}
             >
-              <Lock size={19} color="white" strokeWidth={2.5} />
+              <Lock size={19} color="var(--v2-gold-bright)" strokeWidth={2.4} />
             </div>
-            <p style={{ fontSize: 13, fontWeight: 850, color: "var(--color-text)", textAlign: "center", lineHeight: 1.32 }}>
+            <p style={{ fontSize: 13, fontWeight: 800, color: "var(--v2-ink)", textAlign: "center", lineHeight: 1.35 }}>
               Unlock to see<br />the full pattern map
             </p>
           </div>
         </div>
 
-        <p style={{ marginTop: 12, fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.58 }}>
+        <p style={{ marginTop: 13, fontSize: 13, color: "var(--v2-ink-dim)", lineHeight: 1.6 }}>
           Your full profile explains what this pattern means and how to work with it instead of fighting it.
         </p>
       </div>
@@ -275,7 +351,7 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
         <m.p
           initial={reduceMotion ? undefined : { opacity: 0, y: -6 }}
           animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-        style={{ marginTop: 12, fontSize: 13, color: "var(--color-error)", textAlign: "center", background: "var(--color-error-tint)", borderRadius: 10, padding: "8px 14px", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}
+          style={{ marginTop: 12, fontSize: 13, color: "var(--v2-error)", textAlign: "center", background: "rgba(255,139,139,0.1)", border: "1px solid rgba(255,139,139,0.3)", borderRadius: 10, padding: "8px 14px", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}
         >
           <AlertCircle size={15} /> {error}
         </m.p>
@@ -286,16 +362,27 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
         disabled={!stripe || loading}
         whileTap={reduceMotion ? undefined : { scale: 0.985 }}
         whileHover={reduceMotion || loading ? undefined : { y: -1 }}
+        className={loading ? undefined : "v2-cta v2-cta-gold"}
         style={{
-          marginTop: 16, width: "100%", padding: "18px 24px", borderRadius: "var(--radius-md)",
-          background: loading
-            ? "var(--color-border)"
-            : "linear-gradient(135deg, var(--color-accent), var(--color-accent-dark))",
-          color: loading ? "var(--color-text-muted)" : "#fff",
-          fontSize: 17, fontWeight: 800, border: "none",
+          marginTop: 16,
+          width: "100%",
+          minHeight: 60,
+          padding: "18px 24px",
+          borderRadius: 999,
+          fontSize: 17,
+          fontWeight: 800,
           cursor: loading ? "not-allowed" : "pointer",
-          display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-          boxShadow: loading ? "none" : "0 12px 28px rgba(20,17,31,0.2)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 10,
+          ...(loading
+            ? {
+                background: "rgba(148,163,255,0.06)",
+                border: "1px solid var(--v2-line)",
+                color: "var(--v2-ink-faint)",
+              }
+            : {}),
         }}
       >
         {loading ? (
@@ -303,33 +390,33 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
             <m.span
               animate={reduceMotion ? undefined : { rotate: 360 }}
               transition={reduceMotion ? undefined : { duration: 0.9, repeat: Infinity, ease: "linear" }}
-              style={{ display: "inline-block", width: 16, height: 16, border: "2px solid var(--color-text-muted)", borderTopColor: "transparent", borderRadius: "50%" }}
+              style={{ display: "inline-block", width: 16, height: 16, border: "2px solid var(--v2-ink-faint)", borderTopColor: "transparent", borderRadius: "50%" }}
             />
             Processing...
           </>
         ) : (
           <>
-            <Lock size={17} color="white" strokeWidth={2.5} />
+            <Lock size={17} strokeWidth={2.5} />
             Unlock My Full Plan ({BRAIN_OS.price.paywall})
           </>
         )}
       </m.button>
 
       {/* Trust row */}
-      <div style={{ marginTop: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
+      <div style={{ marginTop: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 14, flexWrap: "wrap" }}>
         {[
           { icon: Shield,    label: "256-bit SSL" },
           { icon: CreditCard, label: "Secure payment" },
           { icon: BadgeCheck, label: "Instant access" },
         ].map(({ icon: Icon, label }) => (
           <div key={label} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <Icon size={13} color="var(--color-text-muted)" />
-            <span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>{label}</span>
+            <Icon size={13} color="var(--v2-ink-faint)" />
+            <span className="v2-hud" style={{ fontSize: 9, letterSpacing: "0.12em" }}>{label}</span>
           </div>
         ))}
       </div>
 
-      <p style={{ marginTop: 10, fontSize: 11, color: "var(--color-text-muted)", textAlign: "center" }}>
+      <p style={{ marginTop: 10, fontSize: 11, color: "var(--v2-ink-ghost)", textAlign: "center" }}>
         One-time payment / Instant access in your account / 7-day refund
       </p>
     </form>
@@ -360,9 +447,9 @@ function PaymentSkeleton() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       {[56, 56, 50].map((h, i) => (
-        <div key={i} style={{ height: h, borderRadius: "var(--radius-sm)", background: "var(--color-border)" }} />
+        <div key={i} style={{ height: h, borderRadius: 12, background: "rgba(148,163,255,0.08)", border: "1px solid var(--v2-line)" }} />
       ))}
-      <div style={{ height: 58, borderRadius: "var(--radius-md)", background: "var(--color-border)", marginTop: 4 }} />
+      <div style={{ height: 58, borderRadius: 999, background: "rgba(217,188,127,0.1)", border: "1px solid rgba(217,188,127,0.25)", marginTop: 4 }} />
     </div>
   );
 }
@@ -421,27 +508,40 @@ export function PaywallScreen() {
 
   return (
     <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.28 }}>
-      <div style={{ padding: "18px 14px 56px", overflowX: "hidden" }}>
+      {/* gold-dusted vault atmosphere */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "fixed",
+          inset: 0,
+          background:
+            "radial-gradient(80% 50% at 50% 0%, rgba(217,188,127,0.07) 0%, transparent 55%), radial-gradient(70% 45% at 50% 110%, rgba(124,138,255,0.1) 0%, transparent 60%)",
+          pointerEvents: "none",
+        }}
+      />
+      <div style={{ position: "relative", padding: "20px 14px 56px", overflowX: "hidden" }}>
         <div style={{ maxWidth: 540, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 }}>
 
           <m.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             style={{
-              borderRadius: "var(--radius-md)",
-              padding: "10px 12px",
+              borderRadius: 999,
+              padding: "10px 14px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: 12,
+              gap: 14,
               flexWrap: "wrap",
-              background: "var(--color-bg-card)",
-              border: "1px solid var(--color-border-2)",
+              background: "rgba(10,13,24,0.7)",
+              border: "1px solid var(--v2-line)",
+              backdropFilter: "blur(10px)",
+              WebkitBackdropFilter: "blur(10px)",
             }}
           >
             {["Private results", "Not a diagnosis", "Instant access"].map((item) => (
-              <span key={item} style={{ fontSize: 12, color: "var(--color-text-body)", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5 }}>
-                <BadgeCheck size={13} color="var(--color-text-muted)" strokeWidth={2.5} />
+              <span key={item} style={{ fontSize: 11.5, color: "var(--v2-ink-dim)", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5 }}>
+                <BadgeCheck size={13} color="var(--v2-ink-faint)" strokeWidth={2.5} />
                 {item}
               </span>
             ))}
@@ -451,27 +551,25 @@ export function PaywallScreen() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.04 }}
-            style={{
-              background: "var(--color-bg-card)",
-              borderRadius: "var(--radius-lg)",
-              border: "1px solid var(--color-border)",
-              boxShadow: "var(--shadow-card)",
-              overflow: "hidden",
-            }}
+            className="v2-panel"
+            style={{ overflow: "hidden", padding: 0 }}
           >
-            <div style={{ padding: "18px 20px 14px" }}>
-              <p style={{ fontSize: 11, letterSpacing: "0.09em", textTransform: "uppercase", fontWeight: 700, color: "var(--color-text-muted)", marginBottom: 8 }}>
+            <div style={{ padding: "20px 20px 14px" }}>
+              <HudLabel tone="signal" style={{ marginBottom: 10 }}>
                 Your pattern: {signature.title}
-              </p>
-              <h1 style={{ fontSize: 24, fontWeight: 900, color: "var(--color-text)", lineHeight: 1.22, letterSpacing: "-0.02em" }}>
+              </HudLabel>
+              <h1
+                className="v2-display"
+                style={{ fontSize: "clamp(24px, 6vw, 29px)", fontWeight: 550, lineHeight: 1.2, letterSpacing: "-0.02em" }}
+              >
                 {displayName === "Your" ? "Now turn this into a plan built for you." : `${displayName}, now turn this into a plan built for you.`}
               </h1>
-              <p style={{ marginTop: 8, fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.62 }}>
+              <p style={{ marginTop: 9, fontSize: 14, color: "var(--v2-ink-dim)", lineHeight: 1.65 }}>
                 {echo ? `${echo} ` : ""}Your full plan focuses on {signature.planFocus}.
               </p>
             </div>
 
-            <div style={{ padding: "0 20px 18px" }}>
+            <div style={{ padding: "0 18px 18px" }}>
               <LockedCard />
             </div>
           </m.div>
@@ -480,60 +578,56 @@ export function PaywallScreen() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.08 }}
-            style={{
-              background: "var(--color-bg-card)",
-              borderRadius: "var(--radius-lg)",
-              border: "1px solid var(--color-border)",
-              boxShadow: "var(--shadow-card)",
-              padding: "16px 18px",
-            }}
+            className="v2-panel"
+            style={{ padding: "18px 20px", borderColor: "rgba(217,188,127,0.25)" }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 12 }}>
               <div>
-                <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.09em", color: "var(--color-text-muted)", fontWeight: 700 }}>
-                  Your full plan
-                </p>
-                <p style={{ fontSize: 13, color: "var(--color-text-body)", marginTop: 2 }}>
+                <HudLabel tone="gold">Your full plan</HudLabel>
+                <p style={{ fontSize: 13, color: "var(--v2-ink-dim)", marginTop: 4 }}>
                   Built from your answers, not a generic guide
                 </p>
               </div>
               <div style={{ textAlign: "right" }}>
-                <p style={{ fontSize: 12, color: "var(--color-text-muted)", textDecoration: "line-through" }}>
+                <p style={{ fontSize: 12, color: "var(--v2-ink-ghost)", textDecoration: "line-through" }}>
                   {BRAIN_OS.price.paywallAnchor}
                 </p>
-                <p style={{ fontSize: 34, fontWeight: 900, color: "var(--color-accent)", lineHeight: 1, letterSpacing: "-0.03em" }}>
+                <p
+                  className="v2-display v2-text-gold"
+                  style={{ fontSize: 38, fontWeight: 600, lineHeight: 1, letterSpacing: "-0.02em" }}
+                >
                   {BRAIN_OS.price.paywall}
                 </p>
               </div>
             </div>
 
-            <p style={{ fontSize: 12, color: "var(--color-text-muted)", lineHeight: 1.5, marginBottom: 12 }}>
+            <p style={{ fontSize: 12, color: "var(--v2-ink-faint)", lineHeight: 1.55, marginBottom: 14 }}>
               Why {BRAIN_OS.price.paywall} instead of {BRAIN_OS.price.paywallAnchor}? Finishing the assessment did the mapping work — so you get completer pricing for this results session.
             </p>
 
-            <p style={{ fontSize: 12, fontWeight: 850, color: "var(--color-text)", marginBottom: 10 }}>
+            <p style={{ fontSize: 12, fontWeight: 800, color: "var(--v2-ink)", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.08em" }}>
               What&apos;s in your full plan
             </p>
-            <div style={{ marginBottom: 12, display: "grid", gap: 8 }}>
+            <div style={{ marginBottom: 14, display: "grid", gap: 9 }}>
               {revealsFor(signature.planFocus).map((item) => (
                 <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                  <div style={{ width: 18, height: 18, borderRadius: "var(--radius-pill)", background: "var(--color-signal-tint)", display: "flex", alignItems: "center", justifyContent: "center", marginTop: 1, flexShrink: 0 }}>
-                    <Check size={11} color="var(--color-signal)" strokeWidth={3} />
+                  <div style={{ width: 18, height: 18, borderRadius: 999, background: "rgba(217,188,127,0.14)", border: "1px solid rgba(217,188,127,0.4)", display: "flex", alignItems: "center", justifyContent: "center", marginTop: 1, flexShrink: 0 }}>
+                    <Check size={10} color="var(--v2-gold)" strokeWidth={3} />
                   </div>
-                  <span style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.45 }}>{item}</span>
+                  <span style={{ fontSize: 13, color: "var(--v2-ink-dim)", lineHeight: 1.5 }}>{item}</span>
                 </div>
               ))}
             </div>
 
-            <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: 12, marginTop: 4 }}>
+            <div style={{ borderTop: "1px solid var(--v2-line)", paddingTop: 13, marginTop: 4 }}>
               <div style={{ marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
-                <BadgeCheck size={14} color="var(--color-warning)" />
-                <span style={{ fontSize: 12, fontWeight: 700, color: "var(--color-primary-dark)" }}>{BRAIN_OS.clinicalContrastShort}</span>
+                <BadgeCheck size={14} color="var(--v2-gold)" />
+                <span style={{ fontSize: 12, fontWeight: 700, color: "var(--v2-ink)" }}>{BRAIN_OS.clinicalContrastShort}</span>
               </div>
-              <p style={{ fontSize: 12, color: "var(--color-text-muted)", lineHeight: 1.5 }}>
+              <p style={{ fontSize: 12, color: "var(--v2-ink-faint)", lineHeight: 1.55 }}>
                 {BRAIN_OS.guaranteeTitle}. If it doesn&apos;t feel accurate, request a full refund within 7 days.
               </p>
-              <p style={{ fontSize: 11, color: "var(--color-text-muted)", lineHeight: 1.5, marginTop: 8 }}>
+              <p style={{ fontSize: 11, color: "var(--v2-ink-ghost)", lineHeight: 1.55, marginTop: 8 }}>
                 FocusRoute is educational self-understanding and productivity support. It is not a diagnosis or medical treatment.
               </p>
             </div>
@@ -543,15 +637,10 @@ export function PaywallScreen() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.10 }}
-            style={{
-              background: "var(--color-bg-card)",
-              borderRadius: "var(--radius-lg)",
-              border: "1px solid var(--color-border)",
-              boxShadow: "var(--shadow-card)",
-              padding: "16px 18px",
-            }}
+            className="v2-panel"
+            style={{ padding: "18px 20px" }}
           >
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
               {[
                 { q: "Is this just another quiz?", a: "No — your plan is built from your answers, not generic tips." },
                 { q: "Is this a diagnosis?", a: "No. It's a focus pattern and a practical plan, not a medical assessment." },
@@ -561,8 +650,8 @@ export function PaywallScreen() {
                 { q: "What if it doesn't fit?", a: "7-day refund. If it's not you, email us — no questions." },
               ].map(({ q, a }) => (
                 <div key={q}>
-                  <p style={{ fontSize: 13, fontWeight: 800, color: "var(--color-text)", marginBottom: 2 }}>{q}</p>
-                  <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.5 }}>{a}</p>
+                  <p style={{ fontSize: 13, fontWeight: 800, color: "var(--v2-ink)", marginBottom: 3 }}>{q}</p>
+                  <p style={{ fontSize: 13, color: "var(--v2-ink-dim)", lineHeight: 1.55 }}>{a}</p>
                 </div>
               ))}
             </div>
@@ -572,28 +661,21 @@ export function PaywallScreen() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.11 }}
-            style={{
-              background: "var(--color-bg-card)",
-              borderRadius: "var(--radius-lg)",
-              border: "1px solid var(--color-border)",
-              boxShadow: "var(--shadow-card)",
-              padding: "16px 18px",
-            }}
+            className="v2-panel"
+            style={{ padding: "18px 20px" }}
           >
-            <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.09em", color: "var(--color-text-muted)", fontWeight: 700, marginBottom: 10 }}>
-              After you pay
-            </p>
-            <div style={{ display: "grid", gap: 8 }}>
+            <HudLabel style={{ marginBottom: 12 }}>After you pay</HudLabel>
+            <div style={{ display: "grid", gap: 9 }}>
               {[
                 "Your full plan unlocks in your account the moment you pay.",
                 "We email you a copy, so it's easy to come back to.",
                 "Start with one short first step — no overwhelm.",
               ].map((line) => (
                 <div key={line} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                  <div style={{ width: 18, height: 18, borderRadius: "var(--radius-pill)", background: "var(--color-signal-tint)", display: "flex", alignItems: "center", justifyContent: "center", marginTop: 1, flexShrink: 0 }}>
-                    <Check size={11} color="var(--color-signal)" strokeWidth={3} />
+                  <div style={{ width: 18, height: 18, borderRadius: 999, background: "rgba(124,138,255,0.12)", border: "1px solid rgba(124,138,255,0.35)", display: "flex", alignItems: "center", justifyContent: "center", marginTop: 1, flexShrink: 0 }}>
+                    <Check size={10} color="var(--v2-signal-2)" strokeWidth={3} />
                   </div>
-                  <span style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.45 }}>{line}</span>
+                  <span style={{ fontSize: 13, color: "var(--v2-ink-dim)", lineHeight: 1.5 }}>{line}</span>
                 </div>
               ))}
             </div>
@@ -603,32 +685,35 @@ export function PaywallScreen() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.115 }}
-            style={{
-              background: "var(--color-bg-card)",
-              borderRadius: "var(--radius-lg)",
-              border: "1px solid var(--color-border)",
-              boxShadow: "var(--shadow-card)",
-              padding: "16px 18px",
-            }}
+            className="v2-panel"
+            style={{ padding: "18px 20px" }}
           >
-            <p style={{ fontSize: 14, fontStyle: "italic", color: "var(--color-text-body)", lineHeight: 1.7, marginBottom: 8 }}>
+            <p
+              style={{
+                fontFamily: "var(--v2-font-display)",
+                fontSize: 15,
+                fontStyle: "italic",
+                color: "var(--v2-ink-dim)",
+                lineHeight: 1.7,
+                marginBottom: 8,
+              }}
+            >
               &quot;The profile language felt uncannily accurate. For the first time, I had a step-by-step system that matched how I actually work.&quot;
             </p>
-            <p style={{ fontSize: 13, color: "var(--color-text-muted)" }}>— Sarah M., verified customer</p>
+            <p className="v2-hud" style={{ fontSize: 9.5 }}>— Sarah M., verified customer</p>
           </m.div>
 
           <m.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.12 }}
-            style={{
-              background: "var(--color-bg-card)",
-              borderRadius: "var(--radius-lg)",
-              border: "1px solid var(--color-border)",
-              boxShadow: "var(--shadow-card)",
-              padding: "18px",
-            }}
+            className="v2-panel"
+            style={{ padding: "18px", borderColor: "rgba(217,188,127,0.3)" }}
           >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+              <Lock size={13} color="var(--v2-gold)" />
+              <HudLabel tone="gold">Secure unlock</HudLabel>
+            </div>
             <AnimatePresence mode="wait">
               {loadingSecret ? (
                 <m.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -642,7 +727,7 @@ export function PaywallScreen() {
                   />
                 </m.div>
               ) : (
-                <m.p key="error" style={{ fontSize: 13, color: "var(--color-accent-dark)", textAlign: "center", padding: "16px 0" }}>
+                <m.p key="error" style={{ fontSize: 13, color: "var(--v2-error)", textAlign: "center", padding: "16px 0" }}>
                   Failed to load payment. Please refresh the page.
                 </m.p>
               )}
@@ -653,23 +738,20 @@ export function PaywallScreen() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.16 }}
+            className="v2-panel"
             style={{
-              background: "var(--color-bg-card)",
-              borderRadius: 18,
-              border: "1px solid var(--color-border)",
-              boxShadow: "var(--shadow-card)",
               padding: "14px 16px",
               display: "flex",
               alignItems: "center",
               gap: 10,
             }}
           >
-            <Shield size={16} color="var(--color-primary)" />
-            <p style={{ fontSize: 12, color: "var(--color-text-body)", lineHeight: 1.45 }}>
+            <Shield size={16} color="var(--v2-signal-2)" />
+            <p style={{ fontSize: 12, color: "var(--v2-ink-dim)", lineHeight: 1.45 }}>
               Secure checkout via Stripe / encrypted payment / instant access to your plan
             </p>
           </m.div>
-          <p style={{ textAlign: "center", fontSize: 11, color: "var(--color-text-muted)", marginTop: 6, lineHeight: 2 }}>
+          <p style={{ textAlign: "center", fontSize: 11, color: "var(--v2-ink-ghost)", marginTop: 6, lineHeight: 2 }}>
             <a href="/terms" style={{ color: "inherit", textDecoration: "none" }}>Terms</a>
             {" / "}
             <a href="/privacy" style={{ color: "inherit", textDecoration: "none" }}>Privacy</a>

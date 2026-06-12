@@ -52,15 +52,15 @@ export function NameScreen() {
       <div style={{ width: "100%", maxWidth: 520, display: "flex", flexDirection: "column", gap: 20 }}>
 
         {/* Title */}
-        <h1 style={{
-          fontSize: 24, fontWeight: 800,
-          color: "var(--color-primary)",
-          textAlign: "center", lineHeight: 1.3,
+        <h1 className="v2-display" style={{
+          fontSize: 26, fontWeight: 550,
+          color: "var(--v2-ink)",
+          textAlign: "center", lineHeight: 1.25,
           marginBottom: 4,
         }}>
           Personalize your signature reveal
         </h1>
-        <p style={{ fontSize: 14, color: "var(--color-text-muted)", textAlign: "center" }}>
+        <p style={{ fontSize: 14, color: "var(--v2-ink-faint)", textAlign: "center" }}>
           We&apos;ll use your name in your Cognitive Signature™ preview and Profile-to-Protocol™ overview.
         </p>
 
@@ -74,27 +74,14 @@ export function NameScreen() {
             onKeyDown={(e) => e.key === "Enter" && handleContinue()}
             onBlur={() => setTouched(true)}
             autoFocus
-            style={{
-              width: "100%", padding: "17px 20px",
-              borderRadius: 14,
-              background: hasError ? "var(--color-error-tint)" : "var(--color-bg-card)",
-              border: `1.5px solid ${hasError ? "var(--color-error)" : "var(--color-border)"}`,
-              color: "var(--color-primary)",
-              fontSize: 16, outline: "none",
-              transition: "border-color 0.15s, box-shadow 0.15s, background 0.15s",
-            }}
-            onFocus={(e) => {
-              if (!hasError) {
-                e.currentTarget.style.borderColor = "var(--color-cognitive)";
-                e.currentTarget.style.boxShadow   = "0 0 0 3px rgba(107,92,165,0.2)";
-              }
-            }}
+            className={`v2-input ${hasError ? "v2-input-error" : ""}`}
+            style={{ fontSize: 16 }}
           />
           {hasError && (
             <m.p
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
-              style={{ marginTop: 6, fontSize: 12, color: "var(--color-error)", paddingLeft: 4 }}
+              style={{ marginTop: 6, fontSize: 12, color: "var(--v2-error)", paddingLeft: 4 }}
             >
               Please enter a valid name (letters only, min 2 characters)
             </m.p>
@@ -105,21 +92,25 @@ export function NameScreen() {
         <button
           onClick={handleContinue}
           disabled={!valid}
+          className={valid ? "v2-cta" : undefined}
           style={{
-            width: "100%", padding: "18px",
-            borderRadius: 16, fontSize: 16, fontWeight: 700,
-            border: "none", cursor: valid ? "pointer" : "not-allowed",
-            transition: "all 0.2s",
+            width: "100%", padding: "18px", minHeight: 58,
+            borderRadius: 999, fontSize: 16, fontWeight: 800,
+            cursor: valid ? "pointer" : "not-allowed",
             ...(valid
-              ? { background: "var(--color-accent)", color: "#fff", boxShadow: "var(--shadow-btn-accent)" }
-              : { background: "var(--color-border)", color: "var(--color-text-muted)" }),
+              ? {}
+              : {
+                  background: "rgba(148,163,255,0.05)",
+                  border: "1px solid var(--v2-line)",
+                  color: "var(--v2-ink-ghost)",
+                }),
           }}
         >
           Reveal My Profile Preview
         </button>
 
         {/* Privacy note */}
-        <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", lineHeight: 1.6, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+        <p style={{ fontSize: 12, color: "var(--v2-ink-faint)", textAlign: "center", lineHeight: 1.6, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
           <Lock size={12} aria-hidden /> Your name stays private and is used only for personalization
         </p>
 

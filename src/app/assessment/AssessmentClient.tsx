@@ -3,6 +3,7 @@
 import dynamic                      from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, m }  from "framer-motion";
+import { ArrowRight }          from "lucide-react";
 import { useQuizStore }             from "@/store/quizStore";
 import type { FunnelStep }          from "@/types/quiz";
 import { getPersistedQuizResultId } from "@/lib/quizResultId";
@@ -10,11 +11,14 @@ import { createClient }             from "@/lib/supabase/client";
 import { QuizEngine }               from "@/components/quiz/QuizEngine";
 import { FIRST_PARTY_EVENTS }       from "@/lib/analytics/events";
 import { trackEvent }               from "@/lib/analytics/client";
+import { FocusField }               from "@/components/v2/FocusField";
+import { Magnetic }                 from "@/components/v2/Magnetic";
+import { HudLabel, TelemetryChip, OrbitLoader, SignalRule } from "@/components/v2/primitives";
 
 function ScreenSkeleton() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ width: 48, height: 48, borderRadius: "50%", border: "3px solid var(--color-border)", borderTopColor: "var(--color-primary)", animation: "spin 0.8s linear infinite" }} />
+      <OrbitLoader />
     </div>
   );
 }
@@ -71,42 +75,41 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
     "Unlock your full Brain Profile if it feels useful",
   ];
 
-  const trust = ["Free", "3 minutes", "Private results", "Not a diagnosis"];
-
   return (
-    <div style={{ minHeight: "100dvh", background: "var(--color-bg-page)", overflowX: "hidden", width: "100%", maxWidth: "100%" }}>
-      <section style={{ padding: "34px 18px 28px" }}>
-        <div style={{ maxWidth: 620, margin: "0 auto", minWidth: 0 }}>
-          <p
-            style={{
-              fontSize: 11,
-              fontWeight: 800,
-              color: "var(--color-signal)",
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              marginBottom: 18,
-            }}
-          >
-            FocusRoute
-          </p>
+    <div style={{ position: "relative", minHeight: "100dvh", overflowX: "hidden", width: "100%", maxWidth: "100%" }}>
+      {/* scattered attention field — the state the user arrives in */}
+      <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+        <FocusField coherence={0.12} intensity={0.85} />
+      </div>
+
+      <section style={{ position: "relative", padding: "54px 20px 30px" }}>
+        <div style={{ maxWidth: 640, margin: "0 auto", minWidth: 0 }}>
+          <HudLabel tone="signal" style={{ marginBottom: 22 }}>
+            FocusRoute — pattern mapping · free · 3 min
+          </HudLabel>
           <h1
+            className="v2-display"
             style={{
-              fontSize: "clamp(31px, 9vw, 54px)",
-              fontWeight: 900,
-              color: "var(--color-text)",
-              lineHeight: 1.04,
-              marginBottom: 18,
+              fontSize: "clamp(36px, 10vw, 62px)",
+              fontWeight: 550,
+              lineHeight: 1.0,
+              letterSpacing: "-0.028em",
+              marginBottom: 20,
               overflowWrap: "break-word",
             }}
           >
-            You&apos;re not lazy. Your focus system is overloaded.
+            You&apos;re not lazy.
+            <br />
+            <em className="v2-text-signal" style={{ fontStyle: "italic" }}>
+              Your focus system is overloaded.
+            </em>
           </h1>
           <p
             style={{
               fontSize: 16,
-              color: "var(--color-text-body)",
-              lineHeight: 1.65,
-              marginBottom: 22,
+              color: "var(--v2-ink-dim)",
+              lineHeight: 1.7,
+              marginBottom: 28,
               maxWidth: 540,
               overflowWrap: "break-word",
             }}
@@ -114,38 +117,30 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
             Take the free 3-minute FocusRoute assessment to map your focus patterns,
             friction points, and best next step.
           </p>
-          <button
-            type="button"
-            onClick={onStart}
-            style={{
-              width: "100%",
-              maxWidth: 360,
-              border: "1px solid var(--color-accent)",
-              borderRadius: 14,
-              background: "var(--color-accent)",
-              color: "#fff",
-              cursor: "pointer",
-              fontSize: 16,
-              fontWeight: 900,
-              padding: "16px 20px",
-              boxShadow: "var(--shadow-btn-accent)",
-            }}
-          >
-            Find My Focus Pattern
-          </button>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "7px 14px", marginTop: 16 }}>
-            {trust.map((item) => (
-              <span key={item} style={{ fontSize: 12, color: "var(--color-text-body)", fontWeight: 800 }}>
-                {item}
-              </span>
-            ))}
+          <Magnetic style={{ width: "100%", maxWidth: 380 }}>
+            <button
+              type="button"
+              onClick={onStart}
+              className="v2-cta"
+              style={{ width: "100%", minHeight: 60, fontSize: 16, animation: "v2-pulse-ring 2.6s ease-out infinite" }}
+            >
+              Find My Focus Pattern
+              <ArrowRight size={17} strokeWidth={2.6} />
+            </button>
+          </Magnetic>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "9px 20px", marginTop: 20 }}>
+            <TelemetryChip>Free</TelemetryChip>
+            <TelemetryChip>3 minutes</TelemetryChip>
+            <TelemetryChip>Private results</TelemetryChip>
+            <TelemetryChip color="var(--v2-ink-faint)">Not a diagnosis</TelemetryChip>
           </div>
         </div>
       </section>
 
-      <section style={{ padding: "10px 18px 26px" }}>
-        <div style={{ maxWidth: 620, margin: "0 auto", display: "grid", gap: 9, minWidth: 0 }}>
-          {recognition.map((item) => (
+      <section style={{ position: "relative", padding: "16px 20px 30px" }}>
+        <div style={{ maxWidth: 640, margin: "0 auto", display: "grid", gap: 10, minWidth: 0 }}>
+          <HudLabel style={{ marginBottom: 4 }}>Signal readings — tap what sounds like you</HudLabel>
+          {recognition.map((item, i) => (
             <button
               key={item}
               type="button"
@@ -156,43 +151,69 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
                 onStart();
               }}
               aria-label={`${item} Start the FocusRoute assessment`}
+              className="v2-panel"
               style={{
                 width: "100%",
                 textAlign: "left",
-                borderRadius: 14,
-                background: "linear-gradient(90deg, var(--color-bg-card) 0%, var(--color-signal-tint) 100%)",
-                border: "1px solid var(--color-border-2)",
-                padding: "14px 14px",
-                boxShadow: "0 1px 2px rgba(20,17,31,0.06), 0 10px 28px rgba(46,111,158,0.08)",
+                padding: "16px 16px",
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
                 gap: 12,
-                outlineColor: "var(--color-signal)",
                 minWidth: 0,
+                color: "var(--v2-ink)",
+                transition: "border-color 0.25s, transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "rgba(163,178,255,0.42)";
+                e.currentTarget.style.transform = "translateY(-2px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--v2-line)";
+                e.currentTarget.style.transform = "translateY(0)";
               }}
             >
-              <p style={{ fontSize: 14, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.35, minWidth: 0, overflowWrap: "break-word" }}>
-                {item}
-              </p>
-              <span aria-hidden="true" style={{ width: 24, height: 24, borderRadius: "var(--radius-pill)", border: "1px solid var(--color-border-2)", color: "var(--color-signal)", fontSize: 15, fontWeight: 900, flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", background: "var(--color-bg-card)" }}>
-                &rarr;
+              <span style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                <span className="v2-hud" aria-hidden="true" style={{ color: "var(--v2-signal-2)", fontSize: 10, flexShrink: 0 }}>
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <span style={{ fontSize: 14.5, fontWeight: 700, lineHeight: 1.35, minWidth: 0, overflowWrap: "break-word" }}>
+                  {item}
+                </span>
+              </span>
+              <span
+                aria-hidden="true"
+                style={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: 999,
+                  border: "1px solid rgba(163,178,255,0.35)",
+                  color: "var(--v2-signal-2)",
+                  flexShrink: 0,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <ArrowRight size={13} />
               </span>
             </button>
           ))}
         </div>
       </section>
 
-      <section style={{ padding: "22px 18px" }}>
-        <div style={{ maxWidth: 620, margin: "0 auto", minWidth: 0 }}>
-          <p style={{ fontSize: 11, fontWeight: 800, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
-            What you&apos;ll get
-          </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(130px, 100%), 1fr))", gap: 9 }}>
+      <section style={{ position: "relative", padding: "26px 20px" }}>
+        <div style={{ maxWidth: 640, margin: "0 auto", minWidth: 0 }}>
+          <HudLabel style={{ marginBottom: 12 }}>What you&apos;ll get</HudLabel>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(150px, 100%), 1fr))", gap: 10 }}>
             {outcomes.map((item) => (
-              <div key={item} style={{ borderRadius: 12, background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderTop: "2px solid var(--color-signal-tint)", padding: "12px 12px", minWidth: 0 }}>
-                <p style={{ fontSize: 13, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.35, overflowWrap: "break-word" }}>
+              <div
+                key={item}
+                className="v2-panel"
+                style={{ borderRadius: 14, padding: "14px 14px", minWidth: 0 }}
+              >
+                <p style={{ fontSize: 13, fontWeight: 700, color: "var(--v2-ink)", lineHeight: 1.4, overflowWrap: "break-word" }}>
                   {item}
                 </p>
               </div>
@@ -201,18 +222,30 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
         </div>
       </section>
 
-      <section style={{ padding: "22px 18px" }}>
-        <div style={{ maxWidth: 620, margin: "0 auto", minWidth: 0 }}>
-          <p style={{ fontSize: 11, fontWeight: 800, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>
-            How it works
-          </p>
-          <div style={{ display: "grid", gap: 10 }}>
+      <section style={{ position: "relative", padding: "26px 20px" }}>
+        <div style={{ maxWidth: 640, margin: "0 auto", minWidth: 0 }}>
+          <HudLabel style={{ marginBottom: 16 }}>How it works</HudLabel>
+          <div style={{ display: "grid", gap: 14 }}>
             {steps.map((item, index) => (
-              <div key={item} style={{ display: "grid", gridTemplateColumns: "30px minmax(0, 1fr)", gap: 12, alignItems: "start" }}>
-                <span style={{ width: 30, height: 30, borderRadius: 999, border: "1px solid var(--color-border-2)", background: "var(--color-signal-tint)", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "var(--color-signal)", fontSize: 12, fontWeight: 900 }}>
+              <div key={item} style={{ display: "grid", gridTemplateColumns: "34px minmax(0, 1fr)", gap: 14, alignItems: "start" }}>
+                <span
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 999,
+                    border: "1px solid rgba(163,178,255,0.35)",
+                    background: "rgba(124,138,255,0.08)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "var(--v2-signal-2)",
+                    fontFamily: "var(--v2-font-mono)",
+                    fontSize: 12,
+                  }}
+                >
                   {index + 1}
                 </span>
-                <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.55, paddingTop: 4, overflowWrap: "break-word" }}>
+                <p style={{ fontSize: 14.5, color: "var(--v2-ink-dim)", lineHeight: 1.6, paddingTop: 6, overflowWrap: "break-word" }}>
                   {item}
                 </p>
               </div>
@@ -221,9 +254,10 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
         </div>
       </section>
 
-      <section style={{ padding: "22px 18px 38px" }}>
-        <div style={{ maxWidth: 620, margin: "0 auto", borderTop: "1px solid var(--color-border)", paddingTop: 22, paddingBottom: "max(12px, env(safe-area-inset-bottom))", minWidth: 0 }}>
-          <p style={{ fontSize: 13, color: "var(--color-text-muted)", lineHeight: 1.65, marginBottom: 18, overflowWrap: "break-word" }}>
+      <section style={{ position: "relative", padding: "26px 20px 44px" }}>
+        <div style={{ maxWidth: 640, margin: "0 auto", minWidth: 0, paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}>
+          <SignalRule style={{ marginBottom: 24 }} />
+          <p style={{ fontSize: 13, color: "var(--v2-ink-faint)", lineHeight: 1.7, marginBottom: 22, overflowWrap: "break-word" }}>
             Your results are private. FocusRoute is built for self-understanding and
             productivity support. It is not a diagnosis, medical treatment, or a
             substitute for professional care.
@@ -231,19 +265,11 @@ function HomepageFunnel({ onStart }: { onStart: () => void }) {
           <button
             type="button"
             onClick={onStart}
-            style={{
-              width: "100%",
-              border: "1px solid var(--color-accent)",
-              borderRadius: 14,
-              background: "var(--color-accent)",
-              color: "#fff",
-              cursor: "pointer",
-              fontSize: 15,
-              fontWeight: 900,
-              padding: "15px 18px",
-            }}
+            className="v2-cta"
+            style={{ width: "100%", minHeight: 56, fontSize: 15 }}
           >
             Find My Focus Pattern
+            <ArrowRight size={16} strokeWidth={2.6} />
           </button>
         </div>
       </section>
@@ -346,7 +372,7 @@ export default function AssessmentClient({
   }, [email, setEmail, setName]);
 
   return (
-    <main style={{ overflowX: "hidden" }}>
+    <main className="v2-screen v2-grain" style={{ overflowX: "hidden" }}>
     <AnimatePresence mode="wait">
       {step === "quiz" && (
         <m.div key="quiz" {...fade(true)}>
