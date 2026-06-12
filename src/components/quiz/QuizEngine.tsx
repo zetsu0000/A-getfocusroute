@@ -146,6 +146,24 @@ export function QuizEngine() {
       >
         FocusRoute
       </p>
+      {/* One-line orientation for cold paid traffic on the first screen only:
+          what this is, how long it takes, what it isn't. */}
+      {currentQuestionIndex === 0 && (
+        <p
+          style={{
+            position: "relative",
+            textAlign: "center",
+            marginTop: 6,
+            fontFamily: "var(--v2-font-mono)",
+            fontSize: 10,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            color: "var(--v2-ink-faint)",
+          }}
+        >
+          Free focus pattern check · ~3 min · Not a diagnosis
+        </p>
+      )}
 
       {/* ── Top bar ────────────────────────────────────────── */}
       <div

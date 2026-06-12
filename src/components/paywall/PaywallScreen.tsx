@@ -96,9 +96,23 @@ function revealsFor(planFocus: string): string[] {
     `A plan focused on ${planFocus}`,
     "Your top focus friction points, named in plain language",
     "Your first next step — what to try when starting feels heavy",
-    "Your Executive Function Radar — where focus holds, where it slips",
+    "A map of where your focus holds and where it slips (your Executive Function Radar)",
     "A simple way to explain your pattern to someone",
   ];
+}
+
+/* The three things the buyer gets, in plain words — shown before any
+   branded terms so the first paywall screen answers "what am I buying?" */
+function plainDeliverables(planFocus: string): string[] {
+  return [
+    `Your full pattern breakdown — and a plan for ${planFocus}`,
+    "Your first next step, small enough to try today",
+    "Instant access in your account, kept there for you",
+  ];
+}
+
+function scrollToCheckout() {
+  document.getElementById("paywall-checkout")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 /* Locked result card — the artifact under glass */
@@ -565,29 +579,73 @@ export function PaywallScreen() {
             ))}
           </m.div>
 
+          {/* ── First screen: what you get, what it costs, where to pay.
+              The audit's top finding — checkout access was 4-5 screens deep
+              on mobile. This block answers everything before any scrolling. */}
           <m.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.04 }}
             className="v2-panel"
-            style={{ overflow: "hidden", padding: 0 }}
+            style={{ padding: "20px 20px 18px", borderColor: "rgba(217,188,127,0.28)" }}
           >
-            <div style={{ padding: "20px 20px 14px" }}>
-              <HudLabel tone="signal" style={{ marginBottom: 10 }}>
-                Your pattern: {signature.title}
-              </HudLabel>
-              <h1
-                className="v2-display"
-                style={{ fontSize: "clamp(24px, 6vw, 29px)", fontWeight: 550, lineHeight: 1.2, letterSpacing: "-0.02em" }}
-              >
-                {displayName === "Your" ? "Now turn this into a plan built for you." : `${displayName}, now turn this into a plan built for you.`}
-              </h1>
-              <p style={{ marginTop: 9, fontSize: 14, color: "var(--v2-ink-dim)", lineHeight: 1.65 }}>
-                {echo ? `${echo} ` : ""}Your full plan focuses on {signature.planFocus}.
-              </p>
+            <HudLabel tone="signal" style={{ marginBottom: 10 }}>
+              Your pattern: {signature.title}
+            </HudLabel>
+            <h1
+              className="v2-display"
+              style={{ fontSize: "clamp(24px, 6vw, 29px)", fontWeight: 550, lineHeight: 1.2, letterSpacing: "-0.02em" }}
+            >
+              {displayName === "Your" ? "Now turn this into a plan built for you." : `${displayName}, now turn this into a plan built for you.`}
+            </h1>
+            <p style={{ marginTop: 9, fontSize: 14, color: "var(--v2-ink-dim)", lineHeight: 1.65 }}>
+              {echo ? `${echo} ` : ""}Your full plan focuses on {signature.planFocus}.
+            </p>
+
+            <div style={{ marginTop: 14, display: "grid", gap: 9 }}>
+              {plainDeliverables(signature.planFocus).map((item) => (
+                <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <div style={{ width: 18, height: 18, borderRadius: 999, background: "rgba(217,188,127,0.14)", border: "1px solid rgba(217,188,127,0.4)", display: "flex", alignItems: "center", justifyContent: "center", marginTop: 1, flexShrink: 0 }}>
+                    <Check size={10} color="var(--v2-gold)" strokeWidth={3} />
+                  </div>
+                  <span style={{ fontSize: 13.5, color: "var(--v2-ink-dim)", lineHeight: 1.5 }}>{item}</span>
+                </div>
+              ))}
             </div>
 
-            <div style={{ padding: "0 18px 18px" }}>
+            <div style={{ marginTop: 16, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                <span className="v2-display v2-text-gold" style={{ fontSize: 32, fontWeight: 600, lineHeight: 1, letterSpacing: "-0.02em" }}>
+                  {BRAIN_OS.price.paywall}
+                </span>
+                <span style={{ fontSize: 12, color: "var(--v2-ink-ghost)", textDecoration: "line-through" }}>
+                  {BRAIN_OS.price.paywallAnchor}
+                </span>
+                <span className="v2-hud" style={{ fontSize: 9 }}>one-time</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={scrollToCheckout}
+              className="v2-cta v2-cta-gold"
+              style={{ marginTop: 12, width: "100%", minHeight: 56, fontSize: 15.5 }}
+            >
+              <Lock size={15} strokeWidth={2.5} />
+              Unlock My Full Plan ({BRAIN_OS.price.paywall})
+            </button>
+            <p style={{ marginTop: 9, fontSize: 11, color: "var(--v2-ink-ghost)", textAlign: "center" }}>
+              Instant access in your account / 7-day refund / Not a diagnosis
+            </p>
+          </m.div>
+
+          <m.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.06 }}
+            className="v2-panel"
+            style={{ overflow: "hidden", padding: 0 }}
+          >
+            <div style={{ padding: "18px 18px" }}>
               <LockedCard />
             </div>
           </m.div>
@@ -651,6 +709,40 @@ export function PaywallScreen() {
             </div>
           </m.div>
 
+          {/* Payment sits directly after the offer — FAQ and proof follow it,
+              so checkout is reachable in roughly two screens instead of five. */}
+          <m.div
+            id="paywall-checkout"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.08 }}
+            className="v2-panel"
+            style={{ padding: "18px", borderColor: "rgba(217,188,127,0.3)", scrollMarginTop: 16 }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+              <Lock size={13} color="var(--v2-gold)" />
+              <HudLabel tone="gold">Secure unlock</HudLabel>
+            </div>
+            <AnimatePresence mode="wait">
+              {loadingSecret ? (
+                <m.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <PaymentSkeleton />
+                </m.div>
+              ) : clientSecret ? (
+                <m.div key="form" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.24 }}>
+                  <PaywallStripeElements
+                    clientSecret={clientSecret}
+                    onSuccess={handlePaywallSuccess}
+                  />
+                </m.div>
+              ) : (
+                <m.p key="error" style={{ fontSize: 13, color: "var(--v2-error)", textAlign: "center", padding: "16px 0" }}>
+                  Failed to load payment. Please refresh the page.
+                </m.p>
+              )}
+            </AnimatePresence>
+          </m.div>
+
           <m.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -686,7 +778,7 @@ export function PaywallScreen() {
             <div style={{ display: "grid", gap: 9 }}>
               {[
                 "Your full plan unlocks in your account the moment you pay.",
-                "We email you a copy, so it's easy to come back to.",
+                "Sign in with the same email anytime — your plan stays saved to it.",
                 "Start with one short first step — no overwhelm.",
               ].map((line) => (
                 <div key={line} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
@@ -719,37 +811,6 @@ export function PaywallScreen() {
               &quot;The profile language felt uncannily accurate. For the first time, I had a step-by-step system that matched how I actually work.&quot;
             </p>
             <p className="v2-hud" style={{ fontSize: 9.5 }}>— Sarah M., verified customer</p>
-          </m.div>
-
-          <m.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.12 }}
-            className="v2-panel"
-            style={{ padding: "18px", borderColor: "rgba(217,188,127,0.3)" }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-              <Lock size={13} color="var(--v2-gold)" />
-              <HudLabel tone="gold">Secure unlock</HudLabel>
-            </div>
-            <AnimatePresence mode="wait">
-              {loadingSecret ? (
-                <m.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  <PaymentSkeleton />
-                </m.div>
-              ) : clientSecret ? (
-                <m.div key="form" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.24 }}>
-                  <PaywallStripeElements
-                    clientSecret={clientSecret}
-                    onSuccess={handlePaywallSuccess}
-                  />
-                </m.div>
-              ) : (
-                <m.p key="error" style={{ fontSize: 13, color: "var(--v2-error)", textAlign: "center", padding: "16px 0" }}>
-                  Failed to load payment. Please refresh the page.
-                </m.p>
-              )}
-            </AnimatePresence>
           </m.div>
 
           <m.div

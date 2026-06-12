@@ -103,19 +103,7 @@ export function EmailScreen() {
           </p>
         </div>
 
-        {/* Name (optional) */}
-        <div>
-          <input
-            type="text"
-            placeholder="First name (optional)"
-            value={localName}
-            onChange={(e) => setLocalName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleContinue()}
-            className="v2-input"
-          />
-        </div>
-
-        {/* Email input */}
+        {/* Email input — the one required field, so it leads */}
         <div style={{ position: "relative" }}>
           <span style={{
             position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)",
@@ -142,6 +130,19 @@ export function EmailScreen() {
               Please enter a valid email address
             </m.p>
           )}
+        </div>
+
+        {/* Name — optional, visually secondary so it never reads as a gate */}
+        <div>
+          <input
+            type="text"
+            placeholder="First name (optional — personalizes your plan)"
+            value={localName}
+            onChange={(e) => setLocalName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleContinue()}
+            className="v2-input"
+            style={{ padding: "13px 16px", fontSize: 14, opacity: 0.85 }}
+          />
         </div>
 
         {/* Legal */}
