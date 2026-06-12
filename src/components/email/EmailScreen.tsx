@@ -4,9 +4,11 @@ import { useRef, useState } from "react";
 import { m } from "framer-motion";
 import { useQuizStore } from "@/store/quizStore";
 import { getSignatureFromAnswers } from "@/lib/signature";
+import { getSignatureIdentity } from "@/lib/signature-identity";
 import { EmailIcon } from "@/components/icons/EmailIcon";
 import { getOrCreateActionEventId, trackEvent } from "@/lib/analytics/client";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
+import { HudLabel } from "@/components/v2/primitives";
 
 function toTitleCase(name: string): string {
   return name
@@ -20,6 +22,7 @@ function toTitleCase(name: string): string {
 export function EmailScreen() {
   const { answers, setEmail, setName, setStep } = useQuizStore();
   const signature = getSignatureFromAnswers(answers);
+  const identity = getSignatureIdentity(signature.signature);
   const [localName, setLocalName] = useState("");
   const [local, setLocal]     = useState("");
   const [touched, setTouched] = useState(false);
@@ -60,24 +63,42 @@ export function EmailScreen() {
       exit={{ opacity: 0, x: -40 }}
       transition={{ duration: 0.28 }}
       style={{
+        position: "relative",
         minHeight: "100dvh",
         display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center",
         padding: "40px 24px",
       }}
     >
-      <div style={{ width: "100%", maxWidth: 520, display: "flex", flexDirection: "column", gap: 18 }}>
+      {/* ambient accent in the user's signature color */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: `radial-gradient(70% 45% at 50% 0%, rgba(${identity.accentRgb},0.14) 0%, transparent 60%)`,
+          pointerEvents: "none",
+        }}
+      />
+
+      <div style={{ position: "relative", width: "100%", maxWidth: 520, display: "flex", flexDirection: "column", gap: 18 }}>
 
         {/* Title */}
-        <div style={{ textAlign: "center", marginBottom: 6 }}>
-          <h1 style={{
-            fontSize: 22, fontWeight: 800,
-            color: "var(--color-primary)",
-            lineHeight: 1.3,
-          }}>
-            Your <span style={{ color: "var(--color-accent)" }}>{signature.signature}</span> profile is ready.
+        <div style={{ textAlign: "center", marginBottom: 8 }}>
+          <HudLabel tone="signal" style={{ marginBottom: 14 }}>
+            Route file compiled
+          </HudLabel>
+          <h1
+            className="v2-display"
+            style={{ fontSize: "clamp(25px, 6.6vw, 32px)", fontWeight: 550, lineHeight: 1.22 }}
+          >
+            Your{" "}
+            <em style={{ fontStyle: "italic", color: identity.accent, textShadow: `0 0 24px rgba(${identity.accentRgb},0.5)` }}>
+              {signature.signature}
+            </em>{" "}
+            profile is ready.
           </h1>
-          <p style={{ marginTop: 12, fontSize: 14, color: "var(--color-text-muted)", lineHeight: 1.5 }}>
+          <p style={{ marginTop: 12, fontSize: 14, color: "var(--v2-ink-faint)", lineHeight: 1.6 }}>
             Add your email so we can save your results — and so you can come back to them anytime.
           </p>
         </div>
@@ -90,23 +111,7 @@ export function EmailScreen() {
             value={localName}
             onChange={(e) => setLocalName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleContinue()}
-            style={{
-              width: "100%", padding: "16px 16px",
-              borderRadius: 14,
-              background: "var(--color-bg-card)",
-              border: "1.5px solid var(--color-border)",
-              color: "var(--color-primary)",
-              fontSize: 15, outline: "none",
-              transition: "border-color 0.15s, box-shadow 0.15s",
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = "var(--color-primary)";
-              e.currentTarget.style.boxShadow   = "0 0 0 3px var(--color-primary-ring)";
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = "var(--color-border)";
-              e.currentTarget.style.boxShadow   = "none";
-            }}
+            className="v2-input"
           />
         </div>
 
@@ -114,7 +119,7 @@ export function EmailScreen() {
         <div style={{ position: "relative" }}>
           <span style={{
             position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)",
-            color: "var(--color-text-muted)", pointerEvents: "none",
+            color: "var(--v2-ink-faint)", pointerEvents: "none",
           }}>
             <EmailIcon />
           </span>
@@ -125,27 +130,14 @@ export function EmailScreen() {
             onChange={(e) => setLocal(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleContinue()}
             onBlur={() => setTouched(true)}
-            style={{
-              width: "100%", padding: "16px 16px 16px 44px",
-              borderRadius: 14,
-              background: hasError ? "var(--color-error-tint)" : "var(--color-bg-card)",
-              border: `1.5px solid ${hasError ? "var(--color-error)" : "var(--color-border)"}`,
-              color: "var(--color-primary)",
-              fontSize: 15, outline: "none",
-              transition: "border-color 0.15s, box-shadow 0.15s, background 0.15s",
-            }}
-            onFocus={(e) => {
-              if (!hasError) {
-                e.currentTarget.style.borderColor = "var(--color-primary)";
-                e.currentTarget.style.boxShadow   = "0 0 0 3px var(--color-primary-ring)";
-              }
-            }}
+            className={`v2-input ${hasError ? "v2-input-error" : ""}`}
+            style={{ paddingLeft: 46 }}
           />
           {hasError && (
             <m.p
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
-              style={{ marginTop: 6, fontSize: 12, color: "var(--color-error)", paddingLeft: 4 }}
+              style={{ marginTop: 6, fontSize: 12, color: "var(--v2-error)", paddingLeft: 4 }}
             >
               Please enter a valid email address
             </m.p>
@@ -153,55 +145,60 @@ export function EmailScreen() {
         </div>
 
         {/* Legal */}
-        <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", lineHeight: 1.6 }}>
+        <p style={{ fontSize: 12, color: "var(--v2-ink-faint)", textAlign: "center", lineHeight: 1.6 }}>
           By continuing, you agree to our{" "}
-          <a href="/terms" style={{ color: "var(--color-primary)", textDecoration: "underline" }}>Terms & Conditions</a>,{" "}
-          <a href="/privacy" style={{ color: "var(--color-primary)", textDecoration: "underline" }}>Privacy Policy</a>, and{" "}
-          <a href="/refund-policy" style={{ color: "var(--color-primary)", textDecoration: "underline" }}>Refund Policy</a>.
+          <a href="/terms" style={{ color: "var(--v2-ink-dim)", textDecoration: "underline" }}>Terms & Conditions</a>,{" "}
+          <a href="/privacy" style={{ color: "var(--v2-ink-dim)", textDecoration: "underline" }}>Privacy Policy</a>, and{" "}
+          <a href="/refund-policy" style={{ color: "var(--v2-ink-dim)", textDecoration: "underline" }}>Refund Policy</a>.
         </p>
 
         {/* CTA */}
         <button
           onClick={handleContinue}
           disabled={!valid}
+          className={valid ? "v2-cta" : undefined}
           style={{
-            width: "100%", padding: "18px",
-            borderRadius: 16, fontSize: 16, fontWeight: 700,
-            border: "none", cursor: valid ? "pointer" : "not-allowed",
-            transition: "all 0.2s",
+            width: "100%",
+            minHeight: 58,
+            padding: "18px",
+            borderRadius: 999,
+            fontSize: 16,
+            fontWeight: 800,
+            cursor: valid ? "pointer" : "not-allowed",
             ...(valid
-              ? { background: "var(--color-accent)", color: "#fff", boxShadow: "var(--shadow-btn-accent)" }
-              : { background: "var(--color-border)", color: "var(--color-text-muted)" }),
+              ? {}
+              : {
+                  background: "rgba(148,163,255,0.05)",
+                  border: "1px solid var(--v2-line)",
+                  color: "var(--v2-ink-ghost)",
+                }),
           }}
         >
           See My Results
         </button>
 
         {/* Privacy card */}
-        <div style={{
+        <div className="v2-panel" style={{
           display: "flex", alignItems: "flex-start", gap: 14,
           padding: "16px 18px",
-          background: "var(--color-bg-card)",
-          border: "1px solid var(--color-border)",
-          borderRadius: 16,
-          boxShadow: "var(--shadow-card)",
         }}>
           <div style={{
-            width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-            background: "var(--color-accent)",
+            width: 30, height: 30, borderRadius: 9, flexShrink: 0,
+            background: "linear-gradient(140deg, rgba(124,138,255,0.3), rgba(155,232,255,0.12))",
+            border: "1px solid rgba(163,178,255,0.4)",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--v2-signal-2)" strokeWidth="2.5">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               <path d="m9 12 2 2 4-4"/>
             </svg>
           </div>
-          <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.6 }}>
+          <p style={{ fontSize: 13, color: "var(--v2-ink-dim)", lineHeight: 1.6 }}>
             Private by default. We only use this to give you access to your results and relevant updates.
           </p>
         </div>
 
-        <p style={{ fontSize: 11, color: "var(--color-text-muted)", textAlign: "center", lineHeight: 1.6 }}>
+        <p style={{ fontSize: 11, color: "var(--v2-ink-ghost)", textAlign: "center", lineHeight: 1.6 }}>
           FocusRoute provides educational profiling and does not provide medical diagnosis.
         </p>
 

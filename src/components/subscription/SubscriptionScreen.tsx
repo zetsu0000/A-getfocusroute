@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useRef, useState } from "react";
 import { m } from "framer-motion";
@@ -13,6 +13,7 @@ import {
 import { useQuizStore } from "@/store/quizStore";
 import { safeName } from "@/lib/personalization";
 import { BRAIN_OS } from "@/lib/positioning";
+import { HudLabel } from "@/components/v2/primitives";
 import {
   getAnalyticsContext,
   getOrCreateActionEventId,
@@ -148,24 +149,33 @@ function SubCheckoutForm({
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <PaymentElement options={{ layout: "tabs" }} />
-      {error && <p style={{ fontSize: 13, color: "var(--color-error)", textAlign: "center", background: "var(--color-error-tint)", borderRadius: 12, padding: "9px 12px" }}>{error}</p>}
+      {error && <p style={{ fontSize: 13, color: "var(--v2-error)", textAlign: "center", background: "rgba(255,139,139,0.1)", border: "1px solid rgba(255,139,139,0.3)", borderRadius: 12, padding: "9px 12px" }}>{error}</p>}
       <m.button
         type="submit"
         disabled={!stripe || loading}
         whileTap={{ scale: 0.975 }}
         whileHover={loading ? undefined : { y: -1 }}
+        className={loading ? undefined : "v2-cta"}
         style={{
-          width: "100%", padding: "18px 24px", borderRadius: 16,
-          background: loading ? "var(--color-border)" : "var(--color-accent)",
-          color: loading ? "var(--color-text-muted)" : "#ffffff",
-          fontSize: 16, fontWeight: 800, border: "none",
+          width: "100%",
+          minHeight: 58,
+          padding: "18px 24px",
+          borderRadius: 999,
+          fontSize: 16,
+          fontWeight: 800,
           cursor: loading ? "not-allowed" : "pointer",
-          boxShadow: loading ? "none" : "var(--shadow-btn-accent)",
+          ...(loading
+            ? {
+                background: "rgba(148,163,255,0.06)",
+                border: "1px solid var(--v2-line)",
+                color: "var(--v2-ink-faint)",
+              }
+            : {}),
         }}
       >
         {loading ? "Processing..." : ctaLabel}
       </m.button>
-      <p style={{ fontSize: 11, color: "var(--color-text-muted)", textAlign: "center" }}>
+      <p style={{ fontSize: 11, color: "var(--v2-ink-ghost)", textAlign: "center" }}>
         Cancel anytime — manage it from your dashboard
       </p>
     </form>
@@ -188,53 +198,71 @@ function PlanCard({ planKey, isSelected, onSelect }: { planKey: "annual" | "mont
       whileHover={{ y: -2 }}
       transition={{ type: "spring", stiffness: 400, damping: 30 }}
       style={{
-        width: "100%", textAlign: "left", borderRadius: 20, overflow: "hidden",
-        background: "var(--color-bg-card)",
-        boxShadow: isSelected ? "var(--shadow-sel)" : "var(--shadow-card)",
-        border: isSelected ? "2px solid var(--color-accent)" : "2px solid transparent",
-        transition: "box-shadow 0.2s, border-color 0.2s",
+        width: "100%",
+        textAlign: "left",
+        borderRadius: 20,
+        overflow: "hidden",
+        background: isSelected
+          ? "linear-gradient(150deg, rgba(124,138,255,0.14), rgba(155,232,255,0.05))"
+          : "linear-gradient(165deg, rgba(148,163,255,0.07), rgba(148,163,255,0.03))",
+        border: isSelected ? "2px solid rgba(124,138,255,0.8)" : "2px solid var(--v2-line)",
+        boxShadow: isSelected
+          ? "0 0 0 1px rgba(124,138,255,0.25), 0 16px 50px rgba(124,138,255,0.2)"
+          : "inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 36px rgba(2,3,10,0.45)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+        transition: "box-shadow 0.2s, border-color 0.2s, background 0.2s",
+        cursor: "pointer",
       }}
     >
-          {plan.badge && (
-        <div style={{ padding: "8px 20px", background: "var(--color-accent)", color: "#fff", fontSize: 11, fontWeight: 700, textAlign: "center", letterSpacing: "0.05em" }}>
+      {plan.badge && (
+        <div style={{
+          padding: "8px 20px",
+          background: "var(--v2-grad-signal)",
+          color: "#06070D",
+          fontFamily: "var(--v2-font-mono)",
+          fontSize: 10.5,
+          fontWeight: 700,
+          textAlign: "center",
+          letterSpacing: "0.14em",
+        }}>
           {plan.badge}{plan.savings ? ` — ${plan.savings}` : ""}
         </div>
       )}
       <div style={{ padding: "18px 20px" }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
           <div>
-            <p style={{ fontSize: 11, fontWeight: 700, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>
-              {plan.label}
-            </p>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-              <span style={{ fontSize: 28, fontWeight: 800, color: "var(--color-text)", lineHeight: 1 }}>{plan.price}</span>
-              <span style={{ fontSize: 13, color: "var(--color-text-muted)" }}>{planKey === "monthly" ? "/mo" : "/yr"}</span>
+            <HudLabel style={{ marginBottom: 8, fontSize: 9.5 }}>{plan.label}</HudLabel>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
+              <span className="v2-display" style={{ fontSize: 30, fontWeight: 600, color: "var(--v2-ink)", lineHeight: 1 }}>{plan.price}</span>
+              <span style={{ fontSize: 13, color: "var(--v2-ink-faint)" }}>{planKey === "monthly" ? "/mo" : "/yr"}</span>
             </div>
-            <p style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 3 }}>{plan.sub}</p>
+            <p style={{ fontSize: 12, color: "var(--v2-ink-faint)", marginTop: 4 }}>{plan.sub}</p>
             {plan.oldPrice && (
-              <p style={{ fontSize: 12, color: "var(--color-text-muted)", textDecoration: "line-through", marginTop: 2 }}>{plan.oldPrice}/yr</p>
+              <p style={{ fontSize: 12, color: "var(--v2-ink-ghost)", textDecoration: "line-through", marginTop: 2 }}>{plan.oldPrice}/yr</p>
             )}
           </div>
           <div style={{
             marginTop: 4, width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-            border: `2px solid ${isSelected ? "var(--color-accent)" : "var(--color-border-2)"}`,
+            border: `2px solid ${isSelected ? "var(--v2-signal)" : "var(--v2-line-bright)"}`,
             display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: isSelected ? "0 0 12px rgba(124,138,255,0.5)" : "none",
           }}>
             {isSelected && (
               <m.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500, damping: 25 }}
-                style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--color-accent)" }} />
+                style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--v2-grad-signal)" }} />
             )}
           </div>
         </div>
 
         {planKey === "annual" && (
-          <ul style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--color-border)", display: "flex", flexDirection: "column", gap: 8 }}>
+          <ul style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--v2-line)", display: "flex", flexDirection: "column", gap: 9, listStyle: "none" }}>
             {FEATURES.map((f) => (
               <li key={f} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 18, height: 18, borderRadius: "50%", background: "var(--color-success-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Check size={10} color="var(--color-success)" />
+                <div style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(127,224,178,0.12)", border: "1px solid rgba(127,224,178,0.35)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Check size={9} color="var(--v2-success)" />
                 </div>
-                <span style={{ fontSize: 12, color: "var(--color-text-body)" }}>{f}</span>
+                <span style={{ fontSize: 12, color: "var(--v2-ink-dim)" }}>{f}</span>
               </li>
             ))}
           </ul>
@@ -272,15 +300,21 @@ export function SubscriptionScreen() {
       transition={{ duration: 0.3 }}
       style={{ minHeight: "100dvh", padding: "32px 16px 64px" }}
     >
-      <div style={{ maxWidth: 480, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
+      <div style={{ maxWidth: 500, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
 
         {/* Header */}
         <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: "var(--color-text)", lineHeight: 1.25, marginBottom: 8 }}>
+          <HudLabel tone="signal" style={{ marginBottom: 12 }}>
+            Optional membership
+          </HudLabel>
+          <h1
+            className="v2-display"
+            style={{ fontSize: "clamp(25px, 6.4vw, 31px)", fontWeight: 550, lineHeight: 1.2, marginBottom: 9 }}
+          >
             Keep your FocusRoute system current,{" "}
-            <span style={{ color: "var(--color-accent)" }}>{displayName}</span>
+            <em className="v2-text-signal" style={{ fontStyle: "italic" }}>{displayName}</em>
           </h1>
-          <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.65 }}>
+          <p style={{ fontSize: 14, color: "var(--v2-ink-dim)", lineHeight: 1.65 }}>
             Membership is optional. Your purchased Brain Profile remains yours, and membership adds retakes, billing access, and future profile updates.
           </p>
         </m.div>
@@ -293,7 +327,7 @@ export function SubscriptionScreen() {
 
         {/* CTA or Payment form */}
         <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-          style={{ background: "var(--color-bg-card)", borderRadius: 22, padding: "22px 22px", boxShadow: "var(--shadow-card)" }}>
+          className="v2-panel" style={{ padding: "22px 22px" }}>
 
           {!showPayment ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -313,23 +347,25 @@ export function SubscriptionScreen() {
                 }}
                 whileTap={{ scale: 0.975 }}
                 whileHover={{ y: -1 }}
+                className="v2-cta"
                 style={{
-                  width: "100%", padding: "18px 24px", borderRadius: 16,
-                  background: "var(--color-accent)", color: "#ffffff",
-                  fontSize: 16, fontWeight: 800, border: "none", cursor: "pointer",
-                  boxShadow: "var(--shadow-btn-accent)",
+                  width: "100%",
+                  minHeight: 58,
+                  padding: "18px 24px",
+                  fontSize: 16,
+                  fontWeight: 800,
                 }}
               >
                 Start {selected === "annual" ? "Annual" : "Monthly"} Membership — {plan.price}
               </m.button>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 26 }}>
                 {[
                   { icon: Shield,    label: "SSL Secure" },
                   { icon: RotateCcw, label: "Cancel anytime" },
                 ].map(({ icon: Icon, label }) => (
-                  <div key={label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                    <Icon size={16} color="var(--color-primary)" />
-                    <span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>{label}</span>
+                  <div key={label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
+                    <Icon size={15} color="var(--v2-signal-2)" />
+                    <span className="v2-hud" style={{ fontSize: 8.5 }}>{label}</span>
                   </div>
                 ))}
               </div>
@@ -342,8 +378,8 @@ export function SubscriptionScreen() {
                 amount: plan.amount,
                 currency: "usd",
                 appearance: {
-                  theme: "flat",
-                  variables: { colorPrimary: "var(--color-accent)", colorBackground: "var(--color-bg-card)", colorText: "var(--color-text)", colorDanger: "var(--color-error)", fontFamily: "inherit", borderRadius: "12px" },
+                  theme: "night",
+                  variables: { colorPrimary: "#9BE8FF", colorBackground: "#10131F", colorText: "#EEF1FF", colorDanger: "#FF8B8B", fontFamily: "inherit", borderRadius: "12px" },
                 },
               }}
             >
@@ -362,7 +398,7 @@ export function SubscriptionScreen() {
         {/* Skip */}
         <button
           onClick={handleSkip}
-          style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "var(--color-text-body)", textDecoration: "underline", textAlign: "center", padding: "10px 0" }}
+          style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "var(--v2-ink-dim)", textDecoration: "underline", textAlign: "center", padding: "10px 0" }}
         >
           No thanks — take me to my plan
         </button>

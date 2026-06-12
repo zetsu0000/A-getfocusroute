@@ -121,7 +121,11 @@ html, body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+  /* clip (not hidden): hidden makes html AND body scroll containers, which
+     silently moves page scrolling onto <body> — breaking window.scrollY,
+     window.scrollTo, and any scroll-driven motion bound to the viewport.
+     clip trims horizontal overflow without creating a scroll container. */
+  overflow-x: clip;
 }
 
 /* Warm dot-grid on parchment — POLA-like texture */
@@ -142,6 +146,336 @@ h2 { color: var(--color-text); line-height: 1.28; letter-spacing: -0.02em; font-
 h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-weight: 600; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ════════════════════════════════════════════════════════════════════
+   FocusRoute V2 — "Focus Observatory" experimental visual system.
+   Dark cognition-lab world: noise → signal → route → artifact.
+   Scoped via .v2-* classes; the legacy Warm Ink tokens above remain
+   untouched for dashboard / legal / login surfaces.
+   ════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Atmosphere */
+  --v2-bg:        #06070D;
+  --v2-bg-deep:   #04040A;
+  --v2-bg-raise:  #0C0F1C;
+  --v2-bg-panel:  #0E1220;
+
+  /* Ink */
+  --v2-ink:        #EEF1FF;
+  --v2-ink-dim:    rgba(228, 233, 255, 0.68);
+  --v2-ink-faint:  rgba(228, 233, 255, 0.44);
+  --v2-ink-ghost:  rgba(228, 233, 255, 0.26);
+
+  /* Lines + glass */
+  --v2-line:         rgba(163, 178, 255, 0.14);
+  --v2-line-bright:  rgba(163, 178, 255, 0.30);
+  --v2-glass:        rgba(148, 163, 255, 0.05);
+  --v2-glass-2:      rgba(148, 163, 255, 0.09);
+
+  /* Signal (the luminous route) */
+  --v2-signal:      #7C8AFF;
+  --v2-signal-2:    #9BE8FF;
+  --v2-signal-rgb:  124, 138, 255;
+  --v2-cyan-rgb:    155, 232, 255;
+  --v2-grad-signal: linear-gradient(92deg, #7C8AFF 0%, #9BE8FF 100%);
+
+  /* Gold — reserved exclusively for purchase / unlock moments */
+  --v2-gold:        #D9BC7F;
+  --v2-gold-bright: #F0DCAE;
+  --v2-gold-deep:   #A8843C;
+  --v2-gold-rgb:    217, 188, 127;
+  --v2-grad-gold:   linear-gradient(94deg, #B99453 0%, #EAD7A4 52%, #C8A45F 100%);
+
+  --v2-success:     #7FE0B2;
+  --v2-error:       #FF8B8B;
+  --v2-error-rgb:   255, 139, 139;
+
+  /* Type */
+  --v2-font-display: var(--font-fraunces), "Iowan Old Style", Georgia, serif;
+  --v2-font-mono:    var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
+
+  /* Shape */
+  --v2-r-sm: 14px;
+  --v2-r-md: 20px;
+  --v2-r-lg: 28px;
+}
+
+/* Full-bleed dark screen shell with layered nebula atmosphere */
+.v2-screen {
+  position: relative;
+  min-height: 100dvh;
+  background:
+    radial-gradient(115% 70% at 50% -10%, rgba(124, 138, 255, 0.13) 0%, transparent 58%),
+    radial-gradient(90% 60% at 85% 100%, rgba(155, 232, 255, 0.06) 0%, transparent 55%),
+    var(--v2-bg);
+  color: var(--v2-ink);
+  isolation: isolate;
+}
+
+/* Film-grain overlay — keeps the dark gradients from banding */
+.v2-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+/* Glass panel */
+.v2-panel {
+  background: linear-gradient(165deg, var(--v2-glass-2), var(--v2-glass) 55%);
+  border: 1px solid var(--v2-line);
+  border-radius: var(--v2-r-md);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 24px 60px rgba(2, 3, 10, 0.55);
+}
+
+/* HUD label — telemetry voice */
+.v2-hud {
+  font-family: var(--v2-font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--v2-ink-faint);
+}
+
+.v2-display {
+  font-family: var(--v2-font-display);
+  font-weight: 550;
+  letter-spacing: -0.02em;
+  color: var(--v2-ink);
+}
+
+/* Gradient text */
+.v2-text-signal {
+  background: var(--v2-grad-signal);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.v2-text-gold {
+  background: var(--v2-grad-gold);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Primary luminous CTA */
+.v2-cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 16px 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--v2-signal-rgb), 0.55);
+  background:
+    linear-gradient(120deg, rgba(124, 138, 255, 0.22), rgba(155, 232, 255, 0.10)),
+    rgba(10, 12, 24, 0.7);
+  color: var(--v2-ink);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(4, 5, 12, 0.4),
+    0 10px 38px rgba(var(--v2-signal-rgb), 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.v2-cta:hover {
+  border-color: rgba(var(--v2-cyan-rgb), 0.8);
+  box-shadow:
+    0 0 0 1px rgba(4, 5, 12, 0.4),
+    0 14px 52px rgba(var(--v2-signal-rgb), 0.48),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.v2-cta:active { transform: scale(0.98); }
+.v2-cta::after {
+  content: "";
+  position: absolute;
+  inset: -40% -60%;
+  background: linear-gradient(100deg, transparent 42%, rgba(255, 255, 255, 0.16) 50%, transparent 58%);
+  transform: translateX(-70%) rotate(8deg);
+  pointer-events: none;
+}
+.v2-cta:hover::after { animation: v2-sheen 0.9s cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* Gold variant — checkout moments only */
+.v2-cta-gold {
+  border-color: rgba(var(--v2-gold-rgb), 0.6);
+  background:
+    linear-gradient(120deg, rgba(217, 188, 127, 0.24), rgba(240, 220, 174, 0.08)),
+    rgba(14, 11, 4, 0.72);
+  box-shadow:
+    0 0 0 1px rgba(8, 6, 2, 0.5),
+    0 12px 44px rgba(var(--v2-gold-rgb), 0.28),
+    inset 0 1px 0 rgba(255, 248, 226, 0.22);
+}
+.v2-cta-gold:hover {
+  border-color: rgba(var(--v2-gold-rgb), 0.95);
+  box-shadow:
+    0 0 0 1px rgba(8, 6, 2, 0.5),
+    0 16px 60px rgba(var(--v2-gold-rgb), 0.42),
+    inset 0 1px 0 rgba(255, 248, 226, 0.3);
+}
+
+/* Ghost secondary action */
+.v2-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 14px 22px;
+  border-radius: 999px;
+  border: 1px solid var(--v2-line);
+  background: rgba(10, 13, 24, 0.5);
+  color: var(--v2-ink-dim);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.v2-ghost:hover {
+  border-color: var(--v2-line-bright);
+  color: var(--v2-ink);
+  background: rgba(16, 20, 36, 0.6);
+}
+
+/* Dark inputs */
+.v2-input {
+  width: 100%;
+  padding: 17px 18px;
+  border-radius: var(--v2-r-sm);
+  background: rgba(8, 10, 20, 0.72);
+  border: 1.5px solid var(--v2-line);
+  color: var(--v2-ink);
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+}
+.v2-input::placeholder { color: var(--v2-ink-ghost); }
+.v2-input:focus {
+  border-color: rgba(var(--v2-signal-rgb), 0.85);
+  box-shadow: 0 0 0 4px rgba(var(--v2-signal-rgb), 0.16), 0 0 24px rgba(var(--v2-signal-rgb), 0.18);
+}
+.v2-input-error {
+  border-color: rgba(var(--v2-error-rgb), 0.7) !important;
+  background: rgba(64, 18, 24, 0.35);
+}
+
+/* Luminous keyboard focus for the dark world */
+.v2-screen :focus-visible {
+  outline: 2px solid rgba(var(--v2-cyan-rgb), 0.85);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+@keyframes v2-sheen {
+  from { transform: translateX(-70%) rotate(8deg); }
+  to   { transform: translateX(70%)  rotate(8deg); }
+}
+@keyframes v2-pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(var(--v2-signal-rgb), 0.45); }
+  70%  { box-shadow: 0 0 0 14px rgba(var(--v2-signal-rgb), 0); }
+  100% { box-shadow: 0 0 0 0 rgba(var(--v2-signal-rgb), 0); }
+}
+@keyframes v2-orbit-spin { to { transform: rotate(360deg); } }
+@keyframes v2-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-9px); }
+}
+@keyframes v2-blink { 50% { opacity: 0.25; } }
+@keyframes v2-scan {
+  from { transform: translateY(-110%); }
+  to   { transform: translateY(1100%); }
+}
+@keyframes v2-radar-spin { to { transform: rotate(360deg); } }
+@keyframes v2-pulse-gold {
+  0%   { box-shadow: 0 0 0 0 rgba(var(--v2-gold-rgb), 0.5); }
+  70%  { box-shadow: 0 0 0 13px rgba(var(--v2-gold-rgb), 0); }
+  100% { box-shadow: 0 0 0 0 rgba(var(--v2-gold-rgb), 0); }
+}
+/* gold scanline sweeping across the locked dossier */
+@keyframes v2-gold-scan {
+  0%       { transform: translateY(-120%); opacity: 0; }
+  8%       { opacity: 1; }
+  62%      { opacity: 1; }
+  78%, 100% { transform: translateY(560%); opacity: 0; }
+}
+/* aurora veil — two slow-drifting blurred signal blobs */
+@keyframes v2-aurora-a {
+  0%, 100% { transform: translate(-12%, -6%) scale(1); }
+  50%      { transform: translate(10%, 8%) scale(1.18); }
+}
+@keyframes v2-aurora-b {
+  0%, 100% { transform: translate(8%, 10%) scale(1.1); }
+  50%      { transform: translate(-10%, -8%) scale(0.92); }
+}
+
+/* Shader-like ambient veil. Position: absolute within any v2 section. */
+.v2-aurora {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.v2-aurora::before,
+.v2-aurora::after {
+  content: "";
+  position: absolute;
+  width: 58%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  filter: blur(70px);
+  will-change: transform;
+}
+.v2-aurora::before {
+  left: -8%;
+  top: -16%;
+  background: radial-gradient(circle, rgba(124, 138, 255, 0.16) 0%, transparent 65%);
+  animation: v2-aurora-a 26s ease-in-out infinite;
+}
+.v2-aurora::after {
+  right: -10%;
+  bottom: -18%;
+  background: radial-gradient(circle, rgba(155, 232, 255, 0.10) 0%, transparent 65%);
+  animation: v2-aurora-b 32s ease-in-out infinite;
+}
+
+/* Route stations: dormant → activated as the drawn line reaches them */
+.v2-station {
+  transition: border-color 0.5s, box-shadow 0.5s, color 0.5s, background 0.5s;
+}
+.v2-station.is-active {
+  border-color: rgba(155, 232, 255, 0.85) !important;
+  color: #fff !important;
+  background: rgba(124, 138, 255, 0.16) !important;
+  box-shadow: 0 0 0 4px rgba(124, 138, 255, 0.14), 0 0 34px rgba(124, 138, 255, 0.55) !important;
+}
+
+/* Dark scrollbar inside V2 surfaces */
+.v2-screen ::-webkit-scrollbar-track { background: var(--v2-bg-raise); }
+.v2-screen ::-webkit-scrollbar-thumb { background: rgba(163, 178, 255, 0.24); }
+
+@media (prefers-reduced-motion: reduce) {
+  .v2-cta:hover::after { animation: none; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *,

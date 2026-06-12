@@ -1,13 +1,12 @@
-﻿"use client";
+"use client";
 
-import Image from "next/image";
-import { useState } from "react";
 import { m } from "framer-motion";
-import { Fingerprint, Sparkles, Compass, type LucideIcon } from "lucide-react";
+import { Fingerprint, Sparkles, Compass, Users, type LucideIcon } from "lucide-react";
 import { QuizQuestion } from "@/types/quiz";
 import { useQuizStore } from "@/store/quizStore";
 import { scoreFromAnswers, getSymptomLevel, LevelInfo } from "@/lib/symptom-level";
 import { getSignatureFromAnswers } from "@/lib/signature";
+import { HudLabel } from "@/components/v2/primitives";
 
 interface InfoCardProps {
   question: QuizQuestion;
@@ -21,9 +20,22 @@ const LEVEL_DESCRIPTIONS: Record<string, string> = {
   "Very High": "Your responses point to strong focus friction. The full profile turns that intensity into a clearer map of what to try next.",
 };
 
-function getLevelWithDescription(score: number): LevelInfo & { description: string } {
+/* Dark-world accent per level — the lib palette is light-theme only. */
+const LEVEL_DARK: Record<string, string> = {
+  "Low":       "#9BE8FF",
+  "Mild":      "#7C8AFF",
+  "Moderate":  "#B39BFF",
+  "High":      "#FFB28B",
+  "Very High": "#FF8B8B",
+};
+
+function getLevelWithDescription(score: number): LevelInfo & { description: string; darkColor: string } {
   const level = getSymptomLevel(score);
-  return { ...level, description: LEVEL_DESCRIPTIONS[level.label] ?? "" };
+  return {
+    ...level,
+    description: LEVEL_DESCRIPTIONS[level.label] ?? "",
+    darkColor: LEVEL_DARK[level.label] ?? "#7C8AFF",
+  };
 }
 
 /* Short answer-derived pattern descriptor — same vocabulary as the paywall's
@@ -37,7 +49,7 @@ const PATTERN_HINT: Record<string, { value: string; sub: string }> = {
 };
 
 /* ─────────────────────────────────────────────────────────────────
-   Sub-component: Cognitive Profile Card  — redesigned professional look
+   Sub-component: Focus Snapshot — V2 instrument panel
 ───────────────────────────────────────────────────────────────── */
 function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
   const answers = useQuizStore((s) => s.answers);
@@ -71,70 +83,78 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
       padding: "16px 20px 28px",
       overflowY: "auto",
     }}>
-      <div style={{
-        width: "100%", maxWidth: 480,
-        borderRadius: "var(--radius-xl)",
-        background: "var(--color-bg-card)",
-        boxShadow: "var(--shadow-card)",
-        overflow: "hidden",
-      }}>
+      <div
+        className="v2-panel"
+        style={{
+          width: "100%", maxWidth: 500,
+          borderRadius: "var(--v2-r-lg)",
+          overflow: "hidden",
+          padding: 0,
+          background: "linear-gradient(170deg, rgba(14,18,32,0.92), rgba(7,8,17,0.95))",
+        }}
+      >
 
         {/* ── Header band ───────────────────────────────────── */}
         <div style={{
-          background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)",
-          padding: "22px 24px 20px",
+          position: "relative",
+          padding: "24px 24px 20px",
           display: "flex", alignItems: "center", justifyContent: "space-between",
+          borderBottom: "1px solid var(--v2-line)",
+          background:
+            "radial-gradient(110% 160% at 0% 0%, rgba(124,138,255,0.18) 0%, transparent 55%)",
         }}>
           <div>
-            <p style={{
-              fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.65)",
-              letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4,
-            }}>
-              Your snapshot
-            </p>
-            <h2 style={{
-              fontSize: 20, fontWeight: 800, color: "#ffffff", lineHeight: 1.15,
-            }}>
-              Focus Profile
+            <HudLabel tone="signal" style={{ marginBottom: 6 }}>
+              Live reading
+            </HudLabel>
+            <h2 className="v2-display" style={{ fontSize: 24, fontWeight: 550, color: "#fff", lineHeight: 1.1 }}>
+              Focus Snapshot
             </h2>
           </div>
-          {/* Score pill */}
+          {/* Score dial */}
           <m.div
             initial={{ scale: 0.6, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 300, damping: 20 }}
-            style={{
-              background: "rgba(255,255,255,0.15)",
-              border: "1.5px solid rgba(255,255,255,0.25)",
-              borderRadius: "var(--radius-md)", padding: "8px 16px",
-              textAlign: "center",
-            }}
+            style={{ position: "relative", width: 76, height: 76, display: "grid", placeItems: "center" }}
           >
-            <p style={{ fontSize: 26, fontWeight: 800, color: "#fff", lineHeight: 1 }}>
-              {score.toFixed(0)}
-            </p>
-            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", fontWeight: 600, marginTop: 2 }}>
-              score
-            </p>
+            <svg width="76" height="76" viewBox="0 0 76 76" style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}>
+              <circle cx="38" cy="38" r="33" fill="none" stroke="rgba(163,178,255,0.15)" strokeWidth="3" />
+              <m.circle
+                cx="38" cy="38" r="33" fill="none"
+                stroke={level.darkColor}
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeDasharray={2 * Math.PI * 33}
+                initial={{ strokeDashoffset: 2 * Math.PI * 33 }}
+                animate={{ strokeDashoffset: 2 * Math.PI * 33 * (1 - score / 100) }}
+                transition={{ delay: 0.4, duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+                style={{ filter: `drop-shadow(0 0 6px ${level.darkColor})` }}
+              />
+            </svg>
+            <div style={{ textAlign: "center" }}>
+              <p className="v2-display" style={{ fontSize: 24, fontWeight: 600, color: "#fff", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                {score.toFixed(0)}
+              </p>
+              <p className="v2-hud" style={{ fontSize: 8, marginTop: 3 }}>score</p>
+            </div>
           </m.div>
         </div>
 
         {/* ── Spectrum section ──────────────────────────────── */}
         <div style={{ padding: "20px 24px 0" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-            <p style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text-body)" }}>
-              Where you land
-            </p>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <HudLabel style={{ fontSize: 10 }}>Where you land</HudLabel>
             <m.span
               initial={{ opacity: 0, x: 8 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5 }}
               style={{
                 fontSize: 12, fontWeight: 800,
-                color: level.color,
-                background: level.bg,
-                padding: "4px 12px", borderRadius: "var(--radius-pill)",
-                border: `1px solid ${level.color}33`,
+                color: level.darkColor,
+                background: `color-mix(in srgb, ${level.darkColor} 14%, transparent)`,
+                padding: "4px 13px", borderRadius: 999,
+                border: `1px solid color-mix(in srgb, ${level.darkColor} 40%, transparent)`,
               }}
             >
               {level.label}
@@ -143,9 +163,10 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
 
           {/* Gradient track */}
           <div style={{
-            position: "relative", height: 10, borderRadius: "var(--radius-pill)",
-            background: "linear-gradient(to right, var(--color-primary-mid), var(--color-primary), var(--color-cognitive))",
-            marginBottom: 8,
+            position: "relative", height: 8, borderRadius: 999,
+            background: "linear-gradient(to right, #9BE8FF, #7C8AFF, #B39BFF, #FFB28B, #FF8B8B)",
+            opacity: 0.85,
+            marginBottom: 10,
           }}>
             <m.div
               initial={{ opacity: 0, scale: 0.9 }}
@@ -156,17 +177,17 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
                 left: `${level.pct}%`,
                 top: "50%", transform: "translate(-50%, -50%)",
                 width: 20, height: 20, borderRadius: "50%",
-                background: "#fff",
-                border: `3px solid ${level.color}`,
-                boxShadow: `0 2px 8px ${level.color}55`,
+                background: "#0B0E1A",
+                border: `3px solid ${level.darkColor}`,
+                boxShadow: `0 0 14px ${level.darkColor}`,
               }}
             />
           </div>
 
           {/* Axis labels */}
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18 }}>
             {["Low", "Mild", "Moderate", "High", "Very high"].map((l) => (
-              <span key={l} style={{ fontSize: 11, color: "var(--color-text-muted)", fontWeight: 500 }}>{l}</span>
+              <span key={l} className="v2-hud" style={{ fontSize: 8.5 }}>{l}</span>
             ))}
           </div>
         </div>
@@ -178,14 +199,13 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
           transition={{ delay: 0.55, duration: 0.3 }}
           style={{
             margin: "0 24px",
-            padding: "14px 16px",
+            padding: "15px 17px",
             borderRadius: 14,
-            background: level.bg,
-            border: `1px solid ${level.color}33`,
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.5)",
+            background: `color-mix(in srgb, ${level.darkColor} 8%, transparent)`,
+            border: `1px solid color-mix(in srgb, ${level.darkColor} 28%, transparent)`,
           }}
         >
-          <p style={{ fontSize: 12, color: "var(--color-text-body)", lineHeight: 1.6 }}>
+          <p style={{ fontSize: 12.5, color: "var(--v2-ink-dim)", lineHeight: 1.6 }}>
             {level.description}
           </p>
         </m.div>
@@ -196,7 +216,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
           gap: 0,
           margin: "16px 24px 0",
           borderRadius: 14, overflow: "hidden",
-          border: "1px solid var(--color-border)",
+          border: "1px solid var(--v2-line)",
         }}>
           {metrics.map((metric, i) => (
             <m.div
@@ -205,19 +225,19 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 + i * 0.08, duration: 0.25 }}
               style={{
-                padding: "12px 10px",
-                borderRight: i < metrics.length - 1 ? "1px solid var(--color-border)" : "none",
+                padding: "13px 10px",
+                borderRight: i < metrics.length - 1 ? "1px solid var(--v2-line)" : "none",
                 textAlign: "center",
-                background: "var(--color-bg-card-2)",
+                background: "rgba(148,163,255,0.04)",
               }}
             >
-              <p style={{ fontSize: 14, fontWeight: 800, color: "var(--color-primary)", lineHeight: 1.1, marginBottom: 3 }}>
+              <p style={{ fontSize: 14, fontWeight: 800, color: "var(--v2-signal-2)", lineHeight: 1.1, marginBottom: 4 }}>
                 {metric.value}
               </p>
-              <p style={{ fontSize: 11, fontWeight: 700, color: "var(--color-text)", marginBottom: 2 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: "var(--v2-ink)", marginBottom: 2 }}>
                 {metric.label}
               </p>
-              <p style={{ fontSize: 11, color: "var(--color-text-muted)", lineHeight: 1.3 }}>
+              <p style={{ fontSize: 10.5, color: "var(--v2-ink-faint)", lineHeight: 1.3 }}>
                 {metric.sub}
               </p>
             </m.div>
@@ -226,15 +246,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
 
         {/* ── CTA ───────────────────────────────────────────── */}
         <div style={{ padding: "20px 24px 24px" }}>
-          <button onClick={onContinue} style={{
-            width: "100%", padding: "16px 20px",
-            borderRadius: "var(--radius-md)", fontSize: 15, fontWeight: 700,
-            background: "linear-gradient(135deg, var(--color-accent), var(--color-accent-dark))",
-            color: "#ffffff",
-            border: "none", cursor: "pointer",
-            boxShadow: "var(--shadow-btn-accent)",
-            letterSpacing: "0.01em",
-          }}>
+          <button onClick={onContinue} className="v2-cta" style={{ width: "100%", minHeight: 56, fontSize: 15 }}>
             See my full results
           </button>
         </div>
@@ -244,7 +256,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
 }
 
 /* ─────────────────────────────────────────────────────────────────
-   Renders infoStat with an optional highlighted (teal) portion
+   Renders infoStat with an optional highlighted (signal) portion
 ───────────────────────────────────────────────────────────────── */
 function HighlightedStat({ stat, highlight }: { stat: string; highlight?: string }) {
   if (!highlight) {
@@ -256,7 +268,7 @@ function HighlightedStat({ stat, highlight }: { stat: string; highlight?: string
     return (
     <>
       {stat}
-      <span style={{ color: "var(--color-primary)" }}>{highlight}</span>
+      <span className="v2-text-signal">{highlight}</span>
       {" for you!"}
     </>
     );
@@ -264,39 +276,22 @@ function HighlightedStat({ stat, highlight }: { stat: string; highlight?: string
   return (
     <>
       {stat.slice(0, idx)}
-      <span style={{ color: "var(--color-primary)" }}>{highlight}</span>
+      <span className="v2-text-signal">{highlight}</span>
       {stat.slice(idx + highlight.length)}
     </>
   );
 }
 
 /* ─────────────────────────────────────────────────────────────────
-   Generic Info Card — LEFT-ALIGNED, Impulse-style
-   illustration at top, bold title with optional % highlight, CTA
+   Generic Info Card — system transmission between question blocks
 ───────────────────────────────────────────────────────────────── */
-/* Distinct visual per interstitial so the same illustration never repeats.
-   Only one real illustration asset exists (people-group.png); it stays on the
-   "you're not alone" belonging card, other cards get their own themed icon. */
+/* Distinct icon per interstitial so the same emblem never repeats. */
 const STAGE_ICON: Record<string, LucideIcon> = {
   "info-seen": Fingerprint,
+  "info-match": Users,
   "info-focus": Sparkles,
   "info-adhd": Compass,
 };
-
-function BrandMark() {
-  return (
-    <div style={{
-      width: 110, height: 110, borderRadius: "var(--radius-xl)",
-      background: "var(--color-primary-tint)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      fontSize: 22, fontWeight: 900, letterSpacing: "0.08em",
-      color: "var(--color-primary)",
-      boxShadow: "var(--shadow-btn-primary)",
-    }}>
-      FR
-    </div>
-  );
-}
 
 function GenericInfoCard({
   question,
@@ -305,11 +300,7 @@ function GenericInfoCard({
   question: QuizQuestion;
   onContinue: () => void;
 }) {
-  const [imgFailed, setImgFailed] = useState(false);
-  const StageIcon = STAGE_ICON[question.id];
-  // Only the first interstitial uses the photo; if it ever fails to load we
-  // fall back to the brand mark so a broken-image placeholder never appears.
-  const showPhoto = !StageIcon && !imgFailed;
+  const StageIcon = STAGE_ICON[question.id] ?? Sparkles;
 
   return (
     <div style={{
@@ -321,7 +312,7 @@ function GenericInfoCard({
       padding: "0 24px",
     }}>
 
-      {/* ── Illustration ─────────────────────────────────────── */}
+      {/* ── Emblem orb ───────────────────────────────────────── */}
       <m.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -337,32 +328,49 @@ function GenericInfoCard({
           paddingBottom: 16,
         }}
       >
-        {showPhoto ? (
-          /* People-group illustration — first interstitial only */
-          <Image
-            src="/illustrations/people-group.png"
-            alt=""
-            width={320}
-            height={180}
-            sizes="(max-width: 520px) 80vw, 320px"
-            onError={() => setImgFailed(true)}
-            style={{ width: "100%", maxWidth: 320, height: "auto", objectFit: "contain" }}
+        <div style={{ position: "relative", width: 132, height: 132, display: "grid", placeItems: "center" }}>
+          {/* orbital rings */}
+          <m.span
+            aria-hidden="true"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+            style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: "50%",
+              border: "1px dashed rgba(124,138,255,0.4)",
+            }}
           />
-        ) : StageIcon ? (
-          /* Themed icon for later interstitials (no repeated illustration) */
+          <span
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 13,
+              borderRadius: "50%",
+              border: "1px solid rgba(163,178,255,0.22)",
+            }}
+          />
+          <span
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: -18,
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(124,138,255,0.22) 0%, transparent 65%)",
+              filter: "blur(8px)",
+            }}
+          />
           <div style={{
-            width: 110, height: 110, borderRadius: "var(--radius-xl)",
-            background: "var(--color-primary-tint)",
+            width: 86, height: 86, borderRadius: "50%",
+            background: "linear-gradient(150deg, rgba(124,138,255,0.20), rgba(155,232,255,0.06))",
+            border: "1px solid rgba(163,178,255,0.4)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            color: "var(--color-primary)",
-            boxShadow: "var(--shadow-btn-primary)",
+            color: "var(--v2-signal-2)",
+            boxShadow: "0 14px 44px rgba(124,138,255,0.3), inset 0 1px 0 rgba(255,255,255,0.16)",
           }}>
-            <StageIcon size={46} strokeWidth={1.8} />
+            <StageIcon size={36} strokeWidth={1.6} />
           </div>
-        ) : (
-          /* Graceful fallback if the photo ever fails */
-          <BrandMark />
-        )}
+        </div>
       </m.div>
 
       {/* ── Text + CTA — centered ────────────────────────────── */}
@@ -376,15 +384,26 @@ function GenericInfoCard({
         textAlign: "center",
         gap: 0,
       }}>
+        <m.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.05 }}
+          className="v2-hud"
+          style={{ color: "var(--v2-signal-2)", marginBottom: 14 }}
+        >
+          System note
+        </m.p>
         <m.h2
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.26 }}
+          className="v2-display"
           style={{
-            fontSize: 22, fontWeight: 800,
-            color: "var(--color-text)",
-            lineHeight: 1.3,
-            marginBottom: 12,
+            fontSize: "clamp(24px, 6.4vw, 30px)",
+            fontWeight: 550,
+            lineHeight: 1.2,
+            letterSpacing: "-0.02em",
+            marginBottom: 14,
           }}
         >
           <HighlightedStat
@@ -398,8 +417,8 @@ function GenericInfoCard({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.16, duration: 0.26 }}
           style={{
-            fontSize: 14, color: "var(--color-text-body)",
-            lineHeight: 1.65, marginBottom: 32,
+            fontSize: 14.5, color: "var(--v2-ink-dim)",
+            lineHeight: 1.7, marginBottom: 34,
           }}
         >
           {question.infoBody}
@@ -410,15 +429,8 @@ function GenericInfoCard({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.22, duration: 0.24 }}
           onClick={onContinue}
-          style={{
-            width: "100%",
-            padding: "16px 24px", borderRadius: 14,
-            fontSize: 15, fontWeight: 700,
-            background: "linear-gradient(135deg, var(--color-accent), var(--color-accent-dark))",
-            color: "#ffffff",
-            border: "none", cursor: "pointer",
-            boxShadow: "var(--shadow-btn-accent)",
-          }}
+          className="v2-cta"
+          style={{ width: "100%", minHeight: 56, fontSize: 15 }}
         >
           Keep Going
         </m.button>

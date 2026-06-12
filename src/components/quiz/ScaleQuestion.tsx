@@ -37,15 +37,19 @@ export function ScaleQuestion({ question }: ScaleQuestionProps) {
       <div style={{
         padding: "28px 24px 0",
         textAlign: "center",
-        maxWidth: 520,
+        maxWidth: 560,
         margin: "0 auto",
         width: "100%",
       }}>
-        <h2 style={{
-          fontSize: "clamp(18px, 4.5vw, 22px)", fontWeight: 700,
-          color: "var(--color-text)",
-          lineHeight: 1.28, letterSpacing: "-0.02em",
-        }}>
+        <h2
+          className="v2-display"
+          style={{
+            fontSize: "clamp(21px, 5.4vw, 27px)",
+            fontWeight: 550,
+            lineHeight: 1.22,
+            letterSpacing: "-0.02em",
+          }}
+        >
           {question.question}
         </h2>
       </div>
@@ -64,39 +68,52 @@ export function ScaleQuestion({ question }: ScaleQuestionProps) {
         gap: 20,
       }}>
 
-        {/* Quote card */}
+        {/* Statement — read back like an observation in the lab log */}
         <m.div
           initial={reduceMotion ? undefined : { opacity: 0, y: 10 }}
           animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
           transition={reduceMotion ? undefined : { duration: 0.24 }}
+          className="v2-panel"
           style={{
-            padding: "20px 20px",
-            borderRadius: 16,
-            background: "var(--color-primary-tint)",
-            border: "1px solid var(--color-primary-ring)",
+            padding: "22px 22px",
+            borderColor: "rgba(124,138,255,0.3)",
             position: "relative",
+            overflow: "hidden",
           }}
         >
-          {/* Quotation mark */}
-          <span style={{
-            position: "absolute", top: 14, left: 18,
-            fontSize: 22, fontWeight: 800,
-            color: "var(--color-primary)",
-            lineHeight: 1, opacity: 0.7,
-          }}>&ldquo;</span>
-          <p style={{
-            fontSize: 15, color: "var(--color-text-body)",
-            lineHeight: 1.65,
-            paddingLeft: 22,
-          }}>
-            {question.statement}
+          <span
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: 3,
+              background: "var(--v2-grad-signal)",
+              boxShadow: "0 0 14px rgba(124,138,255,0.6)",
+            }}
+          />
+          <p className="v2-hud" style={{ marginBottom: 10, fontSize: 9.5 }}>
+            Observation
+          </p>
+          <p
+            className="v2-display"
+            style={{
+              fontSize: 18,
+              fontWeight: 500,
+              fontStyle: "italic",
+              color: "var(--v2-ink)",
+              lineHeight: 1.5,
+            }}
+          >
+            &ldquo;{question.statement}&rdquo;
           </p>
         </m.div>
 
         {/* Scale labels */}
         <div style={{ display: "flex", justifyContent: "space-between", paddingLeft: 4, paddingRight: 4 }}>
-          <span style={{ fontSize: 11, color: "var(--color-text-muted)", fontWeight: 500 }}>Strongly disagree</span>
-          <span style={{ fontSize: 11, color: "var(--color-text-muted)", fontWeight: 500 }}>Strongly agree</span>
+          <span className="v2-hud" style={{ fontSize: 9.5 }}>Strongly disagree</span>
+          <span className="v2-hud" style={{ fontSize: 9.5 }}>Strongly agree</span>
         </div>
 
         {/* Pattern scale */}
@@ -116,43 +133,47 @@ export function ScaleQuestion({ question }: ScaleQuestionProps) {
                 animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
                 transition={reduceMotion ? undefined : { delay: i * 0.035, duration: 0.18 }}
                 whileTap={reduceMotion ? undefined : { scale: 0.97 }}
-                whileHover={!reduceMotion && !chosen ? { y: -1 } : undefined}
+                whileHover={!reduceMotion && !chosen ? { y: -2 } : undefined}
                 style={{
-                  padding: "10px 4px 11px",
-                  borderRadius: 14,
-                  border: `1.5px solid ${isSelected ? "var(--color-primary)" : "rgba(28,26,46,0.09)"}`,
+                  padding: "11px 4px 12px",
+                  borderRadius: 15,
+                  border: `1.5px solid ${isSelected ? "rgba(124,138,255,0.85)" : "var(--v2-line)"}`,
                   background: isSelected
-                    ? "var(--color-primary-tint)"
-                    : "var(--color-bg-card)",
+                    ? "linear-gradient(150deg, rgba(124,138,255,0.2), rgba(155,232,255,0.08))"
+                    : "linear-gradient(165deg, rgba(148,163,255,0.07), rgba(148,163,255,0.03))",
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
-                  gap: 6,
+                  gap: 7,
                   cursor: chosen ? "default" : "pointer",
-                  opacity: isAny && !isSelected ? 0.38 : 1,
-                  transition: "background 0.15s, border-color 0.15s, opacity 0.2s",
-                  boxShadow: isSelected ? "var(--shadow-sel)" : "0 1px 3px rgba(28,26,46,0.04)",
+                  opacity: isAny && !isSelected ? 0.32 : 1,
+                  transition: "background 0.15s, border-color 0.15s, opacity 0.2s, box-shadow 0.15s",
+                  boxShadow: isSelected
+                    ? "0 0 0 1px rgba(124,138,255,0.3), 0 8px 28px rgba(124,138,255,0.25)"
+                    : "inset 0 1px 0 rgba(255,255,255,0.05)",
                 }}
               >
                 <span style={{
                   width: 30,
                   height: 30,
-                  borderRadius: "var(--radius-pill)",
+                  borderRadius: 999,
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  fontFamily: "var(--v2-font-mono)",
                   fontSize: 13,
-                  fontWeight: 850,
-                  color: isSelected ? "var(--color-bg-card)" : "var(--color-text)",
-                  background: isSelected ? "var(--color-primary)" : "var(--color-bg-card-2)",
-                  border: `1px solid ${isSelected ? "var(--color-primary)" : "var(--color-border)"}`,
+                  fontWeight: 600,
+                  color: isSelected ? "#06070D" : "var(--v2-ink-dim)",
+                  background: isSelected ? "var(--v2-grad-signal)" : "rgba(148,163,255,0.07)",
+                  border: `1px solid ${isSelected ? "transparent" : "var(--v2-line)"}`,
+                  boxShadow: isSelected ? "0 0 14px rgba(124,138,255,0.6)" : "none",
                 }}>
                   {item.label}
                 </span>
                 <span style={{
-                  fontSize: 11,
+                  fontSize: 10.5,
                   fontWeight: isSelected ? 700 : 500,
-                  color: isSelected ? "var(--color-primary)" : "var(--color-text-muted)",
+                  color: isSelected ? "var(--v2-signal-2)" : "var(--v2-ink-faint)",
                   textAlign: "center",
                   lineHeight: 1.2,
                 }}>
