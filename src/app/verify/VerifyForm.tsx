@@ -8,6 +8,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
+import { HudLabel } from "@/components/v2/primitives";
+
 export function VerifyForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -99,6 +101,7 @@ export function VerifyForm() {
   if (!emailParam) {
     return (
       <div
+        className="v2-screen v2-grain"
         style={{
           minHeight: "100dvh",
           display: "flex",
@@ -106,11 +109,10 @@ export function VerifyForm() {
           alignItems: "center",
           justifyContent: "center",
           padding: "40px 24px",
-          background: "var(--color-bg-page)",
         }}
       >
-        <div style={{ maxWidth: 440, textAlign: "center" }}>
-          <p style={{ fontSize: 14, color: "var(--color-text-body)" }}>
+        <div style={{ maxWidth: 440, textAlign: "center", position: "relative", zIndex: 2 }}>
+          <p style={{ fontSize: 14, color: "var(--v2-ink-dim)" }}>
             Missing email. Start from the sign-in page.
           </p>
           <Link
@@ -119,7 +121,7 @@ export function VerifyForm() {
               display: "inline-block",
               marginTop: 16,
               fontWeight: 700,
-              color: "var(--color-primary)",
+              color: "var(--v2-signal-2)",
             }}
           >
             Go to sign in
@@ -131,6 +133,7 @@ export function VerifyForm() {
 
   return (
     <div
+      className="v2-screen v2-grain"
       style={{
         minHeight: "100dvh",
         display: "flex",
@@ -138,39 +141,27 @@ export function VerifyForm() {
         alignItems: "center",
         justifyContent: "center",
         padding: "40px 24px",
-        background: "var(--color-bg-page)",
       }}
     >
-      <div style={{ width: "100%", maxWidth: 440 }}>
+      <div className="v2-aurora" aria-hidden="true" />
+      <div style={{ width: "100%", maxWidth: 440, position: "relative", zIndex: 2 }}>
         <div
+          className="v2-panel"
           style={{
-            background: "var(--color-bg-card)",
-            border: "1.5px solid var(--color-border)",
-            borderRadius: 16,
-            padding: "28px 24px 26px",
-            boxShadow: "var(--shadow-card)",
+            borderRadius: "var(--v2-r-lg)",
+            padding: "30px 26px 28px",
+            background: "linear-gradient(170deg, rgba(14,18,32,0.9), rgba(7,8,17,0.94))",
           }}
         >
-          <p
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: "var(--color-text-muted)",
-              marginBottom: 8,
-            }}
-          >
-            FocusRoute
-          </p>
+          <HudLabel tone="signal" style={{ marginBottom: 14 }}>
+            FocusRoute — verification
+          </HudLabel>
           <h1
+            className="v2-display"
             style={{
-              fontSize: "clamp(22px, 4.5vw, 26px)",
-              fontWeight: 800,
-              letterSpacing: "-0.02em",
-              lineHeight: 1.22,
-              color: "var(--color-text)",
-              marginBottom: 10,
+              fontSize: "clamp(26px, 5vw, 32px)",
+              lineHeight: 1.15,
+              marginBottom: 12,
             }}
           >
             Check your email
@@ -178,27 +169,25 @@ export function VerifyForm() {
           <p
             style={{
               fontSize: 14,
-              lineHeight: 1.6,
-              color: "var(--color-text-body)",
+              lineHeight: 1.65,
+              color: "var(--v2-ink-dim)",
               marginBottom: 8,
             }}
           >
             Enter the verification code sent to{" "}
-            <strong style={{ color: "var(--color-text)" }}>{emailParam}</strong>
-            . You can also use the magic link in the same email.
+            <strong style={{ color: "var(--v2-ink)" }}>{emailParam}</strong>.
+            You can also use the magic link in the same email.
           </p>
           <p
             style={{
               fontSize: 12,
               lineHeight: 1.55,
-              color: "var(--color-text-muted)",
+              color: "var(--v2-ink-faint)",
               marginBottom: 8,
             }}
           >
-            Supabase email templates must include{" "}
-            <code style={{ fontSize: 11 }}>{`{{ .Token }}`}</code> for the
-            code to appear. If you only see a link, sign in with that link
-            instead.
+            If your email only shows a link, sign in with that link instead —
+            it opens the same secure session.
           </p>
 
           {message && (
@@ -211,12 +200,16 @@ export function VerifyForm() {
                 lineHeight: 1.5,
                 background:
                   status === "error"
-                    ? "var(--color-accent-tint)"
-                    : "var(--color-success-tint)",
+                    ? "rgba(var(--v2-error-rgb), 0.10)"
+                    : "rgba(127, 224, 178, 0.10)",
+                border:
+                  status === "error"
+                    ? "1px solid rgba(var(--v2-error-rgb), 0.35)"
+                    : "1px solid rgba(127, 224, 178, 0.35)",
                 color:
                   status === "error"
-                    ? "var(--color-accent-dark)"
-                    : "var(--color-success)",
+                    ? "var(--v2-error)"
+                    : "var(--v2-success)",
               }}
               role={status === "error" ? "alert" : "status"}
             >
@@ -235,12 +228,11 @@ export function VerifyForm() {
           >
             <label style={{ display: "block" }}>
               <span
+                className="v2-hud"
                 style={{
                   display: "block",
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: "var(--color-text-body)",
-                  marginBottom: 8,
+                  fontSize: 10,
+                  marginBottom: 9,
                 }}
               >
                 Verification code
@@ -249,41 +241,29 @@ export function VerifyForm() {
                 type="text"
                 inputMode="numeric"
                 autoComplete="one-time-code"
-                placeholder="Verification code"
+                placeholder="000000"
                 required
                 value={token}
                 onChange={(ev) =>
                   setToken(ev.target.value)
                 }
                 disabled={status === "loading"}
+                className="v2-input"
                 style={{
-                  width: "100%",
-                  padding: "14px 16px",
-                  borderRadius: 14,
-                  border: "1.5px solid var(--color-border)",
-                  fontSize: 18,
-                  letterSpacing: "0.12em",
-                  outline: "none",
-                  color: "var(--color-text)",
-                  background: "var(--color-bg-card-2)",
+                  fontSize: 19,
+                  letterSpacing: "0.22em",
+                  fontFamily: "var(--v2-font-mono)",
+                  textAlign: "center",
                 }}
               />
             </label>
             <button
               type="submit"
               disabled={status === "loading"}
+              className="v2-cta"
               style={{
                 width: "100%",
-                padding: "14px 20px",
-                borderRadius: 14,
-                border: "none",
                 cursor: status === "loading" ? "not-allowed" : "pointer",
-                fontSize: 15,
-                fontWeight: 800,
-                letterSpacing: "-0.01em",
-                color: "#ffffff",
-                background: "var(--color-primary)",
-                boxShadow: "var(--shadow-btn-primary)",
                 opacity: status === "loading" ? 0.65 : 1,
               }}
             >
@@ -309,10 +289,11 @@ export function VerifyForm() {
                 border: "none",
                 cursor:
                   resendStatus === "loading" ? "not-allowed" : "pointer",
-                fontSize: 14,
-                fontWeight: 600,
-                color: "var(--color-primary)",
+                fontSize: 13,
+                fontWeight: 700,
+                color: "var(--v2-signal-2)",
                 textDecoration: "underline",
+                textUnderlineOffset: 3,
               }}
             >
               {resendStatus === "loading" ? "Sending…" : "Resend code"}
@@ -320,16 +301,16 @@ export function VerifyForm() {
             <Link
               href={loginHref}
               style={{
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: 600,
-                color: "var(--color-text-muted)",
+                color: "var(--v2-ink-faint)",
               }}
             >
               Use a different email
             </Link>
           </div>
         </div>
-        <p style={{ marginTop: 20, textAlign: "center", fontSize: 11, color: "var(--color-text-muted)", lineHeight: 2 }}>
+        <p style={{ marginTop: 20, textAlign: "center", fontSize: 11, color: "var(--v2-ink-faint)", lineHeight: 2 }}>
           <a href="/privacy" style={{ color: "inherit", textDecoration: "none" }}>Privacy</a>
           {" · "}
           <a href="/terms" style={{ color: "inherit", textDecoration: "none" }}>Terms</a>

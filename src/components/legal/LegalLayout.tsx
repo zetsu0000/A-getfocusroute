@@ -20,11 +20,13 @@ export function LegalLayout({
   children: ReactNode;
 }) {
   return (
-    <div style={{ minHeight: "100dvh", background: "var(--color-bg-page)", paddingBottom: 80 }}>
+    <div className="v2-screen v2-grain v2-skin" style={{ minHeight: "100dvh", paddingBottom: 80 }}>
       {/* Header */}
       <header
         style={{
-          background: "var(--color-bg-card)",
+          position: "relative",
+          zIndex: 2,
+          background: "rgba(12, 15, 28, 0.7)",
           borderBottom: "1px solid var(--color-border)",
           padding: "14px 24px",
           display: "flex",
@@ -96,7 +98,7 @@ export function LegalLayout({
       </header>
 
       {/* Main */}
-      <main style={{ maxWidth: 720, margin: "0 auto", padding: "clamp(24px, 5vw, 48px) 20px 0" }}>
+      <main style={{ maxWidth: 720, margin: "0 auto", padding: "clamp(24px, 5vw, 48px) 20px 0", position: "relative", zIndex: 2 }}>
         <h1
           style={{
             fontSize: "clamp(24px, 5vw, 34px)",

@@ -8,6 +8,7 @@ export const metadata: Metadata = {
 export default function NotFound() {
   return (
     <div
+      className="v2-screen v2-grain v2-skin"
       style={{
         minHeight: "100vh",
         display: "flex",

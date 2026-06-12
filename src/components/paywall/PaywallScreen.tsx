@@ -175,14 +175,15 @@ function LockedCard() {
           }}
         >
           <m.div
-            initial={reduceMotion ? undefined : { opacity: 0, scale: 0.9 }}
+            initial={reduceMotion ? undefined : { opacity: 0, scale: 0.6 }}
             animate={reduceMotion ? undefined : { opacity: 1, scale: 1 }}
             transition={reduceMotion ? undefined : { delay: 0.35, duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
             style={{
               position: "absolute",
               left: `${profileBand.pct}%`,
               top: "50%",
-              transform: "translate(-50%,-50%)",
+              x: "-50%",
+              y: "-50%",
               width: 17,
               height: 17,
               borderRadius: "50%",

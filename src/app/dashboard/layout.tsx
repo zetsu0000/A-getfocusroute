@@ -14,12 +14,12 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const pathname = (await headers()).get("x-pathname") ?? "/dashboard";
 
   return (
-    <div style={{ minHeight: "100dvh", padding: "0 14px 64px", background: "var(--color-bg-page)" }}>
-      <div style={{ maxWidth: 960, margin: "0 auto" }}>
+    <div className="v2-screen v2-grain v2-skin" style={{ minHeight: "100dvh", padding: "0 14px 64px" }}>
+      <div style={{ maxWidth: 960, margin: "0 auto", position: "relative", zIndex: 2 }}>
         <DashboardNav snap={snap} pathname={pathname} />
         <main style={{ paddingBottom: 8 }}>{children}</main>
-        <div style={{ marginTop: 40, paddingTop: 20, borderTop: "1px solid var(--color-border)", textAlign: "center" }}>
-          <p style={{ fontSize: 11, color: "var(--color-text-muted)", lineHeight: 2 }}>
+        <div style={{ marginTop: 40, paddingTop: 20, borderTop: "1px solid var(--v2-line)", textAlign: "center" }}>
+          <p style={{ fontSize: 11, color: "var(--v2-ink-faint)", lineHeight: 2 }}>
             <a href="/privacy" style={{ color: "inherit", textDecoration: "none" }}>Privacy Policy</a>
             {" · "}
             <a href="/terms" style={{ color: "inherit", textDecoration: "none" }}>Terms</a>

@@ -4,6 +4,7 @@ import { Suspense } from "react";
 
 import { safeNextPath } from "@/lib/auth/safe-next";
 import { createClient } from "@/lib/supabase/server";
+import { OrbitLoader } from "@/components/v2/primitives";
 
 import { LoginForm } from "./LoginForm";
 
@@ -17,10 +18,9 @@ export const metadata: Metadata = {
 function LoginFallback() {
   return (
     <div
-      className="mx-auto flex min-h-[100dvh] max-w-md flex-col justify-center px-6 py-16"
-      style={{ background: "var(--color-bg-page)" }}
+      className="v2-screen flex min-h-[100dvh] flex-col items-center justify-center px-6 py-16"
     >
-      <p style={{ color: "var(--color-text-muted)" }}>Loading…</p>
+      <OrbitLoader />
     </div>
   );
 }

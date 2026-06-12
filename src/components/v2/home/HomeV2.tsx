@@ -454,6 +454,19 @@ export default function HomeV2() {
         >
           <RouteScene progressRef={heroProgress} />
 
+          {/* readability scrim — quiets the particle field behind the
+              headline column so type and CTA own the hierarchy */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "radial-gradient(70% 80% at 30% 48%, rgba(4,5,12,0.62) 0%, rgba(4,5,12,0.30) 45%, transparent 72%)",
+              pointerEvents: "none",
+            }}
+          />
+
           {/* horizon glow */}
           <div
             aria-hidden="true"

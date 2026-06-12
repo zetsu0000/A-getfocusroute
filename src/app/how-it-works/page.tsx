@@ -59,9 +59,11 @@ const FAQ = [
 
 export default function HowItWorksPage() {
   return (
-    <div style={{ minHeight: "100vh", background: "var(--color-bg-page)", padding: "0 0 80px" }}>
+    <div className="v2-screen v2-grain v2-skin" style={{ minHeight: "100vh", padding: "0 0 80px" }}>
       <header style={{
-        background: "var(--color-bg-card)",
+        position: "relative",
+        zIndex: 2,
+        background: "rgba(12, 15, 28, 0.7)",
         borderBottom: "1px solid var(--color-border)",
         padding: "14px 24px",
         display: "flex",
@@ -94,7 +96,7 @@ export default function HowItWorksPage() {
         </Link>
       </header>
 
-      <main style={{ maxWidth: 720, margin: "0 auto", padding: "48px 24px 0" }}>
+      <main style={{ maxWidth: 720, margin: "0 auto", padding: "48px 24px 0", position: "relative", zIndex: 2 }}>
         <h1 style={{ fontSize: "clamp(26px, 5vw, 36px)", marginBottom: 8, color: "var(--color-text)" }}>
           How {BRAIN_OS.lineTm} Works
         </h1>

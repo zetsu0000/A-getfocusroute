@@ -201,6 +201,90 @@ h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-
   --v2-r-lg: 28px;
 }
 
+/* ── V2 skin — remaps the legacy Warm Ink tokens to the dark observatory
+   palette inside any wrapped surface (dashboard, account, error states).
+   Lets V1-token components render as V2 without touching their logic. ── */
+.v2-skin {
+  --color-bg-page: #06070D;
+  --color-bg-dots: transparent;
+  /* solid so it also works as the foreground of inverted (light-on-ink) pairs */
+  --color-bg-card: #101424;
+  --color-bg-card-2: rgba(148, 163, 255, 0.06);
+
+  --color-text: var(--v2-ink);
+  --color-text-body: var(--v2-ink-dim);
+  --color-text-muted: var(--v2-ink-faint);
+  --color-text-soft: var(--v2-ink-ghost);
+
+  --color-border: var(--v2-line);
+  --color-border-2: var(--v2-line-bright);
+
+  --color-primary: #5B68E8;
+  /* used as text in skinned scopes — keep it readable on dark */
+  --color-primary-dark: #A9B5FF;
+  --color-primary-mid: #8FA0FF;
+  --color-primary-tint: rgba(124, 138, 255, 0.14);
+  --color-primary-ring: rgba(124, 138, 255, 0.30);
+
+  --color-accent: #5B68E8;
+  --color-accent-dark: #A9B5FF;
+  --color-accent-tint: rgba(124, 138, 255, 0.12);
+
+  --color-cognitive: #B39BFF;
+  --color-cognitive-dark: #CDBDFF;
+  --color-cognitive-tint: rgba(179, 155, 255, 0.13);
+
+  --color-signal: #9BE8FF;
+  --color-signal-tint: rgba(155, 232, 255, 0.12);
+
+  --color-success: var(--v2-success);
+  --color-success-tint: rgba(127, 224, 178, 0.12);
+  --color-error: var(--v2-error);
+  --color-error-tint: rgba(255, 139, 139, 0.12);
+  --color-warning: #F0C987;
+  --color-warning-tint: rgba(240, 201, 135, 0.12);
+
+  --shadow-card:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 18px 52px rgba(2, 3, 10, 0.5);
+  --shadow-card-hover:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 28px 72px rgba(2, 3, 10, 0.6);
+  --shadow-card-strong:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 30px 80px rgba(2, 3, 10, 0.62);
+
+  --shadow-btn-primary: 0 10px 30px rgba(91, 104, 232, 0.35);
+  --shadow-btn-accent: 0 10px 34px rgba(91, 104, 232, 0.35);
+
+  --shadow-sel:
+    0 0 0 2.5px var(--color-primary),
+    0 4px 16px rgba(124, 138, 255, 0.25);
+
+  --color-sig-sprinter: #9BE8FF;
+  --color-sig-sprinter-tint: rgba(155, 232, 255, 0.12);
+  --shadow-sig-sprinter: 0 2px 12px rgba(155, 232, 255, 0.25);
+
+  --color-sig-archivist: #8FA0FF;
+  --color-sig-archivist-tint: rgba(143, 160, 255, 0.12);
+  --shadow-sig-archivist: 0 2px 12px rgba(143, 160, 255, 0.25);
+
+  --color-sig-spark: #B39BFF;
+  --color-sig-spark-tint: rgba(179, 155, 255, 0.12);
+  --shadow-sig-spark: 0 2px 12px rgba(179, 155, 255, 0.25);
+
+  --color-sig-reactor: #7FE0B2;
+  --color-sig-reactor-tint: rgba(127, 224, 178, 0.12);
+  --shadow-sig-reactor: 0 2px 12px rgba(127, 224, 178, 0.25);
+
+  --color-sig-drifter: #F0C987;
+  --color-sig-drifter-tint: rgba(240, 201, 135, 0.12);
+  --shadow-sig-drifter: 0 2px 12px rgba(240, 201, 135, 0.25);
+
+  color: var(--v2-ink);
+  color-scheme: dark;
+}
+
 /* Full-bleed dark screen shell with layered nebula atmosphere */
 .v2-screen {
   position: relative;
@@ -289,9 +373,11 @@ h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-
   text-decoration: none;
   cursor: pointer;
   overflow: hidden;
+  /* Glow stays tight to the pill: a wide offset blur on a full-width button
+     reads as a glowing slab instead of refined edge light. */
   box-shadow:
     0 0 0 1px rgba(4, 5, 12, 0.4),
-    0 10px 38px rgba(var(--v2-signal-rgb), 0.30),
+    0 4px 18px rgba(var(--v2-signal-rgb), 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.14);
   transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -299,7 +385,7 @@ h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-
   border-color: rgba(var(--v2-cyan-rgb), 0.8);
   box-shadow:
     0 0 0 1px rgba(4, 5, 12, 0.4),
-    0 14px 52px rgba(var(--v2-signal-rgb), 0.48),
+    0 6px 26px rgba(var(--v2-signal-rgb), 0.36),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 .v2-cta:active { transform: scale(0.98); }
@@ -321,14 +407,14 @@ h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-
     rgba(14, 11, 4, 0.72);
   box-shadow:
     0 0 0 1px rgba(8, 6, 2, 0.5),
-    0 12px 44px rgba(var(--v2-gold-rgb), 0.28),
+    0 4px 20px rgba(var(--v2-gold-rgb), 0.20),
     inset 0 1px 0 rgba(255, 248, 226, 0.22);
 }
 .v2-cta-gold:hover {
   border-color: rgba(var(--v2-gold-rgb), 0.95);
   box-shadow:
     0 0 0 1px rgba(8, 6, 2, 0.5),
-    0 16px 60px rgba(var(--v2-gold-rgb), 0.42),
+    0 6px 30px rgba(var(--v2-gold-rgb), 0.34),
     inset 0 1px 0 rgba(255, 248, 226, 0.3);
 }
 
@@ -390,10 +476,37 @@ h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-
   from { transform: translateX(-70%) rotate(8deg); }
   to   { transform: translateX(70%)  rotate(8deg); }
 }
+/* Beacon pulse for small luminous dots — keeps a constant core glow so the
+   dot doesn't flatten while the ring expands. */
 @keyframes v2-pulse-ring {
-  0%   { box-shadow: 0 0 0 0 rgba(var(--v2-signal-rgb), 0.45); }
-  70%  { box-shadow: 0 0 0 14px rgba(var(--v2-signal-rgb), 0); }
-  100% { box-shadow: 0 0 0 0 rgba(var(--v2-signal-rgb), 0); }
+  0%   { box-shadow: 0 0 0 0 rgba(var(--v2-signal-rgb), 0.45), 0 0 12px var(--v2-signal-2), 0 0 26px rgba(var(--v2-cyan-rgb), 0.45); }
+  70%  { box-shadow: 0 0 0 14px rgba(var(--v2-signal-rgb), 0), 0 0 12px var(--v2-signal-2), 0 0 26px rgba(var(--v2-cyan-rgb), 0.45); }
+  100% { box-shadow: 0 0 0 0 rgba(var(--v2-signal-rgb), 0), 0 0 12px var(--v2-signal-2), 0 0 26px rgba(var(--v2-cyan-rgb), 0.45); }
+}
+/* Pulse for .v2-cta buttons: keeps the base shadow stack so the animation
+   doesn't strip the button's edge light while the ring expands. */
+@keyframes v2-cta-pulse {
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(var(--v2-signal-rgb), 0.40),
+      0 0 0 1px rgba(4, 5, 12, 0.4),
+      0 4px 18px rgba(var(--v2-signal-rgb), 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  }
+  70% {
+    box-shadow:
+      0 0 0 12px rgba(var(--v2-signal-rgb), 0),
+      0 0 0 1px rgba(4, 5, 12, 0.4),
+      0 4px 18px rgba(var(--v2-signal-rgb), 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  }
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(var(--v2-signal-rgb), 0),
+      0 0 0 1px rgba(4, 5, 12, 0.4),
+      0 4px 18px rgba(var(--v2-signal-rgb), 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  }
 }
 @keyframes v2-orbit-spin { to { transform: rotate(360deg); } }
 @keyframes v2-float {

@@ -161,7 +161,8 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
             </m.span>
           </div>
 
-          {/* Gradient track */}
+          {/* Gradient track — marker rides the true score; the five level
+              bands are even 20% segments, so labels center under each band. */}
           <div style={{
             position: "relative", height: 8, borderRadius: 999,
             background: "linear-gradient(to right, #9BE8FF, #7C8AFF, #B39BFF, #FFB28B, #FF8B8B)",
@@ -169,13 +170,15 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
             marginBottom: 10,
           }}>
             <m.div
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.6 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.35, duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
               style={{
                 position: "absolute",
-                left: `${level.pct}%`,
-                top: "50%", transform: "translate(-50%, -50%)",
+                left: `${Math.max(3, Math.min(97, score))}%`,
+                top: "50%",
+                x: "-50%",
+                y: "-50%",
                 width: 20, height: 20, borderRadius: "50%",
                 background: "#0B0E1A",
                 border: `3px solid ${level.darkColor}`,
@@ -184,10 +187,10 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
             />
           </div>
 
-          {/* Axis labels */}
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18 }}>
+          {/* Axis labels — one per 20% band, centered under its segment */}
+          <div style={{ display: "flex", marginBottom: 18 }}>
             {["Low", "Mild", "Moderate", "High", "Very high"].map((l) => (
-              <span key={l} className="v2-hud" style={{ fontSize: 8.5 }}>{l}</span>
+              <span key={l} className="v2-hud" style={{ fontSize: 8.5, flex: 1, textAlign: "center" }}>{l}</span>
             ))}
           </div>
         </div>

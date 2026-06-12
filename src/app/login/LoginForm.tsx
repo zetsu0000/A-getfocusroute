@@ -8,6 +8,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
+import { HudLabel, TelemetryChip } from "@/components/v2/primitives";
+
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -65,6 +67,7 @@ export function LoginForm() {
 
   return (
     <div
+      className="v2-screen v2-grain"
       style={{
         minHeight: "100dvh",
         display: "flex",
@@ -72,55 +75,42 @@ export function LoginForm() {
         alignItems: "center",
         justifyContent: "center",
         padding: "40px 24px",
-        background: "var(--color-bg-page)",
       }}
     >
-      <div style={{ width: "100%", maxWidth: 440 }}>
+      <div className="v2-aurora" aria-hidden="true" />
+      <div style={{ width: "100%", maxWidth: 440, position: "relative", zIndex: 2 }}>
         <div
+          className="v2-panel"
           style={{
-            background: "var(--color-bg-card)",
-            border: "1.5px solid var(--color-border)",
-            borderRadius: 16,
-            padding: "28px 24px 26px",
-            boxShadow: "var(--shadow-card)",
+            borderRadius: "var(--v2-r-lg)",
+            padding: "30px 26px 28px",
+            background: "linear-gradient(170deg, rgba(14,18,32,0.9), rgba(7,8,17,0.94))",
           }}
         >
-          <p
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: "var(--color-text-muted)",
-              marginBottom: 8,
-            }}
-          >
-            FocusRoute
-          </p>
+          <HudLabel tone="signal" style={{ marginBottom: 14 }}>
+            FocusRoute — secure access
+          </HudLabel>
           <h1
+            className="v2-display"
             style={{
-              fontSize: "clamp(22px, 4.5vw, 26px)",
-              fontWeight: 800,
-              letterSpacing: "-0.02em",
-              lineHeight: 1.22,
-              color: "var(--color-text)",
-              marginBottom: 10,
+              fontSize: "clamp(26px, 5vw, 32px)",
+              lineHeight: 1.15,
+              marginBottom: 12,
             }}
           >
-            Sign in
+            Sign in to your observatory
           </h1>
           <p
             style={{
               fontSize: 14,
-              lineHeight: 1.6,
-              color: "var(--color-text-body)",
-              maxWidth: 360,
+              lineHeight: 1.65,
+              color: "var(--v2-ink-dim)",
+              maxWidth: 370,
             }}
           >
-            We&apos;ll email you a login code and a magic link. Paid access is
-            tied to your account on our servers, not browser storage. On this
-            device, you&apos;ll stay signed in while your secure Supabase session
-            remains valid.
+            We&apos;ll email you a login code and a magic link. Your access is
+            tied to your account on our servers — not browser storage — and you
+            stay signed in on this device while your secure session is valid.
           </p>
 
           {(errorParam === "auth" || status === "error") && (
@@ -131,8 +121,9 @@ export function LoginForm() {
                 padding: "12px 14px",
                 fontSize: 13,
                 lineHeight: 1.5,
-                background: "var(--color-accent-tint)",
-                color: "var(--color-accent-dark)",
+                background: "rgba(var(--v2-error-rgb), 0.10)",
+                border: "1px solid rgba(var(--v2-error-rgb), 0.35)",
+                color: "var(--v2-error)",
               }}
               role="alert"
             >
@@ -151,12 +142,11 @@ export function LoginForm() {
           >
             <label style={{ display: "block" }}>
               <span
+                className="v2-hud"
                 style={{
                   display: "block",
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: "var(--color-text-body)",
-                  marginBottom: 8,
+                  fontSize: 10,
+                  marginBottom: 9,
                 }}
               >
                 Email
@@ -166,85 +156,63 @@ export function LoginForm() {
                 name="email"
                 autoComplete="email"
                 required
+                placeholder="you@example.com"
                 value={email}
                 onChange={(ev) => setEmail(ev.target.value)}
                 disabled={status === "loading"}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = "var(--color-primary)";
-                  e.currentTarget.style.boxShadow =
-                    "0 0 0 3px var(--color-primary-ring)";
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "var(--color-border)";
-                  e.currentTarget.style.boxShadow = "none";
-                }}
-                style={{
-                  width: "100%",
-                  padding: "14px 16px",
-                  borderRadius: 14,
-                  border: "1.5px solid var(--color-border)",
-                  fontSize: 15,
-                  lineHeight: 1.4,
-                  outline: "none",
-                  color: "var(--color-text)",
-                  background: "var(--color-bg-card-2)",
-                  transition:
-                    "border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease",
-                }}
+                className="v2-input"
               />
             </label>
             <button
               type="submit"
               disabled={status === "loading"}
+              className="v2-cta"
               style={{
                 width: "100%",
-                padding: "14px 20px",
-                borderRadius: 14,
-                border: "none",
                 cursor: status === "loading" ? "not-allowed" : "pointer",
-                fontSize: 15,
-                fontWeight: 800,
-                letterSpacing: "-0.01em",
-                color: "#ffffff",
-                background: "var(--color-primary)",
-                boxShadow: "var(--shadow-btn-primary)",
                 opacity: status === "loading" ? 0.65 : 1,
-                transition: "opacity 0.15s ease, transform 0.12s ease",
               }}
             >
               {status === "loading" ? "Sending…" : "Send login code"}
             </button>
           </form>
 
+          <div
+            style={{
+              marginTop: 22,
+              paddingTop: 18,
+              borderTop: "1px solid var(--v2-line)",
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "8px 18px",
+              justifyContent: "center",
+            }}
+          >
+            <TelemetryChip>Private</TelemetryChip>
+            <TelemetryChip>No password needed</TelemetryChip>
+            <TelemetryChip color="var(--v2-ink-faint)">Secure session</TelemetryChip>
+          </div>
+
           <p
             style={{
-              marginTop: 26,
+              marginTop: 20,
               textAlign: "center",
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: 600,
-              color: "var(--color-text-muted)",
             }}
           >
             <Link
               href="/"
               style={{
-                color: "var(--color-primary)",
+                color: "var(--v2-signal-2)",
                 textDecoration: "none",
-                borderBottom: "1.5px solid transparent",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderBottomColor =
-                  "var(--color-primary)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderBottomColor = "transparent";
               }}
             >
-              Back to home
+              ← Back to home
             </Link>
           </p>
         </div>
-        <p style={{ marginTop: 20, textAlign: "center", fontSize: 11, color: "var(--color-text-muted)", lineHeight: 2 }}>
+        <p style={{ marginTop: 20, textAlign: "center", fontSize: 11, color: "var(--v2-ink-faint)", lineHeight: 2 }}>
           <a href="/privacy" style={{ color: "inherit", textDecoration: "none" }}>Privacy</a>
           {" · "}
           <a href="/terms" style={{ color: "inherit", textDecoration: "none" }}>Terms</a>
