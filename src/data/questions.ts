@@ -1,7 +1,7 @@
 import { QuizQuestion } from "@/types/quiz";
 
 /*
- * FULL FUNNEL — 20 quiz questions + info cards
+ * FULL FUNNEL — 15 quiz questions + info cards
  *
  * Copy is intentionally warm, short, and scannable (focus-friendly): titles
  * ~3-6 words, options under ~6 words, no multi-clause options. SCORING NOTE:
@@ -13,17 +13,28 @@ import { QuizQuestion } from "@/types/quiz";
  * so info cards never affect scoring. They can be added, removed, reordered,
  * or reworded freely.
  *
- * Block 1 — Pain hook (warm single-selects; paid traffic lands here),
- *           then info card 0 (acknowledgment + setup pre-frame).
- * Block 2 — Quick setup (pronoun + age, once the user is invested).
- * Block 3 — Deeper pattern, then info card A (belonging).
- * Block 4 — Scale block (6 statements) with info card B (pattern tease) mid-block.
- * Block 5 — Context + readiness, info card C (almost-there bridge), snapshot.
+ * 15-QUESTION CUT (funnel audit): gender, age, sleep, daily-impact, and
+ * motivation were removed. None of them feed archetype selection
+ * (signature.ts), answer echoes, or the focus-friction score
+ * (symptom-level.ts). sleep/daily-impact only fed optional branches of the
+ * dashboard's focusConditions, which fall back gracefully when the answers
+ * are absent — and stored results that still contain them are simply ignored
+ * by id-based readers, so old and new results both keep working.
  *
- * Scored ids (do not rename): mood, distraction, sleep, experience,
- * daily-impact, time, support, obstacles, scale-*.
+ * Block 1 — Pain hook (warm single-selects; paid traffic lands here),
+ *           then info card 0 (acknowledgment).
+ * Block 2 — Deeper pattern (history, goals, available time), then
+ *           info card A (belonging).
+ * Block 3 — Scale block (6 statements) with info card B (pattern tease)
+ *           mid-block. All six are load-bearing: they drive the paid
+ *           report's six-dimension radar, the snapshot score, and several
+ *           archetype signals.
+ * Block 4 — Context + readiness, then the snapshot card.
+ *
+ * Scored ids (do not rename): mood, distraction, experience, time, support,
+ * obstacles, scale-*.
  * Personalization-only ids (labels free, ids kept stable): focus-feeling,
- * gender, age, struggles, goals, motivation.
+ * struggles, goals.
  */
 
 export const questions: QuizQuestion[] = [
@@ -71,7 +82,7 @@ export const questions: QuizQuestion[] = [
     ],
   },
 
-  /* Q4 — struggles (hash-only; strong "that's me" multi) */
+  /* Q4 — struggles (personalization; strong "that's me" multi) */
   {
     id: "struggles",
     question: "Where does it fall apart?",
@@ -86,7 +97,7 @@ export const questions: QuizQuestion[] = [
     ],
   },
 
-  /* INFO CARD 0 — early acknowledgment + setup pre-frame (after the pain block) */
+  /* INFO CARD 0 — early acknowledgment (after the pain block) */
   {
     id: "info-seen",
     question: "",
@@ -94,54 +105,12 @@ export const questions: QuizQuestion[] = [
     options: [],
     infoStat: "Sound familiar? You're in the right place.",
     infoBody:
-      "Your first answers already sketch a pattern. Two quick setup questions, then we map what's driving it.",
+      "Your first answers already sketch a pattern. A few more and we can name what's driving it.",
   },
 
-  /* ── BLOCK 2 — Quick setup ───────────────────────────────────── */
+  /* ── BLOCK 2 — Deeper pattern ────────────────────────────────── */
 
-  /* Q5 — pronoun (personalization only) */
-  {
-    id: "gender",
-    question: "How should we refer to you?",
-    subtitle: "So your plan sounds like you.",
-    inputType: "single",
-    options: [
-      { id: "male",   label: "He / him" },
-      { id: "female", label: "She / her" },
-      { id: "other",  label: "Keep it neutral" },
-    ],
-  },
-
-  /* Q6 — age (hash-only) */
-  {
-    id: "age",
-    question: "Your age range?",
-    inputType: "single",
-    options: [
-      { id: "18-24", label: "18-24" },
-      { id: "25-34", label: "25-34" },
-      { id: "35-44", label: "35-44" },
-      { id: "45-60", label: "45-60" },
-      { id: "60+",   label: "60 or older" },
-    ],
-  },
-
-  /* ── BLOCK 3 — Deeper pattern ────────────────────────────────── */
-
-  /* Q7 — sleep (SCORED: focus conditions) */
-  {
-    id: "sleep",
-    question: "How's your energy?",
-    inputType: "single",
-    options: [
-      { id: "poor",   label: "It crashes a lot." },
-      { id: "medium", label: "All over the place." },
-      { id: "good",   label: "Mostly steady." },
-      { id: "great",  label: "Pretty stable." },
-    ],
-  },
-
-  /* Q8 — experience (SCORED: initiation style) */
+  /* Q5 — experience (SCORED: initiation style) */
   {
     id: "experience",
     question: "Tried fixing this before?",
@@ -153,21 +122,7 @@ export const questions: QuizQuestion[] = [
     ],
   },
 
-  /* Q9 — daily-impact (SCORED: focus conditions) */
-  {
-    id: "daily-impact",
-    question: "Where does it cost you most?",
-    inputType: "multiple",
-    options: [
-      { id: "work",       label: "Work or studies" },
-      { id: "relations",  label: "Relationships" },
-      { id: "finances",   label: "Money and admin" },
-      { id: "health",     label: "Health and self-care" },
-      { id: "creativity", label: "Personal projects" },
-    ],
-  },
-
-  /* Q10 — goals (hash-only) */
+  /* Q6 — goals (personalization) */
   {
     id: "goals",
     question: "What would feel like relief?",
@@ -182,7 +137,7 @@ export const questions: QuizQuestion[] = [
     ],
   },
 
-  /* Q11 — time (SCORED: focus conditions) */
+  /* Q7 — time (SCORED: focus conditions) */
   {
     id: "time",
     question: "How much time can you give?",
@@ -207,9 +162,9 @@ export const questions: QuizQuestion[] = [
       "What you're describing is common. Your plan will fit how your brain actually works.",
   },
 
-  /* ── BLOCK 4 — Scale block (6 statements) ────────────────────── */
+  /* ── BLOCK 3 — Scale block (6 statements) ────────────────────── */
 
-  /* Q12 */
+  /* Q8 */
   {
     id: "scale-procrastination",
     question: "How true is this for you?",
@@ -218,7 +173,7 @@ export const questions: QuizQuestion[] = [
     statement: "I put off things I actually care about.",
   },
 
-  /* Q13 */
+  /* Q9 */
   {
     id: "scale-focus",
     question: "And this one?",
@@ -227,7 +182,7 @@ export const questions: QuizQuestion[] = [
     statement: "Once it's boring, my focus is gone.",
   },
 
-  /* Q14 */
+  /* Q10 */
   {
     id: "scale-overwhelm",
     question: "This one?",
@@ -247,7 +202,7 @@ export const questions: QuizQuestion[] = [
       "This looks like a focus pattern — not a willpower problem. A few more answers and we can name it.",
   },
 
-  /* Q15 */
+  /* Q11 */
   {
     id: "scale-organization",
     question: "Keep going — how true?",
@@ -256,7 +211,7 @@ export const questions: QuizQuestion[] = [
     statement: "I know the goal, not the next step.",
   },
 
-  /* Q16 */
+  /* Q12 */
   {
     id: "scale-memory",
     question: "This one?",
@@ -265,7 +220,7 @@ export const questions: QuizQuestion[] = [
     statement: "If I don't write it down, it's gone.",
   },
 
-  /* Q17 — last of the scale block, but 4 questions still follow; don't say "last" */
+  /* Q13 — last of the scale block; 2 questions still follow, don't say "last" */
   {
     id: "scale-emotions",
     question: "One more like this?",
@@ -274,20 +229,9 @@ export const questions: QuizQuestion[] = [
     statement: "A bad mood can wreck my whole day.",
   },
 
-  /* INFO CARD C — almost-there bridge (after the scale block) */
-  {
-    id: "info-adhd",
-    question: "",
-    inputType: "info",
-    options: [],
-    infoStat: "Almost there — just a few more.",
-    infoBody:
-      "These last answers fine-tune your plan. Then we'll show you your pattern.",
-  },
+  /* ── BLOCK 4 — Context + readiness ───────────────────────────── */
 
-  /* ── BLOCK 5 — Context + readiness ───────────────────────────── */
-
-  /* Q18 — support (SCORED: focus conditions + initiation) */
+  /* Q14 — support (SCORED: focus conditions + initiation) */
   {
     id: "support",
     question: "What's in your corner?",
@@ -300,7 +244,7 @@ export const questions: QuizQuestion[] = [
     ],
   },
 
-  /* Q19 — obstacles (SCORED: initiation style) */
+  /* Q15 — obstacles (SCORED: initiation style + archetypes) */
   {
     id: "obstacles",
     question: "What keeps breaking your streak?",
@@ -314,21 +258,8 @@ export const questions: QuizQuestion[] = [
     ],
   },
 
-  /* Q20 — motivation (personalization only) */
-  {
-    id: "motivation",
-    question: "Ready to see what fits?",
-    inputType: "single",
-    options: [
-      { id: "very",   label: "Yes, starting today." },
-      { id: "mostly", label: "Yes, if it's clear." },
-      { id: "some",   label: "Almost — need small wins." },
-      { id: "unsure", label: "Still exploring." },
-    ],
-  },
-
-  /* Snapshot card (just before email) — infoBody is a VARIANT KEY here,
-     consumed by InfoCard.tsx. Do NOT change this infoBody value. */
+  /* Snapshot card (just before the result flow) — infoBody is a VARIANT KEY
+     here, consumed by InfoCard.tsx. Do NOT change this infoBody value. */
   {
     id: "adhd-profile",
     question: "",
