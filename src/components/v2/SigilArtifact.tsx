@@ -2,7 +2,7 @@
 
 import { m, useReducedMotion } from "framer-motion";
 import { SignatureSigil } from "@/components/signature/SignatureSigil";
-import { getSignatureIdentity } from "@/lib/signature-identity";
+import { getSignatureIdentity, SIGNATURE_ORDER, type SignatureKey } from "@/lib/signature-identity";
 import { TiltCard } from "./TiltCard";
 import { SparkBurst } from "./SparkBurst";
 
@@ -10,10 +10,17 @@ import { SparkBurst } from "./SparkBurst";
  * SigilArtifact — the V2 premium identity artifact.
  *
  * The user's Cognitive Signature rendered as a precious dark object:
- * pointer-tracked 3D tilt, holographic sheen, orbital ring around the sigil,
- * mono class telemetry, editorial serif name. Used by the result reveal and
- * (in locked form) by the paywall. Replaces SignatureRevealCard inside the
- * funnel only — the dashboard keeps the original card.
+ * pointer-tracked 3D tilt, holographic sheen, orbital emblem ring, mono
+ * telemetry, editorial serif name. Used by the result reveal and (in locked
+ * form) by the paywall. Replaces SignatureRevealCard inside the funnel only —
+ * the dashboard keeps the original card.
+ *
+ * Vocabulary note: this card sits at the purchase moment, so its label
+ * system is deliberately FocusRoute-native ("pattern", "reading", "mapped
+ * from your answers") rather than the legacy class/sigil terms, which read
+ * as RPG/occult and undermine trust right before checkout. The legacy
+ * identity table is untouched for dashboard compatibility; the V2 voice
+ * lives here.
  */
 
 type Props = {
@@ -26,6 +33,22 @@ type Props = {
 };
 
 const ease = [0.16, 1, 0.3, 1] as const;
+
+/* V2 reveal statements — keep the emotional read of each pattern, then
+   bridge straight into what the paid plan does with it. One poetic beat,
+   one practical beat. */
+const V2_STATEMENT: Record<SignatureKey, string> = {
+  Sprinter:
+    "You move fast when it counts. Your plan shows how to start without waiting for pressure.",
+  Archivist:
+    "You see every detail. Your plan shows how to keep the load from burying your next step.",
+  Spark:
+    "You light up for what's new. Your plan shows how to carry strong starts through to finished.",
+  Reactor:
+    "You read the room before it speaks. Your plan shows how to reset before pressure takes over.",
+  Drifter:
+    "Your attention follows meaning. Your plan shows where to place the anchors that hold it.",
+};
 
 export function SigilArtifact({
   signatureKey,
@@ -47,7 +70,11 @@ export function SigilArtifact({
 
   const shownEssence = essence ?? identity.essence;
   const shownSummary = summary ?? identity.summary;
-  const shownStatement = revealStatement ?? identity.revealStatement;
+  const shownStatement = revealStatement ?? V2_STATEMENT[identity.key];
+  /* "Pattern 04 / 05" — one of five focus patterns: specific and honest,
+     with none of the legacy class-rank flavor. */
+  const patternIndex = String(SIGNATURE_ORDER.indexOf(identity.key) + 1).padStart(2, "0");
+  const patternCount = String(SIGNATURE_ORDER.length).padStart(2, "0");
 
   return (
     <div
@@ -143,7 +170,7 @@ export function SigilArtifact({
             {...fade(0)}
             style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: isPaywall ? 18 : 24 }}
           >
-            <span className="v2-hud" style={{ color: "rgba(255,255,255,0.40)" }}>
+            <span className="v2-hud" style={{ color: "rgba(255,255,255,0.40)", whiteSpace: "nowrap" }}>
               Cognitive Signature
             </span>
             <span
@@ -156,9 +183,9 @@ export function SigilArtifact({
             />
             <span
               className="v2-hud"
-              style={{ color: `rgba(${identity.accentRgb},1)`, fontVariantNumeric: "tabular-nums" }}
+              style={{ color: `rgba(${identity.accentRgb},1)`, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}
             >
-              Class {identity.classIndex}
+              {patternIndex} / {patternCount}
             </span>
           </m.div>
 
@@ -215,7 +242,7 @@ export function SigilArtifact({
                 className="v2-hud"
                 style={{ color: `rgba(${identity.accentRgb},1)`, marginBottom: 8 }}
               >
-                {identity.classLabel}
+                Your focus pattern
               </m.p>
               <m.h2
                 initial={reduce ? undefined : { opacity: 0, y: 16, filter: "blur(6px)" }}
@@ -243,7 +270,7 @@ export function SigilArtifact({
                   style={{ width: 20, height: 2, borderRadius: 999, background: identity.accent }}
                 />
                 <span className="v2-hud" style={{ color: "rgba(255,255,255,0.55)" }}>
-                  Sigil / {identity.glyph}
+                  Mapped from your answers
                 </span>
               </m.div>
             </div>
