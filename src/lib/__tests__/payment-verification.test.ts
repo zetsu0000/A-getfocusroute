@@ -44,6 +44,7 @@ async function postVerify(body: Record<string, unknown>) {
   const response = await verifyPayment(
     new Request("https://focusroute.test/api/verify-payment", {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     }),
   );

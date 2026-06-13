@@ -1,5 +1,11 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { jsonInputError, readJsonObject } from "@/lib/api/request";
+import {
+  enforceRateLimit,
+  rateLimitResponse,
+  temporaryUnavailableResponse,
+} from "@/lib/rate-limit/server";
 import { getSignatureFromAnswers } from "@/lib/signature";
 import type { QuizAnswer } from "@/types/quiz";
 
@@ -10,7 +16,7 @@ function normalizeEmail(email: string): string {
 }
 
 function isValidQuizAnswers(value: unknown): value is QuizAnswer[] {
-  if (!Array.isArray(value) || value.length === 0) {
+  if (!Array.isArray(value) || value.length === 0 || value.length > 30) {
     return false;
   }
   return value.every(
@@ -18,8 +24,12 @@ function isValidQuizAnswers(value: unknown): value is QuizAnswer[] {
       row &&
       typeof row === "object" &&
       typeof (row as QuizAnswer).questionId === "string" &&
+      (row as QuizAnswer).questionId.length <= 80 &&
       Array.isArray((row as QuizAnswer).selectedOptions) &&
-      (row as QuizAnswer).selectedOptions.every((o) => typeof o === "string"),
+      (row as QuizAnswer).selectedOptions.length <= 8 &&
+      (row as QuizAnswer).selectedOptions.every(
+        (o) => typeof o === "string" && o.length <= 160,
+      ),
   );
 }
 
@@ -59,7 +69,13 @@ function insertErrorResponse(error: {
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as Record<string, unknown>;
+    const parsed = await readJsonObject(request, {
+      maxBytes: 64 * 1024,
+      requireJsonContentType: true,
+    });
+    if (!parsed.ok) return jsonInputError(parsed);
+
+    const body = parsed.body;
     const submittedEmailRaw =
       typeof body.email === "string" ? body.email.trim() : "";
     const name = typeof body.name === "string" ? body.name.trim() : "";
@@ -70,6 +86,15 @@ export async function POST(request: Request) {
         { error: "answers must be a non-empty array" },
         { status: 400 },
       );
+    }
+
+    const preAuthLimit = await enforceRateLimit("quizResult", {
+      request,
+      email: submittedEmailRaw || null,
+    });
+    if (!preAuthLimit.ok) {
+      if (preAuthLimit.kind === "limited") return rateLimitResponse(preAuthLimit);
+      return temporaryUnavailableResponse();
     }
 
     const supabase = await createClient();

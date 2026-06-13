@@ -67,6 +67,16 @@ Optional UI pricing overrides:
 - `NEXT_PUBLIC_UI_MEMBERSHIP_MONTHLY_USD`
 - `NEXT_PUBLIC_UI_MEMBERSHIP_ANNUAL_USD`
 
+**Distributed rate limiting (required before paid traffic):**
+
+Public mutation endpoints rely on a Redis REST-compatible distributed limiter in production. Provision the backend manually in Vercel, then set:
+
+- `RATE_LIMIT_REDIS_REST_URL`
+- `RATE_LIMIT_REDIS_REST_TOKEN`
+- `RATE_LIMIT_HMAC_SECRET`
+
+The limiter intentionally does not use process-local memory as production protection. If these values are missing in production, payment creation and verification fail closed, quiz-result writes fail closed, and analytics events are dropped without blocking the user journey. Stripe webhooks are not placed behind this limiter; they continue to rely on signature verification and idempotent event handling.
+
 3. Start development:
 
 ```bash

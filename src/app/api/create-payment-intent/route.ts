@@ -1,5 +1,11 @@
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 import { recordAnalyticsEvent } from "@/lib/analytics/server";
+import { jsonInputError, readJsonObject } from "@/lib/api/request";
+import {
+  enforceRateLimit,
+  rateLimitResponse,
+  temporaryUnavailableResponse,
+} from "@/lib/rate-limit/server";
 import { getStripeClient } from "@/lib/stripe/client";
 import { buildStripeFunnelMetadata } from "@/lib/stripe/metadata";
 import { resolveOneTimeProductKey } from "@/lib/stripe/productKeyPolicy";
@@ -25,8 +31,13 @@ function asString(value: unknown, max = 500): string {
 
 export async function POST(request: Request) {
   try {
-    const stripe = getStripeClient();
-    const body = (await request.json()) as Record<string, unknown>;
+    const parsed = await readJsonObject(request, {
+      maxBytes: 16 * 1024,
+      requireJsonContentType: true,
+    });
+    if (!parsed.ok) return jsonInputError(parsed);
+
+    const body = parsed.body;
     const priceId = body.priceId;
     const email = typeof body.email === "string" ? body.email : "";
     const funnel_step =
@@ -62,6 +73,17 @@ export async function POST(request: Request) {
       );
     }
 
+    const limit = await enforceRateLimit("createPaymentIntent", {
+      request,
+      email,
+      productKey,
+    });
+    if (!limit.ok) {
+      if (limit.kind === "limited") return rateLimitResponse(limit);
+      return temporaryUnavailableResponse();
+    }
+
+    const stripe = getStripeClient();
     const price = await stripe.prices.retrieve(priceId);
     const amount = price.unit_amount!;
 
@@ -127,7 +149,10 @@ export async function POST(request: Request) {
       currency: price.currency,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
+    const message =
+      process.env.NODE_ENV === "development" && err instanceof Error
+        ? err.message
+        : "Unable to create payment";
     return Response.json({ error: message }, { status: 500 });
   }
 }
