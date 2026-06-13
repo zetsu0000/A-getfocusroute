@@ -11,7 +11,11 @@ export default async function Page({
   searchParams: Promise<AssessmentSearchParams>;
 }) {
   const params = await searchParams;
-  const autoStartQuiz = shouldAutoStartAssessment(params);
+  // The assessment now always opens directly on Q1 (the redundant intro screen
+  // was removed), so there is no longer an "auto start vs. show intro" decision
+  // to pass down. We still classify paid traffic so paid_auto_started fires.
+  const paidAutoStart =
+    shouldAutoStartAssessment(params) && isPaidAssessmentTraffic(params);
   const rawStep = params.step;
   const step = Array.isArray(rawStep) ? rawStep[0] : rawStep;
   const hasEntryStep =
@@ -21,10 +25,6 @@ export default async function Page({
     step === "success";
 
   return (
-    <AssessmentClient
-      autoStartQuiz={autoStartQuiz}
-      paidAutoStart={autoStartQuiz && isPaidAssessmentTraffic(params)}
-      hasEntryStep={hasEntryStep}
-    />
+    <AssessmentClient paidAutoStart={paidAutoStart} hasEntryStep={hasEntryStep} />
   );
 }
