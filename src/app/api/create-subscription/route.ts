@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 import { recordAnalyticsEvent } from "@/lib/analytics/server";
 import { sendMetaEvent } from "@/lib/meta/conversions";
+import { subscriptionVerificationEvidenceReady } from "@/lib/payment-verification";
 import { getStripeClient } from "@/lib/stripe/client";
 import { buildStripeFunnelMetadata } from "@/lib/stripe/metadata";
 import { resolveMembershipProductKey } from "@/lib/stripe/productKeyPolicy";
@@ -114,6 +115,20 @@ export async function POST(request: Request) {
     const rawPI = invoice?.payment_intent;
     const paymentIntent =
       typeof rawPI === "string" ? null : (rawPI as Stripe.PaymentIntent | undefined);
+
+    if (
+      !subscriptionVerificationEvidenceReady({
+        subscriptionId: subscription.id,
+        paymentIntentId: paymentIntent?.id,
+        clientSecret: paymentIntent?.client_secret,
+      })
+    ) {
+      return Response.json(
+        { error: "Unable to initialize subscription payment verification. Please try again." },
+        { status: 502 },
+      );
+    }
+
     const price = await stripe.prices.retrieve(priceId);
 
     try {
