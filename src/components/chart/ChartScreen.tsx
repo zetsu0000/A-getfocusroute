@@ -8,6 +8,7 @@ import { useQuizStore } from "@/store/quizStore";
 import { safeName } from "@/lib/personalization";
 import { getSignatureFromAnswers, echoSentence } from "@/lib/signature";
 import { getSignatureIdentity } from "@/lib/signature-identity";
+import { firstStepTeaserFor } from "@/lib/first-step-teaser";
 import { SigilArtifact } from "@/components/v2/SigilArtifact";
 import { FocusField } from "@/components/v2/FocusField";
 import { HudLabel } from "@/components/v2/primitives";
@@ -36,15 +37,8 @@ export function ChartScreen() {
   /* One concrete, pattern-specific withheld deliverable leads the locked
      list — "full plan" stays abstract without it (audit: the bridge needs
      one exact next step withheld, not just categories). */
-  const firstStepTeaser: Record<string, string> = {
-    Sprinter: "Your first step for a day with no deadline pushing you",
-    Archivist: "Your first step for when the list is already overwhelming",
-    Spark: "Your first step for restarting a project that went quiet",
-    Reactor: "Your first short reset for a day that got derailed",
-    Drifter: "Your first anchor to place before tomorrow morning",
-  };
   const lockedRows = [
-    firstStepTeaser[signature.signature] ?? "Your first next step, sized to your pattern",
+    firstStepTeaserFor(signature.signature),
     ...signature.unlockTeaser,
   ];
   const saveStarted = useRef(false);
