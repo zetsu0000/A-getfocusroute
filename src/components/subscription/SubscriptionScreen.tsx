@@ -135,9 +135,19 @@ function SubCheckoutForm({
     if (data.error) { setError(data.error); trackPaymentError("create_subscription"); setLoading(false); return; }
 
     if (data.clientSecret) {
+      if (typeof data.subscriptionId !== "string" || !data.subscriptionId) {
+        setError("Unable to initialize subscription payment verification. Please try again.");
+        trackPaymentError("subscription_verification_evidence");
+        setLoading(false);
+        return;
+      }
       const { error: confirmErr } = await stripe.confirmPayment({
         clientSecret: data.clientSecret,
-        confirmParams: { return_url: window.location.origin + "/assessment?step=success" },
+        confirmParams: {
+          return_url:
+            window.location.origin +
+            `/assessment?step=success&subscription_id=${encodeURIComponent(data.subscriptionId)}`,
+        },
         redirect: "if_required",
       });
       if (confirmErr) { setError(confirmErr.message ?? "Payment failed"); trackPaymentError("confirm_payment"); setLoading(false); return; }
