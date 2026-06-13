@@ -108,6 +108,36 @@ export function QuizEngine() {
     }
   }, [question, isInfo, answeredCount, totalCount]);
 
+  /* Per-question answer confirmation — completion signal per screen, vs the
+     view signal above. Fires when an answer entry is added or changed
+     (re-answers on back-nav refire deliberately). Sends ids and counts,
+     never option content. First-party only. */
+  const prevAnswersRef = useRef(answers);
+  useEffect(() => {
+    const prev = prevAnswersRef.current;
+    prevAnswersRef.current = answers;
+    if (prev === answers) return;
+    for (const a of answers) {
+      const old = prev.find((p) => p.questionId === a.questionId);
+      if (old && old.selectedOptions.join("|") === a.selectedOptions.join("|")) continue;
+      const answeredQuestion = questions.find((q) => q.id === a.questionId);
+      if (!answeredQuestion) continue;
+      const idx = questions
+        .filter((q) => q.inputType !== "info")
+        .findIndex((q) => q.id === a.questionId);
+      trackEvent(FIRST_PARTY_EVENTS.questionAnswered, {
+        meta: false,
+        metadata: {
+          question_id: a.questionId,
+          question_index: idx + 1,
+          total_questions: totalCount,
+          input_type: answeredQuestion.inputType,
+          option_count: a.selectedOptions.length,
+        },
+      });
+    }
+  }, [answers, totalCount]);
+
   // Slide direction follows question index; syncing in an effect avoids reading refs during render (react-hooks/refs).
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- AnimatePresence direction tracks zustand index delta

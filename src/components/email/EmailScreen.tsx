@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { m } from "framer-motion";
 import { Lock } from "lucide-react";
 import { useQuizStore } from "@/store/quizStore";
@@ -36,8 +36,28 @@ export function EmailScreen() {
   const [local, setLocal]     = useState("");
   const [touched, setTouched] = useState(false);
   const submittedRef = useRef(false);
+  const previewTracked = useRef(false);
+  const focusTracked = useRef(false);
   const valid   = local.includes("@") && local.includes(".");
   const hasError = touched && local.length > 0 && !valid;
+
+  /* Since the quiz-15 pass, THIS screen is the free result preview — the
+     event moves here with it (same name, same Meta bridge, fired once). */
+  useEffect(() => {
+    if (previewTracked.current) return;
+    previewTracked.current = true;
+    trackEvent(FIRST_PARTY_EVENTS.resultPreviewViewed, {
+      metadata: { signature_key: signature.signature, source: "email_gate" },
+    });
+  }, [signature.signature]);
+
+  /* First focus on the email field — the abandon signal the audit asked
+     for: gate seen vs gate engaged vs gate completed. */
+  const handleEmailFocus = () => {
+    if (focusTracked.current) return;
+    focusTracked.current = true;
+    trackEvent(FIRST_PARTY_EVENTS.emailFieldFocused, { meta: false });
+  };
 
   const handleContinue = () => {
     if (!valid) return;
@@ -182,6 +202,7 @@ export function EmailScreen() {
             value={local}
             onChange={(e) => setLocal(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleContinue()}
+            onFocus={handleEmailFocus}
             onBlur={() => setTouched(true)}
             className={`v2-input ${hasError ? "v2-input-error" : ""}`}
             style={{ paddingLeft: 46 }}

@@ -45,11 +45,17 @@ export function ChartScreen() {
   const [authChecked, setAuthChecked] = useState(false);
   const [saveEmail, setSaveEmail] = useState<string | null>(null);
 
+  /* The free preview now lives on the email gate (result_preview_viewed
+     fires there); this screen is the full result. */
+  const fullResultTracked = useRef(false);
   useEffect(() => {
-    trackEvent(FIRST_PARTY_EVENTS.resultPreviewViewed, {
-      metadata: { signature_key: signature.signature },
+    if (fullResultTracked.current) return;
+    fullResultTracked.current = true;
+    trackEvent(FIRST_PARTY_EVENTS.fullResultViewed, {
+      meta: false,
+      metadata: { signature_key: signature.signature, retake: retakeMode },
     });
-  }, [signature.signature]);
+  }, [signature.signature, retakeMode]);
 
   useEffect(() => {
     let cancelled = false;
