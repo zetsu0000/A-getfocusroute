@@ -1,8 +1,26 @@
 ﻿import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { paidHomepageRedirectPath } from "@/lib/assessment/autostart";
+import { classifyMalformedBackslashPath } from "@/lib/routing/malformed-path";
 
 export async function proxy(request: NextRequest) {
+  const malformedPath = classifyMalformedBackslashPath(request.nextUrl.pathname);
+  if (malformedPath.action === "redirect") {
+    const redirectUrl = new URL(request.url);
+    redirectUrl.pathname = malformedPath.pathname;
+    return NextResponse.redirect(redirectUrl, 308);
+  }
+
+  if (malformedPath.action === "reject") {
+    return new Response("Bad Request", {
+      status: 400,
+      headers: {
+        "Cache-Control": "no-store",
+        "Content-Type": "text/plain; charset=utf-8",
+      },
+    });
+  }
+
   // Paid ads sometimes point at "/" — route that click into the quiz before
   // rendering anything, with every query param intact so the existing
   // /assessment auto-start and attribution capture take over.
