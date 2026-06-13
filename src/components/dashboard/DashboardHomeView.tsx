@@ -1,7 +1,7 @@
-import Link from "next/link";
 import type { ComponentType } from "react";
 import { ArrowRight, BookOpenCheck, Compass, FileText, Library, ReceiptText } from "lucide-react";
 
+import { FirstActionLink } from "@/components/dashboard/FirstActionLink";
 import { DashboardMembershipSummary } from "@/components/dashboard/DashboardMembershipSummary";
 import { AccessBadge, PremiumCard, SectionEyebrow } from "@/components/dashboard/DashboardPrimitives";
 import { DashboardRetakeSection } from "@/components/dashboard/DashboardRetakeSection";
@@ -39,9 +39,9 @@ function FeatureCard({
     : href;
 
   return (
-    <Link
+    <FirstActionLink
       href={dest}
-      prefetch={false}
+      action={`${locked ? "unlock" : "open"}:${need}`}
       style={{
         display: "block",
         borderRadius: 18,
@@ -80,7 +80,7 @@ function FeatureCard({
       >
         {cta} <ArrowRight size={13} strokeWidth={2.4} />
       </p>
-    </Link>
+    </FirstActionLink>
   );
 }
 
@@ -184,9 +184,9 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
             need="membership"
             icon={BookOpenCheck}
           />
-          <Link
+          <FirstActionLink
             href="/dashboard/membership"
-            prefetch={false}
+            action="open:billing"
             style={{
               display: "block",
               borderRadius: 18,
@@ -209,7 +209,7 @@ export function DashboardHomeView({ snap }: { snap: LoggedInDashboardSnapshot })
                 <p style={{ fontSize: 12, fontWeight: 800, color: "var(--color-signal)", display: "inline-flex", alignItems: "center", gap: 6 }}>Open Billing <ArrowRight size={13} strokeWidth={2.4} /></p>
               </div>
             </div>
-          </Link>
+          </FirstActionLink>
         </div>
       </section>
 

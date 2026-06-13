@@ -122,7 +122,15 @@ function UpsellCheckoutForm({ onSuccess, onDecline }: { onSuccess: () => void; o
 
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <PaymentElement options={{ layout: "tabs" }} />
+      <PaymentElement
+        onReady={() => {
+          trackEvent(FIRST_PARTY_EVENTS.paymentElementLoaded, {
+            meta: false,
+            metadata: { product_key: "roadmap_28_day" },
+          });
+        }}
+        options={{ layout: "tabs" }}
+      />
       {error && <p style={{ fontSize: 13, color: "var(--v2-error)", textAlign: "center", background: "rgba(255,139,139,0.1)", border: "1px solid rgba(255,139,139,0.3)", borderRadius: 12, padding: "9px 12px" }}>{error}</p>}
 
       <m.button
@@ -198,6 +206,12 @@ export function UpsellScreen() {
   const [loadingSecret, setLoadingSecret] = useState(true);
 
   useEffect(() => {
+    /* Distinct upsell-stage signal; the paywall_viewed below keeps its
+       legacy product_key-scoped firing for continuity. */
+    trackEvent(FIRST_PARTY_EVENTS.upsellViewed, {
+      meta: false,
+      metadata: { product_key: "roadmap_28_day" },
+    });
     trackEvent(FIRST_PARTY_EVENTS.paywallViewed, {
       metadata: {
         product_key: "roadmap_28_day",

@@ -500,6 +500,30 @@ export function PaywallScreen() {
   const [clientSecret,  setClientSecret]  = useState<string | null>(null);
   const [loadingSecret, setLoadingSecret] = useState(true);
 
+  /* checkout_section_reached: fires once when the payment section actually
+     enters the viewport. This — not paywall_viewed and not
+     payment_intent_created (which fires on render) — is the "user got to
+     where money moves" signal. */
+  const checkoutReachedRef = useRef(false);
+  useEffect(() => {
+    const el = document.getElementById("paywall-checkout");
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting || checkoutReachedRef.current) return;
+        checkoutReachedRef.current = true;
+        trackEvent(FIRST_PARTY_EVENTS.checkoutSectionReached, {
+          meta: false,
+          metadata: { product_key: "brain_profile" },
+        });
+        io.disconnect();
+      },
+      { threshold: 0.35 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   useEffect(() => {
     trackEvent(FIRST_PARTY_EVENTS.paywallViewed, {
       metadata: {
@@ -626,7 +650,13 @@ export function PaywallScreen() {
             </div>
             <button
               type="button"
-              onClick={scrollToCheckout}
+              onClick={() => {
+                trackEvent(FIRST_PARTY_EVENTS.checkoutCtaClicked, {
+                  meta: false,
+                  metadata: { product_key: "brain_profile", cta_location: "paywall_offer_top" },
+                });
+                scrollToCheckout();
+              }}
               className="v2-cta v2-cta-gold"
               style={{ marginTop: 12, width: "100%", minHeight: 56, fontSize: 15.5 }}
             >

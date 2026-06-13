@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { m } from "framer-motion";
 import { Check, Shield, RotateCcw } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js/pure";
@@ -148,7 +148,15 @@ function SubCheckoutForm({
 
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <PaymentElement options={{ layout: "tabs" }} />
+      <PaymentElement
+        onReady={() => {
+          trackEvent(FIRST_PARTY_EVENTS.paymentElementLoaded, {
+            meta: false,
+            metadata: { product_key: selectedProductKey(priceId) },
+          });
+        }}
+        options={{ layout: "tabs" }}
+      />
       {error && <p style={{ fontSize: 13, color: "var(--v2-error)", textAlign: "center", background: "rgba(255,139,139,0.1)", border: "1px solid rgba(255,139,139,0.3)", borderRadius: 12, padding: "9px 12px" }}>{error}</p>}
       <m.button
         type="submit"
@@ -281,6 +289,15 @@ export function SubscriptionScreen() {
   const [showPayment, setShowPayment] = useState(false);
 
   const plan = PLANS[selected];
+
+  /* Stage-view signal on mount; the legacy paywall_viewed below still fires
+     only when the user opens the payment form. */
+  const viewTracked = useRef(false);
+  useEffect(() => {
+    if (viewTracked.current) return;
+    viewTracked.current = true;
+    trackEvent(FIRST_PARTY_EVENTS.subscriptionViewed, { meta: false });
+  }, []);
 
   const handleSuccess = () => {
     setStep("success");
