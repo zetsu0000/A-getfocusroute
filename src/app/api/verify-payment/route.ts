@@ -20,6 +20,11 @@ import {
   paymentIntentProductKeyMatchesPolicy,
   subscriptionProductKeyMatchesPolicy,
 } from "@/lib/stripe/productKeyPolicy";
+import { readJsonObject } from "@/lib/api/request";
+import {
+  enforceRateLimit,
+  rateLimitResponse,
+} from "@/lib/rate-limit/server";
 
 type VerifyBody = {
   payment_intent?: unknown;
@@ -140,21 +145,52 @@ async function verifySubscriptionIntent(input: {
  */
 export async function POST(request: Request) {
   try {
-    const parsed = (await request.json().catch(() => null)) as unknown;
-    if (!isRecord(parsed)) {
-      return coarseResponse("failed", { status: 400 });
+    const parsed = await readJsonObject(request, {
+      maxBytes: 2 * 1024,
+      requireJsonContentType: true,
+    });
+    if (!parsed.ok || !isRecord(parsed.body)) {
+      return coarseResponse("failed", { status: parsed.ok ? 400 : parsed.status });
     }
 
-    const body = parsed as VerifyBody;
+    const body = parsed.body as VerifyBody;
     const paymentIntentId = body.payment_intent;
     const targetStep = body.target_step;
     const subscriptionId = body.subscription_id;
 
     if (!isPaymentIntentId(paymentIntentId) || !isFunnelStep(targetStep)) {
+      const malformedLimit = await enforceRateLimit("verifyPaymentMalformed", {
+        request,
+      });
+      if (!malformedLimit.ok && malformedLimit.kind === "limited") {
+        return rateLimitResponse(malformedLimit);
+      }
+      if (!malformedLimit.ok) {
+        return coarseResponse("failed", { status: 503 });
+      }
       return coarseResponse("failed", { status: 400 });
     }
     if (subscriptionId !== undefined && !isSubscriptionId(subscriptionId)) {
+      const malformedLimit = await enforceRateLimit("verifyPaymentMalformed", {
+        request,
+      });
+      if (!malformedLimit.ok && malformedLimit.kind === "limited") {
+        return rateLimitResponse(malformedLimit);
+      }
+      if (!malformedLimit.ok) {
+        return coarseResponse("failed", { status: 503 });
+      }
       return coarseResponse("failed", { status: 400 });
+    }
+
+    const limit = await enforceRateLimit("verifyPayment", {
+      request,
+      paymentIntentId,
+      subscriptionId: typeof subscriptionId === "string" ? subscriptionId : null,
+    });
+    if (!limit.ok) {
+      if (limit.kind === "limited") return rateLimitResponse(limit);
+      return coarseResponse("failed", { status: 503 });
     }
 
     const stripe = getStripeClient();

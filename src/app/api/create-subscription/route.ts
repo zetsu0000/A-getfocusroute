@@ -2,8 +2,14 @@ import Stripe from "stripe";
 
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 import { recordAnalyticsEvent } from "@/lib/analytics/server";
+import { jsonInputError, readJsonObject } from "@/lib/api/request";
 import { sendMetaEvent } from "@/lib/meta/conversions";
 import { subscriptionVerificationEvidenceReady } from "@/lib/payment-verification";
+import {
+  enforceRateLimit,
+  rateLimitResponse,
+  temporaryUnavailableResponse,
+} from "@/lib/rate-limit/server";
 import { getStripeClient } from "@/lib/stripe/client";
 import { buildStripeFunnelMetadata } from "@/lib/stripe/metadata";
 import { resolveMembershipProductKey } from "@/lib/stripe/productKeyPolicy";
@@ -35,8 +41,13 @@ function requestIp(request: Request): string | null {
 
 export async function POST(request: Request) {
   try {
-    const stripe = getStripeClient();
-    const body = (await request.json()) as Record<string, unknown>;
+    const parsed = await readJsonObject(request, {
+      maxBytes: 16 * 1024,
+      requireJsonContentType: true,
+    });
+    if (!parsed.ok) return jsonInputError(parsed);
+
+    const body = parsed.body;
     const priceId = body.priceId;
     const emailRaw = typeof body.email === "string" ? body.email : "";
     const paymentMethodId = body.paymentMethodId;
@@ -72,6 +83,17 @@ export async function POST(request: Request) {
       return Response.json({ error: "Invalid priceId" }, { status: 400 });
     }
 
+    const limit = await enforceRateLimit("createSubscription", {
+      request,
+      email,
+      productKey,
+    });
+    if (!limit.ok) {
+      if (limit.kind === "limited") return rateLimitResponse(limit);
+      return temporaryUnavailableResponse();
+    }
+
+    const stripe = getStripeClient();
     const funnelMeta = buildStripeFunnelMetadata({
       product_key: productKey,
       email,
@@ -193,7 +215,10 @@ export async function POST(request: Request) {
       currency: price.currency,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
+    const message =
+      process.env.NODE_ENV === "development" && err instanceof Error
+        ? err.message
+        : "Unable to create subscription";
     return Response.json({ error: message }, { status: 500 });
   }
 }

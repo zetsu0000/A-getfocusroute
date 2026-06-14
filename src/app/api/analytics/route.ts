@@ -10,6 +10,11 @@ import {
   metadataSizeOk,
   recordAnalyticsEvent,
 } from "@/lib/analytics/server";
+import { readJsonObject } from "@/lib/api/request";
+import {
+  enforceRateLimit,
+  rateLimitResponse,
+} from "@/lib/rate-limit/server";
 import { sendMetaEvent } from "@/lib/meta/conversions";
 import { createClient } from "@/lib/supabase/server";
 
@@ -65,7 +70,15 @@ function numberValue(value: unknown): number | undefined {
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as AnalyticsRequest;
+    const parsed = await readJsonObject(request, {
+      maxBytes: 16 * 1024,
+      requireJsonContentType: true,
+    });
+    if (!parsed.ok) {
+      return new Response(null, { status: parsed.status });
+    }
+
+    const body = parsed.body as AnalyticsRequest;
     const eventName = cleanString(body.event_name, 120);
     if (!eventName || !isAllowedFirstPartyEvent(eventName)) {
       return NextResponse.json({ error: "invalid event_name" }, { status: 400 });
@@ -74,6 +87,19 @@ export async function POST(request: Request) {
     const metadata = safeMetadata(body.metadata);
     if (!metadataSizeOk(metadata)) {
       return NextResponse.json({ error: "metadata too large" }, { status: 413 });
+    }
+
+    const limit = await enforceRateLimit("analytics", {
+      request,
+      sessionId: cleanString(body.session_id, 128),
+      eventName,
+    });
+    if (!limit.ok) {
+      if (limit.kind === "limited") return rateLimitResponse(limit);
+      return new Response(null, {
+        status: 204,
+        headers: { "Cache-Control": "no-store" },
+      });
     }
 
     let userId: string | null = null;
