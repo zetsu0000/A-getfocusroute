@@ -5,9 +5,11 @@ import { fileURLToPath } from "node:url";
 import {
   NON_DIAGNOSIS_LINE,
   PAYWALL_CHECKOUT_ID,
+  PAYWALL_TRUST_CHECKOUT_ID,
   POST_PAYMENT_EXPECTATION,
   SECURE_PAYMENT_LINE,
-  TRUST_LINE_ITEMS,
+  TRUST_LINE,
+  payCtaLabel,
   paywallDeliverables,
 } from "../paywallContent";
 
@@ -26,12 +28,25 @@ describe("paywall primary offer content", () => {
     expect(d[2].toLowerCase()).toContain("account");
   });
 
-  it("keeps the trust line to the three verified claims", () => {
-    expect(TRUST_LINE_ITEMS).toEqual([
-      "One-time payment",
-      "Instant account access",
-      "7-day refund",
-    ]);
+  it("states trust as a single quiet line, not three separate chips", () => {
+    expect(TRUST_LINE).toBe("One-time payment \u00B7 Instant access \u00B7 7-day refund");
+    // exactly two middot separators → one line, three claims
+    expect((TRUST_LINE.match(/\u00B7/g) || []).length).toBe(2);
+    // the three verified claims survive the compression
+    expect(TRUST_LINE).toContain("One-time payment");
+    expect(TRUST_LINE).toContain("Instant access");
+    expect(TRUST_LINE).toContain("7-day refund");
+  });
+
+  it("builds the final CTA as one string with an em dash around the price", () => {
+    expect(payCtaLabel("$27")).toBe("Pay $27 \u2014 Unlock My Plan");
+    // em dash, not the old ampersand fragment that collapsed to "$27&"
+    expect(payCtaLabel("$27")).toContain("\u2014");
+    expect(payCtaLabel("$27")).not.toContain("&");
+    // single space on each side of the price token (spacing can't break)
+    expect(payCtaLabel("$27")).toContain("Pay $27 \u2014");
+    // stays driven by the centralized price value
+    expect(payCtaLabel("$49")).toBe("Pay $49 \u2014 Unlock My Plan");
   });
 
   it("states the non-diagnosis boundary without medical claims", () => {
@@ -65,6 +80,10 @@ describe("paywall primary offer content", () => {
 
   it("keeps the checkout anchor id unchanged", () => {
     expect(PAYWALL_CHECKOUT_ID).toBe("paywall-checkout");
+  });
+
+  it("keeps a separate trust-to-checkout scroll target", () => {
+    expect(PAYWALL_TRUST_CHECKOUT_ID).toBe("paywall-trust-checkout");
   });
 
   it("does not export a paywall FAQ", () => {

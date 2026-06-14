@@ -14,6 +14,9 @@
 /** The id the top CTA scrolls to and the checkout-reached observer watches. */
 export const PAYWALL_CHECKOUT_ID = "paywall-checkout";
 
+/** The id the top CTA scrolls to so customer proof stays visible before fields. */
+export const PAYWALL_TRUST_CHECKOUT_ID = "paywall-trust-checkout";
+
 /**
  * The three concrete deliverables in plain words — what the user learns, the
  * practical first step, and where the plan stays available. Derived from the
@@ -27,12 +30,12 @@ export function paywallDeliverables(planFocus: string): string[] {
   ];
 }
 
-/** Scannable trust line shown once, near the primary CTA. */
-export const TRUST_LINE_ITEMS = [
-  "One-time payment",
-  "Instant account access",
-  "7-day refund",
-] as const;
+/**
+ * One quiet trust line shown once, near the primary CTA. Deliberately a single
+ * middot-joined sentence — not three separate icon badges — so the offer reads
+ * calm and editorial rather than chip-heavy.
+ */
+export const TRUST_LINE = "One-time payment \u00B7 Instant access \u00B7 7-day refund";
 
 /** The non-diagnosis boundary, stated once near the offer. */
 export const NON_DIAGNOSIS_LINE =
@@ -40,6 +43,15 @@ export const NON_DIAGNOSIS_LINE =
 
 /** The single secure-payment signal, shown next to the actual checkout. */
 export const SECURE_PAYMENT_LINE = "Secure payment processed by Stripe";
+
+/**
+ * The final payment CTA label, built as one complete string from the
+ * centralized price value so the spacing around the price can never break
+ * (previously two JSX fragments rendered as "Pay $27& Unlock My Plan").
+ */
+export function payCtaLabel(price: string): string {
+  return `Pay ${price} \u2014 Unlock My Plan`;
+}
 
 /**
  * One short, truthful post-payment expectation. Deliberately does NOT promise

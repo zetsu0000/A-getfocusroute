@@ -22,8 +22,18 @@ export type SocialProofPlacement =
 export interface ApprovedTestimonial {
   /** Stable, opaque id used for React keys and safe analytics metadata. */
   id: string;
-  /** Approved public quote or faithful excerpt. */
-  quote: string;
+  /**
+   * Short approved excerpt — shown on the result screen and in the collapsed
+   * paywall proof, where a single scannable line is enough.
+   */
+  shortQuote: string;
+  /**
+   * The complete authorized public review — shown only when the paywall proof
+   * is expanded. This is the customer's real, full text (faithful to the
+   * authorized source, never invented or padded); when a customer wrote only a
+   * single sentence, that sentence is the complete story.
+   */
+  fullQuote: string;
   /** Approved public attribution. */
   attribution: string;
   /** Repo-relative public image path. Never a local filesystem path. */
@@ -48,8 +58,10 @@ const PAYWALL: SocialProofPlacement = "paywall_post_checkout";
 export const APPROVED_TESTIMONIALS: readonly ApprovedTestimonial[] = [
   {
     id: "proof-001",
-    quote:
+    shortQuote:
       "Not cheap, but at least you are getting a lot actually, so it is a good deal.",
+    fullQuote:
+      "Not cheap, but at least you are getting a lot actually, so it is a good deal. Something one might gift a friend if there was an option (for example, gifting a 3-month membership).",
     attribution: "Mark H.",
     image: "/testimonials/mark-hendrik.png",
     category: "practical_value",
@@ -58,7 +70,9 @@ export const APPROVED_TESTIMONIALS: readonly ApprovedTestimonial[] = [
   },
   {
     id: "proof-002",
-    quote: "Very easy interface, everything is clear and cool.",
+    shortQuote: "Very easy interface, everything is clear and cool.",
+    fullQuote:
+      "I am very satisfied. Very easy interface, everything is clear and cool.",
     attribution: "Daria M.",
     image: "/testimonials/daria-mart.png",
     category: "clarity",
@@ -67,8 +81,10 @@ export const APPROVED_TESTIMONIALS: readonly ApprovedTestimonial[] = [
   },
   {
     id: "proof-003",
-    quote:
+    shortQuote:
       "They showed a great disposition to help. Thumbs up to their support.",
+    fullQuote:
+      "I contacted the technical support and, before getting their answer, I had already fixed the problem myself. Although, in their favor, it only took a few hours to get their answer, and they showed a great disposition to help. So, thumbs up to their support.",
     attribution: "Alan T.",
     image: "/testimonials/alan-thompson.png",
     category: "customer_support",
@@ -77,8 +93,10 @@ export const APPROVED_TESTIMONIALS: readonly ApprovedTestimonial[] = [
   },
   {
     id: "proof-004",
-    quote:
+    shortQuote:
       "The support team responded very quickly with a clear and accurate answer. They helped me understand the situation right away and resolved my concern.",
+    fullQuote:
+      "I had a question regarding an issue with my account, and the support team responded very quickly with a clear and accurate answer. They helped me understand the situation right away and resolved my concern. Excellent customer service and a great support experience. Thank you!",
     attribution: "Melissa R.",
     image: "/testimonials/melissa-roberts.png",
     category: "customer_support",
@@ -87,8 +105,10 @@ export const APPROVED_TESTIMONIALS: readonly ApprovedTestimonial[] = [
   },
   {
     id: "proof-005",
-    quote:
+    shortQuote:
       "Super professional, helpful, and went above and beyond. He took the time to explain things.",
+    fullQuote:
+      "I was surprised how fast and quick Dean from the FocusRoute team was. He was super professional, helpful, and went above and beyond. He took the time to explain things. I already loved FocusRoute and now I love them even more. I look forward to making many more cool things with them.",
     attribution: "Barbara S.",
     image: "/testimonials/barbara-sanchez.png",
     category: "customer_support",
@@ -97,8 +117,10 @@ export const APPROVED_TESTIMONIALS: readonly ApprovedTestimonial[] = [
   },
   {
     id: "proof-006",
-    quote:
+    shortQuote:
       "They were ultra persistent in getting to the bottom of this. They were honestly trying to help me through the entire situation.",
+    fullQuote:
+      "To Jason, Aria, and the whole FocusRoute support team. I can't thank them enough for not slamming the door on me. They were ultra persistent in getting to the bottom of this. I truly appreciate it. Very professional and not one email was demeaning. They all were honestly trying to help me through this entire situation. Thank you once again for being decent and in order, and operating with a spirit of excellence!",
     attribution: "Pamela D.",
     image: "/testimonials/pamela-davis.png",
     category: "customer_support",
@@ -107,7 +129,8 @@ export const APPROVED_TESTIMONIALS: readonly ApprovedTestimonial[] = [
   },
   {
     id: "proof-007",
-    quote: "Everything is amazing.",
+    shortQuote: "Everything is amazing.",
+    fullQuote: "Everything is amazing.",
     attribution: "Gregory H.",
     image: "/testimonials/gregory-hernandez.png",
     category: "product_trust",
@@ -116,8 +139,10 @@ export const APPROVED_TESTIMONIALS: readonly ApprovedTestimonial[] = [
   },
   {
     id: "proof-008",
-    quote:
+    shortQuote:
       "I am very happy with FocusRoute so far. It has greatly helped me come up with new and creative ideas.",
+    fullQuote:
+      "I am very happy with FocusRoute so far. It has greatly helped me come up with new and creative ideas; it has greatly improved how much value my focus has. Each time I had a problem, the support team has done everything they could to give me help and to fix my problem! It has been an overall good experience!",
     attribution: "Amy R.",
     image: "/testimonials/amy-reyes.png",
     category: "practical_value",
@@ -126,8 +151,10 @@ export const APPROVED_TESTIMONIALS: readonly ApprovedTestimonial[] = [
   },
   {
     id: "proof-009",
-    quote:
+    shortQuote:
       "He was incredibly empathetic, listened to my situation, and guided me on exactly what verification documents were needed.",
+    fullQuote:
+      "I recently went through a nightmare situation where my primary email was completely hacked, meaning I lost access to my FocusRoute account and my active subscription. I was incredibly stressed. I reached out on their Email channel hoping for a miracle, and a team member named Theo responded. He was incredibly empathetic, listened to my situation, and guided me on exactly what verification documents were needed. After I provided my proof, Theo went above and beyond to make a one-time exception and manually transferred my entire account and subscription to my new, secure email address. The whole process was handled so quickly and professionally. Losing your digital identity to a hacker is terrifying, but Theo and the FocusRoute team made the recovery process absolutely seamless. This is what top-tier customer service looks like. Highly recommend them not just for their tech, but for actually caring about their users!",
     attribution: "Larry B.",
     image: "/testimonials/larry-bennett.png",
     category: "post_purchase_reassurance",
@@ -136,7 +163,8 @@ export const APPROVED_TESTIMONIALS: readonly ApprovedTestimonial[] = [
   },
   {
     id: "proof-010",
-    quote: "It really is helping me re-define myself.",
+    shortQuote: "It really is helping me re-define myself.",
+    fullQuote: "It really is helping me re-define myself.",
     attribution: "Benjamin L.",
     image: "/testimonials/benjamin-lee.png",
     category: "post_purchase_reassurance",
@@ -145,7 +173,9 @@ export const APPROVED_TESTIMONIALS: readonly ApprovedTestimonial[] = [
   },
   {
     id: "proof-011",
-    quote:
+    shortQuote:
+      "It's brilliant. Quite easy to navigate around, and it doesn't break the bank.",
+    fullQuote:
       "It's brilliant. Quite easy to navigate around, and it doesn't break the bank.",
     attribution: "Billy W.",
     image: "/testimonials/billy-wilson.png",
@@ -155,7 +185,8 @@ export const APPROVED_TESTIMONIALS: readonly ApprovedTestimonial[] = [
   },
   {
     id: "proof-012",
-    quote: "Tools that solve our problems.",
+    shortQuote: "Tools that solve our problems.",
+    fullQuote: "Tools that solve our problems.",
     attribution: "Jean B.",
     image: "/testimonials/jean-brooks.png",
     category: "practical_value",
