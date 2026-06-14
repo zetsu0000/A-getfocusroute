@@ -186,7 +186,7 @@ function TestimonialRow({
             margin: 0,
             fontSize: compact ? 12.5 : 13.25,
             color: "var(--v2-ink-dim)",
-            lineHeight: 1.45,
+            lineHeight: fullQuote ? 1.55 : 1.45,
             ...(fullQuote
               ? {}
               : {
@@ -197,13 +197,19 @@ function TestimonialRow({
                 }),
           }}
         >
-          &ldquo;{testimonial.quote}&rdquo;
+          &ldquo;{fullQuote ? testimonial.fullQuote : testimonial.shortQuote}&rdquo;
         </blockquote>
         <figcaption
-          className="v2-hud"
-          style={{ fontSize: 9, marginTop: compact ? 3 : 4 }}
+          style={{
+            fontSize: compact ? 11 : 11.5,
+            marginTop: compact ? 4 : 6,
+            color: "var(--v2-ink-faint)",
+            fontWeight: 600,
+            letterSpacing: "0.01em",
+          }}
         >
-          - {testimonial.attribution}
+          {"\u2014 "}
+          {testimonial.attribution}
         </figcaption>
       </div>
     </figure>

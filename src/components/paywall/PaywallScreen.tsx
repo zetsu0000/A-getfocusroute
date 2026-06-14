@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { m, AnimatePresence, useReducedMotion } from "framer-motion";
-import { AlertCircle, BadgeCheck, CreditCard, Lock, Check, RefreshCcw } from "lucide-react";
+import { AlertCircle, CreditCard, Lock, Check, RefreshCcw } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js/pure";
 import {
   Elements,
@@ -29,7 +29,7 @@ import {
   PAYWALL_TRUST_CHECKOUT_ID,
   POST_PAYMENT_EXPECTATION,
   SECURE_PAYMENT_LINE,
-  TRUST_LINE_ITEMS,
+  TRUST_LINE,
   paywallDeliverables,
 } from "./paywallContent";
 import {
@@ -203,7 +203,7 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
           width: "100%",
           minHeight: 58,
           padding: "17px 22px",
-          borderRadius: 17,
+          borderRadius: 16,
           fontSize: 16.5,
           fontWeight: 800,
           cursor: loading ? "not-allowed" : "pointer",
@@ -275,7 +275,7 @@ function PaymentSkeleton() {
       {[56, 56, 50].map((h, i) => (
         <div key={i} style={{ height: h, borderRadius: 12, background: "rgba(148,163,255,0.08)", border: "1px solid var(--v2-line)" }} />
       ))}
-      <div style={{ height: 58, borderRadius: 17, background: "rgba(217,188,127,0.1)", border: "1px solid rgba(217,188,127,0.25)", marginTop: 4 }} />
+      <div style={{ height: 58, borderRadius: 16, background: "rgba(217,188,127,0.1)", border: "1px solid rgba(217,188,127,0.25)", marginTop: 4 }} />
     </div>
   );
 }
@@ -286,6 +286,7 @@ export function PaywallScreen() {
   const displayName = safeName(name, "Your");
   const signature = getSignatureFromAnswers(answers);
   const echo = echoSentence(answers);
+  const reduceMotion = useReducedMotion();
 
   const handlePaywallSuccess = () => {
     setStep("upsell");
@@ -499,26 +500,49 @@ export function PaywallScreen() {
               <span className="v2-hud" style={{ fontSize: 9 }}>one-time</span>
             </div>
 
-            <button
+            {/* Top CTA — restrained gold (Fable a1cbe8a vocabulary): a dark
+                premium surface with a subtle gold border and inner highlight.
+                It starts checkout preparation; it does not pay. Deliberately
+                quieter than the final payment CTA — related, not identical. */}
+            <m.button
               type="button"
               onClick={handleCheckoutCtaClick}
               disabled={loadingSecret || retryBlocked}
-              className="v2-cta"
-              style={{ marginTop: 14, width: "100%", minHeight: 54, borderRadius: 17, fontSize: 15.25 }}
+              whileTap={reduceMotion ? undefined : { scale: 0.985 }}
+              whileHover={reduceMotion || loadingSecret || retryBlocked ? undefined : { y: -1 }}
+              style={{
+                marginTop: 14,
+                width: "100%",
+                minHeight: 54,
+                padding: "15px 22px",
+                borderRadius: 16,
+                fontSize: 15.25,
+                fontWeight: 750,
+                letterSpacing: "0.01em",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 9,
+                cursor: loadingSecret || retryBlocked ? "not-allowed" : "pointer",
+                color: "var(--v2-gold-bright)",
+                border: "1px solid rgba(217,188,127,0.42)",
+                background:
+                  "linear-gradient(120deg, rgba(217,188,127,0.12), rgba(240,220,174,0.04)), rgba(14,11,4,0.55)",
+                boxShadow:
+                  "0 0 0 1px rgba(8,6,2,0.4), inset 0 1px 0 rgba(255,248,226,0.14)",
+                opacity: loadingSecret || retryBlocked ? 0.72 : 1,
+                transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+              }}
             >
               <CreditCard size={15} strokeWidth={2.35} />
               {loadingSecret ? "Preparing secure checkout..." : "Continue to Secure Checkout"}
-            </button>
+            </m.button>
 
-            {/* one scannable trust line + the non-diagnosis boundary, stated once */}
-            <div style={{ marginTop: 12, display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
-              {TRUST_LINE_ITEMS.map((item) => (
-                <span key={item} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, color: "var(--v2-ink-faint)", lineHeight: 1.4 }}>
-                  <BadgeCheck size={12} color="var(--v2-gold)" strokeWidth={2.4} />
-                  {item}
-                </span>
-              ))}
-            </div>
+            {/* one quiet trust line + the non-diagnosis boundary, stated once —
+                a single editorial sentence, not three separate chips */}
+            <p style={{ marginTop: 12, fontSize: 11.5, color: "var(--v2-ink-faint)", textAlign: "center", lineHeight: 1.55 }}>
+              {TRUST_LINE}
+            </p>
             <p style={{ marginTop: 4, fontSize: 11, color: "var(--v2-ink-ghost)", textAlign: "center", lineHeight: 1.5 }}>
               {NON_DIAGNOSIS_LINE}
             </p>

@@ -30,12 +30,12 @@ export function paywallDeliverables(planFocus: string): string[] {
   ];
 }
 
-/** Scannable trust line shown once, near the primary CTA. */
-export const TRUST_LINE_ITEMS = [
-  "One-time payment",
-  "Instant account access",
-  "7-day refund",
-] as const;
+/**
+ * One quiet trust line shown once, near the primary CTA. Deliberately a single
+ * middot-joined sentence — not three separate icon badges — so the offer reads
+ * calm and editorial rather than chip-heavy.
+ */
+export const TRUST_LINE = "One-time payment \u00B7 Instant access \u00B7 7-day refund";
 
 /** The non-diagnosis boundary, stated once near the offer. */
 export const NON_DIAGNOSIS_LINE =

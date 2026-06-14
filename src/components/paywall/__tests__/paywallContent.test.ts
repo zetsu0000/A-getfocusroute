@@ -8,7 +8,7 @@ import {
   PAYWALL_TRUST_CHECKOUT_ID,
   POST_PAYMENT_EXPECTATION,
   SECURE_PAYMENT_LINE,
-  TRUST_LINE_ITEMS,
+  TRUST_LINE,
   paywallDeliverables,
 } from "../paywallContent";
 
@@ -27,12 +27,14 @@ describe("paywall primary offer content", () => {
     expect(d[2].toLowerCase()).toContain("account");
   });
 
-  it("keeps the trust line to the three verified claims", () => {
-    expect(TRUST_LINE_ITEMS).toEqual([
-      "One-time payment",
-      "Instant account access",
-      "7-day refund",
-    ]);
+  it("states trust as a single quiet line, not three separate chips", () => {
+    expect(TRUST_LINE).toBe("One-time payment \u00B7 Instant access \u00B7 7-day refund");
+    // exactly two middot separators → one line, three claims
+    expect((TRUST_LINE.match(/\u00B7/g) || []).length).toBe(2);
+    // the three verified claims survive the compression
+    expect(TRUST_LINE).toContain("One-time payment");
+    expect(TRUST_LINE).toContain("Instant access");
+    expect(TRUST_LINE).toContain("7-day refund");
   });
 
   it("states the non-diagnosis boundary without medical claims", () => {

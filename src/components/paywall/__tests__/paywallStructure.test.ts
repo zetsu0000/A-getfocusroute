@@ -57,7 +57,7 @@ describe("PaywallScreen structure (copy compression)", () => {
 
   it("uses distinct top and final CTA copy, with the top CTA price-free", () => {
     const start = src.indexOf("onClick={handleCheckoutCtaClick}");
-    const end = src.indexOf("</button>", start);
+    const end = src.indexOf("</m.button>", start);
     const topCta = src.slice(start, end);
     const checkoutForm = src.slice(
       src.indexOf("function CheckoutForm"),
@@ -71,6 +71,41 @@ describe("PaywallScreen structure (copy compression)", () => {
     expect(checkoutForm).toContain("elements.submit()");
     expect(checkoutForm).toContain("stripe.confirmPayment");
     expect(checkoutForm).toContain('/assessment?step=upsell');
+  });
+
+  it("removes the blue/purple CTA: both buttons are gold and the final is the strongest", () => {
+    // The PR#33 regression used the bare blue/purple `.v2-cta` on the top
+    // button. No standalone blue CTA may remain; the only `.v2-cta` usage is
+    // the gold pairing on the final payment button.
+    expect(src).not.toContain('className="v2-cta"');
+    expect(src).not.toContain('"v2-cta"');
+    expect(src).not.toContain("v2-cta-blue");
+
+    const topCta = src.slice(
+      src.indexOf("onClick={handleCheckoutCtaClick}"),
+      src.indexOf("</m.button>", src.indexOf("onClick={handleCheckoutCtaClick}")),
+    );
+    // top CTA wears the restrained Fable gold treatment (no signal/blue glow)
+    expect(topCta).toContain("var(--v2-gold-bright)");
+    expect(topCta).toContain("217,188,127");
+    expect(topCta).not.toContain("v2-signal");
+    expect(topCta).not.toContain("124,138,255");
+
+    // final payment CTA keeps the full gold fill and stays the strongest action
+    const checkoutForm = src.slice(
+      src.indexOf("function CheckoutForm"),
+      src.indexOf("function PaywallStripeElements"),
+    );
+    expect(checkoutForm).toContain("v2-cta v2-cta-gold");
+    expect(checkoutForm).toContain("fontWeight: 800");
+  });
+
+  it("states trust as one quiet line, not three icon chips", () => {
+    expect(src).toContain("{TRUST_LINE}");
+    expect(src).not.toContain("TRUST_LINE_ITEMS");
+    // the old three-badge map is gone
+    expect(src).not.toContain("TRUST_LINE_ITEMS.map");
+    expect(src).not.toContain("BadgeCheck");
   });
 
   it("removed the duplicated 'Your full plan' section and its rationale", () => {

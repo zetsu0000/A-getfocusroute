@@ -75,6 +75,40 @@ describe("social proof components", () => {
     expect(paywallComponent).toContain("fullQuote");
   });
 
+  it("renders the short excerpt collapsed and the full authorized text expanded", () => {
+    // a single row swaps source text based on its fullQuote flag — short by
+    // default (result + collapsed paywall), complete when expanded
+    expect(src).toContain(
+      "fullQuote ? testimonial.fullQuote : testimonial.shortQuote",
+    );
+  });
+
+  it("drops the line clamp for expanded stories — no clamp, ellipsis, or fixed height", () => {
+    const rowBody = src.slice(
+      src.indexOf("function TestimonialRow"),
+      src.indexOf("export function ResultSocialProof"),
+    );
+    // the clamp object is applied only in the non-full branch
+    expect(rowBody).toContain("...(fullQuote");
+    expect(rowBody).toContain("WebkitLineClamp: quoteLines");
+    expect(rowBody).not.toContain("maxHeight");
+    expect(rowBody).not.toContain("\u2026"); // no hardcoded ellipsis
+  });
+
+  it("attributes in title case with an em dash, not uppercased HUD styling", () => {
+    const rowBody = src.slice(
+      src.indexOf("function TestimonialRow"),
+      src.indexOf("export function ResultSocialProof"),
+    );
+    const caption = rowBody.slice(
+      rowBody.indexOf("<figcaption"),
+      rowBody.indexOf("</figcaption>"),
+    );
+    expect(caption).toContain("\\u2014"); // em dash, not a hyphen
+    expect(caption).not.toContain("v2-hud"); // no forced uppercase / wide tracking
+    expect(rowBody).not.toContain("- {testimonial.attribution}"); // old "-  ALAN T." form gone
+  });
+
   it("uses the same client-created journey for both placements", () => {
     const resultComponent = src.slice(
       src.indexOf("export function ResultSocialProof"),

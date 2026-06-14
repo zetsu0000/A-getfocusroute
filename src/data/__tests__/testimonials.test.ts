@@ -12,7 +12,8 @@ import {
 
 const ALLOWED_KEYS = new Set([
   "id",
-  "quote",
+  "shortQuote",
+  "fullQuote",
   "attribution",
   "image",
   "category",
@@ -29,9 +30,35 @@ describe("approved testimonial pool", () => {
     expect(hasApprovedTestimonials()).toBe(true);
     for (const entry of APPROVED_TESTIMONIALS) {
       expect(entry.approved).toBe(true);
-      expect(entry.quote.trim().length).toBeGreaterThan(0);
+      expect(entry.shortQuote.trim().length).toBeGreaterThan(0);
+      expect(entry.fullQuote.trim().length).toBeGreaterThan(0);
       expect(entry.attribution.trim().length).toBeGreaterThan(0);
     }
+  });
+
+  it("gives every paywall story a complete fullQuote that is the real, untruncated text", () => {
+    const paywall = APPROVED_TESTIMONIALS.filter((entry) =>
+      entry.eligiblePlacement.includes("paywall_post_checkout"),
+    );
+    expect(paywall.length).toBeGreaterThanOrEqual(3);
+
+    for (const entry of paywall) {
+      // fullQuote is at least as long as the short excerpt (never a shorter
+      // "expanded" version) and ends cleanly — no clamp ellipsis, no fragment.
+      expect(entry.fullQuote.length).toBeGreaterThanOrEqual(entry.shortQuote.length);
+      expect(entry.fullQuote).not.toContain("\u2026"); // no ellipsis char
+      expect(entry.fullQuote.trimEnd()).toMatch(/[.!?]$/);
+    }
+
+    // The richer multi-sentence stories must actually carry their full body,
+    // not the compressed registry excerpt that shipped before.
+    const byId = (id: string) =>
+      APPROVED_TESTIMONIALS.find((entry) => entry.id === id)!;
+    expect(byId("proof-009").fullQuote).toContain("nightmare situation");
+    expect(byId("proof-009").fullQuote.length).toBeGreaterThan(400);
+    expect(byId("proof-006").fullQuote).toContain("ultra persistent");
+    expect(byId("proof-006").fullQuote).toContain("spirit of excellence");
+    expect(byId("proof-003").fullQuote).toContain("fixed the problem myself");
   });
 
   it("exposes only public-safe fields", () => {
@@ -173,7 +200,8 @@ describe("social proof journey selector", () => {
   it("never selects unapproved entries", () => {
     const draft = makeTestimonial({
       id: "draft",
-      quote: "not cleared for publication",
+      shortQuote: "not cleared for publication",
+      fullQuote: "not cleared for publication",
       approved: false,
       category: "clarity",
     });
@@ -231,7 +259,8 @@ describe("social proof analytics metadata", () => {
     });
 
     const json = JSON.stringify(meta);
-    expect(json).not.toContain(testimonial.quote);
+    expect(json).not.toContain(testimonial.shortQuote);
+    expect(json).not.toContain(testimonial.fullQuote);
     expect(json).not.toContain(testimonial.attribution);
     expect(json).not.toContain(testimonial.image);
   });
@@ -242,7 +271,8 @@ function makeTestimonial(
 ): ApprovedTestimonial {
   return {
     id: "test",
-    quote: "approved quote",
+    shortQuote: "approved quote",
+    fullQuote: "approved quote, in full.",
     attribution: "Customer",
     image: "/testimonials/daria-mart.png",
     category: "practical_value",
