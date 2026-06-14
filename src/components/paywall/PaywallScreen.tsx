@@ -16,6 +16,7 @@ import { BRAIN_OS } from "@/lib/positioning";
 import { getSignatureFromAnswers, echoSentence } from "@/lib/signature";
 import { getSignatureIdentity } from "@/lib/signature-identity";
 import { SigilArtifact } from "@/components/v2/SigilArtifact";
+import { SocialProof } from "@/components/signature/SocialProof";
 import { HudLabel } from "@/components/v2/primitives";
 import {
   createAnalyticsEventId,
@@ -821,27 +822,16 @@ export function PaywallScreen() {
             </div>
           </m.div>
 
-          <m.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.115 }}
-            className="v2-panel"
-            style={{ padding: "18px 20px" }}
-          >
-            <p
-              style={{
-                fontFamily: "var(--v2-font-display)",
-                fontSize: 15,
-                fontStyle: "italic",
-                color: "var(--v2-ink-dim)",
-                lineHeight: 1.7,
-                marginBottom: 8,
-              }}
-            >
-              &quot;The profile language felt uncannily accurate. For the first time, I had a step-by-step system that matched how I actually work.&quot;
-            </p>
-            <p className="v2-hud" style={{ fontSize: 9.5 }}>— Sarah M., verified customer</p>
-          </m.div>
+          {/* Social proof: an approved, signature-matched customer story when
+              one exists — otherwise nothing (this screen is already trust-dense,
+              so we never stack placeholder or manufactured proof here). The
+              previous hard-coded "verified customer" quote was unverifiable and
+              has been removed. */}
+          <SocialProof
+            signature={signature.signature}
+            placement="paywall"
+            fallback="none"
+          />
 
           <m.div
             initial={{ opacity: 0, y: 12 }}

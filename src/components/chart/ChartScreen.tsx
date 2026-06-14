@@ -11,6 +11,7 @@ import { getSignatureIdentity } from "@/lib/signature-identity";
 import { firstStepTeaserFor } from "@/lib/first-step-teaser";
 import { SigilArtifact } from "@/components/v2/SigilArtifact";
 import { FocusField } from "@/components/v2/FocusField";
+import { SocialProof } from "@/components/signature/SocialProof";
 import { HudLabel } from "@/components/v2/primitives";
 import { setPersistedQuizResultId } from "@/lib/quizResultId";
 import { createClient } from "@/lib/supabase/client";
@@ -355,6 +356,23 @@ export function ChartScreen() {
             your full focus plan is ready to unlock.
           </p>
         </m.div>
+
+        {/* Supporting evidence sits right at the decision point — one compact,
+            signature-matched proof (or a verified trust signal when no approved
+            story exists yet). It does not gate the CTA below it. */}
+        {!retakeMode && (
+          <m.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.95 }}
+          >
+            <SocialProof
+              signature={signature.signature}
+              placement="result_transition"
+              fallback="trust"
+            />
+          </m.div>
+        )}
 
         {retakeMode ? (
           <m.button

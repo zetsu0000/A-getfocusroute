@@ -45,6 +45,7 @@ describe("first-party funnel event registry", () => {
       FIRST_PARTY_EVENTS.upsellViewed,
       FIRST_PARTY_EVENTS.subscriptionViewed,
       FIRST_PARTY_EVENTS.dashboardFirstActionClicked,
+      FIRST_PARTY_EVENTS.socialProofImpression,
     ] as const;
     for (const eventName of depthEvents) {
       expect(isAllowedFirstPartyEvent(eventName)).toBe(true);
@@ -69,6 +70,21 @@ describe("first-party funnel event registry", () => {
     expect(META_EVENT_BY_FIRST_PARTY[FIRST_PARTY_EVENTS.checkoutSectionReached]).toBeUndefined();
     expect(META_EVENT_BY_FIRST_PARTY[FIRST_PARTY_EVENTS.checkoutCtaClicked]).toBeUndefined();
     expect(META_EVENT_BY_FIRST_PARTY[FIRST_PARTY_EVENTS.checkoutIntent]).toBe("InitiateCheckout");
+  });
+
+  it("keeps the social-proof impression a distinct, first-party-only fact", () => {
+    // Seeing real proof must not alias the result view, the paywall view, or
+    // the CTA click — and, being diagnostic, it never reaches Meta.
+    const distinct = new Set([
+      FIRST_PARTY_EVENTS.fullResultViewed,
+      FIRST_PARTY_EVENTS.paywallViewed,
+      FIRST_PARTY_EVENTS.checkoutCtaClicked,
+      FIRST_PARTY_EVENTS.socialProofImpression,
+    ]);
+    expect(distinct.size).toBe(4);
+    expect(isAllowedFirstPartyEvent(FIRST_PARTY_EVENTS.socialProofImpression)).toBe(true);
+    expect(META_ALLOWED_FIRST_PARTY_EVENTS.has(FIRST_PARTY_EVENTS.socialProofImpression)).toBe(false);
+    expect(META_EVENT_BY_FIRST_PARTY[FIRST_PARTY_EVENTS.socialProofImpression]).toBeUndefined();
   });
 
   it("separates the free preview from the full result", () => {
