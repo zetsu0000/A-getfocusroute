@@ -2,7 +2,6 @@
 
 import {
   useEffect,
-  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -12,6 +11,7 @@ import { ChevronDown } from "lucide-react";
 import {
   buildImpressionMetadata,
   type ApprovedTestimonial,
+  type SocialProofJourney,
   type SocialProofPlacement,
 } from "@/data/testimonials";
 import { getOrCreateSocialProofJourney } from "@/lib/social-proof-session";
@@ -32,6 +32,22 @@ const visuallyHidden: CSSProperties = {
   whiteSpace: "nowrap",
   border: 0,
 };
+
+export function useSocialProofJourney(): SocialProofJourney | null {
+  const [journey, setJourney] = useState<SocialProofJourney | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    queueMicrotask(() => {
+      if (mounted) setJourney(getOrCreateSocialProofJourney());
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  return journey;
+}
 
 function trackImpressions(
   testimonials: readonly ApprovedTestimonial[],
@@ -189,10 +205,8 @@ function TestimonialRow({
 }
 
 export function ResultSocialProof() {
-  const testimonials = useMemo(
-    () => getOrCreateSocialProofJourney().result,
-    [],
-  );
+  const journey = useSocialProofJourney();
+  const testimonials = journey?.result ?? [];
   const nodeRef = useVisibleImpression<HTMLElement>({
     testimonials,
     placement: "result_transition",
@@ -229,13 +243,13 @@ export function ResultSocialProof() {
 }
 
 export function PaywallSocialProofDisclosure() {
-  const journey = useMemo(() => getOrCreateSocialProofJourney(), []);
+  const journey = useSocialProofJourney();
   const [open, setOpen] = useState(false);
   const expandedTrackedRef = useRef(false);
   const extraImpressionsTrackedRef = useRef(false);
 
-  const primary = journey.paywall[0];
-  const expanded = journey.paywall.slice(1, 3);
+  const primary = journey?.paywall[0];
+  const expanded = journey?.paywall.slice(1, 3) ?? [];
   const initialTestimonials = primary ? [primary] : [];
   const nodeRef = useVisibleImpression<HTMLDetailsElement>({
     testimonials: initialTestimonials,
@@ -310,7 +324,7 @@ export function PaywallSocialProofDisclosure() {
         />
       </summary>
 
-      {expanded.length > 0 && (
+      {open && expanded.length > 0 && (
         <div
           style={{
             display: "grid",

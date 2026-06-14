@@ -31,7 +31,6 @@ describe("approved testimonial pool", () => {
       expect(entry.approved).toBe(true);
       expect(entry.quote.trim().length).toBeGreaterThan(0);
       expect(entry.attribution.trim().length).toBeGreaterThan(0);
-      expect(entry.eligiblePlacement.length).toBeGreaterThan(0);
     }
   });
 
@@ -66,6 +65,19 @@ describe("approved testimonial pool", () => {
         existsSync(join(process.cwd(), "public", entry.image.slice(1))),
       ).toBe(true);
     }
+  });
+
+  it("keeps weaker approved entries out of the active funnel", () => {
+    const mark = APPROVED_TESTIMONIALS.find((entry) => entry.id === "proof-001");
+    const gregory = APPROVED_TESTIMONIALS.find((entry) => entry.id === "proof-007");
+    const jean = APPROVED_TESTIMONIALS.find((entry) => entry.id === "proof-012");
+
+    expect(mark?.approved).toBe(true);
+    expect(mark?.eligiblePlacement).toEqual(["paywall_post_checkout"]);
+    expect(gregory?.approved).toBe(true);
+    expect(gregory?.eligiblePlacement).toEqual([]);
+    expect(jean?.approved).toBe(true);
+    expect(jean?.eligiblePlacement).toEqual([]);
   });
 });
 
@@ -123,6 +135,26 @@ describe("social proof journey selector", () => {
     );
   });
 
+  it("never shows Mark before the paywall price is introduced", () => {
+    for (const seed of ["a", "b", "c", "d", "e", "f", "g"]) {
+      const journey = selectSocialProofJourney(APPROVED_TESTIMONIALS, seed);
+      expect(journey.result.map((entry) => entry.id)).not.toContain("proof-001");
+    }
+  });
+
+  it("does not select inactive generic testimonials", () => {
+    const picked = new Set<string>();
+
+    for (const seed of ["a", "b", "c", "d", "e", "f", "g"]) {
+      for (const id of ids(selectSocialProofJourney(APPROVED_TESTIMONIALS, seed))) {
+        picked.add(id);
+      }
+    }
+
+    expect(picked).not.toContain("proof-007");
+    expect(picked).not.toContain("proof-012");
+  });
+
   it("falls back gracefully when preferred categories are scarce", () => {
     const fallbackPool = Array.from({ length: 6 }, (_, index) =>
       makeTestimonial({
@@ -155,6 +187,23 @@ describe("social proof journey selector", () => {
     const picked = ids(selectSocialProofJourney([draft, ...approved], "draft"));
 
     expect(picked).not.toContain("draft");
+  });
+
+  it("returns no active proof when the kill switch is on", () => {
+    const previous = process.env.NEXT_PUBLIC_SOCIAL_PROOF_OFF;
+    process.env.NEXT_PUBLIC_SOCIAL_PROOF_OFF = "1";
+    try {
+      expect(hasApprovedTestimonials()).toBe(false);
+      const journey = selectSocialProofJourney(APPROVED_TESTIMONIALS, "off");
+      expect(journey.result).toHaveLength(0);
+      expect(journey.paywall).toHaveLength(0);
+    } finally {
+      if (previous === undefined) {
+        delete process.env.NEXT_PUBLIC_SOCIAL_PROOF_OFF;
+      } else {
+        process.env.NEXT_PUBLIC_SOCIAL_PROOF_OFF = previous;
+      }
+    }
   });
 });
 

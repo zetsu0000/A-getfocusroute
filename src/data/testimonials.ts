@@ -40,7 +40,7 @@ export interface SocialProofJourney {
   paywall: ApprovedTestimonial[];
 }
 
-export const SOCIAL_PROOF_POOL_VERSION = "2026-06-14-v1";
+export const SOCIAL_PROOF_POOL_VERSION = "2026-06-14-v2";
 
 const RESULT: SocialProofPlacement = "result_transition";
 const PAYWALL: SocialProofPlacement = "paywall_post_checkout";
@@ -53,7 +53,7 @@ export const APPROVED_TESTIMONIALS: readonly ApprovedTestimonial[] = [
     attribution: "Mark H.",
     image: "/testimonials/mark-hendrik.png",
     category: "practical_value",
-    eligiblePlacement: [RESULT, PAYWALL],
+    eligiblePlacement: [PAYWALL],
     approved: true,
   },
   {
@@ -111,7 +111,7 @@ export const APPROVED_TESTIMONIALS: readonly ApprovedTestimonial[] = [
     attribution: "Gregory H.",
     image: "/testimonials/gregory-hernandez.png",
     category: "product_trust",
-    eligiblePlacement: [RESULT, PAYWALL],
+    eligiblePlacement: [],
     approved: true,
   },
   {
@@ -159,7 +159,7 @@ export const APPROVED_TESTIMONIALS: readonly ApprovedTestimonial[] = [
     attribution: "Jean B.",
     image: "/testimonials/jean-brooks.png",
     category: "practical_value",
-    eligiblePlacement: [RESULT, PAYWALL],
+    eligiblePlacement: [],
     approved: true,
   },
 ];

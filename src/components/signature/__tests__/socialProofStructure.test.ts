@@ -1,6 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { createElement } from "react";
+import { renderToString } from "react-dom/server";
+import {
+  PaywallSocialProofDisclosure,
+  ResultSocialProof,
+} from "../SocialProof";
 
 const src = readFileSync(
   fileURLToPath(new URL("../SocialProof.tsx", import.meta.url)),
@@ -8,18 +14,57 @@ const src = readFileSync(
 );
 
 describe("social proof components", () => {
-  it("renders three result testimonials from the shared session journey", () => {
-    expect(src).toContain("getOrCreateSocialProofJourney().result");
+  it("creates the journey only after client mount", () => {
+    expect(src).toContain("function useSocialProofJourney");
+    expect(src).toContain("useEffect(() =>");
+    expect(src).toContain("queueMicrotask");
+    expect(src).toContain("getOrCreateSocialProofJourney()");
+    expect(src).not.toContain("useMemo(() => getOrCreateSocialProofJourney");
+  });
+
+  it("renders no testimonial HTML during server rendering", () => {
+    const throwingWindow = {};
+    Object.defineProperty(throwingWindow, "sessionStorage", {
+      get: () => {
+        throw new Error("sessionStorage accessed during render");
+      },
+    });
+    vi.stubGlobal("window", throwingWindow);
+
+    try {
+      expect(renderToString(createElement(ResultSocialProof))).toBe("");
+      expect(renderToString(createElement(PaywallSocialProofDisclosure))).toBe("");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("renders three result testimonials from the shared client journey", () => {
+    expect(src).toContain("const journey = useSocialProofJourney()");
     expect(src).toContain("testimonials.map");
     expect(src).toContain("quoteLines={2}");
   });
 
   it("shows one paywall testimonial initially and exactly two on expansion", () => {
-    expect(src).toContain("journey.paywall[0]");
-    expect(src).toContain("journey.paywall.slice(1, 3)");
+    expect(src).toContain("journey?.paywall[0]");
+    expect(src).toContain("journey?.paywall.slice(1, 3)");
+    expect(src).toContain("open && expanded.length > 0");
     expect(src).toContain("<details");
     expect(src).toContain("<summary");
     expect(src).not.toContain("<details open");
+  });
+
+  it("uses the same client-created journey for both placements", () => {
+    const resultComponent = src.slice(
+      src.indexOf("export function ResultSocialProof"),
+      src.indexOf("export function PaywallSocialProofDisclosure"),
+    );
+    const paywallComponent = src.slice(
+      src.indexOf("export function PaywallSocialProofDisclosure"),
+    );
+
+    expect(resultComponent).toContain("useSocialProofJourney()");
+    expect(paywallComponent).toContain("useSocialProofJourney()");
   });
 
   it("keeps the paywall expansion keyboard-accessible and quietly discoverable", () => {
@@ -50,4 +95,3 @@ describe("social proof components", () => {
     expect(src).toContain("initial");
   });
 });
-

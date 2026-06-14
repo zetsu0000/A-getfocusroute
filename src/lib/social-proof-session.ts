@@ -1,6 +1,7 @@
 import {
   APPROVED_TESTIMONIALS,
   SOCIAL_PROOF_POOL_VERSION,
+  liveTestimonials,
   selectSocialProofJourney,
   type ApprovedTestimonial,
   type SocialProofJourney,
@@ -20,8 +21,15 @@ interface StoredJourney {
 
 let inMemoryStoredJourney: StoredJourney | null = null;
 
+function emptyJourney(): SocialProofJourney {
+  return { result: [], paywall: [] };
+}
+
+function isBrowserEnvironment(): boolean {
+  return typeof window !== "undefined";
+}
+
 function safeSessionStorage(): StorageLike | null {
-  if (typeof window === "undefined") return null;
   try {
     return window.sessionStorage;
   } catch {
@@ -55,8 +63,7 @@ function hydrateStoredJourney(
   if (stored.version !== SOCIAL_PROOF_POOL_VERSION) return null;
 
   const byId = new Map(
-    testimonials
-      .filter((testimonial) => testimonial.approved)
+    liveTestimonials(testimonials)
       .map((testimonial) => [testimonial.id, testimonial]),
   );
   const result = stored.resultIds
@@ -74,6 +81,22 @@ function hydrateStoredJourney(
 
   if (result.length !== 3 || paywall.length !== 3) return null;
   if (unique.size !== ids.length) return null;
+  if (
+    result.some(
+      (testimonial) =>
+        !testimonial.eligiblePlacement.includes("result_transition"),
+    )
+  ) {
+    return null;
+  }
+  if (
+    paywall.some(
+      (testimonial) =>
+        !testimonial.eligiblePlacement.includes("paywall_post_checkout"),
+    )
+  ) {
+    return null;
+  }
 
   return { result, paywall };
 }
@@ -129,6 +152,7 @@ function readJourneyFromStorage(
 function readJourneyFromMemory(
   testimonials: readonly ApprovedTestimonial[],
 ): SocialProofJourney | null {
+  if (!isBrowserEnvironment()) return null;
   return inMemoryStoredJourney
     ? hydrateStoredJourney(inMemoryStoredJourney, testimonials)
     : null;
@@ -138,6 +162,7 @@ function persistJourney(
   storage: StorageLike | null,
   payload: StoredJourney,
 ): void {
+  if (!isBrowserEnvironment()) return;
   inMemoryStoredJourney = payload;
   if (!storage) return;
   try {
@@ -149,25 +174,27 @@ function persistJourney(
 
 export function getOrCreateSocialProofJourney({
   testimonials = APPROVED_TESTIMONIALS,
-  storage = safeSessionStorage(),
+  storage,
   seedFactory = createSessionSeed,
 }: {
   testimonials?: readonly ApprovedTestimonial[];
   storage?: StorageLike | null;
   seedFactory?: () => string;
 } = {}): SocialProofJourney {
+  if (!isBrowserEnvironment()) return emptyJourney();
+
+  const resolvedStorage = storage === undefined ? safeSessionStorage() : storage;
   const stored =
-    readJourneyFromStorage(storage, testimonials) ??
+    readJourneyFromStorage(resolvedStorage, testimonials) ??
     readJourneyFromMemory(testimonials);
   if (stored) return stored;
 
   const seed = seedFactory();
   const journey = selectSocialProofJourney(testimonials, seed);
-  persistJourney(storage, storePayload(seed, journey));
+  persistJourney(resolvedStorage, storePayload(seed, journey));
   return journey;
 }
 
 export function resetInMemorySocialProofJourneyForTests(): void {
   inMemoryStoredJourney = null;
 }
-
