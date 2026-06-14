@@ -16,7 +16,6 @@ import { BRAIN_OS } from "@/lib/positioning";
 import { getSignatureFromAnswers, echoSentence } from "@/lib/signature";
 import { getSignatureIdentity } from "@/lib/signature-identity";
 import { SigilArtifact } from "@/components/v2/SigilArtifact";
-import { SocialProof } from "@/components/signature/SocialProof";
 import { HudLabel } from "@/components/v2/primitives";
 import {
   createAnalyticsEventId,
@@ -822,16 +821,11 @@ export function PaywallScreen() {
             </div>
           </m.div>
 
-          {/* Social proof: an approved, signature-matched customer story when
-              one exists — otherwise nothing (this screen is already trust-dense,
-              so we never stack placeholder or manufactured proof here). The
-              previous hard-coded "verified customer" quote was unverifiable and
-              has been removed. */}
-          <SocialProof
-            signature={signature.signature}
-            placement="paywall"
-            fallback="none"
-          />
+          {/* Social proof intentionally lives only at the result→paywall
+              decision point (ChartScreen), not here: the paywall is already
+              trust-dense and adding a testimonial would push checkout lower.
+              The previous hard-coded "verified customer" quote was unverifiable
+              and has been removed. */}
 
           <m.div
             initial={{ opacity: 0, y: 12 }}

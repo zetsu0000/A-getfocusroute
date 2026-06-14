@@ -353,13 +353,13 @@ export function ChartScreen() {
             }}
           >
             <em style={{ fontStyle: "italic", color: identity.accent }}>{displayName},</em>{" "}
-            your full focus plan is ready to unlock.
+            your full plan focuses on {signature.planFocus}.
           </p>
         </m.div>
 
-        {/* Supporting evidence sits right at the decision point — one compact,
-            signature-matched proof (or a verified trust signal when no approved
-            story exists yet). It does not gate the CTA below it. */}
+        {/* One compact, real customer micro-proof at the decision point — it sits
+            between the result→plan bridge above and the CTA below, and renders
+            nothing if no approved story is available. It does not gate the CTA. */}
         {!retakeMode && (
           <m.div
             initial={{ opacity: 0, y: 10 }}
@@ -369,7 +369,6 @@ export function ChartScreen() {
             <SocialProof
               signature={signature.signature}
               placement="result_transition"
-              fallback="trust"
             />
           </m.div>
         )}
