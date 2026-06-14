@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import {
   NON_DIAGNOSIS_LINE,
   PAYWALL_CHECKOUT_ID,
+  PAYWALL_TRUST_CHECKOUT_ID,
   POST_PAYMENT_EXPECTATION,
   SECURE_PAYMENT_LINE,
   TRUST_LINE_ITEMS,
@@ -65,6 +66,10 @@ describe("paywall primary offer content", () => {
 
   it("keeps the checkout anchor id unchanged", () => {
     expect(PAYWALL_CHECKOUT_ID).toBe("paywall-checkout");
+  });
+
+  it("keeps a separate trust-to-checkout scroll target", () => {
+    expect(PAYWALL_TRUST_CHECKOUT_ID).toBe("paywall-trust-checkout");
   });
 
   it("does not export a paywall FAQ", () => {

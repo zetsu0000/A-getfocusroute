@@ -161,11 +161,13 @@ function TestimonialRow({
   quoteLines = 2,
   avatarSize = 38,
   compact = false,
+  fullQuote = false,
 }: {
   testimonial: ApprovedTestimonial;
   quoteLines?: number;
   avatarSize?: number;
   compact?: boolean;
+  fullQuote?: boolean;
 }) {
   return (
     <figure
@@ -185,10 +187,14 @@ function TestimonialRow({
             fontSize: compact ? 12.5 : 13.25,
             color: "var(--v2-ink-dim)",
             lineHeight: 1.45,
-            display: "-webkit-box",
-            WebkitLineClamp: quoteLines,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
+            ...(fullQuote
+              ? {}
+              : {
+                  display: "-webkit-box",
+                  WebkitLineClamp: quoteLines,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }),
           }}
         >
           &ldquo;{testimonial.quote}&rdquo;
@@ -311,6 +317,7 @@ export function PaywallSocialProofDisclosure() {
           testimonial={primary}
           quoteLines={3}
           avatarSize={40}
+          fullQuote={open}
         />
         <ChevronDown
           aria-hidden="true"
@@ -344,6 +351,7 @@ export function PaywallSocialProofDisclosure() {
                 testimonial={testimonial}
                 quoteLines={3}
                 avatarSize={40}
+                fullQuote
               />
             </div>
           ))}

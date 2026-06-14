@@ -11,10 +11,23 @@ const src = readFileSync(
   fileURLToPath(new URL("../PaywallScreen.tsx", import.meta.url)),
   "utf8",
 );
+const socialProofSrc = readFileSync(
+  fileURLToPath(new URL("../../signature/SocialProof.tsx", import.meta.url)),
+  "utf8",
+);
+const rateLimitPolicySrc = readFileSync(
+  fileURLToPath(new URL("../../../lib/rate-limit/policies.ts", import.meta.url)),
+  "utf8",
+);
+const paymentRouteSrc = readFileSync(
+  fileURLToPath(new URL("../../../app/api/create-payment-intent/route.ts", import.meta.url)),
+  "utf8",
+);
 
 describe("PaywallScreen structure (copy compression)", () => {
   it("keeps the checkout section id and the top-CTA scroll target", () => {
     expect(src).toContain("id={PAYWALL_CHECKOUT_ID}");
+    expect(src).toContain("id={PAYWALL_TRUST_CHECKOUT_ID}");
     expect(src).toContain("scrollToCheckout()");
   });
 
@@ -34,18 +47,30 @@ describe("PaywallScreen structure (copy compression)", () => {
   it("presents the anchored price exactly once (no duplicate offer block)", () => {
     const anchorHits = (src.match(/price\.paywallAnchor/g) || []).length;
     expect(anchorHits).toBe(1);
-    const priceHits = (src.match(/BRAIN_OS\.price\.paywall\b/g) || []).length;
-    expect(priceHits).toBe(1);
+
+    const offerStart = src.indexOf("Primary offer");
+    const offerEnd = src.indexOf("onClick={handleCheckoutCtaClick}", offerStart);
+    const offerCopy = src.slice(offerStart, offerEnd);
+    const offerPriceHits = (offerCopy.match(/BRAIN_OS\.price\.paywall\b/g) || []).length;
+    expect(offerPriceHits).toBe(1);
   });
 
-  it("keeps the pre-checkout scroll CTA price-free", () => {
-    const start = src.indexOf('cta_location: "paywall_offer_top"');
+  it("uses distinct top and final CTA copy, with the top CTA price-free", () => {
+    const start = src.indexOf("onClick={handleCheckoutCtaClick}");
     const end = src.indexOf("</button>", start);
     const topCta = src.slice(start, end);
+    const checkoutForm = src.slice(
+      src.indexOf("function CheckoutForm"),
+      src.indexOf("function PaywallStripeElements"),
+    );
 
-    expect(topCta).toContain("Unlock My Full Plan");
-    expect(topCta).toContain("scrollToCheckout()");
-    expect(topCta).not.toContain("price.paywall");
+    expect(topCta).toContain("Continue to Secure Checkout");
+    expect(topCta).not.toContain("BRAIN_OS.price.paywall");
+    expect(topCta).not.toContain("confirmPayment");
+    expect(checkoutForm).toContain("Pay {BRAIN_OS.price.paywall} &amp; Unlock My Plan");
+    expect(checkoutForm).toContain("elements.submit()");
+    expect(checkoutForm).toContain("stripe.confirmPayment");
+    expect(checkoutForm).toContain('/assessment?step=upsell');
   });
 
   it("removed the duplicated 'Your full plan' section and its rationale", () => {
@@ -69,26 +94,33 @@ describe("PaywallScreen structure (copy compression)", () => {
     expect(hits).toBe(1);
   });
 
-  it("keeps checkout immediately after the offer", () => {
+  it("keeps social proof before the requested checkout panel", () => {
     const offerEnd = src.indexOf("</m.div>", src.indexOf("Primary offer"));
-    const checkoutStart = src.indexOf("id={PAYWALL_CHECKOUT_ID}", offerEnd);
+    const trustTarget = src.indexOf("id={PAYWALL_TRUST_CHECKOUT_ID}", offerEnd);
+    const proof = src.indexOf("<PaywallSocialProofDisclosure", trustTarget);
+    const checkoutStart = src.indexOf("id={PAYWALL_CHECKOUT_ID}", proof);
     const between = src.slice(offerEnd, checkoutStart);
 
+    expect(trustTarget).toBeGreaterThan(offerEnd);
+    expect(proof).toBeGreaterThan(trustTarget);
     expect(checkoutStart).toBeGreaterThan(offerEnd);
-    expect(between).not.toContain("PaywallSocialProofDisclosure");
+    expect(proof).toBeLessThan(checkoutStart);
     expect(between).not.toContain("ArtifactPreview");
     expect(between).not.toContain("PAYWALL_FAQ");
   });
 
-  it("places social proof after checkout and post-payment expectation", () => {
-    expect(src).toContain("PaywallSocialProofDisclosure");
-    const checkout = src.indexOf("id={PAYWALL_CHECKOUT_ID}");
-    const expectation = src.indexOf("POST_PAYMENT_EXPECTATION", checkout);
-    const proof = src.indexOf("<PaywallSocialProofDisclosure", expectation);
+  it("defers PaymentIntent creation until explicit checkout intent", () => {
+    const paymentFetchHits = (src.match(/fetch\("\/api\/create-payment-intent"/g) || []).length;
 
-    expect(checkout).toBeGreaterThan(-1);
-    expect(expectation).toBeGreaterThan(checkout);
-    expect(proof).toBeGreaterThan(expectation);
+    expect(paymentFetchHits).toBe(1);
+    expect(src).toContain("const requestCheckoutIntent = async () =>");
+    expect(src).toContain("void requestCheckoutIntent();");
+    expect(src).toContain("onClick={handleCheckoutCtaClick}");
+    expect(src).toContain("checkoutRequestInFlightRef");
+    expect(src).toContain("hasCheckoutClientSecret");
+    expect(src).toContain("disabled={loadingSecret || retryBlocked}");
+    expect(src).not.toContain(".finally(() => setLoadingSecret(false))");
+    expect(socialProofSrc).not.toContain("/api/create-payment-intent");
   });
 
   it("removes paywall FAQ, paywall artifact preview, and fabricated proof", () => {
@@ -106,8 +138,28 @@ describe("PaywallScreen structure (copy compression)", () => {
     expect(src).toContain('setStep("upsell")');
   });
 
+  it("handles checkout-load errors without refresh guidance or raw server details", () => {
+    expect(src).toContain('response.headers.get("Retry-After")');
+    expect(src).toContain('role="alert"');
+    expect(src).toContain('aria-live="polite"');
+    expect(src).toContain("checkoutLoadErrorForStatus");
+    expect(src).not.toContain("Please refresh");
+    expect(src).not.toContain("rate_limited");
+    expect(src).not.toContain("Upstash");
+    expect(src).not.toContain("Redis");
+  });
+
   it("forces Stripe Elements copy to English without overriding country detection", () => {
     expect(src).toContain('locale: "en"');
     expect(src).not.toContain("defaultCountry");
+  });
+
+  it("leaves rate-limit policy and payment endpoint security in place", () => {
+    expect(rateLimitPolicySrc).toContain("createPaymentIntent");
+    expect(rateLimitPolicySrc).toContain('name: "email_product"');
+    expect(rateLimitPolicySrc).toContain("limit: 4");
+    expect(paymentRouteSrc).toContain('enforceRateLimit("createPaymentIntent"');
+    expect(paymentRouteSrc).toContain("getStripeClient()");
+    expect(paymentRouteSrc).toContain("paymentIntents.create");
   });
 });

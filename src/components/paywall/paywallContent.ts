@@ -14,6 +14,9 @@
 /** The id the top CTA scrolls to and the checkout-reached observer watches. */
 export const PAYWALL_CHECKOUT_ID = "paywall-checkout";
 
+/** The id the top CTA scrolls to so customer proof stays visible before fields. */
+export const PAYWALL_TRUST_CHECKOUT_ID = "paywall-trust-checkout";
+
 /**
  * The three concrete deliverables in plain words — what the user learns, the
  * practical first step, and where the plan stays available. Derived from the

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { m, AnimatePresence, useReducedMotion } from "framer-motion";
-import { AlertCircle, Lock, Check } from "lucide-react";
+import { AlertCircle, BadgeCheck, CreditCard, Lock, Check, RefreshCcw } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js/pure";
 import {
   Elements,
@@ -26,11 +26,18 @@ import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 import {
   NON_DIAGNOSIS_LINE,
   PAYWALL_CHECKOUT_ID,
+  PAYWALL_TRUST_CHECKOUT_ID,
   POST_PAYMENT_EXPECTATION,
   SECURE_PAYMENT_LINE,
   TRUST_LINE_ITEMS,
   paywallDeliverables,
 } from "./paywallContent";
+import {
+  canStartCheckoutRequest,
+  checkoutLoadErrorForStatus,
+  hasCheckoutClientSecret,
+  type CheckoutLoadError,
+} from "./paywallCheckout";
 
 // Lazy singleton - loadStripe (and the Stripe.js download) only fires
 // when the PaywallScreen first renders, not when the chunk is prefetched.
@@ -99,7 +106,7 @@ const stripeAppearance = {
 };
 
 function scrollToCheckout() {
-  document.getElementById(PAYWALL_CHECKOUT_ID)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  document.getElementById(PAYWALL_TRUST_CHECKOUT_ID)?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 /* Stripe checkout form */
@@ -194,10 +201,10 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
         style={{
           marginTop: 16,
           width: "100%",
-          minHeight: 60,
-          padding: "18px 24px",
-          borderRadius: 999,
-          fontSize: 17,
+          minHeight: 58,
+          padding: "17px 22px",
+          borderRadius: 17,
+          fontSize: 16.5,
           fontWeight: 800,
           cursor: loading ? "not-allowed" : "pointer",
           display: "flex",
@@ -225,10 +232,14 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
         ) : (
           <>
             <Lock size={17} strokeWidth={2.5} />
-            Unlock My Full Plan
+            Pay {BRAIN_OS.price.paywall} &amp; Unlock My Plan
           </>
         )}
       </m.button>
+
+      <p style={{ marginTop: 12, fontSize: 11, color: "var(--v2-ink-ghost)", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+        <Lock size={11} strokeWidth={2.5} /> {SECURE_PAYMENT_LINE}
+      </p>
     </form>
   );
 }
@@ -255,11 +266,16 @@ function PaywallStripeElements({
 /* Loading skeleton */
 function PaymentSkeleton() {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+    <div
+      aria-busy="true"
+      aria-label="Preparing secure payment fields"
+      role="status"
+      style={{ display: "flex", flexDirection: "column", gap: 10 }}
+    >
       {[56, 56, 50].map((h, i) => (
         <div key={i} style={{ height: h, borderRadius: 12, background: "rgba(148,163,255,0.08)", border: "1px solid var(--v2-line)" }} />
       ))}
-      <div style={{ height: 58, borderRadius: 999, background: "rgba(217,188,127,0.1)", border: "1px solid rgba(217,188,127,0.25)", marginTop: 4 }} />
+      <div style={{ height: 58, borderRadius: 17, background: "rgba(217,188,127,0.1)", border: "1px solid rgba(217,188,127,0.25)", marginTop: 4 }} />
     </div>
   );
 }
@@ -276,14 +292,22 @@ export function PaywallScreen() {
   };
 
   const [clientSecret,  setClientSecret]  = useState<string | null>(null);
-  const [loadingSecret, setLoadingSecret] = useState(true);
+  const [loadingSecret, setLoadingSecret] = useState(false);
+  const [checkoutRequested, setCheckoutRequested] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<CheckoutLoadError | null>(null);
+  const [retryBlockedUntil, setRetryBlockedUntil] = useState<number | null>(null);
+  const [retryClock, setRetryClock] = useState(() => Date.now());
+  const checkoutRequestInFlightRef = useRef(false);
+  const checkoutCtaTrackedRef = useRef(false);
+  const retryBlocked = retryBlockedUntil !== null && retryBlockedUntil > retryClock;
 
   /* checkout_section_reached: fires once when the payment section actually
      enters the viewport. This — not paywall_viewed and not
-     payment_intent_created (which fires on render) — is the "user got to
+     payment_intent_created (which is recorded on server success) — is the "user got to
      where money moves" signal. */
   const checkoutReachedRef = useRef(false);
   useEffect(() => {
+    if (!checkoutRequested) return;
     const el = document.getElementById(PAYWALL_CHECKOUT_ID);
     if (!el || typeof IntersectionObserver === "undefined") return;
     const io = new IntersectionObserver(
@@ -300,7 +324,14 @@ export function PaywallScreen() {
     );
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+  }, [checkoutRequested]);
+
+  useEffect(() => {
+    if (retryBlockedUntil === null) return;
+    const delay = Math.max(0, retryBlockedUntil - Date.now());
+    const timer = window.setTimeout(() => setRetryClock(Date.now()), delay + 250);
+    return () => window.clearTimeout(timer);
+  }, [retryBlockedUntil]);
 
   useEffect(() => {
     trackEvent(FIRST_PARTY_EVENTS.paywallViewed, {
@@ -316,29 +347,95 @@ export function PaywallScreen() {
     });
   }, [signature.signature]);
 
-  useEffect(() => {
-    const analyticsEventId = createAnalyticsEventId("initiate_checkout");
-    fetch("/api/create-payment-intent", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        priceId: PRICE_ID,
-        email,
-        funnel_step: "paywall",
-        quiz_result_id: quizResultId ?? "",
-        user_name: name,
-        analytics_event_id: analyticsEventId,
-        analytics_context: getAnalyticsContext(),
-      }),
-    })
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.clientSecret) {
-          setClientSecret(d.clientSecret);
-        }
+  const requestCheckoutIntent = async () => {
+    const now = Date.now();
+    if (
+      !canStartCheckoutRequest({
+        clientSecret,
+        loading: loadingSecret || checkoutRequestInFlightRef.current,
+        retryBlockedUntil,
+        nowMs: now,
       })
-      .finally(() => setLoadingSecret(false));
-  }, [email, name, quizResultId]);
+    ) {
+      return;
+    }
+
+    checkoutRequestInFlightRef.current = true;
+    setCheckoutRequested(true);
+    setLoadingSecret(true);
+    setCheckoutError(null);
+    setRetryClock(now);
+
+    const analyticsEventId = createAnalyticsEventId("initiate_checkout");
+    try {
+      const response = await fetch("/api/create-payment-intent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          priceId: PRICE_ID,
+          email,
+          funnel_step: "paywall",
+          quiz_result_id: quizResultId ?? "",
+          user_name: name,
+          analytics_event_id: analyticsEventId,
+          analytics_context: getAnalyticsContext(),
+        }),
+      });
+
+      if (!response.ok) {
+        const error = checkoutLoadErrorForStatus(
+          response.status,
+          response.headers.get("Retry-After"),
+        );
+        setCheckoutError(error);
+        if (error.retryAfterSeconds !== undefined) {
+          const blockedUntil = Date.now() + error.retryAfterSeconds * 1000;
+          setRetryBlockedUntil(blockedUntil);
+          setRetryClock(Date.now());
+        }
+        return;
+      }
+
+      let data: unknown = null;
+      try {
+        data = await response.json();
+      } catch {
+        // Handled by the safe generic message below.
+      }
+
+      if (hasCheckoutClientSecret(data)) {
+        setClientSecret(data.clientSecret);
+        setCheckoutError(null);
+        setRetryBlockedUntil(null);
+        return;
+      }
+
+      setCheckoutError(checkoutLoadErrorForStatus(500, null));
+    } catch {
+      setCheckoutError(checkoutLoadErrorForStatus(500, null));
+    } finally {
+      checkoutRequestInFlightRef.current = false;
+      setLoadingSecret(false);
+    }
+  };
+
+  const handleCheckoutCtaClick = () => {
+    if (!checkoutCtaTrackedRef.current) {
+      checkoutCtaTrackedRef.current = true;
+      trackEvent(FIRST_PARTY_EVENTS.checkoutCtaClicked, {
+        meta: false,
+        metadata: { product_key: "brain_profile", cta_location: "paywall_offer_top" },
+      });
+    }
+    setCheckoutRequested(true);
+    void requestCheckoutIntent();
+    scrollToCheckout();
+  };
+
+  const handleCheckoutRetry = () => {
+    setCheckoutRequested(true);
+    void requestCheckoutIntent();
+  };
 
   return (
     <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.28 }}>
@@ -404,72 +501,98 @@ export function PaywallScreen() {
 
             <button
               type="button"
-              onClick={() => {
-                trackEvent(FIRST_PARTY_EVENTS.checkoutCtaClicked, {
-                  meta: false,
-                  metadata: { product_key: "brain_profile", cta_location: "paywall_offer_top" },
-                });
-                scrollToCheckout();
-              }}
-              className="v2-cta v2-cta-gold"
-              style={{ marginTop: 12, width: "100%", minHeight: 56, fontSize: 15.5 }}
+              onClick={handleCheckoutCtaClick}
+              disabled={loadingSecret || retryBlocked}
+              className="v2-cta"
+              style={{ marginTop: 14, width: "100%", minHeight: 54, borderRadius: 17, fontSize: 15.25 }}
             >
-              <Lock size={15} strokeWidth={2.5} />
-              Unlock My Full Plan
+              <CreditCard size={15} strokeWidth={2.35} />
+              {loadingSecret ? "Preparing secure checkout..." : "Continue to Secure Checkout"}
             </button>
 
             {/* one scannable trust line + the non-diagnosis boundary, stated once */}
-            <p style={{ marginTop: 11, fontSize: 11.5, color: "var(--v2-ink-faint)", textAlign: "center", lineHeight: 1.5 }}>
-              {TRUST_LINE_ITEMS.join(" · ")}
-            </p>
+            <div style={{ marginTop: 12, display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
+              {TRUST_LINE_ITEMS.map((item) => (
+                <span key={item} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, color: "var(--v2-ink-faint)", lineHeight: 1.4 }}>
+                  <BadgeCheck size={12} color="var(--v2-gold)" strokeWidth={2.4} />
+                  {item}
+                </span>
+              ))}
+            </div>
             <p style={{ marginTop: 4, fontSize: 11, color: "var(--v2-ink-ghost)", textAlign: "center", lineHeight: 1.5 }}>
               {NON_DIAGNOSIS_LINE}
             </p>
           </m.div>
 
-          {/* Checkout sits immediately after the offer — no second offer in between. */}
-          <m.div
-            id={PAYWALL_CHECKOUT_ID}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.06 }}
-            className="v2-panel"
-            style={{ padding: "18px", borderColor: "rgba(217,188,127,0.3)", scrollMarginTop: 16 }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-              <Lock size={13} color="var(--v2-gold)" />
-              <HudLabel tone="gold">Secure unlock</HudLabel>
-            </div>
-            <AnimatePresence mode="wait">
-              {loadingSecret ? (
-                <m.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  <PaymentSkeleton />
-                </m.div>
-              ) : clientSecret ? (
-                <m.div key="form" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.24 }}>
-                  <PaywallStripeElements
-                    clientSecret={clientSecret}
-                    onSuccess={handlePaywallSuccess}
-                  />
-                </m.div>
-              ) : (
-                <m.p key="error" style={{ fontSize: 13, color: "var(--v2-error)", textAlign: "center", padding: "16px 0" }}>
-                  Failed to load payment. Please refresh the page.
-                </m.p>
-              )}
-            </AnimatePresence>
-            {/* One concise secure-payment signal, next to the actual checkout. */}
-            <p style={{ marginTop: 12, fontSize: 11, color: "var(--v2-ink-ghost)", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-              <Lock size={11} strokeWidth={2.5} /> {SECURE_PAYMENT_LINE}
-            </p>
-          </m.div>
-
-          {/* one compact, truthful post-payment expectation */}
-          <p style={{ textAlign: "center", fontSize: 12, color: "var(--v2-ink-faint)", lineHeight: 1.55, maxWidth: 440, margin: "0 auto" }}>
-            {POST_PAYMENT_EXPECTATION}
-          </p>
+          {/* Scroll target keeps customer proof visible before payment fields. */}
+          <div id={PAYWALL_TRUST_CHECKOUT_ID} style={{ scrollMarginTop: 16 }} />
 
           <PaywallSocialProofDisclosure />
+
+          <AnimatePresence>
+            {checkoutRequested && (
+              <m.div
+                id={PAYWALL_CHECKOUT_ID}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
+                transition={{ delay: 0.02, duration: 0.24 }}
+                className="v2-panel"
+                style={{ padding: "18px", borderColor: "rgba(217,188,127,0.34)", scrollMarginTop: 16 }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                  <Lock size={13} color="var(--v2-gold)" />
+                  <HudLabel tone="gold">Secure checkout</HudLabel>
+                </div>
+                <AnimatePresence mode="wait">
+                  {loadingSecret ? (
+                    <m.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                      <PaymentSkeleton />
+                    </m.div>
+                  ) : clientSecret ? (
+                    <m.div key="form" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.24 }}>
+                      <PaywallStripeElements
+                        clientSecret={clientSecret}
+                        onSuccess={handlePaywallSuccess}
+                      />
+                    </m.div>
+                  ) : checkoutError ? (
+                    <m.div
+                      key="error"
+                      role="alert"
+                      aria-live="polite"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      style={{ display: "grid", gap: 11, color: "#FFE3E3", textAlign: "left", background: "rgba(255,139,139,0.15)", border: "1px solid rgba(255,139,139,0.42)", borderRadius: 14, padding: "13px 14px" }}
+                    >
+                      <div style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
+                        <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+                        <p style={{ fontSize: 13, lineHeight: 1.5, fontWeight: 600 }}>{checkoutError.message}</p>
+                      </div>
+                      {!retryBlocked && (
+                        <button
+                          type="button"
+                          onClick={handleCheckoutRetry}
+                          className="v2-ghost"
+                          style={{ minHeight: 40, padding: "9px 13px", borderRadius: 12, justifySelf: "start", fontSize: 12.5 }}
+                        >
+                          <RefreshCcw size={13} strokeWidth={2.4} />
+                          Try again
+                        </button>
+                      )}
+                    </m.div>
+                  ) : null}
+                </AnimatePresence>
+              </m.div>
+            )}
+          </AnimatePresence>
+
+          {checkoutRequested && (
+            <p style={{ textAlign: "center", fontSize: 12, color: "var(--v2-ink-faint)", lineHeight: 1.55, maxWidth: 440, margin: "0 auto" }}>
+              {POST_PAYMENT_EXPECTATION}
+            </p>
+          )}
 
           <p style={{ textAlign: "center", fontSize: 11, color: "var(--v2-ink-ghost)", marginTop: 2, lineHeight: 2 }}>
             <a href="/terms" style={{ color: "inherit", textDecoration: "none" }}>Terms</a>

@@ -54,6 +54,27 @@ describe("social proof components", () => {
     expect(src).not.toContain("<details open");
   });
 
+  it("shows full paywall quotes after expansion while result proof stays compact", () => {
+    expect(src).toContain("fullQuote={open}");
+    expect(src).toContain("fullQuote");
+    expect(src).toContain("quoteLines={2}");
+    expect(src).toContain("quoteLines={3}");
+    expect(src).toContain("WebkitLineClamp: quoteLines");
+
+    const resultComponent = src.slice(
+      src.indexOf("export function ResultSocialProof"),
+      src.indexOf("export function PaywallSocialProofDisclosure"),
+    );
+    const paywallComponent = src.slice(
+      src.indexOf("export function PaywallSocialProofDisclosure"),
+    );
+
+    expect(resultComponent).toContain("quoteLines={2}");
+    expect(resultComponent).not.toContain("fullQuote");
+    expect(paywallComponent).toContain("fullQuote={open}");
+    expect(paywallComponent).toContain("fullQuote");
+  });
+
   it("uses the same client-created journey for both placements", () => {
     const resultComponent = src.slice(
       src.indexOf("export function ResultSocialProof"),
@@ -83,6 +104,7 @@ describe("social proof components", () => {
     expect(src).toContain("FIRST_PARTY_EVENTS.socialProofImpression");
     expect(src).toContain("buildImpressionMetadata");
     expect(src).toContain("groupId");
+    expect(src).not.toContain("/api/create-payment-intent");
     expect(src).not.toContain("signature_key");
     expect(src).not.toContain("match_type");
   });
