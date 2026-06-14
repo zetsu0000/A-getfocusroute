@@ -506,7 +506,7 @@ export function PaywallScreen() {
               style={{ marginTop: 12, width: "100%", minHeight: 56, fontSize: 15.5 }}
             >
               <Lock size={15} strokeWidth={2.5} />
-              Unlock My Full Plan ({BRAIN_OS.price.paywall})
+              Unlock My Full Plan
             </button>
 
             {/* one scannable trust line + the non-diagnosis boundary, stated once */}

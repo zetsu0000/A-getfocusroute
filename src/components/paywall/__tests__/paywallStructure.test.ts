@@ -36,6 +36,16 @@ describe("PaywallScreen structure (copy compression)", () => {
     expect(anchorHits).toBe(1);
   });
 
+  it("keeps the pre-checkout scroll CTA price-free", () => {
+    const start = src.indexOf('cta_location: "paywall_offer_top"');
+    const end = src.indexOf("</button>", start);
+    const topCta = src.slice(start, end);
+
+    expect(topCta).toContain("Unlock My Full Plan");
+    expect(topCta).toContain("scrollToCheckout()");
+    expect(topCta).not.toContain("price.paywall");
+  });
+
   it("removed the duplicated 'Your full plan' section and its rationale", () => {
     expect(src).not.toContain("What's in your full plan");
     expect(src).not.toContain("instead of"); // the "Why $27 instead of $97" copy
