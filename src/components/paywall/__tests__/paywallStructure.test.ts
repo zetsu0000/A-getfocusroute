@@ -105,4 +105,9 @@ describe("PaywallScreen structure (copy compression)", () => {
     expect(src).toContain("stripe.confirmPayment");
     expect(src).toContain('setStep("upsell")');
   });
+
+  it("forces Stripe Elements copy to English without overriding country detection", () => {
+    expect(src).toContain('locale: "en"');
+    expect(src).not.toContain("defaultCountry");
+  });
 });

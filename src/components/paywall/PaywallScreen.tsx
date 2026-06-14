@@ -241,7 +241,7 @@ function PaywallStripeElements({
   onSuccess: () => void;
 }) {
   const options = useMemo(
-    () => ({ clientSecret, appearance: stripeAppearance }),
+    () => ({ clientSecret, appearance: stripeAppearance, locale: "en" as const }),
     [clientSecret],
   );
 
