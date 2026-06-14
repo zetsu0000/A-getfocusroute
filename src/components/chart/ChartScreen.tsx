@@ -46,6 +46,19 @@ export function ChartScreen() {
   const [authChecked, setAuthChecked] = useState(false);
   const [saveEmail, setSaveEmail] = useState<string | null>(null);
 
+  /* Reset the page to the top when the result screen first mounts. The prior
+     screen can leave the window scrolled down, which would otherwise clip the
+     top of the result. Mount-only (empty deps) so it never reruns on state
+     changes, and an instant (non-smooth) scroll so it can't interfere with the
+     testimonials or the unlock CTA. */
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
   /* The free preview now lives on the email gate (result_preview_viewed
      fires there); this screen is the full result. */
   const fullResultTracked = useRef(false);

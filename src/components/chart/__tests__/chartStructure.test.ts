@@ -28,5 +28,22 @@ describe("ChartScreen trust progression", () => {
 
     expect(guard).toBeGreaterThan(-1);
   });
+
+  it("resets the page to the top on mount only (instant, not smooth)", () => {
+    // The reset lives in its own effect: it begins at the rAF call and ends at
+    // the empty-deps marker. Scoping the assertions to that slice proves it is
+    // mount-only (empty deps, so it never reruns on state changes) and instant
+    // (no smooth behavior that could fight testimonials or the unlock CTA).
+    const effectStart = src.indexOf("window.requestAnimationFrame");
+    const depsEnd = src.indexOf("}, []);", effectStart);
+    expect(effectStart).toBeGreaterThan(-1);
+    expect(depsEnd).toBeGreaterThan(effectStart);
+
+    const resetEffect = src.slice(effectStart, depsEnd);
+    expect(resetEffect).toContain("window.scrollTo(0, 0)");
+    expect(resetEffect).toContain("window.cancelAnimationFrame(frame)");
+    expect(resetEffect).not.toContain("behavior:");
+    expect(resetEffect).not.toContain("setStep");
+  });
 });
 
