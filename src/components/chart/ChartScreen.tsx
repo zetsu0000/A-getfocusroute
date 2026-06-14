@@ -11,6 +11,7 @@ import { getSignatureIdentity } from "@/lib/signature-identity";
 import { firstStepTeaserFor } from "@/lib/first-step-teaser";
 import { SigilArtifact } from "@/components/v2/SigilArtifact";
 import { FocusField } from "@/components/v2/FocusField";
+import { SocialProof } from "@/components/signature/SocialProof";
 import { HudLabel } from "@/components/v2/primitives";
 import { setPersistedQuizResultId } from "@/lib/quizResultId";
 import { createClient } from "@/lib/supabase/client";
@@ -352,9 +353,25 @@ export function ChartScreen() {
             }}
           >
             <em style={{ fontStyle: "italic", color: identity.accent }}>{displayName},</em>{" "}
-            your full focus plan is ready to unlock.
+            your full plan focuses on {signature.planFocus}.
           </p>
         </m.div>
+
+        {/* One compact, real customer micro-proof at the decision point — it sits
+            between the result→plan bridge above and the CTA below, and renders
+            nothing if no approved story is available. It does not gate the CTA. */}
+        {!retakeMode && (
+          <m.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.95 }}
+          >
+            <SocialProof
+              signature={signature.signature}
+              placement="result_transition"
+            />
+          </m.div>
+        )}
 
         {retakeMode ? (
           <m.button
