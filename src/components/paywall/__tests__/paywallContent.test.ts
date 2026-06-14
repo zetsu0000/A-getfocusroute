@@ -1,14 +1,20 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 import {
   NON_DIAGNOSIS_LINE,
   PAYWALL_CHECKOUT_ID,
-  PAYWALL_FAQ,
   POST_PAYMENT_EXPECTATION,
   SECURE_PAYMENT_LINE,
   TRUST_LINE_ITEMS,
   paywallDeliverables,
 } from "../paywallContent";
+
+const src = readFileSync(
+  fileURLToPath(new URL("../paywallContent.ts", import.meta.url)),
+  "utf8",
+);
 
 describe("paywall primary offer content", () => {
   it("exposes exactly three concrete deliverables (learn / first step / availability)", () => {
@@ -60,40 +66,11 @@ describe("paywall primary offer content", () => {
   it("keeps the checkout anchor id unchanged", () => {
     expect(PAYWALL_CHECKOUT_ID).toBe("paywall-checkout");
   });
-});
 
-describe("paywall FAQ", () => {
-  it("is exactly the three intended objections", () => {
-    expect(PAYWALL_FAQ.map((f) => f.q)).toEqual([
-      "What exactly do I get?",
-      "What happens after payment?",
-      "What if it doesn't fit me?",
-    ]);
-  });
-
-  it("drops the previously redundant questions", () => {
-    const qs = PAYWALL_FAQ.map((f) => f.q.toLowerCase()).join(" | ");
-    for (const removed of [
-      "another quiz",
-      "is this a diagnosis",
-      "too much work",
-      "how long until",
-    ]) {
-      expect(qs).not.toContain(removed);
-    }
-  });
-
-  it("makes no promise about how fast results appear", () => {
-    const answers = PAYWALL_FAQ.map((f) => f.a.toLowerCase()).join(" ");
-    for (const timing of ["days until", "weeks", "results in", "see results", "in just"]) {
-      expect(answers).not.toContain(timing);
-    }
-  });
-
-  it("gives every item a question and an answer", () => {
-    for (const f of PAYWALL_FAQ) {
-      expect(f.q.length).toBeGreaterThan(0);
-      expect(f.a.length).toBeGreaterThan(0);
-    }
+  it("does not export a paywall FAQ", () => {
+    expect(src).not.toContain("PAYWALL_FAQ");
+    expect(src).not.toContain("What exactly do I get?");
+    expect(src).not.toContain("What happens after payment?");
+    expect(src).not.toContain("What if it doesn't fit me?");
   });
 });

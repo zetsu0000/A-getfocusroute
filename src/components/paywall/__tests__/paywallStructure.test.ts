@@ -34,6 +34,8 @@ describe("PaywallScreen structure (copy compression)", () => {
   it("presents the anchored price exactly once (no duplicate offer block)", () => {
     const anchorHits = (src.match(/price\.paywallAnchor/g) || []).length;
     expect(anchorHits).toBe(1);
+    const priceHits = (src.match(/BRAIN_OS\.price\.paywall\b/g) || []).length;
+    expect(priceHits).toBe(1);
   });
 
   it("keeps the pre-checkout scroll CTA price-free", () => {
@@ -67,15 +69,33 @@ describe("PaywallScreen structure (copy compression)", () => {
     expect(hits).toBe(1);
   });
 
-  it("renders the FAQ as a native disclosure, collapsed by default", () => {
-    expect(src).toContain("<details");
-    expect(src).toContain("<summary");
-    expect(src).not.toContain("<details open");
-    expect(src).toContain('className="v2-faq"');
+  it("keeps checkout immediately after the offer", () => {
+    const offerEnd = src.indexOf("</m.div>", src.indexOf("Primary offer"));
+    const checkoutStart = src.indexOf("id={PAYWALL_CHECKOUT_ID}", offerEnd);
+    const between = src.slice(offerEnd, checkoutStart);
+
+    expect(checkoutStart).toBeGreaterThan(offerEnd);
+    expect(between).not.toContain("PaywallSocialProofDisclosure");
+    expect(between).not.toContain("ArtifactPreview");
+    expect(between).not.toContain("PAYWALL_FAQ");
   });
 
-  it("keeps social proof and any fabricated testimonial off the paywall", () => {
-    expect(src).not.toContain("SocialProof");
+  it("places social proof after checkout and post-payment expectation", () => {
+    expect(src).toContain("PaywallSocialProofDisclosure");
+    const checkout = src.indexOf("id={PAYWALL_CHECKOUT_ID}");
+    const expectation = src.indexOf("POST_PAYMENT_EXPECTATION", checkout);
+    const proof = src.indexOf("<PaywallSocialProofDisclosure", expectation);
+
+    expect(checkout).toBeGreaterThan(-1);
+    expect(expectation).toBeGreaterThan(checkout);
+    expect(proof).toBeGreaterThan(expectation);
+  });
+
+  it("removes paywall FAQ, paywall artifact preview, and fabricated proof", () => {
+    expect(src).not.toContain("PAYWALL_FAQ");
+    expect(src).not.toContain("v2-faq");
+    expect(src).not.toContain("ArtifactPreview");
+    expect(src).not.toContain("Your full pattern map");
     expect(src.toLowerCase()).not.toContain("verified customer");
     expect(src).not.toContain("Sarah");
   });

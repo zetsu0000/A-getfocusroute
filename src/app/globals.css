@@ -320,19 +320,12 @@ h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-
     0 24px 60px rgba(2, 3, 10, 0.55);
 }
 
-/* Paywall FAQ — native <details>, premium styling, keyboard-accessible */
-.v2-faq > summary {
-  list-style: none;
-  cursor: pointer;
-}
-.v2-faq > summary::-webkit-details-marker {
+.social-proof-summary::-webkit-details-marker {
   display: none;
 }
-.v2-faq > summary .v2-faq-icon {
-  transition: transform 0.2s ease;
-}
-.v2-faq[open] > summary .v2-faq-icon {
-  transform: rotate(45deg);
+.social-proof-summary:focus-visible {
+  outline: 2px solid rgba(246, 195, 107, 0.85);
+  outline-offset: 3px;
 }
 
 /* HUD label — telemetry voice */

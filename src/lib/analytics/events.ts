@@ -44,11 +44,12 @@ export const FIRST_PARTY_EVENTS = {
   upsellViewed: "upsell_viewed",
   subscriptionViewed: "subscription_viewed",
   dashboardFirstActionClicked: "dashboard_first_action_clicked",
-  // Social proof — first-party only. Fires only when an approved, signature-
-  // matched testimonial actually enters the viewport (not on the trust
-  // fallback, not on render). Distinct from full_result_viewed, paywall_viewed,
-  // and checkout_cta_clicked so "saw real proof" stays its own measurable fact.
+  // Social proof - first-party only. Fires only when approved customer proof
+  // enters the viewport or when the user explicitly expands the paywall proof.
+  // Distinct from full_result_viewed, paywall_viewed, and checkout_cta_clicked
+  // so "saw/requested proof" stays its own measurable fact.
   socialProofImpression: "social_proof_impression",
+  socialProofExpanded: "social_proof_expanded",
 } as const;
 
 export type FirstPartyEventName =

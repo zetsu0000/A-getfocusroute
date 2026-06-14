@@ -46,6 +46,7 @@ describe("first-party funnel event registry", () => {
       FIRST_PARTY_EVENTS.subscriptionViewed,
       FIRST_PARTY_EVENTS.dashboardFirstActionClicked,
       FIRST_PARTY_EVENTS.socialProofImpression,
+      FIRST_PARTY_EVENTS.socialProofExpanded,
     ] as const;
     for (const eventName of depthEvents) {
       expect(isAllowedFirstPartyEvent(eventName)).toBe(true);
@@ -85,6 +86,9 @@ describe("first-party funnel event registry", () => {
     expect(isAllowedFirstPartyEvent(FIRST_PARTY_EVENTS.socialProofImpression)).toBe(true);
     expect(META_ALLOWED_FIRST_PARTY_EVENTS.has(FIRST_PARTY_EVENTS.socialProofImpression)).toBe(false);
     expect(META_EVENT_BY_FIRST_PARTY[FIRST_PARTY_EVENTS.socialProofImpression]).toBeUndefined();
+    expect(isAllowedFirstPartyEvent(FIRST_PARTY_EVENTS.socialProofExpanded)).toBe(true);
+    expect(META_ALLOWED_FIRST_PARTY_EVENTS.has(FIRST_PARTY_EVENTS.socialProofExpanded)).toBe(false);
+    expect(META_EVENT_BY_FIRST_PARTY[FIRST_PARTY_EVENTS.socialProofExpanded]).toBeUndefined();
   });
 
   it("separates the free preview from the full result", () => {

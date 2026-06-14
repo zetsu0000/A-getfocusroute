@@ -1,5 +1,3 @@
-import { BRAIN_OS } from "@/lib/positioning";
-
 /**
  * Single source of truth for paywall copy.
  *
@@ -50,22 +48,3 @@ export const SECURE_PAYMENT_LINE = "Secure payment processed by Stripe";
  */
 export const POST_PAYMENT_EXPECTATION =
   "After payment, your full plan unlocks in your account — sign in any time with the same email.";
-
-/**
- * Exactly three FAQ items: the objections not already answered by the offer,
- * deliverables, or trust line. No promises about how fast results appear.
- */
-export const PAYWALL_FAQ: ReadonlyArray<{ q: string; a: string }> = [
-  {
-    q: "What exactly do I get?",
-    a: "Your full focus-pattern breakdown, your Executive Function Radar, and your first next step — all saved in your account the moment you pay.",
-  },
-  {
-    q: "What happens after payment?",
-    a: "Your plan unlocks immediately in your account. Sign in any time with the same email to pick up where you left off.",
-  },
-  {
-    q: "What if it doesn't fit me?",
-    a: `${BRAIN_OS.guaranteeTitle}: if it doesn't feel like you, email support@getfocusroute.com within 7 days for a full refund — no questions.`,
-  },
-] as const;

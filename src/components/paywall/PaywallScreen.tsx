@@ -14,8 +14,7 @@ import { useQuizStore } from "@/store/quizStore";
 import { safeName } from "@/lib/personalization";
 import { BRAIN_OS } from "@/lib/positioning";
 import { getSignatureFromAnswers, echoSentence } from "@/lib/signature";
-import { getSignatureIdentity } from "@/lib/signature-identity";
-import { SignatureSigil } from "@/components/signature/SignatureSigil";
+import { PaywallSocialProofDisclosure } from "@/components/signature/SocialProof";
 import { HudLabel } from "@/components/v2/primitives";
 import {
   createAnalyticsEventId,
@@ -27,7 +26,6 @@ import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 import {
   NON_DIAGNOSIS_LINE,
   PAYWALL_CHECKOUT_ID,
-  PAYWALL_FAQ,
   POST_PAYMENT_EXPECTATION,
   SECURE_PAYMENT_LINE,
   TRUST_LINE_ITEMS,
@@ -102,85 +100,6 @@ const stripeAppearance = {
 
 function scrollToCheckout() {
   document.getElementById(PAYWALL_CHECKOUT_ID)?.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-/* Compact personalized artifact — a small cue that the plan is built from the
-   user's own answers. The full sigil already appeared on the result reveal, so
-   here it stays deliberately small: sigil + "Your full pattern map" + a few
-   locked rows. No friction paragraph, curiosity bullets, profile band, or
-   closing copy — those duplicated the result screen and added height. */
-function ArtifactPreview() {
-  const answers = useQuizStore((s) => s.answers);
-  const signature = getSignatureFromAnswers(answers);
-  const identity = getSignatureIdentity(signature.signature);
-
-  const lockedPatternRow: Record<string, string> = {
-    Sprinter: "Your pressure-to-momentum pattern",
-    Archivist: "Your overload threshold pattern",
-    Spark: "Your novelty-to-follow-through pattern",
-    Reactor: "Your mood-to-focus pattern",
-    Drifter: "Your attention anchor pattern",
-  };
-  const rows = [
-    lockedPatternRow[signature.signature] ?? "Your focus pattern",
-    "Your best starting conditions",
-    "Your recovery rhythm",
-  ];
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        gap: 14,
-        alignItems: "center",
-        borderRadius: 16,
-        border: `1px solid rgba(${identity.accentRgb},0.22)`,
-        background: "linear-gradient(180deg, rgba(14,18,32,0.8), rgba(8,10,18,0.9))",
-        padding: 14,
-      }}
-    >
-      <div style={{ flexShrink: 0 }}>
-        <SignatureSigil signatureKey={signature.signature} size={46} withGlow />
-      </div>
-      <div style={{ minWidth: 0, flex: 1 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 9 }}>
-          <Lock size={12} color="var(--v2-gold)" />
-          <HudLabel tone="gold" style={{ fontSize: 9.5 }}>Your full pattern map</HudLabel>
-        </div>
-        <div style={{ display: "grid", gap: 6 }}>
-          {rows.map((label) => (
-            <div
-              key={label}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "7px 10px",
-                borderRadius: 9,
-                background: "rgba(148,163,255,0.05)",
-                border: "1px solid var(--v2-line)",
-              }}
-            >
-              <span style={{ fontSize: 11.5, color: "var(--v2-ink-dim)", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {label}
-              </span>
-              <span
-                aria-hidden="true"
-                style={{
-                  marginLeft: "auto",
-                  flexShrink: 0,
-                  width: 42,
-                  height: 6,
-                  borderRadius: 999,
-                  background: "repeating-linear-gradient(90deg, rgba(163,178,255,0.25) 0 6px, rgba(163,178,255,0.08) 6px 12px)",
-                }}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
 }
 
 /* Stripe checkout form */
@@ -306,15 +225,10 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
         ) : (
           <>
             <Lock size={17} strokeWidth={2.5} />
-            Unlock My Full Plan ({BRAIN_OS.price.paywall})
+            Unlock My Full Plan
           </>
         )}
       </m.button>
-
-      {/* One concise secure-payment signal, next to the actual checkout. */}
-      <p style={{ marginTop: 12, fontSize: 11, color: "var(--v2-ink-ghost)", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-        <Lock size={11} strokeWidth={2.5} /> {SECURE_PAYMENT_LINE}
-      </p>
     </form>
   );
 }
@@ -477,11 +391,6 @@ export function PaywallScreen() {
               ))}
             </div>
 
-            {/* compact personalized artifact cue */}
-            <div style={{ marginTop: 16 }}>
-              <ArtifactPreview />
-            </div>
-
             {/* price — the one definitive price presentation */}
             <div style={{ marginTop: 16, display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
               <span className="v2-display v2-text-gold" style={{ fontSize: 32, fontWeight: 600, lineHeight: 1, letterSpacing: "-0.02em" }}>
@@ -549,6 +458,10 @@ export function PaywallScreen() {
                 </m.p>
               )}
             </AnimatePresence>
+            {/* One concise secure-payment signal, next to the actual checkout. */}
+            <p style={{ marginTop: 12, fontSize: 11, color: "var(--v2-ink-ghost)", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+              <Lock size={11} strokeWidth={2.5} /> {SECURE_PAYMENT_LINE}
+            </p>
           </m.div>
 
           {/* one compact, truthful post-payment expectation */}
@@ -556,43 +469,7 @@ export function PaywallScreen() {
             {POST_PAYMENT_EXPECTATION}
           </p>
 
-          {/* three collapsed FAQ items */}
-          <m.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.10 }}
-            className="v2-panel"
-            style={{ padding: "4px 8px" }}
-          >
-            {PAYWALL_FAQ.map(({ q, a }, i) => (
-              <details
-                key={q}
-                className="v2-faq"
-                style={{ borderTop: i === 0 ? "none" : "1px solid var(--v2-line)" }}
-              >
-                <summary
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 10,
-                    padding: "13px 10px",
-                    fontSize: 13,
-                    fontWeight: 800,
-                    color: "var(--v2-ink)",
-                  }}
-                >
-                  <span>{q}</span>
-                  <span className="v2-faq-icon" aria-hidden="true" style={{ fontSize: 18, fontWeight: 400, lineHeight: 1, color: "var(--v2-ink-faint)" }}>
-                    +
-                  </span>
-                </summary>
-                <p style={{ fontSize: 13, color: "var(--v2-ink-dim)", lineHeight: 1.55, padding: "0 10px 13px" }}>
-                  {a}
-                </p>
-              </details>
-            ))}
-          </m.div>
+          <PaywallSocialProofDisclosure />
 
           <p style={{ textAlign: "center", fontSize: 11, color: "var(--v2-ink-ghost)", marginTop: 2, lineHeight: 2 }}>
             <a href="/terms" style={{ color: "inherit", textDecoration: "none" }}>Terms</a>
