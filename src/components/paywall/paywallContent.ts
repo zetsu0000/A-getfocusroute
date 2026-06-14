@@ -45,6 +45,15 @@ export const NON_DIAGNOSIS_LINE =
 export const SECURE_PAYMENT_LINE = "Secure payment processed by Stripe";
 
 /**
+ * The final payment CTA label, built as one complete string from the
+ * centralized price value so the spacing around the price can never break
+ * (previously two JSX fragments rendered as "Pay $27& Unlock My Plan").
+ */
+export function payCtaLabel(price: string): string {
+  return `Pay ${price} \u2014 Unlock My Plan`;
+}
+
+/**
  * One short, truthful post-payment expectation. Deliberately does NOT promise
  * an emailed copy or lifetime access — only what the entitlement flow delivers:
  * the plan unlocks in the account and is reachable with the same email.

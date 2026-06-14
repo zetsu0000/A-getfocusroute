@@ -9,6 +9,7 @@ import {
   POST_PAYMENT_EXPECTATION,
   SECURE_PAYMENT_LINE,
   TRUST_LINE,
+  payCtaLabel,
   paywallDeliverables,
 } from "../paywallContent";
 
@@ -35,6 +36,17 @@ describe("paywall primary offer content", () => {
     expect(TRUST_LINE).toContain("One-time payment");
     expect(TRUST_LINE).toContain("Instant access");
     expect(TRUST_LINE).toContain("7-day refund");
+  });
+
+  it("builds the final CTA as one string with an em dash around the price", () => {
+    expect(payCtaLabel("$27")).toBe("Pay $27 \u2014 Unlock My Plan");
+    // em dash, not the old ampersand fragment that collapsed to "$27&"
+    expect(payCtaLabel("$27")).toContain("\u2014");
+    expect(payCtaLabel("$27")).not.toContain("&");
+    // single space on each side of the price token (spacing can't break)
+    expect(payCtaLabel("$27")).toContain("Pay $27 \u2014");
+    // stays driven by the centralized price value
+    expect(payCtaLabel("$49")).toBe("Pay $49 \u2014 Unlock My Plan");
   });
 
   it("states the non-diagnosis boundary without medical claims", () => {

@@ -67,10 +67,34 @@ describe("PaywallScreen structure (copy compression)", () => {
     expect(topCta).toContain("Continue to Secure Checkout");
     expect(topCta).not.toContain("BRAIN_OS.price.paywall");
     expect(topCta).not.toContain("confirmPayment");
-    expect(checkoutForm).toContain("Pay {BRAIN_OS.price.paywall} &amp; Unlock My Plan");
+    // Final CTA copy is now a single centralized string so the spacing around
+    // the price can't break. The old two-fragment "&amp;" form is gone.
+    expect(checkoutForm).toContain("{payCtaLabel(BRAIN_OS.price.paywall)}");
+    expect(checkoutForm).not.toContain("&amp; Unlock My Plan");
     expect(checkoutForm).toContain("elements.submit()");
     expect(checkoutForm).toContain("stripe.confirmPayment");
     expect(checkoutForm).toContain('/assessment?step=upsell');
+  });
+
+  it("resets the page to the top on mount only (instant, not smooth)", () => {
+    // The reset lives in its own effect: it begins at the rAF call and ends at
+    // the empty-deps marker. Scoping the assertions to that slice proves it is
+    // mount-only (empty deps, so it never reruns when Stripe loads or social
+    // proof expands) and instant (no smooth behavior fighting the top CTA).
+    const effectStart = src.indexOf("window.requestAnimationFrame");
+    const depsEnd = src.indexOf("}, []);", effectStart);
+    expect(effectStart).toBeGreaterThan(-1);
+    expect(depsEnd).toBeGreaterThan(effectStart);
+
+    const resetEffect = src.slice(effectStart, depsEnd);
+    expect(resetEffect).toContain("window.scrollTo(0, 0)");
+    expect(resetEffect).toContain("window.cancelAnimationFrame(frame)");
+    expect(resetEffect).not.toContain("behavior:");
+    expect(resetEffect).not.toContain("checkoutRequested");
+    expect(resetEffect).not.toContain("clientSecret");
+
+    // The top CTA keeps its own smooth scroll-to-checkout, untouched.
+    expect(src).toContain('scrollIntoView({ behavior: "smooth"');
   });
 
   it("removes the blue/purple CTA: both buttons are gold and the final is the strongest", () => {

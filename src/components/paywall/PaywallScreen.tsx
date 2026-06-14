@@ -30,6 +30,7 @@ import {
   POST_PAYMENT_EXPECTATION,
   SECURE_PAYMENT_LINE,
   TRUST_LINE,
+  payCtaLabel,
   paywallDeliverables,
 } from "./paywallContent";
 import {
@@ -232,7 +233,7 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
         ) : (
           <>
             <Lock size={17} strokeWidth={2.5} />
-            Pay {BRAIN_OS.price.paywall} &amp; Unlock My Plan
+            {payCtaLabel(BRAIN_OS.price.paywall)}
           </>
         )}
       </m.button>
@@ -301,6 +302,19 @@ export function PaywallScreen() {
   const checkoutRequestInFlightRef = useRef(false);
   const checkoutCtaTrackedRef = useRef(false);
   const retryBlocked = retryBlockedUntil !== null && retryBlockedUntil > retryClock;
+
+  /* Reset the page to the top when the paywall first mounts. The previous
+     result screen can leave the window scrolled down, which would otherwise
+     clip the top of the offer panel. Mount-only (empty deps) so it never
+     reruns when Stripe loads or social proof expands, and it uses an instant
+     (non-smooth) scroll so it can't fight the top CTA's scroll-to-checkout. */
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   /* checkout_section_reached: fires once when the payment section actually
      enters the viewport. This — not paywall_viewed and not
