@@ -1,137 +1,339 @@
-import type { BrainSignature } from "@/lib/signature";
-
 /**
- * Approved customer-evidence registry for the result → paywall transition.
+ * Public-safe customer evidence registry.
  *
- * ── INTEGRITY CONTRACT (read before editing) ───────────────────────────────
- * - Only REAL, customer-approved statements + photos may live here. Every entry
- *   in this file must have public-use authorization on file BEFORE it ships.
- * - Do NOT invent customers, names, photos, star ratings, counts, or
- *   "verified" labels. No stock or AI-generated people. No fabricated metrics.
- * - This module is imported by a Client Component, so everything here ships to
- *   the browser. Keep it to public-safe fields only — NEVER put private consent
- *   notes, source paths, verifier identities, or review comments in this file.
- *   Consent/authorization records are tracked outside the repo.
- * - `image` must be a repo-relative public path (e.g. "/testimonials/x.png").
- *   Never a local/absolute filesystem path.
- * - An entry shows publicly ONLY when `approved === true`. With nothing
- *   approved, the funnel shows no testimonial (just the truthful result→plan
- *   bridge) — never placeholder or manufactured proof.
- * - `signatures: "all"` until a customer's actual Cognitive Signature is
- *   verified AND authorized for that use. Do not imply "similar pattern"
- *   matching from evidence that does not establish the customer's result.
- * - Stories must stay subjective (clarity, usability, practical value, reduced
- *   friction, self-understanding). No medical/ADHD/treatment/clinical claims.
+ * This module is imported by Client Components, so every field below ships to
+ * the browser. Keep it limited to public display and analytics-safe data:
+ * no source filesystem paths, consent notes, verifier names, email addresses,
+ * private approval records, quiz answers, or medical information.
  */
+
+export type SocialProofCategory =
+  | "clarity"
+  | "usability"
+  | "practical_value"
+  | "product_trust"
+  | "customer_support"
+  | "post_purchase_reassurance";
+
+export type SocialProofPlacement =
+  | "result_transition"
+  | "paywall_post_checkout";
+
 export interface ApprovedTestimonial {
-  /** Stable, opaque id — used for analytics + React keys. No customer name. */
+  /** Stable, opaque id used for React keys and safe analytics metadata. */
   id: string;
-  /** Approved public quote (verbatim, or shortened without changing meaning). */
+  /** Approved public quote or faithful excerpt. */
   quote: string;
-  /** Approved public attribution (kept conservative, e.g. first name + initial). */
+  /** Approved public attribution. */
   attribution: string;
-  /** Repo-relative public image path, or undefined if no photo is approved. */
-  image?: string;
-  /**
-   * Cognitive Signatures this story is approved to represent. `"all"` =
-   * signature-agnostic (the only safe value until a customer's actual result
-   * is verified and authorized for signature-specific matching).
-   */
-  signatures: BrainSignature[] | "all";
-  /** Hard gate. `false` never renders publicly. */
+  /** Repo-relative public image path. Never a local filesystem path. */
+  image: string;
+  /** Primary objection this proof resolves. */
+  category: SocialProofCategory;
+  /** Public placements this proof is suitable for. */
+  eligiblePlacement: readonly SocialProofPlacement[];
+  /** Hard gate. False never renders publicly. */
   approved: boolean;
 }
+export interface SocialProofJourney {
+  result: ApprovedTestimonial[];
+  paywall: ApprovedTestimonial[];
+}
 
-/**
- * Authorized customer evidence currently activated in the funnel.
- *
- * Kept to a single, compact, on-message story for the result→paywall decision
- * point (clarity / ease of use). Additional authorized customers + photos can
- * be added here later; the selector and component handle the rest. To add one:
- * place the approved photo in /public/testimonials, add an entry with
- * `approved: true`, and keep `signatures: "all"` unless the customer's actual
- * signature is verified and authorized.
- */
-export const APPROVED_TESTIMONIALS: ApprovedTestimonial[] = [
+export const SOCIAL_PROOF_POOL_VERSION = "2026-06-14-v2";
+
+const RESULT: SocialProofPlacement = "result_transition";
+const PAYWALL: SocialProofPlacement = "paywall_post_checkout";
+
+export const APPROVED_TESTIMONIALS: readonly ApprovedTestimonial[] = [
   {
-    id: "review-01",
-    quote: "Very easy interface, everything is clear.",
+    id: "proof-001",
+    quote:
+      "Not cheap, but at least you are getting a lot actually, so it is a good deal.",
+    attribution: "Mark H.",
+    image: "/testimonials/mark-hendrik.png",
+    category: "practical_value",
+    eligiblePlacement: [PAYWALL],
+    approved: true,
+  },
+  {
+    id: "proof-002",
+    quote: "Very easy interface, everything is clear and cool.",
     attribution: "Daria M.",
     image: "/testimonials/daria-mart.png",
-    signatures: "all",
+    category: "clarity",
+    eligiblePlacement: [RESULT],
+    approved: true,
+  },
+  {
+    id: "proof-003",
+    quote:
+      "They showed a great disposition to help. Thumbs up to their support.",
+    attribution: "Alan T.",
+    image: "/testimonials/alan-thompson.png",
+    category: "customer_support",
+    eligiblePlacement: [PAYWALL],
+    approved: true,
+  },
+  {
+    id: "proof-004",
+    quote:
+      "The support team responded very quickly with a clear and accurate answer. They helped me understand the situation right away and resolved my concern.",
+    attribution: "Melissa R.",
+    image: "/testimonials/melissa-roberts.png",
+    category: "customer_support",
+    eligiblePlacement: [PAYWALL],
+    approved: true,
+  },
+  {
+    id: "proof-005",
+    quote:
+      "Super professional, helpful, and went above and beyond. He took the time to explain things.",
+    attribution: "Barbara S.",
+    image: "/testimonials/barbara-sanchez.png",
+    category: "customer_support",
+    eligiblePlacement: [PAYWALL],
+    approved: true,
+  },
+  {
+    id: "proof-006",
+    quote:
+      "They were ultra persistent in getting to the bottom of this. They were honestly trying to help me through the entire situation.",
+    attribution: "Pamela D.",
+    image: "/testimonials/pamela-davis.png",
+    category: "customer_support",
+    eligiblePlacement: [PAYWALL],
+    approved: true,
+  },
+  {
+    id: "proof-007",
+    quote: "Everything is amazing.",
+    attribution: "Gregory H.",
+    image: "/testimonials/gregory-hernandez.png",
+    category: "product_trust",
+    eligiblePlacement: [],
+    approved: true,
+  },
+  {
+    id: "proof-008",
+    quote:
+      "I am very happy with FocusRoute so far. It has greatly helped me come up with new and creative ideas.",
+    attribution: "Amy R.",
+    image: "/testimonials/amy-reyes.png",
+    category: "practical_value",
+    eligiblePlacement: [RESULT, PAYWALL],
+    approved: true,
+  },
+  {
+    id: "proof-009",
+    quote:
+      "He was incredibly empathetic, listened to my situation, and guided me on exactly what verification documents were needed.",
+    attribution: "Larry B.",
+    image: "/testimonials/larry-bennett.png",
+    category: "post_purchase_reassurance",
+    eligiblePlacement: [PAYWALL],
+    approved: true,
+  },
+  {
+    id: "proof-010",
+    quote: "It really is helping me re-define myself.",
+    attribution: "Benjamin L.",
+    image: "/testimonials/benjamin-lee.png",
+    category: "post_purchase_reassurance",
+    eligiblePlacement: [RESULT, PAYWALL],
+    approved: true,
+  },
+  {
+    id: "proof-011",
+    quote:
+      "It's brilliant. Quite easy to navigate around, and it doesn't break the bank.",
+    attribution: "Billy W.",
+    image: "/testimonials/billy-wilson.png",
+    category: "usability",
+    eligiblePlacement: [RESULT, PAYWALL],
+    approved: true,
+  },
+  {
+    id: "proof-012",
+    quote: "Tools that solve our problems.",
+    attribution: "Jean B.",
+    image: "/testimonials/jean-brooks.png",
+    category: "practical_value",
+    eligiblePlacement: [],
     approved: true,
   },
 ];
 
+const RESULT_SLOT_CATEGORY_PREFERENCES: readonly (readonly SocialProofCategory[])[] =
+  [
+    ["clarity", "usability", "practical_value", "product_trust"],
+    ["usability", "clarity", "practical_value", "product_trust"],
+    ["practical_value", "product_trust", "clarity", "usability"],
+  ];
+
+const PAYWALL_SLOT_CATEGORY_PREFERENCES: readonly (readonly SocialProofCategory[])[] =
+  [
+    [
+      "customer_support",
+      "product_trust",
+      "post_purchase_reassurance",
+      "practical_value",
+    ],
+    [
+      "customer_support",
+      "product_trust",
+      "post_purchase_reassurance",
+      "practical_value",
+    ],
+    [
+      "post_purchase_reassurance",
+      "practical_value",
+      "customer_support",
+      "product_trust",
+    ],
+  ];
+
 /**
- * Ops kill-switch (defense in depth). Set `NEXT_PUBLIC_SOCIAL_PROOF_OFF=1` to
- * force-hide every testimonial even after approved evidence has been added.
+ * Ops kill-switch. Set NEXT_PUBLIC_SOCIAL_PROOF_OFF=1 to force-hide customer
+ * proof without shipping placeholder or fabricated evidence.
  */
 function featureDisabled(): boolean {
   return process.env.NEXT_PUBLIC_SOCIAL_PROOF_OFF === "1";
 }
 
-/** Approved + (kill-switch off) entries only. */
-function liveTestimonials(): ApprovedTestimonial[] {
+export function liveTestimonials(
+  testimonials: readonly ApprovedTestimonial[] = APPROVED_TESTIMONIALS,
+): ApprovedTestimonial[] {
   if (featureDisabled()) return [];
-  return APPROVED_TESTIMONIALS.filter((t) => t.approved);
+  return testimonials.filter((testimonial) => testimonial.approved);
 }
 
-/**
- * Most relevant approved testimonial for a signature, or `null`.
- *
- * Deterministic: prefers a signature-specific match in declaration order, then
- * a `"all"` story, then `null`. Returning `null` is the graceful path — callers
- * must render nothing (no empty container), never fake proof.
- */
-export function getMatchedTestimonial(
-  signature: BrainSignature,
-): ApprovedTestimonial | null {
-  const live = liveTestimonials();
-  const specific = live.find(
-    (t) => t.signatures !== "all" && t.signatures.includes(signature),
-  );
-  if (specific) return specific;
-  return live.find((t) => t.signatures === "all") ?? null;
-}
-
-/** True only when at least one approved testimonial would render. */
 export function hasApprovedTestimonials(): boolean {
   return liveTestimonials().length > 0;
 }
 
-export type SocialProofPlacement = "result_transition" | "paywall";
+function hashString(value: string): number {
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i += 1) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
 
-/** Whether a testimonial is a true signature-specific match for `signature`. */
-export function isSignatureMatch(
-  testimonial: ApprovedTestimonial,
-  signature: BrainSignature,
-): boolean {
-  return (
-    testimonial.signatures !== "all" &&
-    testimonial.signatures.includes(signature)
+function bySeedRank(
+  testimonials: readonly ApprovedTestimonial[],
+  seed: string,
+  slotKey: string,
+): ApprovedTestimonial[] {
+  return [...testimonials].sort((a, b) => {
+    const aRank = hashString(`${seed}:${slotKey}:${a.id}`);
+    const bRank = hashString(`${seed}:${slotKey}:${b.id}`);
+    if (aRank !== bRank) return aRank - bRank;
+    return a.id.localeCompare(b.id);
+  });
+}
+
+function pickForSlot({
+  testimonials,
+  placement,
+  usedIds,
+  categoryPreferences,
+  seed,
+  slotKey,
+}: {
+  testimonials: readonly ApprovedTestimonial[];
+  placement: SocialProofPlacement;
+  usedIds: Set<string>;
+  categoryPreferences: readonly SocialProofCategory[];
+  seed: string;
+  slotKey: string;
+}): ApprovedTestimonial | null {
+  const eligible = testimonials.filter(
+    (testimonial) =>
+      testimonial.approved &&
+      !usedIds.has(testimonial.id) &&
+      testimonial.eligiblePlacement.includes(placement),
   );
+
+  for (const category of categoryPreferences) {
+    const categoryMatches = eligible.filter(
+      (testimonial) => testimonial.category === category,
+    );
+    const picked = bySeedRank(categoryMatches, seed, `${slotKey}:${category}`)[0];
+    if (picked) return picked;
+  }
+
+  return bySeedRank(eligible, seed, `${slotKey}:fallback`)[0] ?? null;
 }
 
 /**
- * Analytics payload for `social_proof_impression`. Pure + safe by construction:
- * only opaque ids/enums — never the quote, the attribution/name, or the image
- * path. Kept here (not in the component) so its safety is unit-testable.
+ * Pure deterministic selector. It returns up to six unique approved records,
+ * prioritizing the right objection categories for each placement while
+ * gracefully falling back when a category is short.
+ */
+export function selectSocialProofJourney(
+  testimonials: readonly ApprovedTestimonial[],
+  seed: string,
+): SocialProofJourney {
+  const live = liveTestimonials(testimonials);
+  const usedIds = new Set<string>();
+  const result: ApprovedTestimonial[] = [];
+  const paywall: ApprovedTestimonial[] = [];
+
+  for (let i = 0; i < RESULT_SLOT_CATEGORY_PREFERENCES.length; i += 1) {
+    const picked = pickForSlot({
+      testimonials: live,
+      placement: RESULT,
+      usedIds,
+      categoryPreferences: RESULT_SLOT_CATEGORY_PREFERENCES[i],
+      seed,
+      slotKey: `result:${i}`,
+    });
+    if (picked) {
+      result.push(picked);
+      usedIds.add(picked.id);
+    }
+  }
+
+  for (let i = 0; i < PAYWALL_SLOT_CATEGORY_PREFERENCES.length; i += 1) {
+    const picked = pickForSlot({
+      testimonials: live,
+      placement: PAYWALL,
+      usedIds,
+      categoryPreferences: PAYWALL_SLOT_CATEGORY_PREFERENCES[i],
+      seed,
+      slotKey: `paywall:${i}`,
+    });
+    if (picked) {
+      paywall.push(picked);
+      usedIds.add(picked.id);
+    }
+  }
+
+  return { result, paywall };
+}
+
+/**
+ * Safe payload for social_proof_impression. It contains opaque ids and group
+ * shape only, never quote text, attribution, image paths, source details, quiz
+ * answers, or derived Cognitive Signature data.
  */
 export function buildImpressionMetadata(
   testimonial: ApprovedTestimonial,
   placement: SocialProofPlacement,
-  signature: BrainSignature,
+  groupId: string,
+  visibleCount: number,
 ): {
   placement: SocialProofPlacement;
-  signature_key: BrainSignature;
+  group_id: string;
   testimonial_id: string;
-  match_type: "signature" | "generic";
+  visible_count: number;
 } {
   return {
     placement,
-    signature_key: signature,
+    group_id: groupId,
     testimonial_id: testimonial.id,
-    match_type: isSignatureMatch(testimonial, signature) ? "signature" : "generic",
+    visible_count: visibleCount,
   };
 }

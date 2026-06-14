@@ -1,0 +1,50 @@
+/**
+ * Single source of truth for paywall copy.
+ *
+ * The paywall previously repeated price, deliverables, refund, diagnosis and
+ * access messaging across several sections. Centralizing the copy here keeps
+ * each message defined once and makes the hierarchy unit-testable without a DOM.
+ * Every claim below is verified against the implementation / policies:
+ *   - one-time payment  → a single PaymentIntent (no subscription)
+ *   - 7-day refund      → refund-policy "This Is Me" 7-Day Guarantee
+ *   - instant access    → plan unlocks in the account on success
+ *   - not a diagnosis   → /disclaimer
+ */
+
+/** The id the top CTA scrolls to and the checkout-reached observer watches. */
+export const PAYWALL_CHECKOUT_ID = "paywall-checkout";
+
+/**
+ * The three concrete deliverables in plain words — what the user learns, the
+ * practical first step, and where the plan stays available. Derived from the
+ * user's plan focus; no invented deliverables.
+ */
+export function paywallDeliverables(planFocus: string): string[] {
+  return [
+    `Your full pattern breakdown — and a plan for ${planFocus}`,
+    "Your first next step, small enough to try today",
+    "Instant access in your account, kept there for you",
+  ];
+}
+
+/** Scannable trust line shown once, near the primary CTA. */
+export const TRUST_LINE_ITEMS = [
+  "One-time payment",
+  "Instant account access",
+  "7-day refund",
+] as const;
+
+/** The non-diagnosis boundary, stated once near the offer. */
+export const NON_DIAGNOSIS_LINE =
+  "Educational self-understanding, not a medical diagnosis.";
+
+/** The single secure-payment signal, shown next to the actual checkout. */
+export const SECURE_PAYMENT_LINE = "Secure payment processed by Stripe";
+
+/**
+ * One short, truthful post-payment expectation. Deliberately does NOT promise
+ * an emailed copy or lifetime access — only what the entitlement flow delivers:
+ * the plan unlocks in the account and is reachable with the same email.
+ */
+export const POST_PAYMENT_EXPECTATION =
+  "After payment, your full plan unlocks in your account — sign in any time with the same email.";

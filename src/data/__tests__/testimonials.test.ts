@@ -1,175 +1,253 @@
 import { describe, expect, it } from "vitest";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 
 import {
   APPROVED_TESTIMONIALS,
   buildImpressionMetadata,
-  getMatchedTestimonial,
   hasApprovedTestimonials,
-  isSignatureMatch,
+  selectSocialProofJourney,
   type ApprovedTestimonial,
 } from "../testimonials";
-import type { BrainSignature } from "../../lib/signature";
 
-const ALL_SIGNATURES: BrainSignature[] = [
-  "Sprinter",
-  "Archivist",
-  "Spark",
-  "Reactor",
-  "Drifter",
-];
-
-/* Public-safe fields only — this module ships to the browser. */
 const ALLOWED_KEYS = new Set([
   "id",
   "quote",
   "attribution",
   "image",
-  "signatures",
+  "category",
+  "eligiblePlacement",
   "approved",
 ]);
 
-describe("approved testimonials registry", () => {
-  it("exposes only public-safe fields (no private consent metadata)", () => {
+function ids(journey: ReturnType<typeof selectSocialProofJourney>): string[] {
+  return [...journey.result, ...journey.paywall].map((entry) => entry.id);
+}
+describe("approved testimonial pool", () => {
+  it("ships all 12 public approved entries and no drafts", () => {
+    expect(APPROVED_TESTIMONIALS).toHaveLength(12);
+    expect(hasApprovedTestimonials()).toBe(true);
     for (const entry of APPROVED_TESTIMONIALS) {
-      for (const key of Object.keys(entry)) {
-        expect(ALLOWED_KEYS.has(key)).toBe(true);
-      }
-      // Belt and suspenders: the private operational keys must never appear.
+      expect(entry.approved).toBe(true);
+      expect(entry.quote.trim().length).toBeGreaterThan(0);
+      expect(entry.attribution.trim().length).toBeGreaterThan(0);
+    }
+  });
+
+  it("exposes only public-safe fields", () => {
+    for (const entry of APPROVED_TESTIMONIALS) {
+      expect(Object.keys(entry).sort()).toEqual([...ALLOWED_KEYS].sort());
       const json = JSON.stringify(entry).toLowerCase();
-      for (const banned of ["approval", "consent", "verifiedby", "verifier"]) {
+      for (const banned of [
+        "approval",
+        "consent",
+        "verifiedby",
+        "verifier",
+        "downloads",
+        "social proof",
+        "c:\\",
+        "/users/",
+        "signature",
+        "sarah",
+        "verified customer",
+        "star",
+      ]) {
         expect(json).not.toContain(banned);
       }
     }
   });
 
-  it("only ships approved entries, and at least one is live", () => {
-    expect(hasApprovedTestimonials()).toBe(true);
+  it("uses repo-relative public image paths that exist", () => {
     for (const entry of APPROVED_TESTIMONIALS) {
-      expect(entry.approved).toBe(true);
-    }
-  });
-
-  it("uses repo-relative public image paths, never a local filesystem path", () => {
-    for (const entry of APPROVED_TESTIMONIALS) {
-      if (!entry.image) continue;
       expect(entry.image.startsWith("/testimonials/")).toBe(true);
-      expect(entry.image).not.toMatch(/[a-z]:\\|\/users\/|downloads|social proof/i);
+      expect(entry.image).not.toMatch(/[a-z]:\\|\/users\/|downloads/i);
+      expect(
+        existsSync(join(process.cwd(), "public", entry.image.slice(1))),
+      ).toBe(true);
     }
   });
 
-  it("renders a real, approved story with a photo at the decision point", () => {
-    const picked = getMatchedTestimonial("Sprinter");
-    expect(picked).not.toBeNull();
-    expect(picked?.quote.length).toBeGreaterThan(0);
-    expect(picked?.attribution.length).toBeGreaterThan(0);
-    expect(picked?.image).toBeTruthy();
-  });
+  it("keeps weaker approved entries out of the active funnel", () => {
+    const mark = APPROVED_TESTIMONIALS.find((entry) => entry.id === "proof-001");
+    const gregory = APPROVED_TESTIMONIALS.find((entry) => entry.id === "proof-007");
+    const jean = APPROVED_TESTIMONIALS.find((entry) => entry.id === "proof-012");
 
-  it("makes no signature-specific claim for the current evidence", () => {
-    for (const entry of APPROVED_TESTIMONIALS) {
-      expect(entry.signatures).toBe("all");
-    }
-    const picked = getMatchedTestimonial("Spark");
-    expect(picked && isSignatureMatch(picked, "Spark")).toBe(false);
-  });
-
-  it("returns the same generic story for every (unknown) signature", () => {
-    const picks = ALL_SIGNATURES.map((s) => getMatchedTestimonial(s)?.id);
-    expect(new Set(picks).size).toBe(1);
-    expect(picks[0]).toBeDefined();
+    expect(mark?.approved).toBe(true);
+    expect(mark?.eligiblePlacement).toEqual(["paywall_post_checkout"]);
+    expect(gregory?.approved).toBe(true);
+    expect(gregory?.eligiblePlacement).toEqual([]);
+    expect(jean?.approved).toBe(true);
+    expect(jean?.eligiblePlacement).toEqual([]);
   });
 });
 
-describe("social_proof_impression payload safety", () => {
-  it("carries only opaque ids/enums — never quote, name, or image", () => {
-    const picked = getMatchedTestimonial("Drifter");
-    expect(picked).not.toBeNull();
-    const meta = buildImpressionMetadata(picked!, "result_transition", "Drifter");
+describe("social proof journey selector", () => {
+  it("returns three result proofs and three paywall proofs", () => {
+    const journey = selectSocialProofJourney(APPROVED_TESTIMONIALS, "seed-a");
+    expect(journey.result).toHaveLength(3);
+    expect(journey.paywall).toHaveLength(3);
+  });
+
+  it("keeps all six selected testimonials unique", () => {
+    const picked = ids(
+      selectSocialProofJourney(APPROVED_TESTIMONIALS, "seed-unique"),
+    );
+    expect(new Set(picked).size).toBe(6);
+  });
+
+  it("is deterministic for the same seed", () => {
+    expect(ids(selectSocialProofJourney(APPROVED_TESTIMONIALS, "same"))).toEqual(
+      ids(selectSocialProofJourney(APPROVED_TESTIMONIALS, "same")),
+    );
+  });
+
+  it("allows different valid seeds to produce different sets", () => {
+    const outputs = new Set(
+      ["a", "b", "c", "d", "e", "f"].map((seed) =>
+        ids(selectSocialProofJourney(APPROVED_TESTIMONIALS, seed)).join("|"),
+      ),
+    );
+    expect(outputs.size).toBeGreaterThan(1);
+  });
+
+  it("respects placement and category preferences for the real pool", () => {
+    const journey = selectSocialProofJourney(APPROVED_TESTIMONIALS, "category");
+
+    expect(journey.result.every((entry) =>
+      entry.eligiblePlacement.includes("result_transition"),
+    )).toBe(true);
+    expect(journey.paywall.every((entry) =>
+      entry.eligiblePlacement.includes("paywall_post_checkout"),
+    )).toBe(true);
+    expect(journey.result[0].category).toBe("clarity");
+    expect(journey.result[1].category).toBe("usability");
+    expect(["practical_value", "product_trust"]).toContain(
+      journey.result[2].category,
+    );
+    expect(["customer_support", "product_trust"]).toContain(
+      journey.paywall[0].category,
+    );
+    expect(["customer_support", "product_trust"]).toContain(
+      journey.paywall[1].category,
+    );
+    expect(["post_purchase_reassurance", "practical_value"]).toContain(
+      journey.paywall[2].category,
+    );
+  });
+
+  it("never shows Mark before the paywall price is introduced", () => {
+    for (const seed of ["a", "b", "c", "d", "e", "f", "g"]) {
+      const journey = selectSocialProofJourney(APPROVED_TESTIMONIALS, seed);
+      expect(journey.result.map((entry) => entry.id)).not.toContain("proof-001");
+    }
+  });
+
+  it("does not select inactive generic testimonials", () => {
+    const picked = new Set<string>();
+
+    for (const seed of ["a", "b", "c", "d", "e", "f", "g"]) {
+      for (const id of ids(selectSocialProofJourney(APPROVED_TESTIMONIALS, seed))) {
+        picked.add(id);
+      }
+    }
+
+    expect(picked).not.toContain("proof-007");
+    expect(picked).not.toContain("proof-012");
+  });
+
+  it("falls back gracefully when preferred categories are scarce", () => {
+    const fallbackPool = Array.from({ length: 6 }, (_, index) =>
+      makeTestimonial({
+        id: `fallback-${index}`,
+        category: "practical_value",
+        eligiblePlacement: ["result_transition", "paywall_post_checkout"],
+      }),
+    );
+    const journey = selectSocialProofJourney(fallbackPool, "fallback");
+
+    expect(journey.result).toHaveLength(3);
+    expect(journey.paywall).toHaveLength(3);
+    expect(new Set(ids(journey)).size).toBe(6);
+  });
+
+  it("never selects unapproved entries", () => {
+    const draft = makeTestimonial({
+      id: "draft",
+      quote: "not cleared for publication",
+      approved: false,
+      category: "clarity",
+    });
+    const approved = Array.from({ length: 6 }, (_, index) =>
+      makeTestimonial({
+        id: `approved-${index}`,
+        category: "practical_value",
+        eligiblePlacement: ["result_transition", "paywall_post_checkout"],
+      }),
+    );
+    const picked = ids(selectSocialProofJourney([draft, ...approved], "draft"));
+
+    expect(picked).not.toContain("draft");
+  });
+
+  it("returns no active proof when the kill switch is on", () => {
+    const previous = process.env.NEXT_PUBLIC_SOCIAL_PROOF_OFF;
+    process.env.NEXT_PUBLIC_SOCIAL_PROOF_OFF = "1";
+    try {
+      expect(hasApprovedTestimonials()).toBe(false);
+      const journey = selectSocialProofJourney(APPROVED_TESTIMONIALS, "off");
+      expect(journey.result).toHaveLength(0);
+      expect(journey.paywall).toHaveLength(0);
+    } finally {
+      if (previous === undefined) {
+        delete process.env.NEXT_PUBLIC_SOCIAL_PROOF_OFF;
+      } else {
+        process.env.NEXT_PUBLIC_SOCIAL_PROOF_OFF = previous;
+      }
+    }
+  });
+});
+
+describe("social proof analytics metadata", () => {
+  it("contains only safe opaque fields", () => {
+    const testimonial = APPROVED_TESTIMONIALS[0];
+    const meta = buildImpressionMetadata(
+      testimonial,
+      "result_transition",
+      "result_trust",
+      3,
+    );
 
     expect(Object.keys(meta).sort()).toEqual([
-      "match_type",
+      "group_id",
       "placement",
-      "signature_key",
       "testimonial_id",
+      "visible_count",
     ]);
-    expect(meta).toMatchObject({
+    expect(meta).toEqual({
       placement: "result_transition",
-      signature_key: "Drifter",
-      testimonial_id: picked!.id,
-      match_type: "generic",
+      group_id: "result_trust",
+      testimonial_id: testimonial.id,
+      visible_count: 3,
     });
 
     const json = JSON.stringify(meta);
-    expect(json).not.toContain(picked!.quote);
-    expect(json).not.toContain(picked!.attribution);
-    if (picked!.image) expect(json).not.toContain(picked!.image);
+    expect(json).not.toContain(testimonial.quote);
+    expect(json).not.toContain(testimonial.attribution);
+    expect(json).not.toContain(testimonial.image);
   });
 });
 
-/*
- * Selection-rule guards. Verified against arbitrary candidate lists so the
- * logic is covered without mutating the real (intentionally small) registry —
- * kept identical to getMatchedTestimonial on purpose.
- */
-describe("testimonial selection rules", () => {
-  it("never surfaces an unapproved draft entry", () => {
-    const draft: ApprovedTestimonial = {
-      id: "draft-1",
-      quote: "not cleared for publication",
-      attribution: "pending",
-      signatures: ["Sprinter"],
-      approved: false,
-    };
-    expect(pickFrom([draft], "Sprinter")).toBeNull();
-  });
-
-  it("prefers a signature-specific story over a generic one (future-ready)", () => {
-    const generic: ApprovedTestimonial = {
-      id: "all-1",
-      quote: "generic but real",
-      attribution: "Customer",
-      signatures: "all",
-      approved: true,
-    };
-    const specific: ApprovedTestimonial = {
-      id: "sprinter-1",
-      quote: "sprinter-specific and real",
-      attribution: "Customer",
-      signatures: ["Sprinter"],
-      approved: true,
-    };
-    expect(pickFrom([generic, specific], "Sprinter")?.id).toBe("sprinter-1");
-    expect(pickFrom([generic, specific], "Drifter")?.id).toBe("all-1");
-  });
-
-  it("is deterministic for the same signature", () => {
-    const a: ApprovedTestimonial = {
-      id: "spark-1",
-      quote: "first",
-      attribution: "Customer",
-      signatures: ["Spark"],
-      approved: true,
-    };
-    const b: ApprovedTestimonial = {
-      id: "spark-2",
-      quote: "second",
-      attribution: "Customer",
-      signatures: ["Spark"],
-      approved: true,
-    };
-    expect(pickFrom([a, b], "Spark")?.id).toBe("spark-1");
-    expect(pickFrom([a, b], "Spark")?.id).toBe("spark-1");
-  });
-});
-
-function pickFrom(
-  candidates: ApprovedTestimonial[],
-  signature: BrainSignature,
-): ApprovedTestimonial | null {
-  const live = candidates.filter((t) => t.approved);
-  const specific = live.find(
-    (t) => t.signatures !== "all" && t.signatures.includes(signature),
-  );
-  if (specific) return specific;
-  return live.find((t) => t.signatures === "all") ?? null;
+function makeTestimonial(
+  overrides: Partial<ApprovedTestimonial>,
+): ApprovedTestimonial {
+  return {
+    id: "test",
+    quote: "approved quote",
+    attribution: "Customer",
+    image: "/testimonials/daria-mart.png",
+    category: "practical_value",
+    eligiblePlacement: ["result_transition", "paywall_post_checkout"],
+    approved: true,
+    ...overrides,
+  };
 }

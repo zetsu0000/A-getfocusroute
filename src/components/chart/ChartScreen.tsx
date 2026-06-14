@@ -11,7 +11,7 @@ import { getSignatureIdentity } from "@/lib/signature-identity";
 import { firstStepTeaserFor } from "@/lib/first-step-teaser";
 import { SigilArtifact } from "@/components/v2/SigilArtifact";
 import { FocusField } from "@/components/v2/FocusField";
-import { SocialProof } from "@/components/signature/SocialProof";
+import { ResultSocialProof } from "@/components/signature/SocialProof";
 import { HudLabel } from "@/components/v2/primitives";
 import { setPersistedQuizResultId } from "@/lib/quizResultId";
 import { createClient } from "@/lib/supabase/client";
@@ -40,7 +40,7 @@ export function ChartScreen() {
      one exact next step withheld, not just categories). */
   const lockedRows = [
     firstStepTeaserFor(signature.signature),
-    ...signature.unlockTeaser,
+    ...signature.unlockTeaser.slice(0, 2),
   ];
   const saveStarted = useRef(false);
   const [authChecked, setAuthChecked] = useState(false);
@@ -198,7 +198,7 @@ export function ChartScreen() {
           maxWidth: 520,
           display: "flex",
           flexDirection: "column",
-          gap: 22,
+          gap: 20,
         }}
       >
         <div style={{ textAlign: "center" }}>
@@ -357,19 +357,15 @@ export function ChartScreen() {
           </p>
         </m.div>
 
-        {/* One compact, real customer micro-proof at the decision point — it sits
-            between the result→plan bridge above and the CTA below, and renders
-            nothing if no approved story is available. It does not gate the CTA. */}
+        {/* Three compact, real customer proofs at the decision point. The
+            session-level selector keeps these unique from the paywall proofs. */}
         {!retakeMode && (
           <m.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.95 }}
           >
-            <SocialProof
-              signature={signature.signature}
-              placement="result_transition"
-            />
+            <ResultSocialProof />
           </m.div>
         )}
 

@@ -1,136 +1,354 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { BrainSignature } from "@/lib/signature";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type RefObject,
+} from "react";
+import { ChevronDown } from "lucide-react";
 import {
   buildImpressionMetadata,
-  getMatchedTestimonial,
+  type ApprovedTestimonial,
+  type SocialProofJourney,
   type SocialProofPlacement,
 } from "@/data/testimonials";
+import { getOrCreateSocialProofJourney } from "@/lib/social-proof-session";
 import { trackEvent } from "@/lib/analytics/client";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 
-interface SocialProofProps {
-  /** The user's Cognitive Signature — used to surface the most relevant story. */
-  signature: BrainSignature;
-  /** Where this instance lives, for analytics attribution. */
-  placement: SocialProofPlacement;
-}
+const RESULT_GROUP_ID = "result_trust";
+const PAYWALL_GROUP_ID = "paywall_trust";
 
-/**
- * One compact, real, approved customer micro-proof for the result→paywall
- * decision point — a small photo + a short quote + conservative attribution.
- *
- * Renders nothing when no approved testimonial matches (the surrounding screen
- * supplies the truthful result→plan bridge); never an empty container, never
- * placeholder or "verified customer" content. `social_proof_impression` fires
- * once, only when this real testimonial meaningfully enters the viewport.
- */
-export function SocialProof({ signature, placement }: SocialProofProps) {
-  const testimonial = useMemo(
-    () => getMatchedTestimonial(signature),
-    [signature],
-  );
-  const [imageOk, setImageOk] = useState(true);
+const visuallyHidden: CSSProperties = {
+  position: "absolute",
+  width: 1,
+  height: 1,
+  padding: 0,
+  margin: -1,
+  overflow: "hidden",
+  clip: "rect(0, 0, 0, 0)",
+  whiteSpace: "nowrap",
+  border: 0,
+};
 
-  const firedRef = useRef(false);
-  const nodeRef = useRef<HTMLElement | null>(null);
+export function useSocialProofJourney(): SocialProofJourney | null {
+  const [journey, setJourney] = useState<SocialProofJourney | null>(null);
 
   useEffect(() => {
-    if (!testimonial) return;
+    let mounted = true;
+    queueMicrotask(() => {
+      if (mounted) setJourney(getOrCreateSocialProofJourney());
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  return journey;
+}
+
+function trackImpressions(
+  testimonials: readonly ApprovedTestimonial[],
+  placement: SocialProofPlacement,
+  groupId: string,
+  visibleCount: number,
+): void {
+  for (const testimonial of testimonials) {
+    trackEvent(FIRST_PARTY_EVENTS.socialProofImpression, {
+      meta: false,
+      metadata: buildImpressionMetadata(
+        testimonial,
+        placement,
+        groupId,
+        visibleCount,
+      ),
+    });
+  }
+}
+
+function useVisibleImpression<T extends HTMLElement = HTMLElement>({
+  testimonials,
+  placement,
+  groupId,
+  visibleCount,
+}: {
+  testimonials: readonly ApprovedTestimonial[];
+  placement: SocialProofPlacement;
+  groupId: string;
+  visibleCount: number;
+}): RefObject<T | null> {
+  const firedRef = useRef(false);
+  const nodeRef = useRef<T | null>(null);
+
+  useEffect(() => {
+    if (testimonials.length === 0) return;
     const el = nodeRef.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
     const io = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting || firedRef.current) return;
         firedRef.current = true;
-        trackEvent(FIRST_PARTY_EVENTS.socialProofImpression, {
-          meta: false,
-          metadata: buildImpressionMetadata(testimonial, placement, signature),
-        });
+        trackImpressions(testimonials, placement, groupId, visibleCount);
         io.disconnect();
       },
-      { threshold: 0.6 },
+      { threshold: 0.55 },
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [testimonial, placement, signature]);
+  }, [testimonials, placement, groupId, visibleCount]);
 
-  if (!testimonial) return null;
+  return nodeRef;
+}
 
-  const showPhoto = Boolean(testimonial.image) && imageOk;
-  const initial = testimonial.attribution.trim().charAt(0).toUpperCase() || "•";
+function TestimonialAvatar({
+  testimonial,
+  size = 38,
+}: {
+  testimonial: ApprovedTestimonial;
+  size?: number;
+}) {
+  const [imageOk, setImageOk] = useState(Boolean(testimonial.image));
+  const initial = testimonial.attribution.trim().charAt(0).toUpperCase() || "?";
 
   return (
+    <span
+      aria-hidden="true"
+      style={{
+        flexShrink: 0,
+        width: size,
+        height: size,
+        borderRadius: "50%",
+        overflow: "hidden",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(124,138,255,0.18)",
+        border: "1px solid var(--v2-line)",
+        color: "var(--v2-ink-dim)",
+        fontSize: Math.max(11, Math.round(size * 0.34)),
+        fontWeight: 800,
+      }}
+    >
+      {imageOk ? (
+        // Decorative avatar: the customer name is rendered as text.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={testimonial.image}
+          alt=""
+          width={size}
+          height={size}
+          loading="lazy"
+          decoding="async"
+          onError={() => setImageOk(false)}
+          style={{
+            width: size,
+            height: size,
+            objectFit: "cover",
+            display: "block",
+          }}
+        />
+      ) : (
+        initial
+      )}
+    </span>
+  );
+}
+
+function TestimonialRow({
+  testimonial,
+  quoteLines = 2,
+  avatarSize = 38,
+  compact = false,
+}: {
+  testimonial: ApprovedTestimonial;
+  quoteLines?: number;
+  avatarSize?: number;
+  compact?: boolean;
+}) {
+  return (
     <figure
-      ref={nodeRef}
       style={{
         margin: 0,
         display: "flex",
         alignItems: "center",
-        gap: 12,
-        padding: "10px 14px",
-        borderRadius: 14,
-        border: "1px solid var(--v2-line)",
-        background: "rgba(148,163,255,0.05)",
+        gap: compact ? 10 : 12,
+        minWidth: 0,
       }}
     >
-      {/* Fixed-size avatar slot — reserves space whether the photo loads or
-          falls back to an initial, so there is no layout shift. */}
-      <span
-        aria-hidden="true"
-        style={{
-          flexShrink: 0,
-          width: 38,
-          height: 38,
-          borderRadius: "50%",
-          overflow: "hidden",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "rgba(124,138,255,0.18)",
-          border: "1px solid var(--v2-line)",
-          color: "var(--v2-ink-dim)",
-          fontSize: 14,
-          fontWeight: 700,
-        }}
-      >
-        {showPhoto ? (
-          // Small static asset; explicit dimensions prevent reflow. Decorative —
-          // the name is in the caption — so alt is empty.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={testimonial.image}
-            alt=""
-            width={38}
-            height={38}
-            loading="lazy"
-            decoding="async"
-            onError={() => setImageOk(false)}
-            style={{ width: 38, height: 38, objectFit: "cover", display: "block" }}
-          />
-        ) : (
-          initial
-        )}
-      </span>
-
-      <div style={{ minWidth: 0 }}>
+      <TestimonialAvatar testimonial={testimonial} size={avatarSize} />
+      <div style={{ minWidth: 0, flex: 1 }}>
         <blockquote
           style={{
             margin: 0,
-            fontFamily: "var(--v2-font-display)",
-            fontSize: 13.5,
-            fontStyle: "italic",
+            fontSize: compact ? 12.5 : 13.25,
             color: "var(--v2-ink-dim)",
-            lineHeight: 1.5,
+            lineHeight: 1.45,
+            display: "-webkit-box",
+            WebkitLineClamp: quoteLines,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
           }}
         >
           &ldquo;{testimonial.quote}&rdquo;
         </blockquote>
-        <figcaption className="v2-hud" style={{ fontSize: 9.5, marginTop: 4 }}>
-          — {testimonial.attribution}
+        <figcaption
+          className="v2-hud"
+          style={{ fontSize: 9, marginTop: compact ? 3 : 4 }}
+        >
+          - {testimonial.attribution}
         </figcaption>
       </div>
     </figure>
+  );
+}
+
+export function ResultSocialProof() {
+  const journey = useSocialProofJourney();
+  const testimonials = journey?.result ?? [];
+  const nodeRef = useVisibleImpression<HTMLElement>({
+    testimonials,
+    placement: "result_transition",
+    groupId: RESULT_GROUP_ID,
+    visibleCount: testimonials.length,
+  });
+
+  if (testimonials.length === 0) return null;
+
+  return (
+    <section
+      ref={nodeRef}
+      aria-label="Customer experiences"
+      style={{
+        display: "grid",
+        gap: 9,
+        padding: "11px 12px",
+        borderRadius: 16,
+        border: "1px solid var(--v2-line)",
+        background: "rgba(148,163,255,0.045)",
+      }}
+    >
+      {testimonials.map((testimonial) => (
+        <TestimonialRow
+          key={testimonial.id}
+          testimonial={testimonial}
+          quoteLines={2}
+          avatarSize={38}
+          compact
+        />
+      ))}
+    </section>
+  );
+}
+
+export function PaywallSocialProofDisclosure() {
+  const journey = useSocialProofJourney();
+  const [open, setOpen] = useState(false);
+  const expandedTrackedRef = useRef(false);
+  const extraImpressionsTrackedRef = useRef(false);
+
+  const primary = journey?.paywall[0];
+  const expanded = journey?.paywall.slice(1, 3) ?? [];
+  const initialTestimonials = primary ? [primary] : [];
+  const nodeRef = useVisibleImpression<HTMLDetailsElement>({
+    testimonials: initialTestimonials,
+    placement: "paywall_post_checkout",
+    groupId: PAYWALL_GROUP_ID,
+    visibleCount: initialTestimonials.length,
+  });
+
+  if (!primary) return null;
+
+  return (
+    <details
+      ref={nodeRef}
+      onToggle={(event) => {
+        const isOpen = event.currentTarget.open;
+        setOpen(isOpen);
+        if (!isOpen || expandedTrackedRef.current) return;
+        expandedTrackedRef.current = true;
+        trackEvent(FIRST_PARTY_EVENTS.socialProofExpanded, {
+          meta: false,
+          metadata: {
+            placement: "paywall_post_checkout",
+            group_id: PAYWALL_GROUP_ID,
+            visible_count_before: 1,
+            visible_count_after: 1 + expanded.length,
+          },
+        });
+        if (!extraImpressionsTrackedRef.current && expanded.length > 0) {
+          extraImpressionsTrackedRef.current = true;
+          trackImpressions(
+            expanded,
+            "paywall_post_checkout",
+            PAYWALL_GROUP_ID,
+            1 + expanded.length,
+          );
+        }
+      }}
+      style={{
+        borderRadius: 16,
+        border: "1px solid var(--v2-line)",
+        background: "rgba(148,163,255,0.045)",
+        overflow: "hidden",
+      }}
+    >
+      <summary
+        className="social-proof-summary"
+        style={{
+          cursor: "pointer",
+          listStyle: "none",
+          display: "grid",
+          gridTemplateColumns: "1fr auto",
+          alignItems: "center",
+          gap: 10,
+          padding: "11px 12px",
+        }}
+      >
+        <span style={visuallyHidden}>Show more customer experiences</span>
+        <TestimonialRow
+          testimonial={primary}
+          quoteLines={3}
+          avatarSize={40}
+        />
+        <ChevronDown
+          aria-hidden="true"
+          size={17}
+          strokeWidth={2.4}
+          style={{
+            color: "var(--v2-ink-faint)",
+            transform: open ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "transform 0.18s ease",
+          }}
+        />
+      </summary>
+
+      {open && expanded.length > 0 && (
+        <div
+          style={{
+            display: "grid",
+            gap: 10,
+            padding: "0 12px 12px",
+          }}
+        >
+          {expanded.map((testimonial) => (
+            <div
+              key={testimonial.id}
+              style={{
+                borderTop: "1px solid var(--v2-line)",
+                paddingTop: 10,
+              }}
+            >
+              <TestimonialRow
+                testimonial={testimonial}
+                quoteLines={3}
+                avatarSize={40}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+    </details>
   );
 }
