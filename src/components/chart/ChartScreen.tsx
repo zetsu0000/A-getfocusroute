@@ -309,7 +309,7 @@ export function ChartScreen() {
         >
           <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 12 }}>
             <Lock size={13} color="var(--v2-gold)" />
-            <HudLabel tone="gold">Locked — full focus plan</HudLabel>
+            <HudLabel tone="gold">Locked — full focus profile</HudLabel>
           </div>
           <div
             style={{
@@ -367,10 +367,10 @@ export function ChartScreen() {
             {personalName ? (
               <>
                 <em style={{ fontStyle: "italic", color: identity.accent }}>{personalName},</em>{" "}
-                your full profile shows where momentum breaks, what helps it return, and the conditions that make focus easier to hold.
+                your full profile shows where momentum breaks — and how to get it back.
               </>
             ) : (
-              <>Your full profile shows where momentum breaks, what helps it return, and the conditions that make focus easier to hold.</>
+              <>Your full profile shows where momentum breaks — and how to get it back.</>
             )}
           </p>
         </m.div>
@@ -414,7 +414,7 @@ export function ChartScreen() {
             style={{ width: "100%", minHeight: 58, fontSize: 16 }}
           >
             <Lock size={15} strokeWidth={2.4} />
-            Unlock My Full Plan
+            Unlock My Full Profile
           </m.button>
         )}
       </div>

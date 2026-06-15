@@ -57,14 +57,17 @@ describe("paywall primary offer content", () => {
   });
 
   it("builds the final CTA as one string with an em dash around the price", () => {
-    expect(payCtaLabel("$27")).toBe("Pay $27 \u2014 Unlock My Plan");
+    expect(payCtaLabel("$27")).toBe("Pay $27 \u2014 Unlock My Profile");
     // em dash, not the old ampersand fragment that collapsed to "$27&"
     expect(payCtaLabel("$27")).toContain("\u2014");
     expect(payCtaLabel("$27")).not.toContain("&");
     // single space on each side of the price token (spacing can't break)
     expect(payCtaLabel("$27")).toContain("Pay $27 \u2014");
+    // names the purchased product as the "profile", consistent with the result CTA
+    expect(payCtaLabel("$27")).toContain("Unlock My Profile");
+    expect(payCtaLabel("$27")).not.toContain("Unlock My Plan");
     // stays driven by the centralized price value
-    expect(payCtaLabel("$49")).toBe("Pay $49 \u2014 Unlock My Plan");
+    expect(payCtaLabel("$49")).toBe("Pay $49 \u2014 Unlock My Profile");
   });
 
   it("states the non-diagnosis boundary without medical claims", () => {

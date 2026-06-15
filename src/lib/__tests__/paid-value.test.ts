@@ -54,6 +54,10 @@ const paywallSrc = readFileSync(
   fileURLToPath(new URL("../../components/paywall/PaywallScreen.tsx", import.meta.url)),
   "utf8",
 );
+const paymentRouteSrc = readFileSync(
+  fileURLToPath(new URL("../../app/api/create-payment-intent/route.ts", import.meta.url)),
+  "utf8",
+);
 
 describe("result locked preview — three outcome rows", () => {
   it("returns exactly three rows for every signature (and an unknown one)", () => {
@@ -118,30 +122,42 @@ describe("every sales claim is grounded in a shipped section (not just unique)",
   });
 });
 
-describe("ChartScreen renders the centralized rows without new structure", () => {
+describe("ChartScreen renders the centralized rows and profile terminology", () => {
   it("builds the locked rows from resultLockedRows in a single panel", () => {
     expect(chartSrc).toContain("resultLockedRows(signature.signature)");
     expect((chartSrc.match(/lockedRows\.map/g) || []).length).toBe(1);
-    expect((chartSrc.match(/full focus plan/g) || []).length).toBe(1);
     // The pre-PR4 inline construction and the first-step helper are gone.
     expect(chartSrc).not.toContain("signature.unlockTeaser");
     expect(chartSrc).not.toContain("firstStepTeaserFor");
   });
+
+  it("names the purchased product 'profile' in the locked header and the CTA", () => {
+    expect((chartSrc.match(/full focus profile/g) || []).length).toBe(1);
+    expect(chartSrc).toContain("Unlock My Full Profile");
+    // The earlier "plan" product labels are gone from the result screen.
+    expect(chartSrc).not.toContain("full focus plan");
+    expect(chartSrc).not.toContain("Unlock My Full Plan");
+  });
 });
 
-describe("named / unnamed result bridge", () => {
-  it("keeps the explicit named/unnamed conditional with the approved benefit copy", () => {
+describe("named / unnamed result bridge (short benefit copy)", () => {
+  it("keeps the explicit conditional with the exact approved short copy", () => {
     expect(chartSrc).toContain("{personalName ? (");
     expect(chartSrc).toContain("{personalName},</em>");
     // Named branch (lowercase lead-in after the italic name).
     expect(chartSrc).toContain(
-      "your full profile shows where momentum breaks, what helps it return, and the conditions that make focus easier to hold.",
+      "your full profile shows where momentum breaks — and how to get it back.",
     );
     // Unnamed branch (capitalized).
     expect(chartSrc).toContain(
-      "Your full profile shows where momentum breaks, what helps it return, and the conditions that make focus easier to hold.",
+      "Your full profile shows where momentum breaks — and how to get it back.",
     );
-    // The old abstract plan-focus sentence is gone.
+  });
+
+  it("drops the earlier long bridge and the abstract plan-focus sentence", () => {
+    expect(chartSrc).not.toContain(
+      "what helps it return, and the conditions that make focus easier to hold",
+    );
     expect(chartSrc).not.toContain("your full plan focuses on");
   });
 });
@@ -163,5 +179,59 @@ describe("pricing, CTAs, checkout and social proof remain unchanged", () => {
     expect(checkout).toBeGreaterThan(proof);
     // Deliverables rendered exactly once via the shared accessor.
     expect((paywallSrc.match(/paywallDeliverables\(/g) || []).length).toBe(1);
+  });
+
+  it("creates no PaymentIntent on mount — the only mount effect just scrolls to top", () => {
+    // The single fetch is inside requestCheckoutIntent, which is invoked from the
+    // checkout CTA handler, not from a mount effect.
+    expect(paywallSrc).toContain("void requestCheckoutIntent();");
+    expect(paywallSrc).toContain("onClick={handleCheckoutCtaClick}");
+    const mountEffectStart = paywallSrc.indexOf("window.requestAnimationFrame");
+    const mountEffectEnd = paywallSrc.indexOf("}, []);", mountEffectStart);
+    expect(mountEffectStart).toBeGreaterThan(-1);
+    expect(mountEffectEnd).toBeGreaterThan(mountEffectStart);
+    const mountEffect = paywallSrc.slice(mountEffectStart, mountEffectEnd);
+    expect(mountEffect).not.toContain("create-payment-intent");
+    expect(mountEffect).not.toContain("requestCheckoutIntent");
+  });
+
+  it("sends the expected create-payment-intent request contract on explicit click", () => {
+    for (const field of [
+      "priceId: PRICE_ID",
+      "email,",
+      'funnel_step: "paywall"',
+      "quiz_result_id:",
+      "user_name: name",
+      "analytics_event_id: analyticsEventId",
+      "analytics_context: getAnalyticsContext()",
+    ]) {
+      expect(paywallSrc).toContain(field);
+    }
+  });
+
+  it("leaves payment confirmation and the return URL unchanged", () => {
+    expect(paywallSrc).toContain("stripe.confirmPayment");
+    expect(paywallSrc).toContain('return_url: window.location.origin + "/assessment?step=upsell"');
+    expect(paywallSrc).toContain('redirect: "if_required"');
+    expect(paywallSrc).toContain('setStep("upsell")');
+  });
+});
+
+describe("create-payment-intent stays diagnosable and contract-stable", () => {
+  it("logs the error server-side in the 500 catch (observability), response unchanged", () => {
+    // Regression for the Preview 500s that logged no cause. The catch now logs
+    // server-side but the client response stays a generic 500.
+    const catchStart = paymentRouteSrc.indexOf("} catch (err) {");
+    expect(catchStart).toBeGreaterThan(-1);
+    const catchBlock = paymentRouteSrc.slice(catchStart);
+    expect(catchBlock).toContain('console.error("[api/create-payment-intent]", err)');
+    expect(catchBlock).toContain('status: 500');
+    expect(catchBlock).toContain('"Unable to create payment"');
+  });
+
+  it("keeps PaymentIntent creation gated behind validation (no behavior change)", () => {
+    expect(paymentRouteSrc).toContain("resolveOneTimeProductKey(priceId, funnel_step)");
+    expect(paymentRouteSrc).toContain('enforceRateLimit("createPaymentIntent"');
+    expect(paymentRouteSrc).toContain("stripe.paymentIntents.create");
   });
 });

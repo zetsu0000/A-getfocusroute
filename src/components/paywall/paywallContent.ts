@@ -51,7 +51,7 @@ export const SECURE_PAYMENT_LINE = "Secure payment processed by Stripe";
  * (previously two JSX fragments rendered as "Pay $27& Unlock My Plan").
  */
 export function payCtaLabel(price: string): string {
-  return `Pay ${price} \u2014 Unlock My Plan`;
+  return `Pay ${price} \u2014 Unlock My Profile`;
 }
 
 /**

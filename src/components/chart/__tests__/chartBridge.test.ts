@@ -33,15 +33,18 @@ describe("result bridge name handling", () => {
     expect(src).toContain("{personalName ? (");
     // named branch keeps the personalized, italicized lead-in
     expect(src).toContain("{personalName},</em>");
-    // named branch: lowercase benefit lead-in after the italic name
+    // named branch: exact short benefit copy, lowercase lead-in after the name
     expect(src).toContain(
-      "your full profile shows where momentum breaks, what helps it return, and the conditions that make focus easier to hold.",
+      "your full profile shows where momentum breaks — and how to get it back.",
     );
-    // unnamed branch: the same sentence, capitalized
+    // unnamed branch: the same short sentence, capitalized
     expect(src).toContain(
-      "Your full profile shows where momentum breaks, what helps it return, and the conditions that make focus easier to hold.",
+      "Your full profile shows where momentum breaks — and how to get it back.",
     );
-    // the old abstract plan-focus sentence is gone
+  });
+
+  it("removes the earlier long bridge copy and the abstract plan-focus sentence", () => {
+    expect(src).not.toContain("what helps it return, and the conditions that make focus easier to hold");
     expect(src).not.toContain("your full plan focuses on");
   });
 

@@ -149,6 +149,11 @@ export async function POST(request: Request) {
       currency: price.currency,
     });
   } catch (err) {
+    // Log server-side so a 500 here is diagnosable (Preview QA surfaced 500s
+    // with no logged cause — e.g. a missing/mismatched Stripe key or price for
+    // the environment). Mirrors the quiz-result route's catch; the client
+    // response stays generic and leaks no internals.
+    console.error("[api/create-payment-intent]", err);
     const message =
       process.env.NODE_ENV === "development" && err instanceof Error
         ? err.message
