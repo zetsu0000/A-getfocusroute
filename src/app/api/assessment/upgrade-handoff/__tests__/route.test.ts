@@ -86,6 +86,31 @@ const ROW_WITH_ANSWERS: QuizRow = {
   answers: [{ questionId: "q1", selectedOptions: ["a"] }],
 };
 
+async function expectOwnedRedirect(
+  need: string,
+  entitlement: string,
+  redirectTo: string,
+  cta: string,
+) {
+  quizRows = [];
+  setEntitlements(entitlement);
+
+  const { body } = await callHandoff(need);
+
+  expect(body).toEqual({
+    authorized: false,
+    reason: "already_unlocked",
+    redirectTo,
+    cta,
+  });
+  expect(entitlementMocks.getActiveEntitlementKindsForUser).toHaveBeenCalledWith(
+    "user-1",
+    "buyer@example.com",
+  );
+  expect(supabaseMocks.from).not.toHaveBeenCalled();
+  expect(stripeMocks.getStripeClient).not.toHaveBeenCalled();
+}
+
 describe("GET /api/assessment/upgrade-handoff", () => {
   it("restores context and opens the requested step for a valid session + assessment", async () => {
     quizRows = [ROW_WITH_ANSWERS];
@@ -185,6 +210,42 @@ describe("GET /api/assessment/upgrade-handoff", () => {
     expect(body).not.toMatchObject({ step: "subscription" });
   });
 
+  it("routes owned Brain Profile without assessment data to the dashboard profile", async () => {
+    await expectOwnedRedirect(
+      "brain_profile",
+      "brain_profile",
+      "/dashboard/profile",
+      "Open Brain Profile",
+    );
+  });
+
+  it("routes owned Roadmap without assessment data to the dashboard roadmap", async () => {
+    await expectOwnedRedirect(
+      "roadmap_28_day",
+      "roadmap_28_day",
+      "/dashboard/roadmap",
+      "Open 28-Day Protocol",
+    );
+  });
+
+  it("routes owned Bonus Toolkit without assessment data to dashboard bonuses", async () => {
+    await expectOwnedRedirect(
+      "bonus_toolkit",
+      "roadmap_28_day",
+      "/dashboard/bonuses",
+      "View Bonuses",
+    );
+  });
+
+  it("routes owned Membership without assessment data to dashboard membership", async () => {
+    await expectOwnedRedirect(
+      "membership",
+      "membership",
+      "/dashboard/membership",
+      "Open Membership",
+    );
+  });
+
   it("denies a query parameter with no session (login is required, never assumed)", async () => {
     setUser(null);
 
@@ -203,7 +264,10 @@ describe("GET /api/assessment/upgrade-handoff", () => {
     const { body } = await callHandoff("brain_profile");
 
     expect(body).toEqual({ authorized: false, reason: "no_assessment" });
-    expect(entitlementMocks.getActiveEntitlementKindsForUser).not.toHaveBeenCalled();
+    expect(entitlementMocks.getActiveEntitlementKindsForUser).toHaveBeenCalledWith(
+      "user-1",
+      "buyer@example.com",
+    );
   });
 
   it("treats a saved row without usable answers as no assessment", async () => {
@@ -212,7 +276,10 @@ describe("GET /api/assessment/upgrade-handoff", () => {
     const { body } = await callHandoff("brain_profile");
 
     expect(body).toEqual({ authorized: false, reason: "no_assessment" });
-    expect(entitlementMocks.getActiveEntitlementKindsForUser).not.toHaveBeenCalled();
+    expect(entitlementMocks.getActiveEntitlementKindsForUser).toHaveBeenCalledWith(
+      "user-1",
+      "buyer@example.com",
+    );
   });
 
   it("rejects an unknown or manipulated need before touching auth or the database", async () => {

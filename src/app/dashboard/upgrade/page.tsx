@@ -57,6 +57,7 @@ export default async function DashboardUpgradePage({
   const needKey: UpgradeNeed = isUpgradeNeed(need) ? need : "brain_profile";
   const u = snap.entitlementSet;
   const target = resolveUpgradeNeedTarget(needKey, u);
+  const ownsRequestedNeed = target.kind === "dashboard";
   const hint =
     target.kind === "purchase"
       ? COPY[target.need]
@@ -70,22 +71,22 @@ export default async function DashboardUpgradePage({
      assessment first — explicitly, never a silent Q1 drop. CTA wording matches
      whichever destination applies. */
   const hasQuizResult = answersFromQuizRow(snap.latestQuizResult).length > 0;
-  const ctaHref = !hasQuizResult
-    ? "/assessment"
-    : target.kind === "purchase"
-      ? `/assessment?upgrade=${target.need}`
-      : target.href;
-  const ctaLabel = !hasQuizResult
-    ? "Take the 2-minute assessment"
-    : target.kind === "purchase"
-      ? hint.cta
-      : target.cta;
+  const ctaHref = ownsRequestedNeed
+    ? target.href
+    : !hasQuizResult
+      ? "/assessment"
+      : `/assessment?upgrade=${target.need}`;
+  const ctaLabel = ownsRequestedNeed
+    ? target.cta
+    : !hasQuizResult
+      ? "Take the 2-minute assessment"
+      : hint.cta;
   const ctaBody = hasQuizResult
     ? hint.body
     : "Your plan is built from your assessment answers. Take the 2-minute assessment to unlock checkout — your access then syncs to this account automatically.";
 
   const resolvedCtaBody =
-    hasQuizResult && target.kind === "dashboard"
+    ownsRequestedNeed
       ? "That access is already unlocked on your dashboard. Open it there instead of starting another checkout."
       : ctaBody;
 

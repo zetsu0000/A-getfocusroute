@@ -254,6 +254,67 @@ describe("decideUpgradeHandoff", () => {
     });
   });
 
+  it("routes already-owned products to dashboard pages before requiring assessment data", () => {
+    const noAssessment = { quizRow: null, quizAnswers: [] };
+
+    expect(
+      decideUpgradeHandoff(
+        "brain_profile",
+        ctx({
+          ...noAssessment,
+          entitlementSet: entitlements("brain_profile"),
+        }),
+      ),
+    ).toEqual({
+      authorized: false,
+      reason: "already_unlocked",
+      redirectTo: "/dashboard/profile",
+      cta: "Open Brain Profile",
+    });
+    expect(
+      decideUpgradeHandoff(
+        "roadmap_28_day",
+        ctx({
+          ...noAssessment,
+          entitlementSet: entitlements("roadmap_28_day"),
+        }),
+      ),
+    ).toEqual({
+      authorized: false,
+      reason: "already_unlocked",
+      redirectTo: "/dashboard/roadmap",
+      cta: "Open 28-Day Protocol",
+    });
+    expect(
+      decideUpgradeHandoff(
+        "bonus_toolkit",
+        ctx({
+          ...noAssessment,
+          entitlementSet: entitlements("roadmap_28_day"),
+        }),
+      ),
+    ).toEqual({
+      authorized: false,
+      reason: "already_unlocked",
+      redirectTo: "/dashboard/bonuses",
+      cta: "View Bonuses",
+    });
+    expect(
+      decideUpgradeHandoff(
+        "membership",
+        ctx({
+          ...noAssessment,
+          entitlementSet: entitlements("membership"),
+        }),
+      ),
+    ).toEqual({
+      authorized: false,
+      reason: "already_unlocked",
+      redirectTo: "/dashboard/membership",
+      cta: "Open Membership",
+    });
+  });
+
   it("works from verified server context alone (fresh tab / no sessionStorage)", () => {
     // The decision depends only on the server-provided user + saved assessment,
     // so a brand-new tab with empty client state still reaches the right step.

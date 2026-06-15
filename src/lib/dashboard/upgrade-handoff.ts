@@ -23,7 +23,8 @@ import {
  *
  * What counts as proof here is deliberately strict, and is checked server-side:
  *  - a valid Supabase session (login), AND
- *  - a saved quiz result with real answers (a genuinely completed assessment).
+ *  - existing entitlement when the product is already owned, OR
+ *  - a saved quiz result with real answers before opening a purchase step.
  *
  * Neither login alone, a query parameter alone, nor a manipulated request is
  * sufficient. Opening a step is *navigation only*: it never grants an
@@ -151,7 +152,7 @@ export type UpgradeHandoffContext = {
   quizRow: Record<string, unknown> | null;
   /** Answers reconstructed from `quizRow` (empty when none/invalid). */
   quizAnswers: QuizAnswer[];
-  /** Active entitlements loaded server-side after the assessment is verified. */
+  /** Active entitlements loaded server-side after authentication. */
   entitlementSet: Set<EntitlementKey>;
 };
 
@@ -183,9 +184,10 @@ function stringField(value: unknown): string {
 }
 
 /**
- * Pure handoff decision. A step is authorized only when the request is a known
- * need AND there is a real session AND a completed assessment (answers present).
- * Restores the user's saved context so the reopened step is personalized.
+ * Pure handoff decision. Already-owned products route back to their dashboard
+ * pages before assessment recovery is required. Purchase steps still require a
+ * real session and completed assessment, then resolve to the currently valid
+ * prerequisite offer.
  */
 export function decideUpgradeHandoff(
   needRaw: unknown,
@@ -197,9 +199,6 @@ export function decideUpgradeHandoff(
   if (!ctx.user) {
     return { authorized: false, reason: "unauthenticated" };
   }
-  if (!ctx.quizRow || ctx.quizAnswers.length === 0) {
-    return { authorized: false, reason: "no_assessment" };
-  }
 
   const target = resolveUpgradeNeedTarget(needRaw, ctx.entitlementSet);
   if (target.kind === "dashboard") {
@@ -209,6 +208,9 @@ export function decideUpgradeHandoff(
       redirectTo: target.href,
       cta: target.cta,
     };
+  }
+  if (!ctx.quizRow || ctx.quizAnswers.length === 0) {
+    return { authorized: false, reason: "no_assessment" };
   }
 
   const rowEmail = stringField(ctx.quizRow.email);

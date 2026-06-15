@@ -3,6 +3,7 @@ import { getActiveEntitlementKindsForUser } from "@/lib/access/entitlements";
 import {
   decideUpgradeHandoff,
   isUpgradeNeed,
+  resolveUpgradeNeedTarget,
   type UpgradeHandoffDecision,
 } from "@/lib/dashboard/upgrade-handoff";
 import { createClient } from "@/lib/supabase/server";
@@ -44,6 +45,20 @@ export async function GET(request: Request) {
       return handoffResponse({ authorized: false, reason: "unauthenticated" });
     }
 
+    const entitlementSet = await getActiveEntitlementKindsForUser(
+      user.id,
+      user.email,
+    );
+    const target = resolveUpgradeNeedTarget(need, entitlementSet);
+    if (target.kind === "dashboard") {
+      return handoffResponse({
+        authorized: false,
+        reason: "already_unlocked",
+        redirectTo: target.href,
+        cta: target.cta,
+      });
+    }
+
     const { data: rows } = await supabase
       .from("quiz_results")
       .select("id, email, name, answers, payload, created_at")
@@ -57,10 +72,6 @@ export async function GET(request: Request) {
       return handoffResponse({ authorized: false, reason: "no_assessment" });
     }
 
-    const entitlementSet = await getActiveEntitlementKindsForUser(
-      user.id,
-      user.email,
-    );
     const decision = decideUpgradeHandoff(need, {
       user: { id: user.id, email: user.email },
       quizRow,
