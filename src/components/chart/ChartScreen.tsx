@@ -8,7 +8,7 @@ import { useQuizStore } from "@/store/quizStore";
 import { safeName } from "@/lib/personalization";
 import { getSignatureFromAnswers, echoSentence } from "@/lib/signature";
 import { getSignatureIdentity } from "@/lib/signature-identity";
-import { firstStepTeaserFor } from "@/lib/first-step-teaser";
+import { resultLockedRows } from "@/lib/paid-value";
 import { SigilArtifact } from "@/components/v2/SigilArtifact";
 import { FocusField } from "@/components/v2/FocusField";
 import { ResultSocialProof } from "@/components/signature/SocialProof";
@@ -35,13 +35,12 @@ export function ChartScreen() {
   const identity = getSignatureIdentity(signature.signature);
   const echo = echoSentence(answers);
 
-  /* One concrete, pattern-specific withheld deliverable leads the locked
-     list — "full plan" stays abstract without it (audit: the bridge needs
-     one exact next step withheld, not just categories). */
-  const lockedRows = [
-    firstStepTeaserFor(signature.signature),
-    ...signature.unlockTeaser.slice(0, 2),
-  ];
+  /* The locked preview names the concrete outputs the purchase unlocks (audit
+     PR4): the six-dimension Executive Function Radar, the Best Focus Conditions
+     + initiation/recovery guidance, and one pattern-specific starting point that
+     stays unique per signature. Centralized in paid-value so the result and the
+     paywall name the same real Brain Profile sections without drift. */
+  const lockedRows = resultLockedRows(signature.signature);
   const saveStarted = useRef(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [saveEmail, setSaveEmail] = useState<string | null>(null);

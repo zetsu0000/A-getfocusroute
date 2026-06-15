@@ -19,13 +19,37 @@ const src = readFileSync(
 );
 
 describe("paywall primary offer content", () => {
-  it("exposes exactly three concrete deliverables (learn / first step / availability)", () => {
+  it("names three concrete shipped deliverables, not abstract 'full breakdown / first step' copy", () => {
     const d = paywallDeliverables("building consistency");
     expect(d).toHaveLength(3);
-    expect(d[0].toLowerCase()).toContain("pattern breakdown");
-    expect(d[0]).toContain("building consistency"); // plan focus woven in, not invented
-    expect(d[1].toLowerCase()).toContain("first next step");
-    expect(d[2].toLowerCase()).toContain("account");
+
+    // Each deliverable names a real Brain Profile section.
+    expect(d[0]).toContain("Executive Function Radar");
+    expect(d[0]).toContain("Cognitive Signature");
+    expect(d[0].toLowerCase()).toContain("six-dimension");
+    expect(d[1]).toContain("Best Focus Conditions");
+    expect(d[1]).toContain("Task Initiation Style");
+    expect(d[1]).toContain("building consistency"); // plan focus woven in, not invented
+    expect(d[2]).toContain("Explain-It-To-Someone Script");
+
+    // At least two deliverables reference recognizable product sections.
+    const sectionHits = d.filter((line) =>
+      [
+        "Executive Function Radar",
+        "Cognitive Signature",
+        "Best Focus Conditions",
+        "Task Initiation Style",
+        "Recovery Style",
+        "Explain-It-To-Someone Script",
+      ].some((section) => line.includes(section)),
+    ).length;
+    expect(sectionHits).toBeGreaterThanOrEqual(2);
+
+    // The targeted abstract-only wording is gone.
+    const joined = d.join(" ").toLowerCase();
+    expect(joined).not.toContain("full pattern breakdown");
+    expect(joined).not.toContain("first next step");
+    expect(joined).not.toContain("full focus plan");
   });
 
   it("states trust as a single quiet line, not three separate chips", () => {
