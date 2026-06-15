@@ -58,8 +58,10 @@ describe("EmailScreen content density (no redesign)", () => {
     expect(src).not.toContain("linear-gradient");
   });
 
-  it("uses the exact CTA copy 'See My Full Results' (no Save & prefix)", () => {
-    expect(src).toContain("See My Full Results");
+  it("uses the exact CTA copy 'Reveal My Focus Profile'", () => {
+    expect(src).toContain("Reveal My Focus Profile");
+    // the old CTA wording is fully gone
+    expect(src).not.toContain("See My Full Results");
     expect(src).not.toContain("Save &amp; See My Full Results");
     expect(src).not.toContain("Save & See My Full Results");
   });

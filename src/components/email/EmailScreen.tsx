@@ -178,7 +178,7 @@ export function EmailScreen() {
                 }),
           }}
         >
-          See My Full Results
+          Reveal My Focus Profile
         </button>
 
         {/* One short privacy line */}
