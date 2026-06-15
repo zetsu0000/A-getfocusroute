@@ -57,7 +57,7 @@ export const questions: QuizQuestion[] = [
   /* Q2 — mood (SCORED: recovery) */
   {
     id: "mood",
-    question: "When a day goes sideways?",
+    question: "When your day goes off track, what usually happens?",
     inputType: "single",
     options: [
       { id: "never",     label: "I bounce back fast." },
@@ -92,7 +92,7 @@ export const questions: QuizQuestion[] = [
       { id: "depression", label: "I lose momentum fast." },
       { id: "burnout",    label: "Routines don't stick." },
       { id: "ocd",        label: "Details pile up." },
-      { id: "other",      label: "Plans change, I drop." },
+      { id: "other",      label: "Plans change and I lose the thread." },
       { id: "none",       label: "None of these." },
     ],
   },
@@ -140,7 +140,7 @@ export const questions: QuizQuestion[] = [
   /* Q7 — time (SCORED: focus conditions) */
   {
     id: "time",
-    question: "How much time can you give?",
+    question: "What feels realistic each day?",
     inputType: "single",
     options: [
       { id: "5min",  label: "5 min/day", badge: "Starter" },
@@ -176,7 +176,7 @@ export const questions: QuizQuestion[] = [
   /* Q9 */
   {
     id: "scale-focus",
-    question: "And this one?",
+    question: "How true is this for you?",
     inputType: "scale",
     options: [],
     statement: "Once it's boring, my focus is gone.",
@@ -185,7 +185,7 @@ export const questions: QuizQuestion[] = [
   /* Q10 */
   {
     id: "scale-overwhelm",
-    question: "This one?",
+    question: "How true is this for you?",
     inputType: "scale",
     options: [],
     statement: "Too much at once and I freeze.",
@@ -214,16 +214,16 @@ export const questions: QuizQuestion[] = [
   /* Q12 */
   {
     id: "scale-memory",
-    question: "This one?",
+    question: "How true is this for you?",
     inputType: "scale",
     options: [],
     statement: "If I don't write it down, it's gone.",
   },
 
-  /* Q13 — last of the scale block; 2 questions still follow, don't say "last" */
+  /* Q13 — last of the scale block (2 non-scale questions still follow) */
   {
     id: "scale-emotions",
-    question: "One more like this?",
+    question: "Last pattern check.",
     inputType: "scale",
     options: [],
     statement: "A bad mood can wreck my whole day.",

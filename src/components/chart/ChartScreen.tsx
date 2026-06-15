@@ -30,7 +30,7 @@ export function ChartScreen() {
     setQuizResultId,
   } = useQuizStore();
   const router = useRouter();
-  const displayName = safeName(name, "you");
+  const personalName = safeName(name, "");
   const signature = getSignatureFromAnswers(answers);
   const identity = getSignatureIdentity(signature.signature);
   const echo = echoSentence(answers);
@@ -365,8 +365,14 @@ export function ChartScreen() {
               lineHeight: 1.45,
             }}
           >
-            <em style={{ fontStyle: "italic", color: identity.accent }}>{displayName},</em>{" "}
-            your full plan focuses on {signature.planFocus}.
+            {personalName ? (
+              <>
+                <em style={{ fontStyle: "italic", color: identity.accent }}>{personalName},</em>{" "}
+                your full plan focuses on {signature.planFocus}.
+              </>
+            ) : (
+              <>Your full plan focuses on {signature.planFocus}.</>
+            )}
           </p>
         </m.div>
 
