@@ -9,7 +9,15 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
-import { CheckCircle2, Zap, Calendar, Target } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  CreditCard,
+  RefreshCcw,
+  Zap,
+  Calendar,
+  Target,
+} from "lucide-react";
 import { useQuizStore } from "@/store/quizStore";
 import { BRAIN_OS } from "@/lib/positioning";
 import { HudLabel } from "@/components/v2/primitives";
@@ -20,6 +28,12 @@ import {
   trackEvent,
 } from "@/lib/analytics/client";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
+import {
+  canStartCheckoutRequest,
+  checkoutLoadErrorForStatus,
+  hasCheckoutClientSecret,
+  type CheckoutLoadError,
+} from "@/components/paywall/paywallCheckout";
 
 let _stripePromise: ReturnType<typeof loadStripe> | null = null;
 function getStripePromise() {
@@ -170,6 +184,33 @@ function UpsellCheckoutForm({ onSuccess, onDecline }: { onSuccess: () => void; o
   );
 }
 
+function UpsellDeclineButton({ onDecline }: { onDecline: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onDecline}
+      style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "var(--v2-ink-dim)", textDecoration: "underline", padding: "10px 0", width: "100%" }}
+    >
+      No thanks — continue without it
+    </button>
+  );
+}
+
+function UpsellPaymentSkeleton() {
+  return (
+    <div
+      aria-busy="true"
+      aria-label="Preparing secure payment fields"
+      role="status"
+      style={{ display: "flex", flexDirection: "column", gap: 10, padding: "4px 0" }}
+    >
+      <div style={{ height: 52, borderRadius: 12, background: "rgba(148,163,255,0.08)", border: "1px solid var(--v2-line)" }} />
+      <div style={{ height: 52, borderRadius: 12, background: "rgba(148,163,255,0.08)", border: "1px solid var(--v2-line)" }} />
+      <div style={{ height: 58, borderRadius: 999, background: "rgba(217,188,127,0.1)", border: "1px solid rgba(217,188,127,0.25)" }} />
+    </div>
+  );
+}
+
 /* Mini route map: 28 day-nodes extending from the profile the user now owns. */
 function ProtocolRouteStrip() {
   return (
@@ -203,7 +244,14 @@ export function UpsellScreen() {
   const displayName = name || "You";
 
   const [clientSecret,  setClientSecret]  = useState<string | null>(null);
-  const [loadingSecret, setLoadingSecret] = useState(true);
+  const [loadingSecret, setLoadingSecret] = useState(false);
+  const [checkoutRequested, setCheckoutRequested] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<CheckoutLoadError | null>(null);
+  const [retryBlockedUntil, setRetryBlockedUntil] = useState<number | null>(null);
+  const [retryClock, setRetryClock] = useState(() => Date.now());
+  const checkoutRequestInFlightRef = useRef(false);
+  const checkoutCtaTrackedRef = useRef(false);
+  const retryBlocked = retryBlockedUntil !== null && retryBlockedUntil > retryClock;
 
   useEffect(() => {
     /* Distinct upsell-stage signal; the paywall_viewed below keeps its
@@ -222,29 +270,103 @@ export function UpsellScreen() {
         currency: "USD",
       },
     });
+  }, []);
+
+  useEffect(() => {
+    if (retryBlockedUntil === null) return;
+    const delay = Math.max(0, retryBlockedUntil - Date.now());
+    const timer = window.setTimeout(() => setRetryClock(Date.now()), delay + 250);
+    return () => window.clearTimeout(timer);
+  }, [retryBlockedUntil]);
+
+  const requestCheckoutIntent = async () => {
+    const now = Date.now();
+    if (
+      !canStartCheckoutRequest({
+        clientSecret,
+        loading: loadingSecret || checkoutRequestInFlightRef.current,
+        retryBlockedUntil,
+        nowMs: now,
+      })
+    ) {
+      return;
+    }
+
+    checkoutRequestInFlightRef.current = true;
+    setCheckoutRequested(true);
+    setLoadingSecret(true);
+    setCheckoutError(null);
+    setRetryClock(now);
 
     const analyticsEventId = createAnalyticsEventId("initiate_checkout");
-    fetch("/api/create-payment-intent", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        priceId: PRICE_ID,
-        email,
-        funnel_step: "upsell",
-        quiz_result_id: quizResultId ?? "",
-        user_name: name,
-        analytics_event_id: analyticsEventId,
-        analytics_context: getAnalyticsContext(),
-      }),
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.clientSecret) {
-          setClientSecret(data.clientSecret);
+    try {
+      const response = await fetch("/api/create-payment-intent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          priceId: PRICE_ID,
+          email,
+          funnel_step: "upsell",
+          quiz_result_id: quizResultId ?? "",
+          user_name: name,
+          analytics_event_id: analyticsEventId,
+          analytics_context: getAnalyticsContext(),
+        }),
+      });
+
+      if (!response.ok) {
+        const error = checkoutLoadErrorForStatus(
+          response.status,
+          response.headers.get("Retry-After"),
+        );
+        setCheckoutError(error);
+        if (error.retryAfterSeconds !== undefined) {
+          const blockedUntil = Date.now() + error.retryAfterSeconds * 1000;
+          setRetryBlockedUntil(blockedUntil);
+          setRetryClock(Date.now());
         }
-      })
-      .finally(() => setLoadingSecret(false));
-  }, [email, name, quizResultId]);
+        return;
+      }
+
+      let data: unknown = null;
+      try {
+        data = await response.json();
+      } catch {
+        // Handled by the safe generic message below.
+      }
+
+      if (hasCheckoutClientSecret(data)) {
+        setClientSecret(data.clientSecret);
+        setCheckoutError(null);
+        setRetryBlockedUntil(null);
+        return;
+      }
+
+      setCheckoutError(checkoutLoadErrorForStatus(500, null));
+    } catch {
+      setCheckoutError(checkoutLoadErrorForStatus(500, null));
+    } finally {
+      checkoutRequestInFlightRef.current = false;
+      setLoadingSecret(false);
+    }
+  };
+
+  const handleCheckoutCtaClick = () => {
+    if (!checkoutCtaTrackedRef.current) {
+      checkoutCtaTrackedRef.current = true;
+      trackEvent(FIRST_PARTY_EVENTS.checkoutCtaClicked, {
+        meta: false,
+        metadata: { product_key: "roadmap_28_day", cta_location: "upsell_offer" },
+      });
+    }
+    setCheckoutRequested(true);
+    void requestCheckoutIntent();
+  };
+
+  const handleCheckoutRetry = () => {
+    setCheckoutRequested(true);
+    void requestCheckoutIntent();
+  };
 
   const handleSuccess = () => setStep("subscription");
   const handleDecline = () => {
@@ -360,19 +482,82 @@ export function UpsellScreen() {
 
           <div style={{ height: 1, background: "var(--v2-line)", margin: "14px 0" }} />
 
-          {loadingSecret ? (
-            <div style={{ textAlign: "center", padding: "20px 0", fontSize: 13, color: "var(--v2-ink-faint)" }}>
-              Loading secure payment...
-            </div>
+          {!checkoutRequested ? (
+            <>
+              <m.button
+                type="button"
+                onClick={handleCheckoutCtaClick}
+                disabled={loadingSecret || retryBlocked}
+                aria-busy={loadingSecret}
+                whileTap={{ scale: 0.975 }}
+                whileHover={loadingSecret || retryBlocked ? undefined : { y: -1 }}
+                className={loadingSecret || retryBlocked ? undefined : "v2-cta v2-cta-gold"}
+                style={{
+                  width: "100%",
+                  minHeight: 58,
+                  padding: "18px 24px",
+                  borderRadius: 999,
+                  fontSize: 16,
+                  fontWeight: 800,
+                  cursor: loadingSecret || retryBlocked ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 9,
+                  ...(loadingSecret || retryBlocked
+                    ? {
+                        background: "rgba(148,163,255,0.06)",
+                        border: "1px solid var(--v2-line)",
+                        color: "var(--v2-ink-faint)",
+                      }
+                    : {}),
+                }}
+              >
+                <CreditCard size={16} strokeWidth={2.4} />
+                {loadingSecret ? "Preparing secure checkout..." : "Continue to Secure Checkout"}
+              </m.button>
+              <UpsellDeclineButton onDecline={handleDecline} />
+            </>
+          ) : loadingSecret ? (
+            <>
+              <UpsellPaymentSkeleton />
+              <UpsellDeclineButton onDecline={handleDecline} />
+            </>
           ) : clientSecret ? (
             <UpsellStripeElements
               clientSecret={clientSecret}
               onSuccess={handleSuccess}
               onDecline={handleDecline}
             />
+          ) : checkoutError ? (
+            <>
+              <div
+                role="alert"
+                aria-live="polite"
+                style={{ display: "grid", gap: 11, color: "#FFE3E3", textAlign: "left", background: "rgba(255,139,139,0.15)", border: "1px solid rgba(255,139,139,0.42)", borderRadius: 14, padding: "13px 14px" }}
+              >
+                <div style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
+                  <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+                  <p style={{ fontSize: 13, lineHeight: 1.5, fontWeight: 600 }}>{checkoutError.message}</p>
+                </div>
+                {!retryBlocked && (
+                  <button
+                    type="button"
+                    onClick={handleCheckoutRetry}
+                    className="v2-ghost"
+                    style={{ minHeight: 40, padding: "9px 13px", borderRadius: 12, justifySelf: "start", fontSize: 12.5 }}
+                  >
+                    <RefreshCcw size={13} strokeWidth={2.4} />
+                    Try again
+                  </button>
+                )}
+              </div>
+              <UpsellDeclineButton onDecline={handleDecline} />
+            </>
           ) : (
-            <p style={{ fontSize: 13, color: "var(--v2-error)", textAlign: "center" }}>Could not load payment. Please refresh.</p>
+            <UpsellDeclineButton onDecline={handleDecline} />
           )}
+
         </m.div>
 
       </div>
