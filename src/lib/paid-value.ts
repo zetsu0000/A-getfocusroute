@@ -1,50 +1,64 @@
-import { firstStepTeaserFor } from "@/lib/first-step-teaser";
-
 /**
- * Single source of truth for the *names* of the concrete paid outputs, shared
- * by the result locked preview (ChartScreen) and the paywall offer
- * (paywallContent). Defined once so the two surfaces name the same real
- * deliverables and can never drift apart, and so a section is never renamed in
- * one place but not the other.
+ * Single source of truth for the buyer-facing copy that previews the paid Brain
+ * Profile — shared by the result locked preview (ChartScreen) and the paywall
+ * offer (paywallContent) so the two surfaces stay in sync.
  *
- * Every label below maps to a section actually rendered in BrainProfileView for
- * the `brain_profile` entitlement bundle (see PRODUCT_TO_ENTITLEMENTS):
- *   - radar              → "Executive Function Radar™" (six radarDimensions)
- *   - cognitiveSignature → "Cognitive Signature" (profileExplanation)
- *   - conditions         → "Best Focus Conditions" (focusConditions)
- *   - taskInitiation     → "Task Initiation Style" (initiationStyle)
- *   - recovery           → "Recovery Style" (distractionRecovery)
- *   - explainScript      → "Explain-It-To-Someone Script™" — granted with the
- *                          Brain Profile via the bonus_explain_script entitlement
- *
- * Funnel copy intentionally omits the dashboard's ™ glyphs (matching the
- * existing teaser convention; cf. signature.unlockTeaser). Nothing here is a
- * diagnosis — these are the names of educational focus-pattern outputs.
+ * The copy is written as practical outcomes, NOT internal dashboard section
+ * names, but every line translates a real shipped section of BrainProfileView
+ * for the brain_profile entitlement bundle:
+ *   - "6-point map …"            → Executive Function Radar (six radarDimensions)
+ *                                  + Strengths / Friction Points
+ *   - "conditions that help you
+ *      start, stay …, recover"   → Best Focus Conditions + Task Initiation Style
+ *                                  + Recovery Style
+ *   - per-signature outcome      → the pattern-specific focus the profile centers on
+ *   - "explanation you can …
+ *      share"                    → Explain-It-To-Someone Script, granted with the
+ *                                  Brain Profile via the bonus_explain_script entitlement
+ * Nothing here is a diagnosis — these are educational focus-pattern outcomes.
  */
-export const PROFILE_SECTIONS = {
-  radar: "Executive Function Radar",
-  cognitiveSignature: "Cognitive Signature",
-  conditions: "Best Focus Conditions",
-  taskInitiation: "Task Initiation Style",
-  recovery: "Recovery Style",
-  explainScript: "Explain-It-To-Someone Script",
-} as const;
 
 /**
- * The three locked rows shown (blurred) in the result preview. They name the
- * concrete outputs the purchase unlocks rather than abstract "full plan" copy:
- *   1. the six-dimension Executive Function Radar;
- *   2. Best Focus Conditions plus Task Initiation / Recovery guidance;
- *   3. one pattern-specific practical starting point — unique per signature.
- *
- * The teaser deliberately shows the TYPE and CONTEXT of each output (e.g. "your
- * first step for a day with no deadline pushing you") and never the full paid
- * instruction. Always exactly three rows.
+ * The approved per-signature third locked row: a practical, benefit-focused
+ * outcome that stays unique per pattern. Not a separate "first step" artifact —
+ * it names the outcome the profile helps the reader reach.
+ */
+const SIGNATURE_OUTCOME: Record<string, string> = {
+  Sprinter: "How to build momentum that doesn’t depend on urgency",
+  Archivist: "How to find the next clear move when too much is competing for attention",
+  Spark: "How to keep moving after the initial excitement fades",
+  Reactor: "How to regain traction when stress knocks the day off course",
+  Drifter: "How to create enough structure to start and stay with what matters",
+};
+
+const SIGNATURE_OUTCOME_FALLBACK =
+  "How to work with your focus pattern instead of against it";
+
+export function signatureOutcomeFor(signatureKey: string): string {
+  return SIGNATURE_OUTCOME[signatureKey] ?? SIGNATURE_OUTCOME_FALLBACK;
+}
+
+/**
+ * The three locked rows shown (blurred) in the result preview, as practical
+ * outcomes. Rows 1–2 are shared; row 3 varies by signature. Always exactly
+ * three rows, and never the words "first step" or an internal section name.
  */
 export function resultLockedRows(signatureKey: string): string[] {
   return [
-    `Your six-dimension ${PROFILE_SECTIONS.radar}`,
-    `Your ${PROFILE_SECTIONS.conditions}, ${PROFILE_SECTIONS.taskInitiation} and ${PROFILE_SECTIONS.recovery}`,
-    firstStepTeaserFor(signatureKey),
+    "A 6-point map of where your focus holds — and where it breaks",
+    "The conditions that help you start, stay on track, and recover when focus slips",
+    signatureOutcomeFor(signatureKey),
   ];
 }
+
+/**
+ * The three paywall deliverables, as customer outcomes. Each translates a real
+ * shipped section into value: the radar + strengths/friction, the focus
+ * conditions + initiation/recovery guidance, and the Explain-It-To-Someone
+ * Script. No internal section names; exactly three.
+ */
+export const PAYWALL_DELIVERABLES: readonly string[] = [
+  "A 6-point map of your strongest focus patterns and biggest friction points",
+  "Your personalized conditions for starting, staying on track, and recovering when focus slips",
+  "A clear explanation of your pattern you can use yourself or share with someone else",
+];

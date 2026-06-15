@@ -33,12 +33,19 @@ describe("result bridge name handling", () => {
     expect(src).toContain("{personalName ? (");
     // named branch keeps the personalized, italicized lead-in
     expect(src).toContain("{personalName},</em>");
-    expect(src).toContain("your full plan focuses on {signature.planFocus}.");
-    // unnamed branch starts with the capitalized sentence
-    expect(src).toContain("Your full plan focuses on {signature.planFocus}.");
+    // named branch: lowercase benefit lead-in after the italic name
+    expect(src).toContain(
+      "your full profile shows where momentum breaks, what helps it return, and the conditions that make focus easier to hold.",
+    );
+    // unnamed branch: the same sentence, capitalized
+    expect(src).toContain(
+      "Your full profile shows where momentum breaks, what helps it return, and the conditions that make focus easier to hold.",
+    );
+    // the old abstract plan-focus sentence is gone
+    expect(src).not.toContain("your full plan focuses on");
   });
 
-  it("never emits the 'you, your full plan' string", () => {
-    expect(src.toLowerCase()).not.toContain("you, your full plan");
+  it("never emits the 'you, your full' string", () => {
+    expect(src.toLowerCase()).not.toContain("you, your full");
   });
 });

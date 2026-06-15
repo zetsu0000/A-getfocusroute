@@ -493,7 +493,7 @@ export function PaywallScreen() {
 
             {/* three concrete deliverables */}
             <div style={{ marginTop: 14, display: "grid", gap: 9 }}>
-              {paywallDeliverables(signature.planFocus).map((item) => (
+              {paywallDeliverables().map((item) => (
                 <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
                   <div style={{ width: 18, height: 18, borderRadius: 999, background: "rgba(217,188,127,0.14)", border: "1px solid rgba(217,188,127,0.4)", display: "flex", alignItems: "center", justifyContent: "center", marginTop: 1, flexShrink: 0 }}>
                     <Check size={10} color="var(--v2-gold)" strokeWidth={3} />

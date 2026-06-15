@@ -11,7 +11,7 @@
  *   - not a diagnosis   → /disclaimer
  */
 
-import { PROFILE_SECTIONS } from "@/lib/paid-value";
+import { PAYWALL_DELIVERABLES } from "@/lib/paid-value";
 
 /** The id the top CTA scrolls to and the checkout-reached observer watches. */
 export const PAYWALL_CHECKOUT_ID = "paywall-checkout";
@@ -20,23 +20,15 @@ export const PAYWALL_CHECKOUT_ID = "paywall-checkout";
 export const PAYWALL_TRUST_CHECKOUT_ID = "paywall-trust-checkout";
 
 /**
- * The three concrete deliverables, named after the real sections that ship in
- * the Brain Profile (see PROFILE_SECTIONS) instead of abstract "full breakdown /
- * first next step" copy:
- *   1. the six-dimension Executive Function Radar + Cognitive Signature;
- *   2. Best Focus Conditions + Task Initiation Style, framed by the user's plan
- *      focus — the "first next step" is delivered through this real guidance,
- *      not as a separate artifact (the 28-Day Protocol is a distinct add-on);
- *   3. the Explain-It-To-Someone Script, included with the Brain Profile via the
- *      bonus_explain_script entitlement.
- * No invented deliverables; every claim maps to a shipped section.
+ * The three paywall deliverables, expressed as customer outcomes. Sourced from
+ * the centralized paid-value module so the result preview and the paywall stay
+ * in sync. Each translates a real shipped Brain Profile section (radar +
+ * strengths/friction, focus conditions + initiation/recovery guidance, and the
+ * Explain-It-To-Someone Script granted via the bonus_explain_script
+ * entitlement). No invented deliverables; exactly three.
  */
-export function paywallDeliverables(planFocus: string): string[] {
-  return [
-    `Your six-dimension ${PROFILE_SECTIONS.radar} and ${PROFILE_SECTIONS.cognitiveSignature}`,
-    `Your ${PROFILE_SECTIONS.conditions} and ${PROFILE_SECTIONS.taskInitiation} for ${planFocus}`,
-    `Your ${PROFILE_SECTIONS.explainScript} to put your pattern into words`,
-  ];
+export function paywallDeliverables(): string[] {
+  return [...PAYWALL_DELIVERABLES];
 }
 
 /**

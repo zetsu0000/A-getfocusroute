@@ -2,103 +2,166 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { PROFILE_SECTIONS, resultLockedRows } from "@/lib/paid-value";
-import { FIRST_STEP_TEASER, firstStepTeaserFor } from "@/lib/first-step-teaser";
+import {
+  PAYWALL_DELIVERABLES,
+  resultLockedRows,
+  signatureOutcomeFor,
+} from "@/lib/paid-value";
+import { paywallDeliverables } from "@/components/paywall/paywallContent";
 import { deriveBrainProfile } from "@/lib/dashboard/brain-profile";
 import { PRODUCT_TO_ENTITLEMENTS } from "@/lib/access/products";
 
 /*
- * PR4 — make the paid value concrete. The funnel components are client-only with
- * no DOM test environment, so these prove the value-naming logic directly and
- * pair it with source-level guards against the components that render it.
+ * PR4 (follow-up) — translate the paid value into customer outcomes. The funnel
+ * components are client-only with no DOM test environment, so these prove the
+ * value copy directly and pair it with source-level guards on the components
+ * that render it.
  */
 const SIGNATURES = ["Sprinter", "Archivist", "Spark", "Reactor", "Drifter"] as const;
 
-const brainProfileSrc = readFileSync(
-  fileURLToPath(new URL("../../components/dashboard/BrainProfileView.tsx", import.meta.url)),
-  "utf8",
-);
+// The exact approved copy — the contract the sales surfaces must render.
+const APPROVED_ROW_1 = "A 6-point map of where your focus holds — and where it breaks";
+const APPROVED_ROW_2 =
+  "The conditions that help you start, stay on track, and recover when focus slips";
+const APPROVED_ROW_3: Record<(typeof SIGNATURES)[number], string> = {
+  Sprinter: "How to build momentum that doesn’t depend on urgency",
+  Archivist: "How to find the next clear move when too much is competing for attention",
+  Spark: "How to keep moving after the initial excitement fades",
+  Reactor: "How to regain traction when stress knocks the day off course",
+  Drifter: "How to create enough structure to start and stay with what matters",
+};
+const APPROVED_DELIVERABLES = [
+  "A 6-point map of your strongest focus patterns and biggest friction points",
+  "Your personalized conditions for starting, staying on track, and recovering when focus slips",
+  "A clear explanation of your pattern you can use yourself or share with someone else",
+];
+
+// Internal dashboard section names that must NOT appear in sales-facing copy.
+const INTERNAL_LABELS = [
+  "Executive Function Radar",
+  "Cognitive Signature",
+  "Best Focus Conditions",
+  "Task Initiation Style",
+  "Recovery Style",
+  "Explain-It-To-Someone Script",
+];
+
 const chartSrc = readFileSync(
   fileURLToPath(new URL("../../components/chart/ChartScreen.tsx", import.meta.url)),
   "utf8",
 );
+const paywallSrc = readFileSync(
+  fileURLToPath(new URL("../../components/paywall/PaywallScreen.tsx", import.meta.url)),
+  "utf8",
+);
 
-describe("result locked preview is exactly three concrete rows", () => {
-  it("returns exactly three rows for every signature", () => {
+describe("result locked preview — three outcome rows", () => {
+  it("returns exactly three rows for every signature (and an unknown one)", () => {
     for (const sig of SIGNATURES) {
       expect(resultLockedRows(sig)).toHaveLength(3);
     }
-    // Unknown / missing signature still yields three rows (graceful fallback).
     expect(resultLockedRows("")).toHaveLength(3);
   });
 
-  it("names concrete shipped outputs in the two shared rows (radar + conditions/initiation/recovery)", () => {
+  it("renders the two approved shared rows verbatim", () => {
     const rows = resultLockedRows("Sprinter");
-    expect(rows[0].toLowerCase()).toContain("six-dimension");
-    expect(rows[0]).toContain(PROFILE_SECTIONS.radar);
-    expect(rows[1]).toContain(PROFILE_SECTIONS.conditions);
-    expect(rows[1]).toContain(PROFILE_SECTIONS.taskInitiation);
-    expect(rows[1]).toContain(PROFILE_SECTIONS.recovery);
+    expect(rows[0]).toBe(APPROVED_ROW_1);
+    expect(rows[1]).toBe(APPROVED_ROW_2);
   });
 
-  it("gives each signature one distinct pattern-specific practical starting point", () => {
-    const teasers = SIGNATURES.map((sig) => resultLockedRows(sig)[2]);
-    // Row 3 is the per-signature first-step teaser…
-    teasers.forEach((teaser, i) => {
-      expect(teaser).toBe(firstStepTeaserFor(SIGNATURES[i]));
-      expect(teaser.length).toBeGreaterThan(0);
-    });
-    // …and all five are unique.
-    expect(new Set(teasers).size).toBe(SIGNATURES.length);
-  });
-
-  it("replaces the abstract-only wording on the result screen", () => {
+  it("renders the exact approved third row for all five signatures, each unique", () => {
     for (const sig of SIGNATURES) {
-      const joined = resultLockedRows(sig).join(" ").toLowerCase();
-      expect(joined).not.toContain("full focus-pattern breakdown");
-      expect(joined).not.toContain("full pattern breakdown");
-      expect(joined).not.toContain("full focus plan");
+      expect(resultLockedRows(sig)[2]).toBe(APPROVED_ROW_3[sig]);
+      expect(signatureOutcomeFor(sig)).toBe(APPROVED_ROW_3[sig]);
+    }
+    const thirds = SIGNATURES.map((sig) => resultLockedRows(sig)[2]);
+    expect(new Set(thirds).size).toBe(SIGNATURES.length);
+  });
+
+  it("never says 'first step' and never uses an internal section label", () => {
+    for (const sig of [...SIGNATURES, ""]) {
+      for (const row of resultLockedRows(sig)) {
+        expect(row.toLowerCase()).not.toContain("first step");
+        for (const label of INTERNAL_LABELS) {
+          expect(row).not.toContain(label);
+        }
+      }
     }
   });
 });
 
-describe("locked copy names only real shipped Brain Profile sections", () => {
-  it("maps every PROFILE_SECTIONS label to a section rendered in BrainProfileView", () => {
-    for (const label of Object.values(PROFILE_SECTIONS)) {
-      // BrainProfileView labels the radar and script with a ™ glyph, so the
-      // funnel name is a substring of the rendered section heading.
-      expect(brainProfileSrc).toContain(label);
-    }
+describe("paywall deliverables — three outcomes", () => {
+  it("renders exactly the three approved deliverables", () => {
+    expect(PAYWALL_DELIVERABLES).toHaveLength(3);
+    expect([...PAYWALL_DELIVERABLES]).toEqual(APPROVED_DELIVERABLES);
+    // The component's accessor returns the same approved copy.
+    expect(paywallDeliverables()).toEqual(APPROVED_DELIVERABLES);
   });
 
-  it("the Executive Function Radar really has six dimensions", () => {
+  it("uses no internal section label as sales copy", () => {
+    for (const item of PAYWALL_DELIVERABLES) {
+      for (const label of INTERNAL_LABELS) {
+        expect(item).not.toContain(label);
+      }
+    }
+  });
+});
+
+describe("every sales claim is grounded in a shipped section (not just unique)", () => {
+  it("the '6-point map' maps to the six-dimension Executive Function Radar", () => {
     const profile = deriveBrainProfile([], "Sprinter", null);
     expect(profile.radarDimensions).toHaveLength(6);
   });
 
-  it("the Explain-It-To-Someone Script ships with the Brain Profile entitlement bundle", () => {
-    // Justifies naming the script in the paywall: the brain_profile product
-    // grants bonus_explain_script, which is what unlocks the script section.
+  it("the shareable explanation ships with the Brain Profile entitlement bundle", () => {
     expect(PRODUCT_TO_ENTITLEMENTS.brain_profile).toContain("bonus_explain_script");
-  });
-
-  it("FIRST_STEP_TEASER covers all five signatures with distinct copy", () => {
-    for (const sig of SIGNATURES) {
-      expect(typeof FIRST_STEP_TEASER[sig]).toBe("string");
-    }
-    const values = SIGNATURES.map((sig) => FIRST_STEP_TEASER[sig]);
-    expect(new Set(values).size).toBe(SIGNATURES.length);
   });
 });
 
-describe("ChartScreen renders the centralized rows without adding structure", () => {
-  it("builds the locked rows from resultLockedRows and renders them in one panel", () => {
+describe("ChartScreen renders the centralized rows without new structure", () => {
+  it("builds the locked rows from resultLockedRows in a single panel", () => {
     expect(chartSrc).toContain("resultLockedRows(signature.signature)");
-    expect(chartSrc).toContain("lockedRows.map");
-    // Exactly one locked preview panel — no extra card/module was introduced.
     expect((chartSrc.match(/lockedRows\.map/g) || []).length).toBe(1);
     expect((chartSrc.match(/full focus plan/g) || []).length).toBe(1);
-    // The pre-PR4 inline construction from signature.unlockTeaser is gone.
+    // The pre-PR4 inline construction and the first-step helper are gone.
     expect(chartSrc).not.toContain("signature.unlockTeaser");
+    expect(chartSrc).not.toContain("firstStepTeaserFor");
+  });
+});
+
+describe("named / unnamed result bridge", () => {
+  it("keeps the explicit named/unnamed conditional with the approved benefit copy", () => {
+    expect(chartSrc).toContain("{personalName ? (");
+    expect(chartSrc).toContain("{personalName},</em>");
+    // Named branch (lowercase lead-in after the italic name).
+    expect(chartSrc).toContain(
+      "your full profile shows where momentum breaks, what helps it return, and the conditions that make focus easier to hold.",
+    );
+    // Unnamed branch (capitalized).
+    expect(chartSrc).toContain(
+      "Your full profile shows where momentum breaks, what helps it return, and the conditions that make focus easier to hold.",
+    );
+    // The old abstract plan-focus sentence is gone.
+    expect(chartSrc).not.toContain("your full plan focuses on");
+  });
+});
+
+describe("pricing, CTAs, checkout and social proof remain unchanged", () => {
+  it("keeps the single price, both CTAs, deferred PaymentIntent and social-proof order", () => {
+    // One price presentation, anchored once.
+    expect((paywallSrc.match(/price\.paywallAnchor/g) || []).length).toBe(1);
+    // Top CTA and final CTA copy intact.
+    expect(paywallSrc).toContain("Continue to Secure Checkout");
+    expect(paywallSrc).toContain("{payCtaLabel(BRAIN_OS.price.paywall)}");
+    // Deferred PaymentIntent: created only on explicit checkout intent, once.
+    expect((paywallSrc.match(/fetch\("\/api\/create-payment-intent"/g) || []).length).toBe(1);
+    expect(paywallSrc).toContain("const requestCheckoutIntent = async () =>");
+    // Social proof sits before the checkout panel.
+    const proof = paywallSrc.indexOf("<PaywallSocialProofDisclosure");
+    const checkout = paywallSrc.indexOf("id={PAYWALL_CHECKOUT_ID}");
+    expect(proof).toBeGreaterThan(-1);
+    expect(checkout).toBeGreaterThan(proof);
+    // Deliverables rendered exactly once via the shared accessor.
+    expect((paywallSrc.match(/paywallDeliverables\(/g) || []).length).toBe(1);
   });
 });

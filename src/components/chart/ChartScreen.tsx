@@ -35,11 +35,11 @@ export function ChartScreen() {
   const identity = getSignatureIdentity(signature.signature);
   const echo = echoSentence(answers);
 
-  /* The locked preview names the concrete outputs the purchase unlocks (audit
-     PR4): the six-dimension Executive Function Radar, the Best Focus Conditions
-     + initiation/recovery guidance, and one pattern-specific starting point that
-     stays unique per signature. Centralized in paid-value so the result and the
-     paywall name the same real Brain Profile sections without drift. */
+  /* The locked preview teases the paid value as practical outcomes (audit PR4):
+     a 6-point focus map, the conditions that help you start/stay/recover, and one
+     pattern-specific outcome that stays unique per signature. Centralized in
+     paid-value so the result and the paywall stay in sync; every line is grounded
+     in a real shipped Brain Profile section. */
   const lockedRows = resultLockedRows(signature.signature);
   const saveStarted = useRef(false);
   const [authChecked, setAuthChecked] = useState(false);
@@ -367,10 +367,10 @@ export function ChartScreen() {
             {personalName ? (
               <>
                 <em style={{ fontStyle: "italic", color: identity.accent }}>{personalName},</em>{" "}
-                your full plan focuses on {signature.planFocus}.
+                your full profile shows where momentum breaks, what helps it return, and the conditions that make focus easier to hold.
               </>
             ) : (
-              <>Your full plan focuses on {signature.planFocus}.</>
+              <>Your full profile shows where momentum breaks, what helps it return, and the conditions that make focus easier to hold.</>
             )}
           </p>
         </m.div>
