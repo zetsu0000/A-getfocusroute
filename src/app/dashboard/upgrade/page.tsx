@@ -8,7 +8,11 @@ import {
   hasMembershipAccess,
   hasRoadmapAccess,
 } from "@/lib/dashboard/unlock";
-import { isUpgradeNeed, type UpgradeNeed } from "@/lib/dashboard/upgrade-handoff";
+import {
+  isUpgradeNeed,
+  resolveUpgradeNeedTarget,
+  type UpgradeNeed,
+} from "@/lib/dashboard/upgrade-handoff";
 
 export const metadata = {
   title: "Upgrade · FocusRoute",
@@ -51,7 +55,14 @@ export default async function DashboardUpgradePage({
   const snap = await requireDashboardLogin();
   const { need } = await searchParams;
   const needKey: UpgradeNeed = isUpgradeNeed(need) ? need : "brain_profile";
-  const hint = isUpgradeNeed(need) ? COPY[need] : DEFAULT;
+  const u = snap.entitlementSet;
+  const target = resolveUpgradeNeedTarget(needKey, u);
+  const hint =
+    target.kind === "purchase"
+      ? COPY[target.need]
+      : isUpgradeNeed(need)
+        ? COPY[need]
+        : DEFAULT;
 
   /* Authenticated funnel handoff: only route into the funnel when a completed
      assessment exists to restore (the server-verified handoff reopens the right
@@ -59,13 +70,25 @@ export default async function DashboardUpgradePage({
      assessment first — explicitly, never a silent Q1 drop. CTA wording matches
      whichever destination applies. */
   const hasQuizResult = answersFromQuizRow(snap.latestQuizResult).length > 0;
-  const ctaHref = hasQuizResult ? `/assessment?upgrade=${needKey}` : "/assessment";
-  const ctaLabel = hasQuizResult ? hint.cta : "Take the 2-minute assessment";
+  const ctaHref = !hasQuizResult
+    ? "/assessment"
+    : target.kind === "purchase"
+      ? `/assessment?upgrade=${target.need}`
+      : target.href;
+  const ctaLabel = !hasQuizResult
+    ? "Take the 2-minute assessment"
+    : target.kind === "purchase"
+      ? hint.cta
+      : target.cta;
   const ctaBody = hasQuizResult
     ? hint.body
     : "Your plan is built from your assessment answers. Take the 2-minute assessment to unlock checkout — your access then syncs to this account automatically.";
 
-  const u = snap.entitlementSet;
+  const resolvedCtaBody =
+    hasQuizResult && target.kind === "dashboard"
+      ? "That access is already unlocked on your dashboard. Open it there instead of starting another checkout."
+      : ctaBody;
+
   const hasAny =
     hasBrainProfileAccess(u) ||
     hasRoadmapAccess(u) ||
@@ -93,7 +116,7 @@ export default async function DashboardUpgradePage({
           {hint.title}
         </h2>
         <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.65, marginBottom: 20 }}>
-          {ctaBody}
+          {resolvedCtaBody}
         </p>
         <Link
           href={ctaHref}

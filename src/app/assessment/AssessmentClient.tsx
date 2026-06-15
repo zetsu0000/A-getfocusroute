@@ -214,6 +214,10 @@ export default function AssessmentClient({
           setGateMode("ready");
           return;
         }
+        if (decision.redirectTo) {
+          window.location.assign(decision.redirectTo);
+          return;
+        }
         setGateMode("recovery");
       });
       return finish;

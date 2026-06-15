@@ -1,5 +1,11 @@
 import type { FunnelStep } from "@/types/quiz";
 import type { QuizAnswer } from "@/types/quiz";
+import type { EntitlementKey } from "@/lib/access/entitlements";
+import {
+  hasBrainProfileAccess,
+  hasMembershipAccess,
+  hasRoadmapAccess,
+} from "@/lib/dashboard/unlock";
 
 /**
  * Authenticated dashboard → funnel handoff (production audit, PR 1 follow-up).
@@ -58,7 +64,80 @@ export function stepForUpgradeNeed(need: UpgradeNeed): FunnelStep {
   }
 }
 
-/** Reads the dashboard handoff need from a URL query string ("?upgrade=…"). */
+export type UpgradeNeedTarget =
+  | {
+      kind: "purchase";
+      /** The actual currently purchasable need, which may be earlier than requested. */
+      need: UpgradeNeed;
+      step: FunnelStep;
+    }
+  | {
+      kind: "dashboard";
+      href: string;
+      cta: string;
+    };
+
+const OWNED_DESTINATIONS: Record<
+  UpgradeNeed,
+  { href: string; cta: string }
+> = {
+  brain_profile: { href: "/dashboard/profile", cta: "Open Brain Profile" },
+  roadmap_28_day: { href: "/dashboard/roadmap", cta: "Open 28-Day Protocol" },
+  bonus_toolkit: { href: "/dashboard/bonuses", cta: "View Bonuses" },
+  membership: { href: "/dashboard/membership", cta: "Open Membership" },
+};
+
+function purchaseTarget(need: UpgradeNeed): UpgradeNeedTarget {
+  return { kind: "purchase", need, step: stepForUpgradeNeed(need) };
+}
+
+function ownedTarget(need: UpgradeNeed): UpgradeNeedTarget {
+  return { kind: "dashboard", ...OWNED_DESTINATIONS[need] };
+}
+
+/**
+ * Resolves a dashboard "need" to the offer the user is actually allowed to buy
+ * now. This follows the existing entitlement sequence: Brain Profile first,
+ * Roadmap after Brain Profile, Membership after Roadmap. Bonus Toolkit is
+ * included with Roadmap and is not a standalone product.
+ */
+export function resolveUpgradeNeedTarget(
+  need: UpgradeNeed,
+  entitlementSet: Set<EntitlementKey>,
+): UpgradeNeedTarget {
+  const hasBrainProfile = hasBrainProfileAccess(entitlementSet);
+  const hasRoadmap = hasRoadmapAccess(entitlementSet);
+  const hasMembership = hasMembershipAccess(entitlementSet);
+  const hasBonusToolkit = entitlementSet.has("bonus_toolkit");
+
+  switch (need) {
+    case "brain_profile":
+      return hasBrainProfile
+        ? ownedTarget("brain_profile")
+        : purchaseTarget("brain_profile");
+
+    case "roadmap_28_day":
+      if (hasRoadmap) return ownedTarget("roadmap_28_day");
+      if (!hasBrainProfile) return purchaseTarget("brain_profile");
+      return purchaseTarget("roadmap_28_day");
+
+    case "membership":
+      if (hasMembership) return ownedTarget("membership");
+      if (!hasRoadmap) {
+        return hasBrainProfile
+          ? purchaseTarget("roadmap_28_day")
+          : purchaseTarget("brain_profile");
+      }
+      return purchaseTarget("membership");
+
+    case "bonus_toolkit":
+      if (hasRoadmap || hasBonusToolkit) return ownedTarget("bonus_toolkit");
+      if (!hasBrainProfile) return purchaseTarget("brain_profile");
+      return purchaseTarget("roadmap_28_day");
+  }
+}
+
+/** Reads the dashboard handoff need from a URL query string ("?upgrade=..."). */
 export function readUpgradeNeed(search: string): UpgradeNeed | null {
   const value = new URLSearchParams(search).get("upgrade");
   return isUpgradeNeed(value) ? value : null;
@@ -72,12 +151,15 @@ export type UpgradeHandoffContext = {
   quizRow: Record<string, unknown> | null;
   /** Answers reconstructed from `quizRow` (empty when none/invalid). */
   quizAnswers: QuizAnswer[];
+  /** Active entitlements loaded server-side after the assessment is verified. */
+  entitlementSet: Set<EntitlementKey>;
 };
 
 export type UpgradeHandoffDenyReason =
   | "invalid_request"
   | "unauthenticated"
   | "no_assessment"
+  | "already_unlocked"
   | "error";
 
 export type UpgradeHandoffDecision =
@@ -89,7 +171,12 @@ export type UpgradeHandoffDecision =
       quizResultId: string | null;
       answers: QuizAnswer[];
     }
-  | { authorized: false; reason: UpgradeHandoffDenyReason };
+  | {
+      authorized: false;
+      reason: UpgradeHandoffDenyReason;
+      redirectTo?: string;
+      cta?: string;
+    };
 
 function stringField(value: unknown): string {
   return typeof value === "string" ? value : "";
@@ -114,11 +201,21 @@ export function decideUpgradeHandoff(
     return { authorized: false, reason: "no_assessment" };
   }
 
+  const target = resolveUpgradeNeedTarget(needRaw, ctx.entitlementSet);
+  if (target.kind === "dashboard") {
+    return {
+      authorized: false,
+      reason: "already_unlocked",
+      redirectTo: target.href,
+      cta: target.cta,
+    };
+  }
+
   const rowEmail = stringField(ctx.quizRow.email);
   const rowId = ctx.quizRow.id;
   return {
     authorized: true,
-    step: stepForUpgradeNeed(needRaw),
+    step: target.step,
     email: rowEmail || ctx.user.email,
     name: stringField(ctx.quizRow.name),
     quizResultId: typeof rowId === "string" && rowId ? rowId : null,
@@ -160,6 +257,13 @@ function parseAnswers(value: unknown): QuizAnswer[] {
   return out;
 }
 
+function dashboardRedirect(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  return value === "/dashboard" || value.startsWith("/dashboard/")
+    ? value
+    : undefined;
+}
+
 /**
  * Validates the JSON returned by the handoff endpoint before the client acts on
  * it. Anything malformed or unauthorized is treated as a recoverable denial —
@@ -179,9 +283,12 @@ export function parseUpgradeHandoffResponse(
       reason:
         reason === "invalid_request" ||
         reason === "unauthenticated" ||
-        reason === "no_assessment"
+        reason === "no_assessment" ||
+        reason === "already_unlocked"
           ? reason
           : "error",
+      redirectTo: dashboardRedirect(v.redirectTo),
+      cta: typeof v.cta === "string" ? v.cta : undefined,
     };
   }
   if (!isHandoffTargetStep(v.step)) {

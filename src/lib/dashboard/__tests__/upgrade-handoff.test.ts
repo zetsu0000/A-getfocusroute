@@ -5,9 +5,11 @@ import {
   isUpgradeNeed,
   parseUpgradeHandoffResponse,
   readUpgradeNeed,
+  resolveUpgradeNeedTarget,
   stepForUpgradeNeed,
   type UpgradeHandoffContext,
 } from "../upgrade-handoff";
+import type { EntitlementKey } from "@/lib/access/entitlements";
 import {
   gateFunnelEntry,
   planFunnelEntry,
@@ -20,11 +22,16 @@ const ANSWERS: QuizAnswer[] = [
   { questionId: "q2", selectedOptions: ["b", "c"] },
 ];
 
+function entitlements(...keys: EntitlementKey[]): Set<EntitlementKey> {
+  return new Set(keys);
+}
+
 function ctx(overrides: Partial<UpgradeHandoffContext> = {}): UpgradeHandoffContext {
   return {
     user: { id: "user-1", email: "buyer@example.com" },
     quizRow: { id: "row-1", email: "buyer@example.com", name: "Sam" },
     quizAnswers: ANSWERS,
+    entitlementSet: entitlements(),
     ...overrides,
   };
 }
@@ -70,11 +77,72 @@ describe("need parsing and step mapping", () => {
     expect(readUpgradeNeed("")).toBeNull();
   });
 
-  it("maps each need to the funnel step that sells it", () => {
+  it("keeps the raw need-to-step mapping stable", () => {
     expect(stepForUpgradeNeed("brain_profile")).toBe("paywall");
     expect(stepForUpgradeNeed("roadmap_28_day")).toBe("upsell");
     expect(stepForUpgradeNeed("bonus_toolkit")).toBe("upsell");
     expect(stepForUpgradeNeed("membership")).toBe("subscription");
+  });
+
+  it("resolves each need to the currently purchasable offer from entitlements", () => {
+    expect(resolveUpgradeNeedTarget("brain_profile", entitlements())).toEqual({
+      kind: "purchase",
+      need: "brain_profile",
+      step: "paywall",
+    });
+    expect(resolveUpgradeNeedTarget("roadmap_28_day", entitlements())).toEqual({
+      kind: "purchase",
+      need: "brain_profile",
+      step: "paywall",
+    });
+    expect(
+      resolveUpgradeNeedTarget(
+        "roadmap_28_day",
+        entitlements("brain_profile"),
+      ),
+    ).toEqual({
+      kind: "purchase",
+      need: "roadmap_28_day",
+      step: "upsell",
+    });
+    expect(
+      resolveUpgradeNeedTarget("membership", entitlements("brain_profile")),
+    ).toEqual({
+      kind: "purchase",
+      need: "roadmap_28_day",
+      step: "upsell",
+    });
+    expect(
+      resolveUpgradeNeedTarget("membership", entitlements("roadmap_28_day")),
+    ).toEqual({
+      kind: "purchase",
+      need: "membership",
+      step: "subscription",
+    });
+    expect(
+      resolveUpgradeNeedTarget(
+        "bonus_toolkit",
+        entitlements("brain_profile"),
+      ),
+    ).toEqual({
+      kind: "purchase",
+      need: "roadmap_28_day",
+      step: "upsell",
+    });
+    expect(
+      resolveUpgradeNeedTarget("bonus_toolkit", entitlements("roadmap_28_day")),
+    ).toEqual({
+      kind: "dashboard",
+      href: "/dashboard/bonuses",
+      cta: "View Bonuses",
+    });
+    expect(
+      resolveUpgradeNeedTarget("bonus_toolkit", entitlements("bonus_toolkit")),
+    ).toEqual({
+      kind: "dashboard",
+      href: "/dashboard/bonuses",
+      cta: "View Bonuses",
+    });
   });
 });
 
@@ -90,18 +158,99 @@ describe("decideUpgradeHandoff", () => {
     });
   });
 
-  it("gives roadmap, bonus and membership CTAs explicit, correct destinations", () => {
+  it("routes later needs to the prerequisite offer until entitlements are earned", () => {
     expect(decideUpgradeHandoff("roadmap_28_day", ctx())).toMatchObject({
       authorized: true,
-      step: "upsell",
+      step: "paywall",
     });
     expect(decideUpgradeHandoff("bonus_toolkit", ctx())).toMatchObject({
       authorized: true,
-      step: "upsell",
+      step: "paywall",
     });
     expect(decideUpgradeHandoff("membership", ctx())).toMatchObject({
       authorized: true,
+      step: "paywall",
+    });
+  });
+
+  it("opens roadmap only after Brain Profile access exists", () => {
+    expect(
+      decideUpgradeHandoff(
+        "roadmap_28_day",
+        ctx({ entitlementSet: entitlements("brain_profile") }),
+      ),
+    ).toMatchObject({
+      authorized: true,
+      step: "upsell",
+    });
+  });
+
+  it("opens membership only after Roadmap access exists", () => {
+    expect(
+      decideUpgradeHandoff(
+        "membership",
+        ctx({ entitlementSet: entitlements("brain_profile") }),
+      ),
+    ).toMatchObject({
+      authorized: true,
+      step: "upsell",
+    });
+    expect(
+      decideUpgradeHandoff(
+        "membership",
+        ctx({ entitlementSet: entitlements("roadmap_28_day") }),
+      ),
+    ).toMatchObject({
+      authorized: true,
       step: "subscription",
+    });
+  });
+
+  it("does not sell Bonus Toolkit standalone", () => {
+    expect(
+      decideUpgradeHandoff(
+        "bonus_toolkit",
+        ctx({ entitlementSet: entitlements("brain_profile") }),
+      ),
+    ).toMatchObject({
+      authorized: true,
+      step: "upsell",
+    });
+    expect(
+      decideUpgradeHandoff(
+        "bonus_toolkit",
+        ctx({ entitlementSet: entitlements("roadmap_28_day") }),
+      ),
+    ).toEqual({
+      authorized: false,
+      reason: "already_unlocked",
+      redirectTo: "/dashboard/bonuses",
+      cta: "View Bonuses",
+    });
+  });
+
+  it("does not offer already-owned products again", () => {
+    expect(
+      decideUpgradeHandoff(
+        "brain_profile",
+        ctx({ entitlementSet: entitlements("brain_profile") }),
+      ),
+    ).toEqual({
+      authorized: false,
+      reason: "already_unlocked",
+      redirectTo: "/dashboard/profile",
+      cta: "Open Brain Profile",
+    });
+    expect(
+      decideUpgradeHandoff(
+        "roadmap_28_day",
+        ctx({ entitlementSet: entitlements("roadmap_28_day") }),
+      ),
+    ).toEqual({
+      authorized: false,
+      reason: "already_unlocked",
+      redirectTo: "/dashboard/roadmap",
+      cta: "Open 28-Day Protocol",
     });
   });
 
@@ -189,6 +338,19 @@ describe("parseUpgradeHandoffResponse", () => {
     expect(
       parseUpgradeHandoffResponse({ authorized: false, reason: "unauthenticated" }),
     ).toEqual({ authorized: false, reason: "unauthenticated" });
+    expect(
+      parseUpgradeHandoffResponse({
+        authorized: false,
+        reason: "already_unlocked",
+        redirectTo: "/dashboard/bonuses",
+        cta: "View Bonuses",
+      }),
+    ).toEqual({
+      authorized: false,
+      reason: "already_unlocked",
+      redirectTo: "/dashboard/bonuses",
+      cta: "View Bonuses",
+    });
   });
 
   it("treats malformed or manipulated responses as a recoverable denial", () => {
@@ -211,5 +373,12 @@ describe("parseUpgradeHandoffResponse", () => {
     expect(
       parseUpgradeHandoffResponse({ authorized: true, step: "not_a_step" }),
     ).toEqual({ authorized: false, reason: "error" });
+    expect(
+      parseUpgradeHandoffResponse({
+        authorized: false,
+        reason: "already_unlocked",
+        redirectTo: "https://example.com",
+      }),
+    ).toEqual({ authorized: false, reason: "already_unlocked" });
   });
 });

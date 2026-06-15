@@ -1,4 +1,5 @@
 import { answersFromQuizRow } from "@/lib/dashboard/answers-from-quiz-row";
+import { getActiveEntitlementKindsForUser } from "@/lib/access/entitlements";
 import {
   decideUpgradeHandoff,
   isUpgradeNeed,
@@ -51,10 +52,20 @@ export async function GET(request: Request) {
       .limit(1);
 
     const quizRow = (rows?.[0] as Record<string, unknown> | undefined) ?? null;
+    const quizAnswers = answersFromQuizRow(quizRow);
+    if (!quizRow || quizAnswers.length === 0) {
+      return handoffResponse({ authorized: false, reason: "no_assessment" });
+    }
+
+    const entitlementSet = await getActiveEntitlementKindsForUser(
+      user.id,
+      user.email,
+    );
     const decision = decideUpgradeHandoff(need, {
       user: { id: user.id, email: user.email },
       quizRow,
-      quizAnswers: answersFromQuizRow(quizRow),
+      quizAnswers,
+      entitlementSet,
     });
     return handoffResponse(decision);
   } catch {

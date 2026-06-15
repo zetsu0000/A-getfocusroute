@@ -10,6 +10,14 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: supabaseMocks.createClient,
 }));
 
+const entitlementMocks = vi.hoisted(() => ({
+  getActiveEntitlementKindsForUser: vi.fn(),
+}));
+vi.mock("@/lib/access/entitlements", () => ({
+  getActiveEntitlementKindsForUser:
+    entitlementMocks.getActiveEntitlementKindsForUser,
+}));
+
 // The handoff must never touch Stripe. Mock the client to throw if anyone tries,
 // and assert it is never constructed.
 const stripeMocks = vi.hoisted(() => ({
@@ -26,14 +34,23 @@ import { GET } from "@/app/api/assessment/upgrade-handoff/route";
 type QuizRow = Record<string, unknown>;
 
 let quizRows: QuizRow[];
+let entitlementKinds: Set<string>;
 
 function setUser(user: { id: string; email: string } | null) {
   supabaseMocks.getUser.mockResolvedValue({ data: { user } });
 }
 
+function setEntitlements(...keys: string[]) {
+  entitlementKinds = new Set(keys);
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   quizRows = [];
+  setEntitlements();
+  entitlementMocks.getActiveEntitlementKindsForUser.mockImplementation(
+    async () => entitlementKinds,
+  );
   supabaseMocks.createClient.mockImplementation(async () => ({
     auth: { getUser: supabaseMocks.getUser },
     from: supabaseMocks.from,
@@ -84,25 +101,88 @@ describe("GET /api/assessment/upgrade-handoff", () => {
       quizResultId: "row-1",
       answers: [{ questionId: "q1", selectedOptions: ["a"] }],
     });
-    // Only the assessment table is read; no payment tables, no Stripe.
+    // Only the assessment table is read through the session client; entitlement
+    // access goes through the existing server-side helper. No payment tables,
+    // no Stripe.
     expect(supabaseMocks.from).toHaveBeenCalledTimes(1);
     expect(supabaseMocks.from).toHaveBeenCalledWith("quiz_results");
+    expect(entitlementMocks.getActiveEntitlementKindsForUser).toHaveBeenCalledWith(
+      "user-1",
+      "buyer@example.com",
+    );
     expect(stripeMocks.getStripeClient).not.toHaveBeenCalled();
     expect(body).not.toHaveProperty("clientSecret");
     expect(body).not.toHaveProperty("payment_intent");
   });
 
-  it("maps roadmap, bonus and membership needs to their funnel steps", async () => {
+  it("does not let a completed assessment without Brain Profile open roadmap upsell", async () => {
     quizRows = [ROW_WITH_ANSWERS];
+
+    const { body } = await callHandoff("roadmap_28_day");
+
+    expect(body).toMatchObject({
+      authorized: true,
+      step: "paywall",
+    });
+  });
+
+  it("lets Brain Profile entitlement open roadmap upsell", async () => {
+    quizRows = [ROW_WITH_ANSWERS];
+    setEntitlements("brain_profile");
+
     await expect(callHandoff("roadmap_28_day")).resolves.toMatchObject({
       body: { authorized: true, step: "upsell" },
     });
-    await expect(callHandoff("bonus_toolkit")).resolves.toMatchObject({
+  });
+
+  it("does not let a user without Roadmap open membership subscription", async () => {
+    quizRows = [ROW_WITH_ANSWERS];
+    setEntitlements("brain_profile");
+
+    await expect(callHandoff("membership")).resolves.toMatchObject({
       body: { authorized: true, step: "upsell" },
     });
+  });
+
+  it("lets Roadmap entitlement open membership subscription", async () => {
+    quizRows = [ROW_WITH_ANSWERS];
+    setEntitlements("roadmap_28_day");
+
     await expect(callHandoff("membership")).resolves.toMatchObject({
       body: { authorized: true, step: "subscription" },
     });
+  });
+
+  it("routes bonus_toolkit through its real included-with-Roadmap rules", async () => {
+    quizRows = [ROW_WITH_ANSWERS];
+
+    await expect(callHandoff("bonus_toolkit")).resolves.toMatchObject({
+      body: { authorized: true, step: "paywall" },
+    });
+
+    setEntitlements("brain_profile");
+    await expect(callHandoff("bonus_toolkit")).resolves.toMatchObject({
+      body: { authorized: true, step: "upsell" },
+    });
+
+    setEntitlements("roadmap_28_day");
+    await expect(callHandoff("bonus_toolkit")).resolves.toMatchObject({
+      body: {
+        authorized: false,
+        reason: "already_unlocked",
+        redirectTo: "/dashboard/bonuses",
+        cta: "View Bonuses",
+      },
+    });
+  });
+
+  it("downgrades a manipulated valid membership need based on entitlements", async () => {
+    quizRows = [ROW_WITH_ANSWERS];
+
+    const { body } = await callHandoff("membership");
+
+    expect(body).toMatchObject({ authorized: true, step: "paywall" });
+    expect(body).not.toMatchObject({ step: "subscription" });
   });
 
   it("denies a query parameter with no session (login is required, never assumed)", async () => {
@@ -113,6 +193,7 @@ describe("GET /api/assessment/upgrade-handoff", () => {
     expect(body).toEqual({ authorized: false, reason: "unauthenticated" });
     // No assessment lookup happens without a session.
     expect(supabaseMocks.from).not.toHaveBeenCalled();
+    expect(entitlementMocks.getActiveEntitlementKindsForUser).not.toHaveBeenCalled();
     expect(stripeMocks.getStripeClient).not.toHaveBeenCalled();
   });
 
@@ -122,6 +203,7 @@ describe("GET /api/assessment/upgrade-handoff", () => {
     const { body } = await callHandoff("brain_profile");
 
     expect(body).toEqual({ authorized: false, reason: "no_assessment" });
+    expect(entitlementMocks.getActiveEntitlementKindsForUser).not.toHaveBeenCalled();
   });
 
   it("treats a saved row without usable answers as no assessment", async () => {
@@ -130,6 +212,7 @@ describe("GET /api/assessment/upgrade-handoff", () => {
     const { body } = await callHandoff("brain_profile");
 
     expect(body).toEqual({ authorized: false, reason: "no_assessment" });
+    expect(entitlementMocks.getActiveEntitlementKindsForUser).not.toHaveBeenCalled();
   });
 
   it("rejects an unknown or manipulated need before touching auth or the database", async () => {
@@ -141,6 +224,7 @@ describe("GET /api/assessment/upgrade-handoff", () => {
 
     expect(supabaseMocks.createClient).not.toHaveBeenCalled();
     expect(supabaseMocks.getUser).not.toHaveBeenCalled();
+    expect(entitlementMocks.getActiveEntitlementKindsForUser).not.toHaveBeenCalled();
     expect(stripeMocks.getStripeClient).not.toHaveBeenCalled();
   });
 });
