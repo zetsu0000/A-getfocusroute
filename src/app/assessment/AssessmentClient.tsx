@@ -15,10 +15,11 @@ import { shouldTrackAssessmentStart } from "@/lib/assessment/entry";
 import {
   STEP_ORDER,
   createSharedPaymentVerifier,
-  gatePostPurchaseEntry,
-  isPaymentIntentId,
-  isSubscriptionId,
+  isFunnelStep,
+  isGuardedEntryStep,
+  planFunnelEntry,
   pollVerifyPayment,
+  stripFunnelEntryParams,
   type VerifyPaymentRequest,
   type VerifyVerdict,
 } from "@/lib/payment-verification";
@@ -43,17 +44,10 @@ const UpsellScreen       = dynamic(() => import("@/components/upsell/UpsellScree
 const SubscriptionScreen = dynamic(() => import("@/components/subscription/SubscriptionScreen").then(m => ({ default: m.SubscriptionScreen })), { ssr: false, loading: () => <ScreenSkeleton /> });
 const SuccessScreen      = dynamic(() => import("@/components/success/SuccessScreen").then(m => ({ default: m.SuccessScreen })), { ssr: false, loading: () => <ScreenSkeleton /> });
 
-const ENTRY_STEPS = new Set<FunnelStep>([
-  "paywall",
-  "upsell",
-  "subscription",
-  "success",
-]);
-
 function readEntryStep(): FunnelStep | null {
   if (typeof window === "undefined") return null;
   const step = new URLSearchParams(window.location.search).get("step");
-  return ENTRY_STEPS.has(step as FunnelStep) ? (step as FunnelStep) : null;
+  return isFunnelStep(step) && isGuardedEntryStep(step) ? step : null;
 }
 
 function metadataName(value: unknown): string {
@@ -71,17 +65,8 @@ const verifyPaymentIntent = createSharedPaymentVerifier(
 
 function cleanPaymentReturnUrl() {
   if (typeof window === "undefined") return;
-  const url = new URL(window.location.href);
-  for (const key of [
-    "step",
-    "payment_intent",
-    "payment_intent_client_secret",
-    "redirect_status",
-    "subscription_id",
-  ]) {
-    url.searchParams.delete(key);
-  }
-  const next = `${url.pathname}${url.search}${url.hash}`;
+  const search = stripFunnelEntryParams(window.location.search);
+  const next = `${window.location.pathname}${search}${window.location.hash}`;
   window.history.replaceState(null, "", next);
 }
 
@@ -158,68 +143,64 @@ export default function AssessmentClient({
     }
   }, [setQuizResultId]);
 
-  /* Post-purchase entry gate (production audit): ?step= alone never shows
-     success/upsell/subscription. Advancement needs either a persisted store
-     position that already earned the step, or a server-verified Stripe
-     redirect return. Everything else lands in a calm recoverable state. */
+  /* Funnel entry gate (production audit): a ?step= query parameter never
+     advances the funnel by itself. A guarded step (paywall/upsell/subscription/
+     success) is honored only when the persisted store already earned it, or —
+     for post-purchase steps — a Stripe redirect return is verified server-side.
+     Everything else is ignored and the user stays at their real position
+     (a fresh store is Q1). The decision is computed by the pure planFunnelEntry
+     helper so the behavior stays unit-testable. */
   useEffect(() => {
     let active = true;
+    const finish = () => {
+      active = false;
+    };
     const runIfActive = (callback: () => void) => {
       afterEffect(() => {
         if (active) callback();
       });
     };
 
-    const entryStep = readEntryStep();
-    if (!entryStep) {
-      runIfActive(() => setGateMode("ready"));
-      return () => {
-        active = false;
-      };
-    }
-
-    const params = new URLSearchParams(window.location.search);
-    const paymentIntentId = params.get("payment_intent") ?? "";
-    const rawSubscriptionId = params.get("subscription_id");
-    const subscriptionId = isSubscriptionId(rawSubscriptionId) ? rawSubscriptionId : null;
-    const storeStep = useQuizStore.getState().currentStep;
-    const decision = gatePostPurchaseEntry(
-      entryStep,
-      storeStep,
-      isPaymentIntentId(paymentIntentId),
+    const plan = planFunnelEntry(
+      window.location.search,
+      useQuizStore.getState().currentStep,
     );
 
-    if (decision === "allow") {
-      runIfActive(() => {
-        cleanPaymentReturnUrl();
-        setStep(entryStep);
-        setGateMode("ready");
-      });
-      return () => {
-        active = false;
-      };
+    if (plan.kind === "ready") {
+      runIfActive(() => setGateMode("ready"));
+      return finish;
     }
-    if (decision === "deny") {
-      // No purchase evidence: ignore the query string entirely.
+
+    if (plan.kind === "enter") {
+      // Earned in-app refresh/re-entry: drop the query string and advance.
+      runIfActive(() => {
+        cleanPaymentReturnUrl();
+        setStep(plan.step);
+        setGateMode("ready");
+      });
+      return finish;
+    }
+
+    if (plan.kind === "ignore") {
+      // Not earned and no payment evidence: drop the query string and keep the
+      // legitimate persisted funnel position. The guarded screen never renders.
       runIfActive(() => {
         cleanPaymentReturnUrl();
         setGateMode("ready");
       });
-      return () => {
-        active = false;
-      };
+      return finish;
     }
 
     runIfActive(() => setGateMode("verifying"));
     void verifyPaymentIntent({
-      paymentIntentId,
-      targetStep: entryStep,
-      subscriptionId,
+      paymentIntentId: plan.paymentIntentId,
+      targetStep: plan.step,
+      subscriptionId: plan.subscriptionId,
     }).then((verdict: VerifyVerdict) => {
       if (!active) return;
       cleanPaymentReturnUrl();
       if (verdict === "succeeded") {
-        setStep(entryStep);
+        setStep(plan.step);
         setGateMode("ready");
         return;
       }
@@ -232,9 +213,7 @@ export default function AssessmentClient({
       }
       setGateMode("ready");
     });
-    return () => {
-      active = false;
-    };
+    return finish;
   }, [setStep]);
 
   useEffect(() => {
