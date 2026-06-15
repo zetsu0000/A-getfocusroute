@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, m }  from "framer-motion";
 import { useQuizStore }             from "@/store/quizStore";
 import type { FunnelStep }          from "@/types/quiz";
-import { getPersistedQuizResultId } from "@/lib/quizResultId";
+import { getPersistedQuizResultId, setPersistedQuizResultId } from "@/lib/quizResultId";
 import { createClient }             from "@/lib/supabase/client";
 import { QuizEngine }               from "@/components/quiz/QuizEngine";
 import { FIRST_PARTY_EVENTS }       from "@/lib/analytics/events";
@@ -15,13 +15,20 @@ import { shouldTrackAssessmentStart } from "@/lib/assessment/entry";
 import {
   STEP_ORDER,
   createSharedPaymentVerifier,
-  gatePostPurchaseEntry,
-  isPaymentIntentId,
-  isSubscriptionId,
+  isFunnelStep,
+  isGuardedEntryStep,
+  planFunnelEntry,
   pollVerifyPayment,
+  stripFunnelEntryParams,
   type VerifyPaymentRequest,
   type VerifyVerdict,
 } from "@/lib/payment-verification";
+import {
+  parseUpgradeHandoffResponse,
+  readUpgradeNeed,
+  type UpgradeHandoffDecision,
+  type UpgradeNeed,
+} from "@/lib/dashboard/upgrade-handoff";
 
 function ScreenSkeleton() {
   return (
@@ -43,17 +50,10 @@ const UpsellScreen       = dynamic(() => import("@/components/upsell/UpsellScree
 const SubscriptionScreen = dynamic(() => import("@/components/subscription/SubscriptionScreen").then(m => ({ default: m.SubscriptionScreen })), { ssr: false, loading: () => <ScreenSkeleton /> });
 const SuccessScreen      = dynamic(() => import("@/components/success/SuccessScreen").then(m => ({ default: m.SuccessScreen })), { ssr: false, loading: () => <ScreenSkeleton /> });
 
-const ENTRY_STEPS = new Set<FunnelStep>([
-  "paywall",
-  "upsell",
-  "subscription",
-  "success",
-]);
-
 function readEntryStep(): FunnelStep | null {
   if (typeof window === "undefined") return null;
   const step = new URLSearchParams(window.location.search).get("step");
-  return ENTRY_STEPS.has(step as FunnelStep) ? (step as FunnelStep) : null;
+  return isFunnelStep(step) && isGuardedEntryStep(step) ? step : null;
 }
 
 function metadataName(value: unknown): string {
@@ -71,22 +71,31 @@ const verifyPaymentIntent = createSharedPaymentVerifier(
 
 function cleanPaymentReturnUrl() {
   if (typeof window === "undefined") return;
-  const url = new URL(window.location.href);
-  for (const key of [
-    "step",
-    "payment_intent",
-    "payment_intent_client_secret",
-    "redirect_status",
-    "subscription_id",
-  ]) {
-    url.searchParams.delete(key);
-  }
-  const next = `${url.pathname}${url.search}${url.hash}`;
+  const search = stripFunnelEntryParams(window.location.search);
+  const next = `${window.location.pathname}${search}${window.location.hash}`;
   window.history.replaceState(null, "", next);
 }
 
 function afterEffect(callback: () => void) {
   void Promise.resolve().then(callback);
+}
+
+/* Asks the authenticated handoff endpoint to restore the user's real funnel
+   context for a /dashboard/upgrade CTA. The request carries no payment data and
+   the endpoint makes no Stripe call — opening a step is navigation only. Any
+   failure is treated as a recoverable denial, never silent permission. */
+async function fetchUpgradeHandoff(
+  need: UpgradeNeed,
+): Promise<UpgradeHandoffDecision> {
+  try {
+    const res = await fetch(
+      `/api/assessment/upgrade-handoff?need=${encodeURIComponent(need)}`,
+      { headers: { Accept: "application/json" } },
+    );
+    return parseUpgradeHandoffResponse(await res.json());
+  } catch {
+    return { authorized: false, reason: "error" };
+  }
 }
 
 // The quiz step uses opacity:0.01 (not 0) so the browser can measure LCP
@@ -101,11 +110,13 @@ const fade = (isFirst = false) => ({
 interface AssessmentClientProps {
   paidAutoStart?: boolean;
   hasEntryStep?: boolean;
+  hasUpgradeHandoff?: boolean;
 }
 
 export default function AssessmentClient({
   paidAutoStart = false,
   hasEntryStep = false,
+  hasUpgradeHandoff = false,
 }: AssessmentClientProps) {
   const step = useQuizStore((s) => s.currentStep);
   const currentQuestionIndex = useQuizStore((s) => s.currentQuestionIndex);
@@ -115,10 +126,11 @@ export default function AssessmentClient({
   const setStep = useQuizStore((s) => s.setStep);
   const setEmail = useQuizStore((s) => s.setEmail);
   const setName = useQuizStore((s) => s.setName);
+  const resetQuiz = useQuizStore((s) => s.resetQuiz);
   const assessmentStartTracked = useRef(false);
-  const [gateMode, setGateMode] = useState<"checking" | "ready" | "verifying">(
-    hasEntryStep ? "checking" : "ready",
-  );
+  const [gateMode, setGateMode] = useState<
+    "checking" | "ready" | "verifying" | "recovery"
+  >(hasEntryStep || hasUpgradeHandoff ? "checking" : "ready");
   const [gateNotice, setGateNotice] = useState<string | null>(null);
 
   /* The redundant intro screen is gone: a fresh assessment entry lands directly
@@ -158,68 +170,99 @@ export default function AssessmentClient({
     }
   }, [setQuizResultId]);
 
-  /* Post-purchase entry gate (production audit): ?step= alone never shows
-     success/upsell/subscription. Advancement needs either a persisted store
-     position that already earned the step, or a server-verified Stripe
-     redirect return. Everything else lands in a calm recoverable state. */
+  /* Funnel entry gate (production audit): a ?step= query parameter never
+     advances the funnel by itself. A guarded step (paywall/upsell/subscription/
+     success) is honored only when the persisted store already earned it, or —
+     for post-purchase steps — a Stripe redirect return is verified server-side.
+     Everything else is ignored and the user stays at their real position
+     (a fresh store is Q1). The decision is computed by the pure planFunnelEntry
+     helper so the behavior stays unit-testable. */
   useEffect(() => {
     let active = true;
+    const finish = () => {
+      active = false;
+    };
     const runIfActive = (callback: () => void) => {
       afterEffect(() => {
         if (active) callback();
       });
     };
 
-    const entryStep = readEntryStep();
-    if (!entryStep) {
-      runIfActive(() => setGateMode("ready"));
-      return () => {
-        active = false;
-      };
+    /* Authenticated dashboard upgrade handoff (?upgrade=…) takes precedence: a
+       separate, server-verified channel that restores the user's real funnel
+       context and opens the requested step. It never relaxes gateFunnelEntry —
+       login or a query parameter alone is rejected by the endpoint, and an
+       unrestorable result lands on an explicit assessment-required recovery
+       (never a silent Q1 drop). */
+    const upgradeNeed = readUpgradeNeed(window.location.search);
+    if (upgradeNeed) {
+      runIfActive(() => setGateMode("checking"));
+      void fetchUpgradeHandoff(upgradeNeed).then((decision) => {
+        if (!active) return;
+        cleanPaymentReturnUrl();
+        if (decision.authorized) {
+          useQuizStore.setState({
+            email: decision.email,
+            name: decision.name,
+            answers: decision.answers,
+            quizResultId: decision.quizResultId,
+            currentStep: decision.step,
+          });
+          if (decision.quizResultId) {
+            setPersistedQuizResultId(decision.quizResultId);
+          }
+          setGateMode("ready");
+          return;
+        }
+        if (decision.redirectTo) {
+          window.location.assign(decision.redirectTo);
+          return;
+        }
+        setGateMode("recovery");
+      });
+      return finish;
     }
 
-    const params = new URLSearchParams(window.location.search);
-    const paymentIntentId = params.get("payment_intent") ?? "";
-    const rawSubscriptionId = params.get("subscription_id");
-    const subscriptionId = isSubscriptionId(rawSubscriptionId) ? rawSubscriptionId : null;
-    const storeStep = useQuizStore.getState().currentStep;
-    const decision = gatePostPurchaseEntry(
-      entryStep,
-      storeStep,
-      isPaymentIntentId(paymentIntentId),
+    const plan = planFunnelEntry(
+      window.location.search,
+      useQuizStore.getState().currentStep,
     );
 
-    if (decision === "allow") {
-      runIfActive(() => {
-        cleanPaymentReturnUrl();
-        setStep(entryStep);
-        setGateMode("ready");
-      });
-      return () => {
-        active = false;
-      };
+    if (plan.kind === "ready") {
+      runIfActive(() => setGateMode("ready"));
+      return finish;
     }
-    if (decision === "deny") {
-      // No purchase evidence: ignore the query string entirely.
+
+    if (plan.kind === "enter") {
+      // Earned in-app refresh/re-entry: drop the query string and advance.
+      runIfActive(() => {
+        cleanPaymentReturnUrl();
+        setStep(plan.step);
+        setGateMode("ready");
+      });
+      return finish;
+    }
+
+    if (plan.kind === "ignore") {
+      // Not earned and no payment evidence: drop the query string and keep the
+      // legitimate persisted funnel position. The guarded screen never renders.
       runIfActive(() => {
         cleanPaymentReturnUrl();
         setGateMode("ready");
       });
-      return () => {
-        active = false;
-      };
+      return finish;
     }
 
     runIfActive(() => setGateMode("verifying"));
     void verifyPaymentIntent({
-      paymentIntentId,
-      targetStep: entryStep,
-      subscriptionId,
+      paymentIntentId: plan.paymentIntentId,
+      targetStep: plan.step,
+      subscriptionId: plan.subscriptionId,
     }).then((verdict: VerifyVerdict) => {
       if (!active) return;
       cleanPaymentReturnUrl();
       if (verdict === "succeeded") {
-        setStep(entryStep);
+        setStep(plan.step);
         setGateMode("ready");
         return;
       }
@@ -232,9 +275,7 @@ export default function AssessmentClient({
       }
       setGateMode("ready");
     });
-    return () => {
-      active = false;
-    };
+    return finish;
   }, [setStep]);
 
   useEffect(() => {
@@ -266,6 +307,32 @@ export default function AssessmentClient({
       cancelled = true;
     };
   }, [email, setEmail, setName]);
+
+  if (gateMode === "recovery") {
+    return (
+      <main className="v2-screen v2-grain" style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: "32px 20px", textAlign: "center" }}>
+        <p className="v2-hud" style={{ color: "var(--v2-signal-2)" }}>One step first</p>
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: "var(--v2-gold-bright)", maxWidth: 420, lineHeight: 1.3 }}>
+          Finish your assessment to unlock this
+        </h1>
+        <p style={{ fontSize: 14, color: "var(--v2-ink-faint)", maxWidth: 360, lineHeight: 1.6 }}>
+          Your plan is built from your assessment answers. It only takes about 2 minutes — your access then syncs to your account automatically.
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            cleanPaymentReturnUrl();
+            resetQuiz();
+            setGateMode("ready");
+          }}
+          className="v2-cta v2-cta-gold"
+          style={{ marginTop: 6 }}
+        >
+          Take the assessment
+        </button>
+      </main>
+    );
+  }
 
   if (gateMode !== "ready") {
     return (

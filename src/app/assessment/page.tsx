@@ -4,6 +4,7 @@ import {
   shouldAutoStartAssessment,
   type AssessmentSearchParams,
 } from "@/lib/assessment/autostart";
+import { isUpgradeNeed } from "@/lib/dashboard/upgrade-handoff";
 
 export default async function Page({
   searchParams,
@@ -24,7 +25,18 @@ export default async function Page({
     step === "subscription" ||
     step === "success";
 
+  // Authenticated dashboard upgrade handoff (?upgrade=…). Treated like an entry
+  // step so the client opens in a checking state and never flashes Q1 before the
+  // server-verified handoff resolves.
+  const rawUpgrade = params.upgrade;
+  const upgrade = Array.isArray(rawUpgrade) ? rawUpgrade[0] : rawUpgrade;
+  const hasUpgradeHandoff = isUpgradeNeed(upgrade);
+
   return (
-    <AssessmentClient paidAutoStart={paidAutoStart} hasEntryStep={hasEntryStep} />
+    <AssessmentClient
+      paidAutoStart={paidAutoStart}
+      hasEntryStep={hasEntryStep}
+      hasUpgradeHandoff={hasUpgradeHandoff}
+    />
   );
 }

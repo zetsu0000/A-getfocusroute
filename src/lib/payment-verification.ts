@@ -2,17 +2,26 @@ import type { ProductKey } from "@/lib/access/products";
 import type { FunnelStep } from "@/types/quiz";
 
 /**
- * Post-purchase entry gating (production audit, PR 1).
+ * Funnel entry gating (production audit, PR 1).
  *
- * The funnel's post-purchase steps were reachable from the query string
- * alone (/assessment?step=success). These helpers decide — purely, so the
- * rules are unit-testable — whether a ?step= entry may advance the funnel:
+ * Guarded funnel steps (paywall, upsell, subscription, success) were reachable
+ * from the query string alone — /assessment?step=paywall rendered a generic
+ * paywall, /assessment?step=success a generic success — with no earned funnel
+ * context. A query parameter must never advance the funnel by itself. These
+ * helpers decide — purely, so the rules are unit-testable — whether a ?step=
+ * entry may advance the funnel:
  *
- *  - "allow":  pre-purchase step, or the persisted store already earned a
- *              position at/beyond the requested step (legit refresh/return).
- *  - "verify": a Stripe redirect return (payment_intent in the URL) — the
- *              PaymentIntent must be verified server-side before advancing.
- *  - "deny":   no evidence at all — the query string is ignored.
+ *  - "allow":  the persisted store already earned a position at/beyond the
+ *              requested step (a legit in-app refresh or re-entry).
+ *  - "verify": a post-purchase Stripe redirect return (payment_intent in the
+ *              URL) — the PaymentIntent must be verified server-side first.
+ *  - "deny":   no earned position and no payment evidence — the query string is
+ *              ignored and the user stays at their real funnel position.
+ *
+ * paywall is pre-purchase and is never a Stripe redirect target, so it can only
+ * be "allow" (earned) or "deny". Email, a query parameter, or a signed-in
+ * session are never, on their own, treated as proof that a guarded step was
+ * earned.
  */
 
 export const STEP_ORDER: Record<FunnelStep, number> = {
@@ -37,6 +46,24 @@ export function isPostPurchaseStep(step: FunnelStep): boolean {
   return POST_PURCHASE_STEPS.has(step);
 }
 
+/**
+ * The full set of `?step=` values the assessment honors as an entry request.
+ * Every one is gated: it requires earned store state (or, for the post-purchase
+ * subset, verified payment evidence) before the query string may advance the
+ * funnel. The pre-purchase steps (quiz/loading/email/name/chart) are not entry
+ * targets — they are only reached by completing the flow in-app.
+ */
+const GUARDED_ENTRY_STEPS: ReadonlySet<FunnelStep> = new Set([
+  "paywall",
+  "upsell",
+  "subscription",
+  "success",
+]);
+
+export function isGuardedEntryStep(step: FunnelStep): boolean {
+  return GUARDED_ENTRY_STEPS.has(step);
+}
+
 export function isFunnelStep(value: unknown): value is FunnelStep {
   return (
     value === "quiz" ||
@@ -53,15 +80,100 @@ export function isFunnelStep(value: unknown): value is FunnelStep {
 
 export type EntryDecision = "allow" | "verify" | "deny";
 
-export function gatePostPurchaseEntry(
+/**
+ * Decides whether a requested `?step=` entry may advance the funnel. A query
+ * parameter alone never advances it: a guarded step is honored only when the
+ * persisted store already earned it, or — for post-purchase steps — a Stripe
+ * redirect return is present and must be verified server-side.
+ */
+export function gateFunnelEntry(
   requested: FunnelStep,
   storeStep: FunnelStep,
   hasPaymentIntentParam: boolean,
 ): EntryDecision {
-  if (!isPostPurchaseStep(requested)) return "allow";
+  // Unguarded steps (quiz/loading/email/name/chart) are not entry targets and
+  // are never blocked if somehow requested.
+  if (!isGuardedEntryStep(requested)) return "allow";
+  // The persisted store already legitimately reached this step (or further):
+  // a real in-app refresh or re-entry. Honor it.
   if ((STEP_ORDER[storeStep] ?? 0) >= STEP_ORDER[requested]) return "allow";
-  if (hasPaymentIntentParam) return "verify";
+  // Only post-purchase steps are legitimate Stripe redirect targets. A
+  // payment_intent in the URL means we must verify server-side before trusting
+  // it. paywall is never a Stripe return target, so it falls through to deny.
+  if (isPostPurchaseStep(requested) && hasPaymentIntentParam) return "verify";
+  // A query parameter (or email, or a signed-in session) alone is not proof.
   return "deny";
+}
+
+/** Funnel-entry query parameters the gate consumes and then strips from the URL. */
+export const FUNNEL_ENTRY_URL_PARAMS = [
+  "step",
+  "payment_intent",
+  "payment_intent_client_secret",
+  "redirect_status",
+  "subscription_id",
+  "upgrade",
+] as const;
+
+/**
+ * Returns the query string ("?a=b" or "") with every funnel-entry parameter
+ * removed and all unrelated parameters (UTMs, attribution) preserved in order.
+ * Pure, so URL cleanup is observable in tests without a DOM.
+ */
+export function stripFunnelEntryParams(search: string): string {
+  const params = new URLSearchParams(search);
+  for (const key of FUNNEL_ENTRY_URL_PARAMS) params.delete(key);
+  const qs = params.toString();
+  return qs ? `?${qs}` : "";
+}
+
+/**
+ * The action the assessment client should take for a given `?step=` request,
+ * derived purely from the URL search string and the persisted store position.
+ * Keeping this pure makes the entry behavior unit-testable without rendering
+ * React or touching Stripe:
+ *
+ *  - "ready":  no guarded entry requested — render the persisted position.
+ *  - "enter":  the request is earned — clean the URL and advance to `step`.
+ *  - "ignore": the request is not earned — clean the URL and keep the persisted
+ *              position (the query string never advances the funnel).
+ *  - "verify": a post-purchase Stripe return — verify server-side, then advance.
+ */
+export type FunnelEntryAction =
+  | { kind: "ready" }
+  | { kind: "enter"; step: FunnelStep }
+  | { kind: "ignore" }
+  | {
+      kind: "verify";
+      step: FunnelStep;
+      paymentIntentId: string;
+      subscriptionId: string | null;
+    };
+
+export function planFunnelEntry(
+  search: string,
+  storeStep: FunnelStep,
+): FunnelEntryAction {
+  const params = new URLSearchParams(search);
+  const requested = params.get("step");
+  if (!isFunnelStep(requested) || !isGuardedEntryStep(requested)) {
+    return { kind: "ready" };
+  }
+
+  const paymentIntentId = params.get("payment_intent") ?? "";
+  const rawSubscriptionId = params.get("subscription_id");
+  const subscriptionId = isSubscriptionId(rawSubscriptionId)
+    ? rawSubscriptionId
+    : null;
+
+  const decision = gateFunnelEntry(
+    requested,
+    storeStep,
+    isPaymentIntentId(paymentIntentId),
+  );
+  if (decision === "allow") return { kind: "enter", step: requested };
+  if (decision === "deny") return { kind: "ignore" };
+  return { kind: "verify", step: requested, paymentIntentId, subscriptionId };
 }
 
 /** Strict shape check before the id is ever sent to Stripe. */

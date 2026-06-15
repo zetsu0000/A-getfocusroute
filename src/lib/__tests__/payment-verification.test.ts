@@ -16,12 +16,15 @@ import { POST as verifyPayment } from "@/app/api/verify-payment/route";
 import {
   createSharedPaymentVerifier,
   expectedFunnelStepForOneTimeProduct,
-  gatePostPurchaseEntry,
+  gateFunnelEntry,
+  isGuardedEntryStep,
   isPaymentIntentId,
   isPostPurchaseStep,
   isSubscriptionId,
   oneTimeProductCanAdvanceToStep,
+  planFunnelEntry,
   pollVerifyPayment,
+  stripFunnelEntryParams,
   subscriptionVerificationEvidenceReady,
   verdictForPaymentIntentStatus,
 } from "../payment-verification";
@@ -108,35 +111,163 @@ beforeEach(() => {
   setStripePriceEnv();
 });
 
-describe("gatePostPurchaseEntry", () => {
+describe("gateFunnelEntry", () => {
+  it("denies direct paywall access from a fresh quiz store (a query param is not proof)", () => {
+    // A query parameter must never advance the funnel by itself.
+    expect(gateFunnelEntry("paywall", "quiz", false)).toBe("deny");
+    expect(gateFunnelEntry("paywall", "loading", false)).toBe("deny");
+  });
+
+  it("denies direct paywall access from email or chart so earned progress is kept", () => {
+    // "deny" means the client never setStep(paywall) — the store stays at the
+    // legitimate email/chart position rather than being overwritten.
+    expect(gateFunnelEntry("paywall", "email", false)).toBe("deny");
+    expect(gateFunnelEntry("paywall", "name", false)).toBe("deny");
+    expect(gateFunnelEntry("paywall", "chart", false)).toBe("deny");
+  });
+
+  it("never treats a payment_intent param as proof for the pre-purchase paywall", () => {
+    // paywall is never a Stripe redirect target, so even a PI param cannot
+    // unlock it — only earned store state can.
+    expect(gateFunnelEntry("paywall", "quiz", true)).toBe("deny");
+    expect(gateFunnelEntry("paywall", "chart", true)).toBe("deny");
+  });
+
+  it("allows paywall once the store has genuinely reached paywall", () => {
+    expect(gateFunnelEntry("paywall", "paywall", false)).toBe("allow");
+  });
+
+  it("restores paywall safely from any later earned store position", () => {
+    expect(gateFunnelEntry("paywall", "upsell", false)).toBe("allow");
+    expect(gateFunnelEntry("paywall", "subscription", false)).toBe("allow");
+    expect(gateFunnelEntry("paywall", "success", false)).toBe("allow");
+  });
+
   it("denies direct success access with no purchase evidence", () => {
-    expect(gatePostPurchaseEntry("success", "quiz", false)).toBe("deny");
-    expect(gatePostPurchaseEntry("success", "paywall", false)).toBe("deny");
+    expect(gateFunnelEntry("success", "quiz", false)).toBe("deny");
+    expect(gateFunnelEntry("success", "paywall", false)).toBe("deny");
   });
 
   it("denies direct upsell/subscription entry without prerequisite evidence", () => {
-    expect(gatePostPurchaseEntry("upsell", "quiz", false)).toBe("deny");
-    expect(gatePostPurchaseEntry("upsell", "paywall", false)).toBe("deny");
-    expect(gatePostPurchaseEntry("subscription", "chart", false)).toBe("deny");
-    expect(gatePostPurchaseEntry("subscription", "upsell", false)).toBe("deny");
+    expect(gateFunnelEntry("upsell", "quiz", false)).toBe("deny");
+    expect(gateFunnelEntry("upsell", "paywall", false)).toBe("deny");
+    expect(gateFunnelEntry("subscription", "chart", false)).toBe("deny");
+    expect(gateFunnelEntry("subscription", "upsell", false)).toBe("deny");
   });
 
-  it("requires server verification for Stripe redirect returns", () => {
-    expect(gatePostPurchaseEntry("upsell", "paywall", true)).toBe("verify");
-    expect(gatePostPurchaseEntry("subscription", "upsell", true)).toBe("verify");
-    expect(gatePostPurchaseEntry("success", "subscription", true)).toBe("verify");
+  it("requires server verification for post-purchase Stripe redirect returns", () => {
+    expect(gateFunnelEntry("upsell", "paywall", true)).toBe("verify");
+    expect(gateFunnelEntry("subscription", "upsell", true)).toBe("verify");
+    expect(gateFunnelEntry("success", "subscription", true)).toBe("verify");
   });
 
   it("allows entries the persisted store already earned", () => {
-    expect(gatePostPurchaseEntry("upsell", "upsell", false)).toBe("allow");
-    expect(gatePostPurchaseEntry("subscription", "subscription", false)).toBe("allow");
-    expect(gatePostPurchaseEntry("success", "success", false)).toBe("allow");
+    expect(gateFunnelEntry("upsell", "upsell", false)).toBe("allow");
+    expect(gateFunnelEntry("subscription", "subscription", false)).toBe("allow");
+    expect(gateFunnelEntry("success", "success", false)).toBe("allow");
   });
 
-  it("leaves pre-purchase steps accessible", () => {
-    expect(gatePostPurchaseEntry("paywall", "quiz", false)).toBe("allow");
+  it("classifies guarded steps and never blocks unguarded steps", () => {
+    expect(isGuardedEntryStep("paywall")).toBe(true);
+    expect(isGuardedEntryStep("upsell")).toBe(true);
+    expect(isGuardedEntryStep("success")).toBe(true);
+    expect(isGuardedEntryStep("chart")).toBe(false);
+    expect(isGuardedEntryStep("quiz")).toBe(false);
     expect(isPostPurchaseStep("paywall")).toBe(false);
     expect(isPostPurchaseStep("success")).toBe(true);
+    // Unguarded steps are never blocked even if requested directly.
+    expect(gateFunnelEntry("chart", "quiz", false)).toBe("allow");
+  });
+});
+
+describe("planFunnelEntry (assessment client entry behavior)", () => {
+  it("ignores a fresh ?step=paywall: the paywall never renders and no verify runs", () => {
+    // "ignore" means the client never setStep(paywall) — PaywallScreen never
+    // mounts (so paywall_viewed never fires) and the payment verifier is never
+    // called.
+    expect(planFunnelEntry("?step=paywall", "quiz")).toEqual({ kind: "ignore" });
+  });
+
+  it("ignores ?step=paywall from email/chart, preserving the earned position", () => {
+    expect(planFunnelEntry("?step=paywall", "email")).toEqual({ kind: "ignore" });
+    expect(planFunnelEntry("?step=paywall", "chart")).toEqual({ kind: "ignore" });
+  });
+
+  it("enters paywall when the store already earned it (in-app refresh / re-entry)", () => {
+    expect(planFunnelEntry("?step=paywall", "paywall")).toEqual({
+      kind: "enter",
+      step: "paywall",
+    });
+    expect(planFunnelEntry("?step=paywall", "success")).toEqual({
+      kind: "enter",
+      step: "paywall",
+    });
+  });
+
+  it("renders the persisted position when no guarded step is requested", () => {
+    // A plain refresh of a persisted paywall has no ?step= param: the gate is a
+    // no-op and the store renders the paywall directly.
+    expect(planFunnelEntry("", "paywall")).toEqual({ kind: "ready" });
+    expect(planFunnelEntry("?utm_source=fb", "quiz")).toEqual({ kind: "ready" });
+    expect(planFunnelEntry("?step=chart", "quiz")).toEqual({ kind: "ready" });
+  });
+
+  it("verifies a valid post-purchase Stripe redirect return before advancing", () => {
+    expect(
+      planFunnelEntry(
+        "?step=upsell&payment_intent=pi_1234567890abcdef&redirect_status=succeeded",
+        "quiz",
+      ),
+    ).toEqual({
+      kind: "verify",
+      step: "upsell",
+      paymentIntentId: "pi_1234567890abcdef",
+      subscriptionId: null,
+    });
+
+    expect(
+      planFunnelEntry(
+        "?step=success&payment_intent=pi_1234567890abcdef&subscription_id=sub_1234567890abcdef",
+        "quiz",
+      ),
+    ).toEqual({
+      kind: "verify",
+      step: "success",
+      paymentIntentId: "pi_1234567890abcdef",
+      subscriptionId: "sub_1234567890abcdef",
+    });
+  });
+
+  it("ignores a post-purchase ?step= with no or malformed payment evidence", () => {
+    expect(planFunnelEntry("?step=success", "quiz")).toEqual({ kind: "ignore" });
+    expect(
+      planFunnelEntry("?step=upsell&payment_intent=not_a_pi", "quiz"),
+    ).toEqual({ kind: "ignore" });
+  });
+});
+
+describe("stripFunnelEntryParams (URL cleanup)", () => {
+  it("removes the step parameter on a denied entry", () => {
+    expect(stripFunnelEntryParams("?step=paywall")).toBe("");
+  });
+
+  it("preserves UTMs and unrelated attribution while removing funnel params", () => {
+    expect(
+      stripFunnelEntryParams("?step=paywall&utm_source=fb&utm_campaign=launch"),
+    ).toBe("?utm_source=fb&utm_campaign=launch");
+  });
+
+  it("strips every Stripe return parameter and keeps the rest in order", () => {
+    expect(
+      stripFunnelEntryParams(
+        "?step=success&payment_intent=pi_1234567890abcdef&payment_intent_client_secret=pi_1234_secret_x&redirect_status=succeeded&subscription_id=sub_1234567890abcdef&utm_medium=cpc&gclid=abc",
+      ),
+    ).toBe("?utm_medium=cpc&gclid=abc");
+  });
+
+  it("returns an empty query string when only funnel params were present", () => {
+    expect(stripFunnelEntryParams("?payment_intent=pi_1234567890abcdef")).toBe("");
+    expect(stripFunnelEntryParams("")).toBe("");
   });
 });
 
