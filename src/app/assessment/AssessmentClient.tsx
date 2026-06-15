@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, m }  from "framer-motion";
 import { useQuizStore }             from "@/store/quizStore";
 import type { FunnelStep }          from "@/types/quiz";
-import { getPersistedQuizResultId } from "@/lib/quizResultId";
+import { getPersistedQuizResultId, setPersistedQuizResultId } from "@/lib/quizResultId";
 import { createClient }             from "@/lib/supabase/client";
 import { QuizEngine }               from "@/components/quiz/QuizEngine";
 import { FIRST_PARTY_EVENTS }       from "@/lib/analytics/events";
@@ -23,6 +23,12 @@ import {
   type VerifyPaymentRequest,
   type VerifyVerdict,
 } from "@/lib/payment-verification";
+import {
+  parseUpgradeHandoffResponse,
+  readUpgradeNeed,
+  type UpgradeHandoffDecision,
+  type UpgradeNeed,
+} from "@/lib/dashboard/upgrade-handoff";
 
 function ScreenSkeleton() {
   return (
@@ -74,6 +80,24 @@ function afterEffect(callback: () => void) {
   void Promise.resolve().then(callback);
 }
 
+/* Asks the authenticated handoff endpoint to restore the user's real funnel
+   context for a /dashboard/upgrade CTA. The request carries no payment data and
+   the endpoint makes no Stripe call — opening a step is navigation only. Any
+   failure is treated as a recoverable denial, never silent permission. */
+async function fetchUpgradeHandoff(
+  need: UpgradeNeed,
+): Promise<UpgradeHandoffDecision> {
+  try {
+    const res = await fetch(
+      `/api/assessment/upgrade-handoff?need=${encodeURIComponent(need)}`,
+      { headers: { Accept: "application/json" } },
+    );
+    return parseUpgradeHandoffResponse(await res.json());
+  } catch {
+    return { authorized: false, reason: "error" };
+  }
+}
+
 // The quiz step uses opacity:0.01 (not 0) so the browser can measure LCP
 // immediately on first paint instead of waiting for the animation to complete.
 const fade = (isFirst = false) => ({
@@ -86,11 +110,13 @@ const fade = (isFirst = false) => ({
 interface AssessmentClientProps {
   paidAutoStart?: boolean;
   hasEntryStep?: boolean;
+  hasUpgradeHandoff?: boolean;
 }
 
 export default function AssessmentClient({
   paidAutoStart = false,
   hasEntryStep = false,
+  hasUpgradeHandoff = false,
 }: AssessmentClientProps) {
   const step = useQuizStore((s) => s.currentStep);
   const currentQuestionIndex = useQuizStore((s) => s.currentQuestionIndex);
@@ -100,10 +126,11 @@ export default function AssessmentClient({
   const setStep = useQuizStore((s) => s.setStep);
   const setEmail = useQuizStore((s) => s.setEmail);
   const setName = useQuizStore((s) => s.setName);
+  const resetQuiz = useQuizStore((s) => s.resetQuiz);
   const assessmentStartTracked = useRef(false);
-  const [gateMode, setGateMode] = useState<"checking" | "ready" | "verifying">(
-    hasEntryStep ? "checking" : "ready",
-  );
+  const [gateMode, setGateMode] = useState<
+    "checking" | "ready" | "verifying" | "recovery"
+  >(hasEntryStep || hasUpgradeHandoff ? "checking" : "ready");
   const [gateNotice, setGateNotice] = useState<string | null>(null);
 
   /* The redundant intro screen is gone: a fresh assessment entry lands directly
@@ -160,6 +187,37 @@ export default function AssessmentClient({
         if (active) callback();
       });
     };
+
+    /* Authenticated dashboard upgrade handoff (?upgrade=…) takes precedence: a
+       separate, server-verified channel that restores the user's real funnel
+       context and opens the requested step. It never relaxes gateFunnelEntry —
+       login or a query parameter alone is rejected by the endpoint, and an
+       unrestorable result lands on an explicit assessment-required recovery
+       (never a silent Q1 drop). */
+    const upgradeNeed = readUpgradeNeed(window.location.search);
+    if (upgradeNeed) {
+      runIfActive(() => setGateMode("checking"));
+      void fetchUpgradeHandoff(upgradeNeed).then((decision) => {
+        if (!active) return;
+        cleanPaymentReturnUrl();
+        if (decision.authorized) {
+          useQuizStore.setState({
+            email: decision.email,
+            name: decision.name,
+            answers: decision.answers,
+            quizResultId: decision.quizResultId,
+            currentStep: decision.step,
+          });
+          if (decision.quizResultId) {
+            setPersistedQuizResultId(decision.quizResultId);
+          }
+          setGateMode("ready");
+          return;
+        }
+        setGateMode("recovery");
+      });
+      return finish;
+    }
 
     const plan = planFunnelEntry(
       window.location.search,
@@ -245,6 +303,32 @@ export default function AssessmentClient({
       cancelled = true;
     };
   }, [email, setEmail, setName]);
+
+  if (gateMode === "recovery") {
+    return (
+      <main className="v2-screen v2-grain" style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: "32px 20px", textAlign: "center" }}>
+        <p className="v2-hud" style={{ color: "var(--v2-signal-2)" }}>One step first</p>
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: "var(--v2-gold-bright)", maxWidth: 420, lineHeight: 1.3 }}>
+          Finish your assessment to unlock this
+        </h1>
+        <p style={{ fontSize: 14, color: "var(--v2-ink-faint)", maxWidth: 360, lineHeight: 1.6 }}>
+          Your plan is built from your assessment answers. It only takes about 2 minutes — your access then syncs to your account automatically.
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            cleanPaymentReturnUrl();
+            resetQuiz();
+            setGateMode("ready");
+          }}
+          className="v2-cta v2-cta-gold"
+          style={{ marginTop: 6 }}
+        >
+          Take the assessment
+        </button>
+      </main>
+    );
+  }
 
   if (gateMode !== "ready") {
     return (

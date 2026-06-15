@@ -112,6 +112,7 @@ export const FUNNEL_ENTRY_URL_PARAMS = [
   "payment_intent_client_secret",
   "redirect_status",
   "subscription_id",
+  "upgrade",
 ] as const;
 
 /**

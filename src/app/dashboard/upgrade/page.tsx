@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { answersFromQuizRow } from "@/lib/dashboard/answers-from-quiz-row";
 import { requireDashboardLogin } from "@/lib/dashboard/require-dashboard";
 import {
   hasBonusesAccess,
@@ -7,35 +8,32 @@ import {
   hasMembershipAccess,
   hasRoadmapAccess,
 } from "@/lib/dashboard/unlock";
+import { isUpgradeNeed, type UpgradeNeed } from "@/lib/dashboard/upgrade-handoff";
 
 export const metadata = {
   title: "Upgrade · FocusRoute",
 };
 
-const COPY: Record<string, { title: string; body: string; cta: string; href: string }> = {
+const COPY: Record<UpgradeNeed, { title: string; body: string; cta: string }> = {
   brain_profile: {
     title: "Your Brain Profile is locked",
     body: "Complete checkout to unlock your personalized cognitive profile, Executive Function Radar, and bonus resources.",
     cta: "Unlock Brain Profile",
-    href: "/assessment?step=paywall",
   },
   roadmap_28_day: {
     title: "28-Day Protocol",
     body: "Add the 28-Day Protocol to get structured daily micro-actions calibrated to your Brain Profile.",
     cta: "Unlock 28-Day Protocol",
-    href: "/assessment?step=upsell",
   },
   bonus_toolkit: {
     title: "Bonuses",
     body: "Bonus resources are included with qualifying purchases — toolkit, audio guides, and explain scripts.",
     cta: "View upgrade options",
-    href: "/assessment?step=upsell",
   },
   membership: {
     title: "FocusRoute Membership",
     body: "Membership keeps your Brain OS active — with monthly resets, retakes when your context shifts, and protocol updates built around how your brain changes over time.",
     cta: "View membership options",
-    href: "/assessment?step=subscription",
   },
 };
 
@@ -43,7 +41,6 @@ const DEFAULT = {
   title: "Unlock your Brain Profile",
   body: "Complete the assessment checkout to access your personalized Brain Profile, 28-Day Protocol, and bonus library. Access syncs to your account automatically after payment.",
   cta: "Unlock Brain Profile",
-  href: "/assessment?step=paywall",
 };
 
 export default async function DashboardUpgradePage({
@@ -53,7 +50,20 @@ export default async function DashboardUpgradePage({
 }) {
   const snap = await requireDashboardLogin();
   const { need } = await searchParams;
-  const hint = (need && COPY[need]) || DEFAULT;
+  const needKey: UpgradeNeed = isUpgradeNeed(need) ? need : "brain_profile";
+  const hint = isUpgradeNeed(need) ? COPY[need] : DEFAULT;
+
+  /* Authenticated funnel handoff: only route into the funnel when a completed
+     assessment exists to restore (the server-verified handoff reopens the right
+     step with the user's real context). Without one, send the user to take the
+     assessment first — explicitly, never a silent Q1 drop. CTA wording matches
+     whichever destination applies. */
+  const hasQuizResult = answersFromQuizRow(snap.latestQuizResult).length > 0;
+  const ctaHref = hasQuizResult ? `/assessment?upgrade=${needKey}` : "/assessment";
+  const ctaLabel = hasQuizResult ? hint.cta : "Take the 2-minute assessment";
+  const ctaBody = hasQuizResult
+    ? hint.body
+    : "Your plan is built from your assessment answers. Take the 2-minute assessment to unlock checkout — your access then syncs to this account automatically.";
 
   const u = snap.entitlementSet;
   const hasAny =
@@ -83,10 +93,10 @@ export default async function DashboardUpgradePage({
           {hint.title}
         </h2>
         <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.65, marginBottom: 20 }}>
-          {hint.body}
+          {ctaBody}
         </p>
         <Link
-          href={hint.href}
+          href={ctaHref}
           prefetch={false}
           style={{
             display: "inline-flex",
@@ -100,7 +110,7 @@ export default async function DashboardUpgradePage({
             boxShadow: "var(--shadow-btn-accent)",
           }}
         >
-          {hint.cta}
+          {ctaLabel}
         </Link>
       </div>
 
