@@ -19,13 +19,31 @@ const src = readFileSync(
 );
 
 describe("paywall primary offer content", () => {
-  it("exposes exactly three concrete deliverables (learn / first step / availability)", () => {
-    const d = paywallDeliverables("building consistency");
-    expect(d).toHaveLength(3);
-    expect(d[0].toLowerCase()).toContain("pattern breakdown");
-    expect(d[0]).toContain("building consistency"); // plan focus woven in, not invented
-    expect(d[1].toLowerCase()).toContain("first next step");
-    expect(d[2].toLowerCase()).toContain("account");
+  it("exposes exactly the three approved customer-outcome deliverables", () => {
+    const d = paywallDeliverables();
+    expect(d).toEqual([
+      "A 6-point map of your strongest focus patterns and biggest friction points",
+      "Your personalized conditions for starting, staying on track, and recovering when focus slips",
+      "A clear explanation of your pattern you can use yourself or share with someone else",
+    ]);
+  });
+
+  it("keeps sales copy free of internal section labels and 'first step'", () => {
+    const joined = paywallDeliverables().join(" ");
+    for (const label of [
+      "Executive Function Radar",
+      "Cognitive Signature",
+      "Best Focus Conditions",
+      "Task Initiation Style",
+      "Recovery Style",
+      "Explain-It-To-Someone Script",
+    ]) {
+      expect(joined).not.toContain(label);
+    }
+    expect(joined.toLowerCase()).not.toContain("first step");
+    // The earlier abstract wording is also gone.
+    expect(joined.toLowerCase()).not.toContain("full pattern breakdown");
+    expect(joined.toLowerCase()).not.toContain("first next step");
   });
 
   it("states trust as a single quiet line, not three separate chips", () => {
@@ -39,14 +57,17 @@ describe("paywall primary offer content", () => {
   });
 
   it("builds the final CTA as one string with an em dash around the price", () => {
-    expect(payCtaLabel("$27")).toBe("Pay $27 \u2014 Unlock My Plan");
+    expect(payCtaLabel("$27")).toBe("Pay $27 \u2014 Unlock My Profile");
     // em dash, not the old ampersand fragment that collapsed to "$27&"
     expect(payCtaLabel("$27")).toContain("\u2014");
     expect(payCtaLabel("$27")).not.toContain("&");
     // single space on each side of the price token (spacing can't break)
     expect(payCtaLabel("$27")).toContain("Pay $27 \u2014");
+    // names the purchased product as the "profile", consistent with the result CTA
+    expect(payCtaLabel("$27")).toContain("Unlock My Profile");
+    expect(payCtaLabel("$27")).not.toContain("Unlock My Plan");
     // stays driven by the centralized price value
-    expect(payCtaLabel("$49")).toBe("Pay $49 \u2014 Unlock My Plan");
+    expect(payCtaLabel("$49")).toBe("Pay $49 \u2014 Unlock My Profile");
   });
 
   it("states the non-diagnosis boundary without medical claims", () => {

@@ -11,6 +11,8 @@
  *   - not a diagnosis   → /disclaimer
  */
 
+import { PAYWALL_DELIVERABLES } from "@/lib/paid-value";
+
 /** The id the top CTA scrolls to and the checkout-reached observer watches. */
 export const PAYWALL_CHECKOUT_ID = "paywall-checkout";
 
@@ -18,16 +20,15 @@ export const PAYWALL_CHECKOUT_ID = "paywall-checkout";
 export const PAYWALL_TRUST_CHECKOUT_ID = "paywall-trust-checkout";
 
 /**
- * The three concrete deliverables in plain words — what the user learns, the
- * practical first step, and where the plan stays available. Derived from the
- * user's plan focus; no invented deliverables.
+ * The three paywall deliverables, expressed as customer outcomes. Sourced from
+ * the centralized paid-value module so the result preview and the paywall stay
+ * in sync. Each translates a real shipped Brain Profile section (radar +
+ * strengths/friction, focus conditions + initiation/recovery guidance, and the
+ * Explain-It-To-Someone Script granted via the bonus_explain_script
+ * entitlement). No invented deliverables; exactly three.
  */
-export function paywallDeliverables(planFocus: string): string[] {
-  return [
-    `Your full pattern breakdown — and a plan for ${planFocus}`,
-    "Your first next step, small enough to try today",
-    "Instant access in your account, kept there for you",
-  ];
+export function paywallDeliverables(): string[] {
+  return [...PAYWALL_DELIVERABLES];
 }
 
 /**
@@ -50,7 +51,7 @@ export const SECURE_PAYMENT_LINE = "Secure payment processed by Stripe";
  * (previously two JSX fragments rendered as "Pay $27& Unlock My Plan").
  */
 export function payCtaLabel(price: string): string {
-  return `Pay ${price} \u2014 Unlock My Plan`;
+  return `Pay ${price} \u2014 Unlock My Profile`;
 }
 
 /**

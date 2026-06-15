@@ -8,7 +8,7 @@ import { useQuizStore } from "@/store/quizStore";
 import { safeName } from "@/lib/personalization";
 import { getSignatureFromAnswers, echoSentence } from "@/lib/signature";
 import { getSignatureIdentity } from "@/lib/signature-identity";
-import { firstStepTeaserFor } from "@/lib/first-step-teaser";
+import { resultLockedRows } from "@/lib/paid-value";
 import { SigilArtifact } from "@/components/v2/SigilArtifact";
 import { FocusField } from "@/components/v2/FocusField";
 import { ResultSocialProof } from "@/components/signature/SocialProof";
@@ -35,13 +35,12 @@ export function ChartScreen() {
   const identity = getSignatureIdentity(signature.signature);
   const echo = echoSentence(answers);
 
-  /* One concrete, pattern-specific withheld deliverable leads the locked
-     list — "full plan" stays abstract without it (audit: the bridge needs
-     one exact next step withheld, not just categories). */
-  const lockedRows = [
-    firstStepTeaserFor(signature.signature),
-    ...signature.unlockTeaser.slice(0, 2),
-  ];
+  /* The locked preview teases the paid value as practical outcomes (audit PR4):
+     a 6-point focus map, the conditions that help you start/stay/recover, and one
+     pattern-specific outcome that stays unique per signature. Centralized in
+     paid-value so the result and the paywall stay in sync; every line is grounded
+     in a real shipped Brain Profile section. */
+  const lockedRows = resultLockedRows(signature.signature);
   const saveStarted = useRef(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [saveEmail, setSaveEmail] = useState<string | null>(null);
@@ -310,7 +309,7 @@ export function ChartScreen() {
         >
           <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 12 }}>
             <Lock size={13} color="var(--v2-gold)" />
-            <HudLabel tone="gold">Locked — full focus plan</HudLabel>
+            <HudLabel tone="gold">Locked — full focus profile</HudLabel>
           </div>
           <div
             style={{
@@ -368,10 +367,10 @@ export function ChartScreen() {
             {personalName ? (
               <>
                 <em style={{ fontStyle: "italic", color: identity.accent }}>{personalName},</em>{" "}
-                your full plan focuses on {signature.planFocus}.
+                your full profile shows where momentum breaks — and how to get it back.
               </>
             ) : (
-              <>Your full plan focuses on {signature.planFocus}.</>
+              <>Your full profile shows where momentum breaks — and how to get it back.</>
             )}
           </p>
         </m.div>
@@ -415,7 +414,7 @@ export function ChartScreen() {
             style={{ width: "100%", minHeight: 58, fontSize: 16 }}
           >
             <Lock size={15} strokeWidth={2.4} />
-            Unlock My Full Plan
+            Unlock My Full Profile
           </m.button>
         )}
       </div>

@@ -33,12 +33,22 @@ describe("result bridge name handling", () => {
     expect(src).toContain("{personalName ? (");
     // named branch keeps the personalized, italicized lead-in
     expect(src).toContain("{personalName},</em>");
-    expect(src).toContain("your full plan focuses on {signature.planFocus}.");
-    // unnamed branch starts with the capitalized sentence
-    expect(src).toContain("Your full plan focuses on {signature.planFocus}.");
+    // named branch: exact short benefit copy, lowercase lead-in after the name
+    expect(src).toContain(
+      "your full profile shows where momentum breaks — and how to get it back.",
+    );
+    // unnamed branch: the same short sentence, capitalized
+    expect(src).toContain(
+      "Your full profile shows where momentum breaks — and how to get it back.",
+    );
   });
 
-  it("never emits the 'you, your full plan' string", () => {
-    expect(src.toLowerCase()).not.toContain("you, your full plan");
+  it("removes the earlier long bridge copy and the abstract plan-focus sentence", () => {
+    expect(src).not.toContain("what helps it return, and the conditions that make focus easier to hold");
+    expect(src).not.toContain("your full plan focuses on");
+  });
+
+  it("never emits the 'you, your full' string", () => {
+    expect(src.toLowerCase()).not.toContain("you, your full");
   });
 });
