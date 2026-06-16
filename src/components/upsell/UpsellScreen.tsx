@@ -242,7 +242,7 @@ function UpsellPaymentSkeleton() {
     >
       <div style={{ height: 52, borderRadius: 12, background: "rgba(148,163,255,0.08)", border: "1px solid var(--v2-line)" }} />
       <div style={{ height: 52, borderRadius: 12, background: "rgba(148,163,255,0.08)", border: "1px solid var(--v2-line)" }} />
-      <div style={{ height: 58, borderRadius: 999, background: "rgba(217,188,127,0.1)", border: "1px solid rgba(217,188,127,0.25)" }} />
+      <div style={{ height: 58, borderRadius: 999, background: "rgba(var(--v2-gold-rgb),0.1)", border: "1px solid rgba(var(--v2-gold-rgb),0.25)" }} />
     </div>
   );
 }
@@ -502,7 +502,7 @@ export function UpsellScreen() {
 
         {/* Price anchor */}
         <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-          className="v2-panel" style={{ padding: "18px 20px", borderColor: "rgba(217,188,127,0.25)" }}>
+          className="v2-panel" style={{ padding: "18px 20px", borderColor: "rgba(var(--v2-gold-rgb),0.25)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
             <div>
               <p style={{ fontSize: 14, fontWeight: 700, color: "var(--v2-ink)" }}>{BRAIN_OS.protocol}</p>

@@ -72,7 +72,9 @@ const stripeAppearanceDark = {
   },
   rules: {
     ".Input": {
-      border: "1.5px solid rgba(var(--v2-line-rgb),0.18)",
+      // Stripe renders in an iframe — CSS custom properties don't cross it, so
+      // these MUST stay literal colors (the dark vault palette).
+      border: "1.5px solid rgba(163,178,255,0.18)",
       backgroundColor: "#0B0E18",
       padding: "12px 14px",
       fontSize: "15px",
@@ -80,8 +82,8 @@ const stripeAppearanceDark = {
       transition: "border-color 0.15s",
     },
     ".Input:focus": {
-      border: "1.5px solid rgba(var(--v2-cyan-rgb),0.7)",
-      boxShadow: "0 0 0 3px rgba(var(--v2-signal-rgb),0.18)",
+      border: "1.5px solid rgba(155,232,255,0.7)",
+      boxShadow: "0 0 0 3px rgba(124,138,255,0.18)",
       outline: "none",
     },
     ".Label": {
@@ -91,14 +93,14 @@ const stripeAppearanceDark = {
       marginBottom: "5px",
     },
     ".Tab": {
-      border: "1.5px solid rgba(var(--v2-line-rgb),0.18)",
+      border: "1.5px solid rgba(163,178,255,0.18)",
       backgroundColor: "#0B0E18",
       padding: "10px 16px",
       fontWeight: "600",
     },
     ".Tab--selected": {
-      border: "1.5px solid rgba(var(--v2-cyan-rgb),0.7)",
-      backgroundColor: "rgba(var(--v2-signal-rgb),0.12)",
+      border: "1.5px solid rgba(155,232,255,0.7)",
+      backgroundColor: "rgba(124,138,255,0.12)",
       color: "#EEF1FF",
       boxShadow: "none",
     },
@@ -339,7 +341,7 @@ function PaymentSkeleton() {
       {[56, 56, 50].map((h, i) => (
         <div key={i} style={{ height: h, borderRadius: 12, background: "rgba(148,163,255,0.08)", border: "1px solid var(--v2-line)" }} />
       ))}
-      <div style={{ height: 58, borderRadius: 16, background: "rgba(217,188,127,0.1)", border: "1px solid rgba(217,188,127,0.25)", marginTop: 4 }} />
+      <div style={{ height: 58, borderRadius: 16, background: "rgba(var(--v2-gold-rgb),0.1)", border: "1px solid rgba(var(--v2-gold-rgb),0.25)", marginTop: 4 }} />
     </div>
   );
 }
@@ -526,7 +528,7 @@ export function PaywallScreen() {
           position: "fixed",
           inset: 0,
           background:
-            "radial-gradient(80% 50% at 50% 0%, rgba(217,188,127,0.07) 0%, transparent 55%), radial-gradient(70% 45% at 50% 110%, rgba(var(--v2-signal-rgb),0.1) 0%, transparent 60%)",
+            "radial-gradient(80% 50% at 50% 0%, rgba(var(--v2-gold-rgb),0.07) 0%, transparent 55%), radial-gradient(70% 45% at 50% 110%, rgba(var(--v2-signal-rgb),0.1) 0%, transparent 60%)",
           pointerEvents: "none",
         }}
       />
@@ -541,7 +543,7 @@ export function PaywallScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.04 }}
             className="v2-panel"
-            style={{ padding: "20px 20px 18px", borderColor: "rgba(217,188,127,0.28)" }}
+            style={{ padding: "20px 20px 18px", borderColor: "rgba(var(--v2-gold-rgb),0.28)" }}
           >
             <HudLabel tone="signal" style={{ marginBottom: 10 }}>
               Your pattern: {signature.title}
@@ -560,7 +562,7 @@ export function PaywallScreen() {
             <div style={{ marginTop: 14, display: "grid", gap: 9 }}>
               {paywallDeliverables().map((item) => (
                 <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                  <div style={{ width: 18, height: 18, borderRadius: 999, background: "rgba(217,188,127,0.14)", border: "1px solid rgba(217,188,127,0.4)", display: "flex", alignItems: "center", justifyContent: "center", marginTop: 1, flexShrink: 0 }}>
+                  <div style={{ width: 18, height: 18, borderRadius: 999, background: "rgba(var(--v2-gold-rgb),0.14)", border: "1px solid rgba(var(--v2-gold-rgb),0.4)", display: "flex", alignItems: "center", justifyContent: "center", marginTop: 1, flexShrink: 0 }}>
                     <Check size={10} color="var(--v2-gold)" strokeWidth={3} />
                   </div>
                   <span style={{ fontSize: 13.5, color: "var(--v2-ink-dim)", lineHeight: 1.5 }}>{item}</span>
@@ -643,7 +645,7 @@ export function PaywallScreen() {
                 exit={{ opacity: 0, y: 8 }}
                 transition={{ delay: 0.02, duration: 0.24 }}
                 className="v2-panel"
-                style={{ padding: "18px", borderColor: "rgba(217,188,127,0.34)", scrollMarginTop: 16 }}
+                style={{ padding: "18px", borderColor: "rgba(var(--v2-gold-rgb),0.34)", scrollMarginTop: 16 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
                   <Lock size={13} color="var(--v2-gold)" />
