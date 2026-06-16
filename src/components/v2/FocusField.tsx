@@ -215,7 +215,7 @@ export function FocusField({
         const twinkle = 0.55 + Math.sin(t * 2 + p.seed * 9) * 0.25;
         // Light field: smaller, denser-reading dots so the route stays crisp
         // rather than turning into a pale haze.
-        const alpha = (light ? 0.22 + c * 0.26 : 0.30 + c * 0.32) * twinkle * intensity;
+        const alpha = (light ? 0.26 + c * 0.30 : 0.30 + c * 0.32) * twinkle * intensity;
         const s = p.size * (light ? 5 + c * 3 : 7 + c * 4);
 
         ctx!.globalAlpha = alpha;

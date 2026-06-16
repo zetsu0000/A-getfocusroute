@@ -22,14 +22,31 @@ import { Moon, Sun } from "lucide-react";
  *   - exposes `theme` + `toggleTheme` for the wrapper class, canvas blending,
  *     and the Stripe Payment Element appearance (which can't read CSS vars).
  *
- * SSR renders the default (light) and the stored value is applied after mount,
- * so there is no hydration mismatch — only a one-frame correction for returning
- * users who picked dark.
+ * The chosen theme is mirrored to a cookie that the server reads to pick the
+ * correct initial theme for SSR, so returning users no longer get a one-frame
+ * flash of the default theme. localStorage stays the client store and is
+ * reconciled (with the cookie backfilled) on mount for pre-cookie visitors.
  */
 
 export type FunnelTheme = "light" | "dark";
 
-const STORAGE_KEY = "focusroute-funnel-theme";
+export const THEME_STORAGE_KEY = "focusroute-funnel-theme";
+const STORAGE_KEY = THEME_STORAGE_KEY;
+
+/** Persist to localStorage (client store) and a cookie (SSR hint, so the server
+ *  can render the correct shell and there is no theme flash). Client-only. */
+function persistTheme(next: FunnelTheme) {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, next);
+  } catch {
+    /* localStorage may be unavailable (private mode) */
+  }
+  try {
+    document.cookie = `${STORAGE_KEY}=${next}; path=/; max-age=31536000; samesite=lax`;
+  } catch {
+    /* ignore cookie failures */
+  }
+}
 
 type FunnelThemeContextValue = {
   theme: FunnelTheme;
@@ -39,39 +56,43 @@ type FunnelThemeContextValue = {
 
 const FunnelThemeContext = createContext<FunnelThemeContextValue | null>(null);
 
-export function FunnelThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<FunnelTheme>("light");
+export function FunnelThemeProvider({
+  children,
+  initialTheme = "light",
+}: {
+  children: ReactNode;
+  /** Server-resolved theme (from the cookie) so the first paint matches the
+   *  user's choice and there is no hydration flash. */
+  initialTheme?: FunnelTheme;
+}) {
+  const [theme, setThemeState] = useState<FunnelTheme>(initialTheme);
 
-  // Apply the stored preference after hydration (client-only).
+  // Reconcile with localStorage on mount: covers visitors who chose a theme
+  // before the SSR cookie existed, and backfills the cookie so the next load is
+  // flash-free. A no-op when the cookie already matched the stored preference.
   useEffect(() => {
     try {
       const stored = window.localStorage.getItem(STORAGE_KEY);
-      if (stored === "light" || stored === "dark") {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration of the persisted theme from localStorage on mount
-        setThemeState(stored);
+      const resolved = stored === "light" || stored === "dark" ? stored : initialTheme;
+      if (resolved !== initialTheme) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time reconciliation of the persisted theme on mount
+        setThemeState(resolved);
       }
+      persistTheme(resolved);
     } catch {
-      /* localStorage may be unavailable (private mode) — keep the default. */
+      /* localStorage may be unavailable (private mode) — keep the SSR theme. */
     }
-  }, []);
+  }, [initialTheme]);
 
   const setTheme = useCallback((next: FunnelTheme) => {
     setThemeState(next);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, next);
-    } catch {
-      /* ignore persistence failures */
-    }
+    persistTheme(next);
   }, []);
 
   const toggleTheme = useCallback(() => {
     setThemeState((prev) => {
       const next = prev === "light" ? "dark" : "light";
-      try {
-        window.localStorage.setItem(STORAGE_KEY, next);
-      } catch {
-        /* ignore */
-      }
+      persistTheme(next);
       return next;
     });
   }, []);

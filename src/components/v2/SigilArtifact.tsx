@@ -120,9 +120,11 @@ export function SigilArtifact({
             0 0 60px rgba(${identity.accentRgb},0.16)
           `
             : `
-            0 1px 0 rgba(255,255,255,0.9) inset,
-            0 18px 50px rgba(20,30,90,0.13),
-            0 0 50px rgba(${identity.accentRgb},0.12)
+            inset 0 1px 0 rgba(255,255,255,0.95),
+            inset 0 0 0 1px rgba(255,255,255,0.5),
+            0 2px 6px rgba(20,30,90,0.08),
+            0 22px 60px rgba(20,30,90,0.16),
+            0 0 60px rgba(${identity.accentRgb},0.16)
           `,
         }}
       >
