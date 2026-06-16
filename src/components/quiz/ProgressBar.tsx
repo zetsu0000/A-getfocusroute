@@ -57,7 +57,7 @@ export function ProgressBar({ currentIndex }: ProgressBarProps) {
           inset: "6px 0",
           borderRadius: 999,
           background: dark
-            ? "repeating-linear-gradient(90deg, rgba(163,178,255,0.28) 0 7px, transparent 7px 14px)"
+            ? "repeating-linear-gradient(90deg, rgba(var(--v2-line-rgb),0.28) 0 7px, transparent 7px 14px)"
             : "repeating-linear-gradient(90deg, rgba(70,85,230,0.30) 0 7px, transparent 7px 14px)",
           opacity: dark ? 0.5 : 0.6,
           height: 2,
@@ -100,7 +100,7 @@ export function ProgressBar({ currentIndex }: ProgressBarProps) {
           height: 3,
           borderRadius: 999,
           background: "var(--v2-grad-signal)",
-          boxShadow: "0 0 12px rgba(124,138,255,0.55)",
+          boxShadow: "0 0 12px rgba(var(--v2-signal-rgb),0.55)",
           zIndex: 2,
         }}
       >
@@ -116,7 +116,7 @@ export function ProgressBar({ currentIndex }: ProgressBarProps) {
             height: 9,
             borderRadius: 999,
             background: "var(--v2-signal-2)",
-            boxShadow: "0 0 10px var(--v2-signal-2), 0 0 22px rgba(155,232,255,0.5)",
+            boxShadow: "0 0 10px var(--v2-signal-2), 0 0 22px rgba(var(--v2-cyan-rgb),0.5)",
             animation: "v2-pulse-ring 2.2s ease-out infinite",
           }}
         />

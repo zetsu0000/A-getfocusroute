@@ -264,8 +264,8 @@ function ProtocolRouteStrip() {
             background: i < 4
               ? "var(--v2-grad-signal)"
               : "rgba(148,163,255,0.14)",
-            border: i < 4 ? "none" : "1px solid rgba(163,178,255,0.25)",
-            boxShadow: i < 4 ? "0 0 8px rgba(124,138,255,0.6)" : "none",
+            border: i < 4 ? "none" : "1px solid rgba(var(--v2-line-rgb),0.25)",
+            boxShadow: i < 4 ? "0 0 8px rgba(var(--v2-signal-rgb),0.6)" : "none",
           }}
         />
       ))}
@@ -424,7 +424,7 @@ export function UpsellScreen() {
     >
       {/* Offer context */}
       <div style={{
-        background: "linear-gradient(90deg, rgba(124,138,255,0.16), rgba(155,232,255,0.08))",
+        background: "linear-gradient(90deg, rgba(var(--v2-signal-rgb),0.16), rgba(var(--v2-cyan-rgb),0.08))",
         borderBottom: "1px solid var(--v2-line)",
         padding: "12px 20px",
         display: "flex", alignItems: "center", justifyContent: "center", gap: 10, flexWrap: "wrap",
@@ -465,7 +465,7 @@ export function UpsellScreen() {
               Your Brain Profile — your pattern, your radar map, and your first next steps.
             </p>
           </div>
-          <div style={{ padding: "15px 18px", background: "rgba(124,138,255,0.06)" }}>
+          <div style={{ padding: "15px 18px", background: "rgba(var(--v2-signal-rgb),0.06)" }}>
             <HudLabel tone="signal" style={{ marginBottom: 6, fontSize: 9.5 }}>This adds</HudLabel>
             <p style={{ fontSize: 13, color: "var(--v2-ink-dim)", lineHeight: 1.55, marginBottom: 10 }}>
               The {BRAIN_OS.protocol} — a day-by-day practice system built on that profile: 28 short daily actions instead of figuring out each day yourself.
@@ -488,7 +488,7 @@ export function UpsellScreen() {
               { icon: CheckCircle2, title: "Weekly milestone check-ins", desc: "Track real progress with your personalized metrics." },
             ].map(({ icon: Icon, title, desc }) => (
               <div key={title} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                <div style={{ width: 36, height: 36, borderRadius: 11, flexShrink: 0, background: "rgba(124,138,255,0.1)", border: "1px solid rgba(124,138,255,0.28)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: 36, height: 36, borderRadius: 11, flexShrink: 0, background: "rgba(var(--v2-signal-rgb),0.1)", border: "1px solid rgba(var(--v2-signal-rgb),0.28)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Icon size={15} color="var(--v2-signal-2)" />
                 </div>
                 <div>

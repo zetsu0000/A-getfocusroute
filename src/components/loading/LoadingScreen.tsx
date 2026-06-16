@@ -97,7 +97,7 @@ export function LoadingScreen() {
 
       {/* The field organizes in lockstep with the computation. */}
       <div aria-hidden="true" style={{ position: "fixed", inset: 0, pointerEvents: "none" }}>
-        <FocusField coherence={progress / 100} intensity={0.8} showRoute theme={theme} />
+        <FocusField key={theme} coherence={progress / 100} intensity={0.8} showRoute theme={theme} />
       </div>
 
       {/* Title + dial */}
@@ -134,7 +134,7 @@ export function LoadingScreen() {
               position: "absolute",
               inset: 0,
               borderRadius: "50%",
-              border: "1px dashed rgba(124,138,255,0.35)",
+              border: "1px dashed rgba(var(--v2-signal-rgb),0.35)",
             }}
           />
           {/* radar sweep — the system actively scanning */}
@@ -145,7 +145,7 @@ export function LoadingScreen() {
               inset: 6,
               borderRadius: "50%",
               background:
-                "conic-gradient(from 0deg, rgba(155,232,255,0.20) 0deg, rgba(155,232,255,0.04) 46deg, transparent 80deg)",
+                "conic-gradient(from 0deg, rgba(var(--v2-cyan-rgb),0.20) 0deg, rgba(var(--v2-cyan-rgb),0.04) 46deg, transparent 80deg)",
               animation: "v2-radar-spin 3.2s linear infinite",
             }}
           />
@@ -155,11 +155,11 @@ export function LoadingScreen() {
               position: "absolute",
               inset: 26,
               borderRadius: "50%",
-              border: "1px solid rgba(163,178,255,0.16)",
+              border: "1px solid rgba(var(--v2-line-rgb),0.16)",
             }}
           />
           <svg width="148" height="148" viewBox="0 0 148 148" style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}>
-            <circle cx="74" cy="74" r="63" fill="none" stroke="rgba(163,178,255,0.14)" strokeWidth="2.5" />
+            <circle cx="74" cy="74" r="63" fill="none" style={{ stroke: "rgba(var(--v2-line-rgb),0.14)" }} strokeWidth="2.5" />
             <circle
               cx="74" cy="74" r="63" fill="none"
               stroke="url(#v2-load-grad)"
@@ -211,9 +211,9 @@ export function LoadingScreen() {
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  border: `1px solid ${done ? "rgba(155,232,255,0.8)" : active ? "rgba(124,138,255,0.7)" : "var(--v2-line)"}`,
-                  background: done ? "rgba(124,138,255,0.18)" : "transparent",
-                  boxShadow: active ? "0 0 10px rgba(124,138,255,0.5)" : "none",
+                  border: `1px solid ${done ? "rgba(var(--v2-cyan-rgb),0.8)" : active ? "rgba(var(--v2-signal-rgb),0.7)" : "var(--v2-line)"}`,
+                  background: done ? "rgba(var(--v2-signal-rgb),0.18)" : "transparent",
+                  boxShadow: active ? "0 0 10px rgba(var(--v2-signal-rgb),0.5)" : "none",
                   animation: active ? "v2-blink 1.1s ease-in-out infinite" : "none",
                 }}
               >

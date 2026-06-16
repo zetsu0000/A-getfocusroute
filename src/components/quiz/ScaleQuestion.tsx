@@ -79,7 +79,7 @@ export function ScaleQuestion({ question }: ScaleQuestionProps) {
           className="v2-panel"
           style={{
             padding: "22px 22px",
-            borderColor: "rgba(124,138,255,0.3)",
+            borderColor: "rgba(var(--v2-signal-rgb),0.3)",
             position: "relative",
             overflow: "hidden",
           }}
@@ -93,7 +93,7 @@ export function ScaleQuestion({ question }: ScaleQuestionProps) {
               bottom: 0,
               width: 3,
               background: "var(--v2-grad-signal)",
-              boxShadow: "0 0 14px rgba(124,138,255,0.6)",
+              boxShadow: "0 0 14px rgba(var(--v2-signal-rgb),0.6)",
             }}
           />
           <p className="v2-hud" style={{ marginBottom: 10, fontSize: 9.5 }}>
@@ -143,11 +143,11 @@ export function ScaleQuestion({ question }: ScaleQuestionProps) {
                   border: `1.5px solid ${isSelected ? (dark ? "rgba(124,138,255,0.85)" : "rgba(70,85,230,0.85)") : (dark ? "var(--v2-line)" : "var(--v2-line-bright)")}`,
                   background: isSelected
                     ? (dark
-                        ? "linear-gradient(150deg, rgba(124,138,255,0.2), rgba(155,232,255,0.08))"
+                        ? "linear-gradient(150deg, rgba(var(--v2-signal-rgb),0.2), rgba(var(--v2-cyan-rgb),0.08))"
                         : "linear-gradient(150deg, rgba(70,85,230,0.14), rgba(20,135,181,0.07))")
                     : (dark
                         ? "linear-gradient(165deg, rgba(148,163,255,0.07), rgba(148,163,255,0.03))"
-                        : "linear-gradient(165deg, rgba(255,255,255,0.9), rgba(243,245,252,0.7))"),
+                        : "linear-gradient(165deg, rgba(255,255,255,0.96), rgba(244,247,253,0.86))"),
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
@@ -157,11 +157,11 @@ export function ScaleQuestion({ question }: ScaleQuestionProps) {
                   transition: "background 0.15s, border-color 0.15s, opacity 0.2s, box-shadow 0.15s",
                   boxShadow: isSelected
                     ? (dark
-                        ? "0 0 0 1px rgba(124,138,255,0.3), 0 8px 28px rgba(124,138,255,0.25)"
+                        ? "0 0 0 1px rgba(var(--v2-signal-rgb),0.3), 0 8px 28px rgba(var(--v2-signal-rgb),0.25)"
                         : "0 0 0 1px rgba(70,85,230,0.25), 0 8px 24px rgba(70,85,230,0.18)")
                     : (dark
                         ? "inset 0 1px 0 rgba(255,255,255,0.05)"
-                        : "inset 0 1px 0 rgba(255,255,255,0.7)"),
+                        : "inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 2px rgba(20,30,90,0.06), 0 4px 12px rgba(20,30,90,0.07)"),
                 }}
               >
                 <span style={{

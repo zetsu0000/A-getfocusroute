@@ -197,6 +197,7 @@ export function ChartScreen() {
       {/* fully-organized field in the user's accent — the route has been found */}
       <div aria-hidden="true" style={{ position: "fixed", inset: 0, pointerEvents: "none" }}>
         <FocusField
+          key={theme}
           coherence={0.95}
           intensity={0.5}
           showRoute

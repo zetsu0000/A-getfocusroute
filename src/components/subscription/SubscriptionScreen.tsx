@@ -224,12 +224,12 @@ function PlanCard({ planKey, isSelected, onSelect }: { planKey: "annual" | "mont
         borderRadius: 20,
         overflow: "hidden",
         background: isSelected
-          ? "linear-gradient(150deg, rgba(124,138,255,0.14), rgba(155,232,255,0.05))"
+          ? "linear-gradient(150deg, rgba(var(--v2-signal-rgb),0.14), rgba(var(--v2-cyan-rgb),0.05))"
           : "linear-gradient(165deg, rgba(148,163,255,0.07), rgba(148,163,255,0.03))",
-        border: isSelected ? "2px solid rgba(124,138,255,0.8)" : "2px solid var(--v2-line)",
+        border: isSelected ? "2px solid rgba(var(--v2-signal-rgb),0.8)" : "2px solid var(--v2-line)",
         boxShadow: isSelected
           ? (dark
-              ? "0 0 0 1px rgba(124,138,255,0.25), 0 16px 50px rgba(124,138,255,0.2)"
+              ? "0 0 0 1px rgba(var(--v2-signal-rgb),0.25), 0 16px 50px rgba(var(--v2-signal-rgb),0.2)"
               : "0 0 0 1px rgba(70,85,230,0.25), 0 16px 44px rgba(70,85,230,0.18)")
           : (dark
               ? "inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 36px rgba(2,3,10,0.45)"
@@ -271,7 +271,7 @@ function PlanCard({ planKey, isSelected, onSelect }: { planKey: "annual" | "mont
             marginTop: 4, width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
             border: `2px solid ${isSelected ? "var(--v2-signal)" : "var(--v2-line-bright)"}`,
             display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: isSelected ? "0 0 12px rgba(124,138,255,0.5)" : "none",
+            boxShadow: isSelected ? "0 0 12px rgba(var(--v2-signal-rgb),0.5)" : "none",
           }}>
             {isSelected && (
               <m.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500, damping: 25 }}

@@ -121,7 +121,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
           display: "flex", alignItems: "center", justifyContent: "space-between",
           borderBottom: "1px solid var(--v2-line)",
           background:
-            "radial-gradient(110% 160% at 0% 0%, rgba(124,138,255,0.18) 0%, transparent 55%)",
+            "radial-gradient(110% 160% at 0% 0%, rgba(var(--v2-signal-rgb),0.18) 0%, transparent 55%)",
         }}>
           <div>
             <HudLabel tone="signal" style={{ marginBottom: 6 }}>
@@ -139,7 +139,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
             style={{ position: "relative", width: 76, height: 76, display: "grid", placeItems: "center" }}
           >
             <svg width="76" height="76" viewBox="0 0 76 76" style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}>
-              <circle cx="38" cy="38" r="33" fill="none" stroke="rgba(163,178,255,0.15)" strokeWidth="3" />
+              <circle cx="38" cy="38" r="33" fill="none" style={{ stroke: "rgba(var(--v2-line-rgb),0.15)" }} strokeWidth="3" />
               <m.circle
                 cx="38" cy="38" r="33" fill="none"
                 stroke={level.darkColor}
@@ -370,11 +370,11 @@ function SoftPanel({
         borderRadius: 14,
         border:
           tone === "signal"
-            ? "1px solid rgba(155,232,255,0.28)"
-            : "1px solid rgba(163,178,255,0.16)",
+            ? "1px solid rgba(var(--v2-cyan-rgb),0.28)"
+            : "1px solid rgba(var(--v2-line-rgb),0.16)",
         background:
           tone === "signal"
-            ? "linear-gradient(160deg, rgba(124,138,255,0.16), rgba(155,232,255,0.07))"
+            ? "linear-gradient(160deg, rgba(var(--v2-signal-rgb),0.16), rgba(var(--v2-cyan-rgb),0.07))"
             : "linear-gradient(165deg, rgba(148,163,255,0.08), rgba(148,163,255,0.03))",
       }}
     >
@@ -428,7 +428,7 @@ function ClarityInfoContent({ question }: { question: QuizQuestion }) {
             width: 2,
             height: 28,
             borderRadius: 999,
-            background: "linear-gradient(to bottom, transparent, rgba(155,232,255,0.75), transparent)",
+            background: "linear-gradient(to bottom, transparent, rgba(var(--v2-cyan-rgb),0.75), transparent)",
           }}
         />
       </div>
@@ -447,8 +447,8 @@ function ClarityInfoContent({ question }: { question: QuizQuestion }) {
           padding: "12px 14px",
           borderRadius: 999,
           color: "var(--v2-ink)",
-          background: "rgba(155,232,255,0.08)",
-          border: "1px solid rgba(155,232,255,0.24)",
+          background: "rgba(var(--v2-cyan-rgb),0.08)",
+          border: "1px solid rgba(var(--v2-cyan-rgb),0.24)",
           fontSize: 13.2,
           fontWeight: 760,
           lineHeight: 1.35,
@@ -490,7 +490,7 @@ function StartInfoContent({ question }: { question: QuizQuestion }) {
             style={{
               minHeight: 58,
               borderRadius: 14,
-              border: "1px solid rgba(163,178,255,0.18)",
+              border: "1px solid rgba(var(--v2-line-rgb),0.18)",
               background: "rgba(148,163,255,0.05)",
               display: "flex",
               flexDirection: "column",
@@ -524,8 +524,8 @@ function StartInfoContent({ question }: { question: QuizQuestion }) {
               display: "grid",
               placeItems: "center",
               color: "var(--v2-signal-2)",
-              border: "1px solid rgba(155,232,255,0.32)",
-              background: "rgba(155,232,255,0.07)",
+              border: "1px solid rgba(var(--v2-cyan-rgb),0.32)",
+              background: "rgba(var(--v2-cyan-rgb),0.07)",
               fontFamily: "var(--v2-font-mono)",
               fontSize: 15,
             }}
@@ -540,8 +540,8 @@ function StartInfoContent({ question }: { question: QuizQuestion }) {
             style={{
               minHeight: 58,
               borderRadius: 14,
-              border: "1px solid rgba(163,178,255,0.18)",
-              background: "linear-gradient(160deg, rgba(124,138,255,0.17), rgba(155,232,255,0.07))",
+              border: "1px solid rgba(var(--v2-line-rgb),0.18)",
+              background: "linear-gradient(160deg, rgba(var(--v2-signal-rgb),0.17), rgba(var(--v2-cyan-rgb),0.07))",
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
@@ -597,7 +597,7 @@ function RecoveryInfoContent({ question }: { question: QuizQuestion }) {
             top: 7,
             bottom: 16,
             width: 1,
-            background: "linear-gradient(to bottom, rgba(163,178,255,0.18), rgba(155,232,255,0.56), rgba(163,178,255,0.14))",
+            background: "linear-gradient(to bottom, rgba(var(--v2-line-rgb),0.18), rgba(var(--v2-cyan-rgb),0.56), rgba(var(--v2-line-rgb),0.14))",
           }}
         />
         {steps.map((step, i) => {
@@ -624,8 +624,8 @@ function RecoveryInfoContent({ question }: { question: QuizQuestion }) {
                   height: 13,
                   borderRadius: "50%",
                   background: isRoute ? "var(--v2-grad-signal)" : "rgba(148,163,255,0.12)",
-                  border: isRoute ? "none" : "1px solid rgba(163,178,255,0.34)",
-                  boxShadow: isRoute ? "0 0 16px rgba(124,138,255,0.55)" : "none",
+                  border: isRoute ? "none" : "1px solid rgba(var(--v2-line-rgb),0.34)",
+                  boxShadow: isRoute ? "0 0 16px rgba(var(--v2-signal-rgb),0.55)" : "none",
                 }}
               />
               <SoftPanel tone={isRoute ? "signal" : "quiet"}>
@@ -699,10 +699,10 @@ function SystemInfoContent({ question }: { question: QuizQuestion }) {
               minHeight: 36,
               padding: "8px 10px",
               borderRadius: 13,
-              border: "1px solid rgba(163,178,255,0.17)",
+              border: "1px solid rgba(var(--v2-line-rgb),0.17)",
               background:
                 i === layers.length - 1
-                  ? "linear-gradient(160deg, rgba(124,138,255,0.18), rgba(155,232,255,0.07))"
+                  ? "linear-gradient(160deg, rgba(var(--v2-signal-rgb),0.18), rgba(var(--v2-cyan-rgb),0.07))"
                   : "rgba(148,163,255,0.055)",
               color: i === layers.length - 1 ? "var(--v2-ink)" : "var(--v2-ink-dim)",
               fontSize: 12.2,
@@ -824,7 +824,7 @@ function GenericInfoCard({
               position: "absolute",
               inset: 0,
               borderRadius: "50%",
-              border: "1px dashed rgba(124,138,255,0.4)",
+              border: "1px dashed rgba(var(--v2-signal-rgb),0.4)",
             }}
           />
           <span
@@ -833,7 +833,7 @@ function GenericInfoCard({
               position: "absolute",
               inset: 13,
               borderRadius: "50%",
-              border: "1px solid rgba(163,178,255,0.22)",
+              border: "1px solid rgba(var(--v2-line-rgb),0.22)",
             }}
           />
           <span
@@ -842,7 +842,7 @@ function GenericInfoCard({
               position: "absolute",
               inset: -18,
               borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(124,138,255,0.22) 0%, transparent 65%)",
+              background: "radial-gradient(circle, rgba(var(--v2-signal-rgb),0.22) 0%, transparent 65%)",
               filter: "blur(8px)",
             }}
           />
@@ -850,11 +850,11 @@ function GenericInfoCard({
             width: isStrategic ? 66 : 86,
             height: isStrategic ? 66 : 86,
             borderRadius: "50%",
-            background: "linear-gradient(150deg, rgba(124,138,255,0.20), rgba(155,232,255,0.06))",
-            border: "1px solid rgba(163,178,255,0.4)",
+            background: "linear-gradient(150deg, rgba(var(--v2-signal-rgb),0.20), rgba(var(--v2-cyan-rgb),0.06))",
+            border: "1px solid rgba(var(--v2-line-rgb),0.4)",
             display: "flex", alignItems: "center", justifyContent: "center",
             color: "var(--v2-signal-2)",
-            boxShadow: "0 14px 44px rgba(124,138,255,0.3), inset 0 1px 0 rgba(255,255,255,0.16)",
+            boxShadow: "0 14px 44px rgba(var(--v2-signal-rgb),0.3), inset 0 1px 0 rgba(255,255,255,0.16)",
           }}>
             <StageIcon size={isStrategic ? 28 : 36} strokeWidth={1.6} />
           </div>

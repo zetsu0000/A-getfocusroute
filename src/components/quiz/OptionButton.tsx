@@ -55,19 +55,19 @@ export function OptionButton({ option, isSelected, inputType, onClick }: OptionB
         borderRadius: 16,
         background: isSelected
           ? (dark
-              ? "linear-gradient(120deg, rgba(124,138,255,0.18), rgba(155,232,255,0.08))"
+              ? "linear-gradient(120deg, rgba(var(--v2-signal-rgb),0.18), rgba(var(--v2-cyan-rgb),0.08))"
               : "linear-gradient(120deg, rgba(70,85,230,0.14), rgba(20,135,181,0.07))")
           : (dark
               ? "linear-gradient(165deg, rgba(148,163,255,0.07), rgba(148,163,255,0.03))"
-              : "linear-gradient(165deg, rgba(255,255,255,0.9), rgba(243,245,252,0.7))"),
+              : "linear-gradient(165deg, rgba(255,255,255,0.96), rgba(244,247,253,0.86))"),
         border: `1.5px solid ${isSelected ? (dark ? "rgba(124,138,255,0.85)" : "rgba(70,85,230,0.85)") : (dark ? "var(--v2-line)" : "var(--v2-line-bright)")}`,
         boxShadow: isSelected
           ? (dark
-              ? "0 0 0 1px rgba(124,138,255,0.3), 0 8px 30px rgba(124,138,255,0.22), inset 0 1px 0 rgba(255,255,255,0.1)"
+              ? "0 0 0 1px rgba(var(--v2-signal-rgb),0.3), 0 8px 30px rgba(var(--v2-signal-rgb),0.22), inset 0 1px 0 rgba(255,255,255,0.1)"
               : "0 0 0 1px rgba(70,85,230,0.25), 0 10px 26px rgba(70,85,230,0.18), inset 0 1px 0 rgba(255,255,255,0.7)")
           : (dark
               ? "inset 0 1px 0 rgba(255,255,255,0.05), 0 6px 18px rgba(2,3,10,0.35)"
-              : "inset 0 1px 0 rgba(255,255,255,0.7), 0 2px 6px rgba(20,30,90,0.05)"),
+              : "inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 2px rgba(20,30,90,0.06), 0 5px 16px rgba(20,30,90,0.08)"),
         backdropFilter: "blur(10px)",
         WebkitBackdropFilter: "blur(10px)",
         transition: "border-color 0.15s, background 0.15s, box-shadow 0.15s",

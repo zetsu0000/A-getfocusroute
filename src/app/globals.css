@@ -177,6 +177,10 @@ h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-
   --v2-signal-2:    #9BE8FF;
   --v2-signal-rgb:  124, 138, 255;
   --v2-cyan-rgb:    155, 232, 255;
+  /* Line periwinkle as RGB — lets glow/border literals theme via a token.
+     Value matches the raw 163,178,255 used across the dark UI, so swapping
+     literals → var(--v2-line-rgb) is byte-identical in dark. */
+  --v2-line-rgb:    163, 178, 255;
   --v2-grad-signal: linear-gradient(92deg, #7C8AFF 0%, #9BE8FF 100%);
 
   /* Gold — reserved exclusively for purchase / unlock moments */
@@ -639,6 +643,9 @@ h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-
   --v2-signal-2:    #1487B5;
   --v2-signal-rgb:  70, 85, 230;
   --v2-cyan-rgb:    20, 135, 181;
+  /* Line token re-keyed to a cool indigo hairline so every glow/border that
+     was hard-coded to the dark periwinkle reads as daylight ink on white. */
+  --v2-line-rgb:    48, 64, 150;
   --v2-grad-signal: linear-gradient(92deg, #4655E6 0%, #1487B5 100%);
 
   /* Gold — muted antique gold; "bright" must read as TEXT on white */
@@ -652,20 +659,30 @@ h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-
   --v2-error:       #C53A2E;
   --v2-error-rgb:   197, 58, 46;
 
-  /* Precision elevation — daylight shadow replaces the dark-world glow */
-  --v2-shadow-sm:   0 1px 2px rgba(20, 30, 90, 0.06), 0 1px 3px rgba(20, 30, 90, 0.05);
-  --v2-shadow-md:   0 2px 6px rgba(20, 30, 90, 0.06), 0 8px 24px rgba(20, 30, 90, 0.08);
-  --v2-shadow-lg:   0 4px 14px rgba(20, 30, 90, 0.08), 0 18px 50px rgba(20, 30, 90, 0.12);
+  /* Precision elevation — daylight shadow replaces the dark-world glow.
+     A tight contact shadow + a wider soft shadow read as a real raised
+     instrument on the field, so white cards separate instead of dissolving.
+     Tuned restrained: depth, never a heavy generic drop-shadow. */
+  --v2-shadow-sm:   0 1px 2px rgba(20, 30, 90, 0.08), 0 1px 3px rgba(20, 30, 90, 0.06);
+  --v2-shadow-md:   0 1px 2px rgba(20, 30, 90, 0.07), 0 6px 16px rgba(20, 30, 90, 0.10), 0 14px 40px rgba(20, 30, 90, 0.08);
+  --v2-shadow-lg:   0 2px 6px rgba(20, 30, 90, 0.09), 0 14px 30px rgba(20, 30, 90, 0.12), 0 30px 70px rgba(20, 30, 90, 0.14);
+
+  /* Pearl edge-light — a cool inner rim that catches the daylight on raised
+     and selected surfaces. Reusable so cards share one material vocabulary. */
+  --v2-edge-light:  inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
 
   color-scheme: light;
 }
 
-/* Daylight shell — soft instrument atmosphere instead of nebula void */
+/* Daylight shell — soft instrument atmosphere instead of nebula void. The
+   trailing edge vignette is the quiet move that makes white cards read: it
+   darkens the far field a touch so centred surfaces sit forward of it. */
 .v2-light .v2-screen {
   background:
     radial-gradient(120% 75% at 50% -12%, rgba(70, 85, 230, 0.10) 0%, transparent 56%),
     radial-gradient(95% 65% at 88% 105%, rgba(20, 135, 181, 0.08) 0%, transparent 55%),
     radial-gradient(80% 70% at 8% 28%, rgba(120, 110, 230, 0.06) 0%, transparent 60%),
+    radial-gradient(145% 115% at 50% 45%, transparent 58%, rgba(28, 40, 105, 0.05) 100%),
     var(--v2-bg);
   color: var(--v2-ink);
 }
@@ -677,14 +694,17 @@ h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-
   mix-blend-mode: multiply;
 }
 
-/* Glass panel — real frosted white card with daylight elevation */
+/* Glass panel — real frosted white card with daylight elevation. The pearl
+   edge-light + a hairline indigo outer rim give the white surface a defined
+   material edge so it never melts into the field. */
 .v2-light .v2-panel {
-  background: linear-gradient(165deg, var(--v2-glass-2), var(--v2-glass) 60%);
+  background: linear-gradient(168deg, #FFFFFF 0%, var(--v2-glass-2) 100%);
   border: 1px solid var(--v2-line-bright);
   backdrop-filter: blur(18px) saturate(1.4);
   -webkit-backdrop-filter: blur(18px) saturate(1.4);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    var(--v2-edge-light),
+    0 0 0 1px rgba(48, 64, 150, 0.04),
     var(--v2-shadow-md);
 }
 

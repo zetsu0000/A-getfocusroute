@@ -72,7 +72,7 @@ const stripeAppearanceDark = {
   },
   rules: {
     ".Input": {
-      border: "1.5px solid rgba(163,178,255,0.18)",
+      border: "1.5px solid rgba(var(--v2-line-rgb),0.18)",
       backgroundColor: "#0B0E18",
       padding: "12px 14px",
       fontSize: "15px",
@@ -80,8 +80,8 @@ const stripeAppearanceDark = {
       transition: "border-color 0.15s",
     },
     ".Input:focus": {
-      border: "1.5px solid rgba(155,232,255,0.7)",
-      boxShadow: "0 0 0 3px rgba(124,138,255,0.18)",
+      border: "1.5px solid rgba(var(--v2-cyan-rgb),0.7)",
+      boxShadow: "0 0 0 3px rgba(var(--v2-signal-rgb),0.18)",
       outline: "none",
     },
     ".Label": {
@@ -91,14 +91,14 @@ const stripeAppearanceDark = {
       marginBottom: "5px",
     },
     ".Tab": {
-      border: "1.5px solid rgba(163,178,255,0.18)",
+      border: "1.5px solid rgba(var(--v2-line-rgb),0.18)",
       backgroundColor: "#0B0E18",
       padding: "10px 16px",
       fontWeight: "600",
     },
     ".Tab--selected": {
-      border: "1.5px solid rgba(155,232,255,0.7)",
-      backgroundColor: "rgba(124,138,255,0.12)",
+      border: "1.5px solid rgba(var(--v2-cyan-rgb),0.7)",
+      backgroundColor: "rgba(var(--v2-signal-rgb),0.12)",
       color: "#EEF1FF",
       boxShadow: "none",
     },
@@ -526,7 +526,7 @@ export function PaywallScreen() {
           position: "fixed",
           inset: 0,
           background:
-            "radial-gradient(80% 50% at 50% 0%, rgba(217,188,127,0.07) 0%, transparent 55%), radial-gradient(70% 45% at 50% 110%, rgba(124,138,255,0.1) 0%, transparent 60%)",
+            "radial-gradient(80% 50% at 50% 0%, rgba(217,188,127,0.07) 0%, transparent 55%), radial-gradient(70% 45% at 50% 110%, rgba(var(--v2-signal-rgb),0.1) 0%, transparent 60%)",
           pointerEvents: "none",
         }}
       />

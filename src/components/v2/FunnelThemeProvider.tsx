@@ -47,6 +47,7 @@ export function FunnelThemeProvider({ children }: { children: ReactNode }) {
     try {
       const stored = window.localStorage.getItem(STORAGE_KEY);
       if (stored === "light" || stored === "dark") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration of the persisted theme from localStorage on mount
         setThemeState(stored);
       }
     } catch {
@@ -122,19 +123,32 @@ export function ThemeToggleButton() {
   const { theme, toggleTheme } = useFunnelTheme();
   const isLight = theme === "light";
 
+  const hover = (on: boolean) => (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (e.pointerType !== "mouse") return;
+    const el = e.currentTarget;
+    el.style.color = on ? "var(--v2-ink)" : "var(--v2-ink-dim)";
+    el.style.borderColor = on ? "var(--v2-signal)" : "var(--v2-line-bright)";
+    el.style.transform = on ? "translateY(-1px)" : "translateY(0)";
+  };
+
   return (
     <button
       type="button"
       onClick={toggleTheme}
       aria-label={isLight ? "Switch to dark mode" : "Switch to light mode"}
+      aria-pressed={!isLight}
       title={isLight ? "Switch to dark mode" : "Switch to light mode"}
+      onPointerEnter={hover(true)}
+      onPointerLeave={hover(false)}
       style={{
         position: "fixed",
         top: "calc(env(safe-area-inset-top, 0px) + 14px)",
         right: "calc(env(safe-area-inset-right, 0px) + 14px)",
         zIndex: 80,
-        width: 40,
-        height: 40,
+        // 44px hit target (WCAG 2.5.5) — the visual pill stays compact via the
+        // centred icon, but the tap area clears the mobile minimum.
+        width: 44,
+        height: 44,
         borderRadius: 999,
         display: "inline-flex",
         alignItems: "center",
