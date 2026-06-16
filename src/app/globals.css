@@ -620,9 +620,11 @@ h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-
    automatically; component files only override hard-coded literals.
    ════════════════════════════════════════════════════════════════════ */
 .v2-light {
-  /* Atmosphere — cool daylight, never a flat #fff */
-  --v2-bg:        #F3F5FC;
-  --v2-bg-deep:   #E7EAF6;
+  /* Atmosphere — cool daylight paper with real depth, never a flat #fff.
+     Deepened off near-white so the indigo→teal field reads as designed light
+     and white cards/instruments sit clearly forward of the field. */
+  --v2-bg:        #E9EDF8;
+  --v2-bg-deep:   #DBE1F1;
   --v2-bg-raise:  #FFFFFF;
   --v2-bg-panel:  #FFFFFF;
 
@@ -674,15 +676,19 @@ h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-
   color-scheme: light;
 }
 
-/* Daylight shell — soft instrument atmosphere instead of nebula void. The
-   trailing edge vignette is the quiet move that makes white cards read: it
-   darkens the far field a touch so centred surfaces sit forward of it. */
+/* Daylight shell — the dark "Focus Observatory" nebula translated to light:
+   a real instrument atmosphere with a light story, not a white page. An indigo
+   dawn glows from the top (the signal source), a teal route-glow resolves at
+   the lower right, a cool fill adds asymmetric depth on the left, and a single
+   warm gold note keeps the daylight lived-in rather than clinical. The stage
+   vignette darkens the far field so centred white surfaces sit forward of it. */
 .v2-light .v2-screen {
   background:
-    radial-gradient(120% 75% at 50% -12%, rgba(70, 85, 230, 0.10) 0%, transparent 56%),
-    radial-gradient(95% 65% at 88% 105%, rgba(20, 135, 181, 0.08) 0%, transparent 55%),
-    radial-gradient(80% 70% at 8% 28%, rgba(120, 110, 230, 0.06) 0%, transparent 60%),
-    radial-gradient(145% 115% at 50% 45%, transparent 58%, rgba(28, 40, 105, 0.05) 100%),
+    radial-gradient(125% 80% at 50% -16%, rgba(70, 85, 230, 0.20) 0%, rgba(70, 85, 230, 0.07) 32%, transparent 60%),
+    radial-gradient(105% 72% at 88% 110%, rgba(20, 135, 181, 0.18) 0%, rgba(20, 135, 181, 0.05) 38%, transparent 60%),
+    radial-gradient(82% 76% at 4% 22%, rgba(96, 92, 224, 0.12) 0%, transparent 58%),
+    radial-gradient(72% 64% at 14% 98%, rgba(176, 142, 70, 0.07) 0%, transparent 60%),
+    radial-gradient(150% 125% at 50% 40%, transparent 50%, rgba(24, 36, 100, 0.11) 100%),
     var(--v2-bg);
   color: var(--v2-ink);
 }
@@ -816,7 +822,7 @@ h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-
    AssessmentClient on mount. */
 .v2-light-doc,
 .v2-light-doc body {
-  background-color: #F3F5FC;
+  background-color: #E9EDF8;
   color-scheme: light;
 }
 
