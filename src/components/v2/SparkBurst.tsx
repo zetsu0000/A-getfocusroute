@@ -12,11 +12,14 @@ export function SparkBurst({
   accentRgb = "124,138,255",
   delay = 500,
   count = 42,
+  theme = "dark",
   style,
 }: {
   accentRgb?: string;
   delay?: number;
   count?: number;
+  /** Light field: normal compositing + ink-saturated embers (no additive blow-out). */
+  theme?: "dark" | "light";
   style?: React.CSSProperties;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -27,6 +30,10 @@ export function SparkBurst({
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    const light = theme === "light";
+    // Cool accent stays the spark; the second tone is a luminous cyan on dark,
+    // a deeper teal on light so embers read against the bright field.
+    const secondRgb = light ? "20,135,181" : "155,232,255";
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     let frame = 0;
@@ -60,7 +67,7 @@ export function SparkBurst({
     function tick() {
       if (cancelled) return;
       ctx!.clearRect(0, 0, w, h);
-      ctx!.globalCompositeOperation = "lighter";
+      ctx!.globalCompositeOperation = light ? "source-over" : "lighter";
       let alive = 0;
       for (const s of sparks) {
         if (s.life <= 0) continue;
@@ -71,8 +78,8 @@ export function SparkBurst({
         s.vy *= 0.965;
         s.vy += 0.012; // faint gravity — embers settling
         s.life -= s.decay;
-        const a = Math.max(0, s.life) * 0.9;
-        const rgb = s.cyan ? "155,232,255" : accentRgb;
+        const a = Math.max(0, s.life) * (light ? 0.8 : 0.9);
+        const rgb = s.cyan ? secondRgb : accentRgb;
         ctx!.fillStyle = `rgba(${rgb},${a})`;
         ctx!.beginPath();
         ctx!.arc(s.x, s.y, s.size * (0.5 + s.life * 0.7), 0, Math.PI * 2);

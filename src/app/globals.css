@@ -190,6 +190,13 @@ h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-
   --v2-error:       #FF8B8B;
   --v2-error-rgb:   255, 139, 139;
 
+  /* Elevation tokens — additive, consumed only by new light-mode UI (the
+     theme toggle + the .v2-light panel/input/ghost overrides). They do not
+     touch any original dark surface, so the dark theme renders unchanged. */
+  --v2-shadow-sm:   0 1px 2px rgba(2, 3, 10, 0.4);
+  --v2-shadow-md:   0 12px 36px rgba(2, 3, 10, 0.45);
+  --v2-shadow-lg:   0 30px 80px rgba(2, 3, 10, 0.6);
+
   /* Type */
   --v2-font-display: var(--font-fraunces), "Iowan Old Style", Georgia, serif;
   --v2-font-mono:    var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
@@ -598,6 +605,200 @@ h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-
 /* Dark scrollbar inside V2 surfaces */
 .v2-screen ::-webkit-scrollbar-track { background: var(--v2-bg-raise); }
 .v2-screen ::-webkit-scrollbar-thumb { background: rgba(163, 178, 255, 0.24); }
+
+/* ════════════════════════════════════════════════════════════════════
+   V2 LIGHT — "Focus Observatory · Daylight" (PRIMARY funnel identity)
+   Not a colour inversion: surfaces become real white instruments, glows
+   become precision daylight shadows, and the luminous route is re-keyed
+   to deeper, saturated ink so it reads on a bright field. Scoped to
+   .v2-light so the homepage (RouteScene / HomeV2) keeps the dark world.
+   Token names match the dark set, so every `var(--v2-*)` consumer flips
+   automatically; component files only override hard-coded literals.
+   ════════════════════════════════════════════════════════════════════ */
+.v2-light {
+  /* Atmosphere — cool daylight, never a flat #fff */
+  --v2-bg:        #F3F5FC;
+  --v2-bg-deep:   #E7EAF6;
+  --v2-bg-raise:  #FFFFFF;
+  --v2-bg-panel:  #FFFFFF;
+
+  /* Ink — deep indigo-black, layered by opacity */
+  --v2-ink:        #0E1124;
+  --v2-ink-dim:    rgba(14, 17, 36, 0.72);
+  --v2-ink-faint:  rgba(14, 17, 36, 0.50);
+  --v2-ink-ghost:  rgba(14, 17, 36, 0.30);
+
+  /* Lines + glass — cool indigo hairlines on white */
+  --v2-line:         rgba(48, 64, 150, 0.14);
+  --v2-line-bright:  rgba(48, 64, 150, 0.26);
+  --v2-glass:        rgba(255, 255, 255, 0.62);
+  --v2-glass-2:      rgba(232, 237, 255, 0.78);
+
+  /* Signal — darkened so it carries on white (WCAG AA on --v2-bg) */
+  --v2-signal:      #4655E6;
+  --v2-signal-2:    #1487B5;
+  --v2-signal-rgb:  70, 85, 230;
+  --v2-cyan-rgb:    20, 135, 181;
+  --v2-grad-signal: linear-gradient(92deg, #4655E6 0%, #1487B5 100%);
+
+  /* Gold — muted antique gold; "bright" must read as TEXT on white */
+  --v2-gold:        #9A7A2E;
+  --v2-gold-bright: #6E551B;
+  --v2-gold-deep:   #856526;
+  --v2-gold-rgb:    154, 122, 46;
+  --v2-grad-gold:   linear-gradient(94deg, #A9863A 0%, #8A6A24 52%, #6E551B 100%);
+
+  --v2-success:     #1C8A5A;
+  --v2-error:       #C53A2E;
+  --v2-error-rgb:   197, 58, 46;
+
+  /* Precision elevation — daylight shadow replaces the dark-world glow */
+  --v2-shadow-sm:   0 1px 2px rgba(20, 30, 90, 0.06), 0 1px 3px rgba(20, 30, 90, 0.05);
+  --v2-shadow-md:   0 2px 6px rgba(20, 30, 90, 0.06), 0 8px 24px rgba(20, 30, 90, 0.08);
+  --v2-shadow-lg:   0 4px 14px rgba(20, 30, 90, 0.08), 0 18px 50px rgba(20, 30, 90, 0.12);
+
+  color-scheme: light;
+}
+
+/* Daylight shell — soft instrument atmosphere instead of nebula void */
+.v2-light .v2-screen {
+  background:
+    radial-gradient(120% 75% at 50% -12%, rgba(70, 85, 230, 0.10) 0%, transparent 56%),
+    radial-gradient(95% 65% at 88% 105%, rgba(20, 135, 181, 0.08) 0%, transparent 55%),
+    radial-gradient(80% 70% at 8% 28%, rgba(120, 110, 230, 0.06) 0%, transparent 60%),
+    var(--v2-bg);
+  color: var(--v2-ink);
+}
+
+/* Grain: a whisper of texture so the gradients don't band — dark fractal
+   noise on white must stay faint and multiply, or it reads as dirt. */
+.v2-light .v2-grain::after {
+  opacity: 0.025;
+  mix-blend-mode: multiply;
+}
+
+/* Glass panel — real frosted white card with daylight elevation */
+.v2-light .v2-panel {
+  background: linear-gradient(165deg, var(--v2-glass-2), var(--v2-glass) 60%);
+  border: 1px solid var(--v2-line-bright);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    var(--v2-shadow-md);
+}
+
+/* Primary CTA — the luminous route rendered solid on white, white label */
+.v2-light .v2-cta {
+  border: 1px solid transparent;
+  background: linear-gradient(120deg, #5667F0 0%, #2C8FCB 100%);
+  color: #FFFFFF;
+  box-shadow:
+    0 1px 2px rgba(20, 30, 90, 0.10),
+    0 8px 22px rgba(70, 85, 230, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.30);
+}
+.v2-light .v2-cta:hover {
+  border-color: transparent;
+  box-shadow:
+    0 2px 4px rgba(20, 30, 90, 0.12),
+    0 12px 30px rgba(70, 85, 230, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.40);
+}
+.v2-light .v2-cta::after {
+  background: linear-gradient(100deg, transparent 42%, rgba(255, 255, 255, 0.42) 50%, transparent 58%);
+}
+
+/* Gold CTA — antique gold on white, white label */
+.v2-light .v2-cta-gold {
+  border: 1px solid transparent;
+  background: linear-gradient(120deg, #C29A43 0%, #9A7A2E 100%);
+  color: #FFFFFF;
+  box-shadow:
+    0 1px 2px rgba(60, 45, 10, 0.12),
+    0 8px 22px rgba(154, 122, 46, 0.32),
+    inset 0 1px 0 rgba(255, 248, 226, 0.35);
+}
+.v2-light .v2-cta-gold:hover {
+  border-color: transparent;
+  box-shadow:
+    0 2px 4px rgba(60, 45, 10, 0.14),
+    0 12px 30px rgba(154, 122, 46, 0.44),
+    inset 0 1px 0 rgba(255, 248, 226, 0.45);
+}
+
+/* Ghost secondary */
+.v2-light .v2-ghost {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--v2-line-bright);
+  color: var(--v2-ink-dim);
+  box-shadow: var(--v2-shadow-sm);
+}
+.v2-light .v2-ghost:hover {
+  border-color: var(--v2-signal);
+  color: var(--v2-ink);
+  background: #FFFFFF;
+}
+
+/* Inputs — white wells with an indigo focus ring */
+.v2-light .v2-input {
+  background: #FFFFFF;
+  border: 1.5px solid var(--v2-line-bright);
+  color: var(--v2-ink);
+  box-shadow: var(--v2-shadow-sm);
+}
+.v2-light .v2-input::placeholder { color: var(--v2-ink-ghost); }
+.v2-light .v2-input:focus {
+  border-color: rgba(var(--v2-signal-rgb), 0.85);
+  box-shadow: 0 0 0 3px rgba(var(--v2-signal-rgb), 0.14);
+}
+.v2-light .v2-input-error {
+  border-color: rgba(var(--v2-error-rgb), 0.7) !important;
+  background: rgba(197, 58, 46, 0.05);
+}
+
+/* Aurora — pastel daylight blobs */
+.v2-light .v2-aurora::before {
+  background: radial-gradient(circle, rgba(70, 85, 230, 0.10) 0%, transparent 65%);
+}
+.v2-light .v2-aurora::after {
+  background: radial-gradient(circle, rgba(20, 135, 181, 0.08) 0%, transparent 65%);
+}
+
+/* Saturated keyboard focus + light scrollbars */
+.v2-light .v2-screen :focus-visible {
+  outline: 2px solid rgba(var(--v2-signal-rgb), 0.9);
+}
+.v2-light .v2-screen ::-webkit-scrollbar-track { background: var(--v2-bg-deep); }
+.v2-light .v2-screen ::-webkit-scrollbar-thumb { background: rgba(48, 64, 150, 0.28); }
+
+/* Legacy-token bridge for any .v2-skin surface rendered inside the light
+   funnel (kept light + readable, mirrors the dark .v2-skin remap above). */
+.v2-light.v2-skin,
+.v2-light .v2-skin {
+  --color-bg-page: var(--v2-bg);
+  --color-bg-card: var(--v2-bg-raise);
+  --color-bg-card-2: var(--v2-bg-deep);
+  --color-text: var(--v2-ink);
+  --color-text-body: var(--v2-ink-dim);
+  --color-text-muted: var(--v2-ink-faint);
+  --color-text-soft: var(--v2-ink-ghost);
+  --color-border: var(--v2-line);
+  --color-border-2: var(--v2-line-bright);
+  --color-primary: var(--v2-signal);
+  --color-cognitive: var(--v2-signal);
+  --color-signal: var(--v2-signal-2);
+  color-scheme: light;
+}
+
+/* Document canvas while the funnel is mounted — prevents a dark overscroll /
+   short-page flash without affecting the dark homepage. Toggled from
+   AssessmentClient on mount. */
+.v2-light-doc,
+.v2-light-doc body {
+  background-color: #F3F5FC;
+  color-scheme: light;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .v2-cta:hover::after { animation: none; }

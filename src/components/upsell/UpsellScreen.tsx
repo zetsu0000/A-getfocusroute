@@ -21,6 +21,7 @@ import {
 import { useQuizStore } from "@/store/quizStore";
 import { BRAIN_OS } from "@/lib/positioning";
 import { HudLabel } from "@/components/v2/primitives";
+import { useFunnelTheme } from "@/components/v2/FunnelThemeProvider";
 import {
   createAnalyticsEventId,
   getAnalyticsContext,
@@ -42,8 +43,9 @@ function getStripePromise() {
 }
 const PRICE_ID = process.env.NEXT_PUBLIC_PRICE_ROADMAP!;
 
-/* Literal dark colors — the Payment Element iframe can't read page CSS vars. */
-const upsellStripeAppearance = {
+/* Literal colors — the Payment Element iframe can't read page CSS vars. The
+   dark object is the original vault; the light object mirrors .v2-light. */
+const upsellStripeAppearanceDark = {
   theme: "night" as const,
   variables: {
     colorPrimary: "#9BE8FF",
@@ -52,6 +54,36 @@ const upsellStripeAppearance = {
     colorDanger: "#FF8B8B",
     fontFamily: "inherit",
     borderRadius: "12px",
+  },
+};
+
+const upsellStripeAppearanceLight = {
+  theme: "stripe" as const,
+  variables: {
+    colorPrimary: "#4655E6",
+    colorBackground: "#FFFFFF",
+    colorText: "#0E1124",
+    colorTextSecondary: "#5A6079",
+    colorTextPlaceholder: "#9AA0B8",
+    colorDanger: "#C53A2E",
+    fontFamily: "inherit",
+    borderRadius: "12px",
+  },
+  rules: {
+    ".Input": {
+      border: "1.5px solid rgba(48,64,150,0.22)",
+      backgroundColor: "#FFFFFF",
+      boxShadow: "0 1px 2px rgba(20,30,90,0.05)",
+    },
+    ".Input:focus": {
+      border: "1.5px solid rgba(70,85,230,0.85)",
+      boxShadow: "0 0 0 3px rgba(70,85,230,0.14)",
+    },
+    ".Tab--selected": {
+      border: "1.5px solid rgba(70,85,230,0.85)",
+      backgroundColor: "rgba(70,85,230,0.08)",
+      color: "#0E1124",
+    },
   },
 };
 
@@ -64,9 +96,13 @@ function UpsellStripeElements({
   onSuccess: () => void;
   onDecline: () => void;
 }) {
+  const { theme } = useFunnelTheme();
   const options = useMemo(
-    () => ({ clientSecret, appearance: upsellStripeAppearance }),
-    [clientSecret],
+    () => ({
+      clientSecret,
+      appearance: theme === "light" ? upsellStripeAppearanceLight : upsellStripeAppearanceDark,
+    }),
+    [clientSecret, theme],
   );
 
   return (
@@ -242,6 +278,8 @@ function ProtocolRouteStrip() {
 export function UpsellScreen() {
   const { name, email, setStep, quizResultId } = useQuizStore();
   const displayName = name || "You";
+  const { theme } = useFunnelTheme();
+  const dark = theme === "dark";
 
   const [clientSecret,  setClientSecret]  = useState<string | null>(null);
   const [loadingSecret, setLoadingSecret] = useState(false);
@@ -534,7 +572,7 @@ export function UpsellScreen() {
               <div
                 role="alert"
                 aria-live="polite"
-                style={{ display: "grid", gap: 11, color: "#FFE3E3", textAlign: "left", background: "rgba(255,139,139,0.15)", border: "1px solid rgba(255,139,139,0.42)", borderRadius: 14, padding: "13px 14px" }}
+                style={{ display: "grid", gap: 11, color: dark ? "#FFE3E3" : "var(--v2-error)", textAlign: "left", background: dark ? "rgba(255,139,139,0.15)" : "rgba(197,58,46,0.08)", border: dark ? "1px solid rgba(255,139,139,0.42)" : "1px solid rgba(197,58,46,0.30)", borderRadius: 14, padding: "13px 14px" }}
               >
                 <div style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
                   <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 1 }} />

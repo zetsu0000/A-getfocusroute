@@ -13,6 +13,7 @@ import { SigilArtifact } from "@/components/v2/SigilArtifact";
 import { FocusField } from "@/components/v2/FocusField";
 import { ResultSocialProof } from "@/components/signature/SocialProof";
 import { HudLabel } from "@/components/v2/primitives";
+import { useFunnelTheme } from "@/components/v2/FunnelThemeProvider";
 import { setPersistedQuizResultId } from "@/lib/quizResultId";
 import { createClient } from "@/lib/supabase/client";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
@@ -30,6 +31,7 @@ export function ChartScreen() {
     setQuizResultId,
   } = useQuizStore();
   const router = useRouter();
+  const { theme } = useFunnelTheme();
   const personalName = safeName(name, "");
   const signature = getSignatureFromAnswers(answers);
   const identity = getSignatureIdentity(signature.signature);
@@ -198,8 +200,9 @@ export function ChartScreen() {
           coherence={0.95}
           intensity={0.5}
           showRoute
+          theme={theme}
           accentRgb={identity.accentRgb}
-          accentRgb2="155,232,255"
+          accentRgb2={theme === "light" ? "20,135,181" : "155,232,255"}
         />
       </div>
 
@@ -338,7 +341,9 @@ export function ChartScreen() {
                   style={{
                     position: "absolute",
                     inset: 0,
-                    background: "linear-gradient(90deg, transparent 55%, rgba(6,7,13,0.7))",
+                    background: theme === "light"
+                      ? "linear-gradient(90deg, transparent 50%, rgba(243,245,252,0.92))"
+                      : "linear-gradient(90deg, transparent 55%, rgba(6,7,13,0.7))",
                     pointerEvents: "none",
                   }}
                 />

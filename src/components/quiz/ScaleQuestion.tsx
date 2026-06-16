@@ -4,6 +4,7 @@ import { useState } from "react";
 import { m, useReducedMotion } from "framer-motion";
 import { QuizQuestion } from "@/types/quiz";
 import { useQuizStore } from "@/store/quizStore";
+import { useFunnelTheme } from "@/components/v2/FunnelThemeProvider";
 
 interface ScaleQuestionProps {
   question: QuizQuestion;
@@ -21,6 +22,8 @@ export function ScaleQuestion({ question }: ScaleQuestionProps) {
   const { selectOption, submitAnswer } = useQuizStore();
   const [chosen, setChosen] = useState<string | null>(null);
   const reduceMotion = useReducedMotion();
+  const { theme } = useFunnelTheme();
+  const dark = theme === "dark";
 
   const handleSelect = (id: string) => {
     if (chosen) return;
@@ -137,20 +140,28 @@ export function ScaleQuestion({ question }: ScaleQuestionProps) {
                 style={{
                   padding: "11px 4px 12px",
                   borderRadius: 15,
-                  border: `1.5px solid ${isSelected ? "rgba(124,138,255,0.85)" : "var(--v2-line)"}`,
+                  border: `1.5px solid ${isSelected ? (dark ? "rgba(124,138,255,0.85)" : "rgba(70,85,230,0.85)") : (dark ? "var(--v2-line)" : "var(--v2-line-bright)")}`,
                   background: isSelected
-                    ? "linear-gradient(150deg, rgba(124,138,255,0.2), rgba(155,232,255,0.08))"
-                    : "linear-gradient(165deg, rgba(148,163,255,0.07), rgba(148,163,255,0.03))",
+                    ? (dark
+                        ? "linear-gradient(150deg, rgba(124,138,255,0.2), rgba(155,232,255,0.08))"
+                        : "linear-gradient(150deg, rgba(70,85,230,0.14), rgba(20,135,181,0.07))")
+                    : (dark
+                        ? "linear-gradient(165deg, rgba(148,163,255,0.07), rgba(148,163,255,0.03))"
+                        : "linear-gradient(165deg, rgba(255,255,255,0.9), rgba(243,245,252,0.7))"),
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
                   gap: 7,
                   cursor: chosen ? "default" : "pointer",
-                  opacity: isAny && !isSelected ? 0.32 : 1,
+                  opacity: isAny && !isSelected ? (dark ? 0.32 : 0.4) : 1,
                   transition: "background 0.15s, border-color 0.15s, opacity 0.2s, box-shadow 0.15s",
                   boxShadow: isSelected
-                    ? "0 0 0 1px rgba(124,138,255,0.3), 0 8px 28px rgba(124,138,255,0.25)"
-                    : "inset 0 1px 0 rgba(255,255,255,0.05)",
+                    ? (dark
+                        ? "0 0 0 1px rgba(124,138,255,0.3), 0 8px 28px rgba(124,138,255,0.25)"
+                        : "0 0 0 1px rgba(70,85,230,0.25), 0 8px 24px rgba(70,85,230,0.18)")
+                    : (dark
+                        ? "inset 0 1px 0 rgba(255,255,255,0.05)"
+                        : "inset 0 1px 0 rgba(255,255,255,0.7)"),
                 }}
               >
                 <span style={{
@@ -163,10 +174,10 @@ export function ScaleQuestion({ question }: ScaleQuestionProps) {
                   fontFamily: "var(--v2-font-mono)",
                   fontSize: 13,
                   fontWeight: 600,
-                  color: isSelected ? "#06070D" : "var(--v2-ink-dim)",
-                  background: isSelected ? "var(--v2-grad-signal)" : "rgba(148,163,255,0.07)",
+                  color: isSelected ? (dark ? "#06070D" : "#FFFFFF") : "var(--v2-ink-dim)",
+                  background: isSelected ? "var(--v2-grad-signal)" : (dark ? "rgba(148,163,255,0.07)" : "rgba(70,85,230,0.06)"),
                   border: `1px solid ${isSelected ? "transparent" : "var(--v2-line)"}`,
-                  boxShadow: isSelected ? "0 0 14px rgba(124,138,255,0.6)" : "none",
+                  boxShadow: isSelected ? (dark ? "0 0 14px rgba(124,138,255,0.6)" : "0 0 12px rgba(70,85,230,0.4)") : "none",
                 }}>
                   {item.label}
                 </span>

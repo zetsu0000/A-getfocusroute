@@ -9,6 +9,7 @@ import { getOrCreateActionEventId, trackEvent } from "@/lib/analytics/client";
 import { getSignatureFromAnswers } from "@/lib/signature";
 import { FocusField } from "@/components/v2/FocusField";
 import { HudLabel } from "@/components/v2/primitives";
+import { useFunnelTheme } from "@/components/v2/FunnelThemeProvider";
 
 const PHASES = [
   { label: "Reading your answers", end: 28 },
@@ -32,6 +33,8 @@ const REVIEWS = [
 export function LoadingScreen() {
   const setStep = useQuizStore((s) => s.setStep);
   const answers = useQuizStore((s) => s.answers);
+  const { theme } = useFunnelTheme();
+  const dark = theme === "dark";
 
   const [progress, setProgress] = useState(0);
   const loadingTracked = useRef(false);
@@ -94,7 +97,7 @@ export function LoadingScreen() {
 
       {/* The field organizes in lockstep with the computation. */}
       <div aria-hidden="true" style={{ position: "fixed", inset: 0, pointerEvents: "none" }}>
-        <FocusField coherence={progress / 100} intensity={0.8} showRoute />
+        <FocusField coherence={progress / 100} intensity={0.8} showRoute theme={theme} />
       </div>
 
       {/* Title + dial */}
@@ -164,19 +167,19 @@ export function LoadingScreen() {
               strokeLinecap="round"
               strokeDasharray={2 * Math.PI * 63}
               strokeDashoffset={2 * Math.PI * 63 * (1 - progress / 100)}
-              style={{ filter: "drop-shadow(0 0 8px rgba(124,138,255,0.7))", transition: "stroke-dashoffset 0.1s linear" }}
+              style={{ filter: dark ? "drop-shadow(0 0 8px rgba(124,138,255,0.7))" : "drop-shadow(0 0 6px rgba(70,85,230,0.4))", transition: "stroke-dashoffset 0.1s linear" }}
             />
             <defs>
               <linearGradient id="v2-load-grad" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#7C8AFF" />
-                <stop offset="100%" stopColor="#9BE8FF" />
+                <stop offset="0%" stopColor={dark ? "#7C8AFF" : "#4655E6"} />
+                <stop offset="100%" stopColor={dark ? "#9BE8FF" : "#1487B5"} />
               </linearGradient>
             </defs>
           </svg>
           <div>
             <p
               className="v2-display"
-              style={{ fontSize: 38, fontWeight: 600, color: "#fff", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}
+              style={{ fontSize: 38, fontWeight: 600, color: dark ? "#fff" : "var(--v2-ink)", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}
             >
               {Math.round(progress)}
               <span style={{ fontSize: 18, color: "var(--v2-ink-faint)" }}>%</span>

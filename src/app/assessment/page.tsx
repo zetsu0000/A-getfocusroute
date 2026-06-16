@@ -1,4 +1,5 @@
 import AssessmentClient from "./AssessmentClient";
+import { FunnelThemeProvider } from "@/components/v2/FunnelThemeProvider";
 import {
   isPaidAssessmentTraffic,
   shouldAutoStartAssessment,
@@ -33,10 +34,12 @@ export default async function Page({
   const hasUpgradeHandoff = isUpgradeNeed(upgrade);
 
   return (
-    <AssessmentClient
-      paidAutoStart={paidAutoStart}
-      hasEntryStep={hasEntryStep}
-      hasUpgradeHandoff={hasUpgradeHandoff}
-    />
+    <FunnelThemeProvider>
+      <AssessmentClient
+        paidAutoStart={paidAutoStart}
+        hasEntryStep={hasEntryStep}
+        hasUpgradeHandoff={hasUpgradeHandoff}
+      />
+    </FunnelThemeProvider>
   );
 }

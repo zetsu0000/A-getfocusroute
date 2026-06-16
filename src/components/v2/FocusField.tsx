@@ -30,6 +30,8 @@ type Props = {
   density?: number;
   /** Particles yield around the pointer — attention parting the noise. */
   interactive?: boolean;
+  /** Render for a light field (additive blending → normal, ink-cored sprites). */
+  theme?: "dark" | "light";
   style?: React.CSSProperties;
   className?: string;
 };
@@ -52,12 +54,14 @@ export function FocusField({
   showRoute = false,
   density = 1,
   interactive = false,
+  theme = "dark",
   style,
   className,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const coherenceRef = useRef(coherence);
   coherenceRef.current = coherence;
+  const light = theme === "light";
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -93,9 +97,17 @@ export function FocusField({
       s.height = SPRITE;
       const c2 = s.getContext("2d")!;
       const grad = c2.createRadialGradient(SPRITE / 2, SPRITE / 2, 0, SPRITE / 2, SPRITE / 2, SPRITE / 2);
-      grad.addColorStop(0, `rgba(255,255,255,0.9)`);
-      grad.addColorStop(0.25, `rgba(${rgb},0.55)`);
-      grad.addColorStop(1, `rgba(${rgb},0)`);
+      if (light) {
+        // No white hot-core on a bright field: a saturated ink dot that
+        // fades to transparent so over-plotting deepens rather than blows out.
+        grad.addColorStop(0, `rgba(${rgb},0.85)`);
+        grad.addColorStop(0.35, `rgba(${rgb},0.42)`);
+        grad.addColorStop(1, `rgba(${rgb},0)`);
+      } else {
+        grad.addColorStop(0, `rgba(255,255,255,0.9)`);
+        grad.addColorStop(0.25, `rgba(${rgb},0.55)`);
+        grad.addColorStop(1, `rgba(${rgb},0)`);
+      }
       c2.fillStyle = grad;
       c2.fillRect(0, 0, SPRITE, SPRITE);
       return s;
@@ -160,7 +172,9 @@ export function FocusField({
         ctx!.stroke();
       }
 
-      ctx!.globalCompositeOperation = "lighter";
+      // Additive glow on dark; normal compositing on light (additive would
+      // wash ink particles to invisibility against a bright field).
+      ctx!.globalCompositeOperation = light ? "source-over" : "lighter";
 
       for (const p of particles) {
         // Chaos: slow Brownian wander.
@@ -199,8 +213,10 @@ export function FocusField({
         if (p.y < -12) p.y = height + 10;
 
         const twinkle = 0.55 + Math.sin(t * 2 + p.seed * 9) * 0.25;
-        const alpha = (0.30 + c * 0.32) * twinkle * intensity;
-        const s = p.size * (7 + c * 4);
+        // Light field: smaller, denser-reading dots so the route stays crisp
+        // rather than turning into a pale haze.
+        const alpha = (light ? 0.22 + c * 0.26 : 0.30 + c * 0.32) * twinkle * intensity;
+        const s = p.size * (light ? 5 + c * 3 : 7 + c * 4);
 
         ctx!.globalAlpha = alpha;
         ctx!.drawImage(p.tint ? spriteAlt : spriteMain, p.x - s / 2, p.y - s / 2, s, s);

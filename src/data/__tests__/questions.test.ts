@@ -32,6 +32,7 @@ const LOAD_BEARING_IDS = [
 /* Deliberately removed in the 15-question cut — nothing in scoring or
    result generation reads them. Re-adding is fine; update this list. */
 const REMOVED_IDS = ["gender", "age", "sleep", "daily-impact", "motivation"];
+const STRATEGIC_INFO_IDS = ["info-seen", "info-match", "info-focus", "info-system"];
 
 describe("assessment structure (15-question cut)", () => {
   it("has exactly 15 scoreable questions", () => {
@@ -76,11 +77,31 @@ describe("assessment structure (15-question cut)", () => {
     expect(snapshot?.infoBody).toBe("adhd-profile");
   });
 
+  it("places the integrated system info card immediately after Q13", () => {
+    const ids = questions.map((q) => q.id);
+    expect(ids[ids.indexOf("scale-emotions") + 1]).toBe("info-system");
+  });
+
   it("info cards carry no options and never enter progress counts", () => {
     for (const q of questions.filter((q) => q.inputType === "info")) {
       expect(q.options).toHaveLength(0);
     }
     expect(progressQuestions.every((q) => q.inputType !== "info")).toBe(true);
+  });
+
+  it("keeps generic info cards tied to pattern, impact, FocusRoute value, and result", () => {
+    for (const id of STRATEGIC_INFO_IDS) {
+      const card = questions.find((q) => q.id === id);
+      expect(card?.inputType).toBe("info");
+      expect(card?.infoPattern, `${id} missing pattern`).toBeTruthy();
+      expect(card?.infoConsequence, `${id} missing consequence`).toBeTruthy();
+      expect(card?.infoCapability, `${id} missing FocusRoute capability`).toContain("FocusRoute");
+      expect(card?.infoBenefit, `${id} missing user benefit`).toBeTruthy();
+    }
+
+    expect(questions.find((q) => q.id === "info-system")?.infoClosing).toBe(
+      "Not another generic to-do list. A clearer operating system for your day.",
+    );
   });
 });
 
