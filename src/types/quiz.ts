@@ -18,6 +18,11 @@ export interface QuizQuestion {
   infoStat?: string;
   infoHighlight?: string;   /* highlighted (teal) portion inside infoStat */
   infoBody?: string;
+  infoPattern?: string;
+  infoConsequence?: string;
+  infoCapability?: string;
+  infoBenefit?: string;
+  infoClosing?: string;
 
   /* Scale question fields */
   statement?: string;       /* the quoted statement text */

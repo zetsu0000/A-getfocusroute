@@ -9,6 +9,7 @@ import { questions } from "@/data/questions";
 import { ProgressBar } from "./ProgressBar";
 import { QuestionCard } from "./QuestionCard";
 import { FocusField } from "@/components/v2/FocusField";
+import { useFunnelTheme } from "@/components/v2/FunnelThemeProvider";
 import { getOrCreateActionEventId, trackEvent } from "@/lib/analytics/client";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 
@@ -34,6 +35,7 @@ const slideVariants = {
 
 export function QuizEngine() {
   const { answers, currentQuestionIndex, selectedOptions, submitAnswer, goBack } = useQuizStore();
+  const { theme } = useFunnelTheme();
   const [direction, setDirection] = useState(1);
   const prevIndex = useRef(currentQuestionIndex);
   const sentMilestones = useRef<Set<number>>(new Set());
@@ -160,7 +162,7 @@ export function QuizEngine() {
       {/* ── Calibration field — scattered attention organizing into a route
           as answers accumulate. Pure backdrop, zero pointer interception. */}
       <div aria-hidden="true" style={{ position: "fixed", inset: 0, pointerEvents: "none" }}>
-        <FocusField coherence={fieldCoherence} intensity={0.55} showRoute />
+        <FocusField key={theme} coherence={fieldCoherence} intensity={0.55} showRoute theme={theme} />
       </div>
 
       {/* ── Brand anchor — paid traffic lands straight on a question,
@@ -216,8 +218,8 @@ export function QuizEngine() {
             visibility: currentQuestionIndex > 0 ? "visible" : "hidden",
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "rgba(124,138,255,0.10)";
-            (e.currentTarget as HTMLElement).style.borderColor = "rgba(163,178,255,0.3)";
+            (e.currentTarget as HTMLElement).style.background = "rgba(var(--v2-signal-rgb),0.10)";
+            (e.currentTarget as HTMLElement).style.borderColor = "rgba(var(--v2-line-rgb),0.3)";
             (e.currentTarget as HTMLElement).style.color      = "var(--v2-ink)";
           }}
           onMouseLeave={(e) => {

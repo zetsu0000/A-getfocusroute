@@ -103,9 +103,15 @@ export const questions: QuizQuestion[] = [
     question: "",
     inputType: "info",
     options: [],
-    infoStat: "Sound familiar? You're in the right place.",
-    infoBody:
-      "Your first answers already sketch a pattern. A few more and we can name what's driving it.",
+    infoStat: "Clarity for the next move",
+    infoPattern:
+      "Too many tasks and competing priorities can make the next step hard to spot.",
+    infoConsequence:
+      "Energy goes into deciding, reorganizing, and reconsidering instead of starting.",
+    infoCapability:
+      "FocusRoute turns competing priorities into a clear next action, so you spend less time deciding and more time moving forward.",
+    infoBenefit:
+      "Less decision load, a clearer next action.",
   },
 
   /* ── BLOCK 2 — Deeper pattern ────────────────────────────────── */
@@ -156,10 +162,16 @@ export const questions: QuizQuestion[] = [
     question: "",
     inputType: "info",
     options: [],
-    infoStat: "You're not broken — your focus just works differently.",
+    infoStat: "Start without rebuilding the plan",
     infoHighlight: undefined,
-    infoBody:
-      "What you're describing is common. Your plan will fit how your brain actually works.",
+    infoPattern:
+      "Wanting to do a task does not always mean knowing where to begin.",
+    infoConsequence:
+      "The task stays stuck because the entry point still feels big or undefined.",
+    infoCapability:
+      "FocusRoute breaks priorities into clear daily actions, helping you start without rebuilding your entire plan.",
+    infoBenefit:
+      "You can begin from a concrete daily action, not a full planning reset.",
   },
 
   /* ── BLOCK 3 — Scale block (6 statements) ────────────────────── */
@@ -197,9 +209,15 @@ export const questions: QuizQuestion[] = [
     question: "",
     inputType: "info",
     options: [],
-    infoStat: "A pattern is forming in your answers.",
-    infoBody:
-      "This looks like a focus pattern — not a willpower problem. A few more answers and we can name it.",
+    infoStat: "Recover after interruptions",
+    infoPattern:
+      "An interruption can make the rest of the day lose direction.",
+    infoConsequence:
+      "Afterward, you rebuild context and decide again what deserves attention.",
+    infoCapability:
+      "FocusRoute helps you recover your route after interruptions and identify what deserves your attention next.",
+    infoBenefit:
+      "You return to the next priority faster, with less mental backtracking.",
   },
 
   /* Q11 */
@@ -230,6 +248,25 @@ export const questions: QuizQuestion[] = [
   },
 
   /* ── BLOCK 4 — Context + readiness ───────────────────────────── */
+
+  /* INFO CARD C - integrated system bridge (after the scale block) */
+  {
+    id: "info-system",
+    question: "",
+    inputType: "info",
+    options: [],
+    infoStat: "A personalized system is taking shape",
+    infoPattern:
+      "Your answers point to connected focus patterns, not isolated task problems.",
+    infoConsequence:
+      "A plain task list would leave starts, resets, and progress disconnected.",
+    infoCapability:
+      "FocusRoute brings your priorities, daily actions, focus patterns and progress into one personalized system.",
+    infoBenefit:
+      "One route for what matters, how to start, how to recover, and how progress is moving.",
+    infoClosing:
+      "Not another generic to-do list. A clearer operating system for your day.",
+  },
 
   /* Q14 — support (SCORED: focus conditions + initiation) */
   {

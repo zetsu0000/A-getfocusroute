@@ -16,6 +16,7 @@ import { BRAIN_OS } from "@/lib/positioning";
 import { getSignatureFromAnswers, echoSentence } from "@/lib/signature";
 import { PaywallSocialProofDisclosure } from "@/components/signature/SocialProof";
 import { HudLabel } from "@/components/v2/primitives";
+import { useFunnelTheme } from "@/components/v2/FunnelThemeProvider";
 import {
   createAnalyticsEventId,
   getAnalyticsContext,
@@ -49,9 +50,11 @@ function getStripePromise() {
 }
 const PRICE_ID = process.env.NEXT_PUBLIC_PRICE_ASSESSMENT!;
 
-/* V2 dark-vault Stripe appearance. The Payment Element renders in an iframe,
-   so values must be literal colors (CSS variables don't cross the boundary). */
-const stripeAppearance = {
+/* V2 Stripe appearance. The Payment Element renders in an iframe, so values
+   must be literal colors (CSS variables don't cross the boundary). The dark
+   object is the original Focus-Observatory vault; the light object mirrors the
+   .v2-light token palette: white wells, indigo focus, ink text. */
+const stripeAppearanceDark = {
   theme: "night" as const,
   variables: {
     colorPrimary: "#9BE8FF",
@@ -69,7 +72,7 @@ const stripeAppearance = {
   },
   rules: {
     ".Input": {
-      border: "1.5px solid rgba(163,178,255,0.18)",
+      border: "1.5px solid rgba(var(--v2-line-rgb),0.18)",
       backgroundColor: "#0B0E18",
       padding: "12px 14px",
       fontSize: "15px",
@@ -77,8 +80,8 @@ const stripeAppearance = {
       transition: "border-color 0.15s",
     },
     ".Input:focus": {
-      border: "1.5px solid rgba(155,232,255,0.7)",
-      boxShadow: "0 0 0 3px rgba(124,138,255,0.18)",
+      border: "1.5px solid rgba(var(--v2-cyan-rgb),0.7)",
+      boxShadow: "0 0 0 3px rgba(var(--v2-signal-rgb),0.18)",
       outline: "none",
     },
     ".Label": {
@@ -88,19 +91,74 @@ const stripeAppearance = {
       marginBottom: "5px",
     },
     ".Tab": {
-      border: "1.5px solid rgba(163,178,255,0.18)",
+      border: "1.5px solid rgba(var(--v2-line-rgb),0.18)",
       backgroundColor: "#0B0E18",
       padding: "10px 16px",
       fontWeight: "600",
     },
     ".Tab--selected": {
-      border: "1.5px solid rgba(155,232,255,0.7)",
-      backgroundColor: "rgba(124,138,255,0.12)",
+      border: "1.5px solid rgba(var(--v2-cyan-rgb),0.7)",
+      backgroundColor: "rgba(var(--v2-signal-rgb),0.12)",
       color: "#EEF1FF",
       boxShadow: "none",
     },
     ".Error": {
       color: "#FF8B8B",
+      fontSize: "12px",
+    },
+  },
+};
+
+const stripeAppearanceLight = {
+  theme: "stripe" as const,
+  variables: {
+    colorPrimary: "#4655E6",
+    colorBackground: "#FFFFFF",
+    colorText: "#0E1124",
+    colorTextSecondary: "#5A6079",
+    colorTextPlaceholder: "#9AA0B8",
+    colorDanger: "#C53A2E",
+    fontFamily: "inherit",
+    fontSizeBase: "15px",
+    spacingUnit: "5px",
+    borderRadius: "12px",
+    gridColumnSpacing: "12px",
+    gridRowSpacing: "12px",
+  },
+  rules: {
+    ".Input": {
+      border: "1.5px solid rgba(48,64,150,0.22)",
+      backgroundColor: "#FFFFFF",
+      padding: "12px 14px",
+      fontSize: "15px",
+      boxShadow: "0 1px 2px rgba(20,30,90,0.05)",
+      transition: "border-color 0.15s, box-shadow 0.15s",
+    },
+    ".Input:focus": {
+      border: "1.5px solid rgba(70,85,230,0.85)",
+      boxShadow: "0 0 0 3px rgba(70,85,230,0.14)",
+      outline: "none",
+    },
+    ".Label": {
+      fontSize: "12px",
+      fontWeight: "600",
+      color: "#5A6079",
+      marginBottom: "5px",
+    },
+    ".Tab": {
+      border: "1.5px solid rgba(48,64,150,0.22)",
+      backgroundColor: "#FFFFFF",
+      padding: "10px 16px",
+      fontWeight: "600",
+    },
+    ".Tab--selected": {
+      border: "1.5px solid rgba(70,85,230,0.85)",
+      backgroundColor: "rgba(70,85,230,0.08)",
+      color: "#0E1124",
+      boxShadow: "none",
+    },
+    ".Error": {
+      color: "#C53A2E",
       fontSize: "12px",
     },
   },
@@ -252,9 +310,14 @@ function PaywallStripeElements({
   clientSecret: string;
   onSuccess: () => void;
 }) {
+  const { theme } = useFunnelTheme();
   const options = useMemo(
-    () => ({ clientSecret, appearance: stripeAppearance, locale: "en" as const }),
-    [clientSecret],
+    () => ({
+      clientSecret,
+      appearance: theme === "light" ? stripeAppearanceLight : stripeAppearanceDark,
+      locale: "en" as const,
+    }),
+    [clientSecret, theme],
   );
 
   return (
@@ -288,6 +351,8 @@ export function PaywallScreen() {
   const signature = getSignatureFromAnswers(answers);
   const echo = echoSentence(answers);
   const reduceMotion = useReducedMotion();
+  const { theme } = useFunnelTheme();
+  const dark = theme === "dark";
 
   const handlePaywallSuccess = () => {
     setStep("upsell");
@@ -461,7 +526,7 @@ export function PaywallScreen() {
           position: "fixed",
           inset: 0,
           background:
-            "radial-gradient(80% 50% at 50% 0%, rgba(217,188,127,0.07) 0%, transparent 55%), radial-gradient(70% 45% at 50% 110%, rgba(124,138,255,0.1) 0%, transparent 60%)",
+            "radial-gradient(80% 50% at 50% 0%, rgba(217,188,127,0.07) 0%, transparent 55%), radial-gradient(70% 45% at 50% 110%, rgba(var(--v2-signal-rgb),0.1) 0%, transparent 60%)",
           pointerEvents: "none",
         }}
       />
@@ -539,11 +604,13 @@ export function PaywallScreen() {
                 gap: 9,
                 cursor: loadingSecret || retryBlocked ? "not-allowed" : "pointer",
                 color: "var(--v2-gold-bright)",
-                border: "1px solid rgba(217,188,127,0.42)",
-                background:
-                  "linear-gradient(120deg, rgba(217,188,127,0.12), rgba(240,220,174,0.04)), rgba(14,11,4,0.55)",
-                boxShadow:
-                  "0 0 0 1px rgba(8,6,2,0.4), inset 0 1px 0 rgba(255,248,226,0.14)",
+                border: dark ? "1px solid rgba(217,188,127,0.42)" : "1px solid rgba(154,122,46,0.42)",
+                background: dark
+                  ? "linear-gradient(120deg, rgba(217,188,127,0.12), rgba(240,220,174,0.04)), rgba(14,11,4,0.55)"
+                  : "linear-gradient(120deg, rgba(201,154,67,0.16), rgba(154,122,46,0.06)), #FFFFFF",
+                boxShadow: dark
+                  ? "0 0 0 1px rgba(8,6,2,0.4), inset 0 1px 0 rgba(255,248,226,0.14)"
+                  : "0 1px 2px rgba(60,45,10,0.08), inset 0 1px 0 rgba(255,255,255,0.7)",
                 opacity: loadingSecret || retryBlocked ? 0.72 : 1,
                 transition: "border-color 0.2s ease, box-shadow 0.2s ease",
               }}
@@ -602,7 +669,7 @@ export function PaywallScreen() {
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
-                      style={{ display: "grid", gap: 11, color: "#FFE3E3", textAlign: "left", background: "rgba(255,139,139,0.15)", border: "1px solid rgba(255,139,139,0.42)", borderRadius: 14, padding: "13px 14px" }}
+                      style={{ display: "grid", gap: 11, color: dark ? "#FFE3E3" : "var(--v2-error)", textAlign: "left", background: dark ? "rgba(255,139,139,0.15)" : "rgba(197,58,46,0.08)", border: dark ? "1px solid rgba(255,139,139,0.42)" : "1px solid rgba(197,58,46,0.30)", borderRadius: 14, padding: "13px 14px" }}
                     >
                       <div style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
                         <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 1 }} />

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { m } from "framer-motion";
 import { Fingerprint, Sparkles, Compass, Users, type LucideIcon } from "lucide-react";
 import { QuizQuestion } from "@/types/quiz";
@@ -7,6 +8,7 @@ import { useQuizStore } from "@/store/quizStore";
 import { scoreFromAnswers, getSymptomLevel, LevelInfo } from "@/lib/symptom-level";
 import { getSignatureFromAnswers } from "@/lib/signature";
 import { HudLabel } from "@/components/v2/primitives";
+import { useFunnelTheme } from "@/components/v2/FunnelThemeProvider";
 
 interface InfoCardProps {
   question: QuizQuestion;
@@ -20,7 +22,9 @@ const LEVEL_DESCRIPTIONS: Record<string, string> = {
   "Very High": "Your responses point to strong focus friction. The full profile turns that intensity into a clearer map of what to try next.",
 };
 
-/* Dark-world accent per level — the lib palette is light-theme only. */
+/* Per-level accent. Dark world keeps the original luminous pastels; the
+   daylight field uses saturated/deep hues that carry as text, borders, and
+   dial strokes on a white surface (WCAG AA). */
 const LEVEL_DARK: Record<string, string> = {
   "Low":       "#9BE8FF",
   "Mild":      "#7C8AFF",
@@ -29,12 +33,24 @@ const LEVEL_DARK: Record<string, string> = {
   "Very High": "#FF8B8B",
 };
 
-function getLevelWithDescription(score: number): LevelInfo & { description: string; darkColor: string } {
+const LEVEL_LIGHT: Record<string, string> = {
+  "Low":       "#1487B5",
+  "Mild":      "#4655E6",
+  "Moderate":  "#7A4FD0",
+  "High":      "#C2691E",
+  "Very High": "#C53A2E",
+};
+
+function getLevelWithDescription(
+  score: number,
+  dark: boolean,
+): LevelInfo & { description: string; darkColor: string } {
   const level = getSymptomLevel(score);
+  const palette = dark ? LEVEL_DARK : LEVEL_LIGHT;
   return {
     ...level,
     description: LEVEL_DESCRIPTIONS[level.label] ?? "",
-    darkColor: LEVEL_DARK[level.label] ?? "#7C8AFF",
+    darkColor: palette[level.label] ?? (dark ? "#7C8AFF" : "#4655E6"),
   };
 }
 
@@ -54,7 +70,9 @@ const PATTERN_HINT: Record<string, { value: string; sub: string }> = {
 function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
   const answers = useQuizStore((s) => s.answers);
   const score   = scoreFromAnswers(answers);
-  const level   = getLevelWithDescription(score);
+  const { theme } = useFunnelTheme();
+  const dark    = theme === "dark";
+  const level   = getLevelWithDescription(score, dark);
   const hint    = PATTERN_HINT[getSignatureFromAnswers(answers).signature];
 
   const metrics = [
@@ -90,7 +108,9 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
           borderRadius: "var(--v2-r-lg)",
           overflow: "hidden",
           padding: 0,
-          background: "linear-gradient(170deg, rgba(14,18,32,0.92), rgba(7,8,17,0.95))",
+          background: dark
+            ? "linear-gradient(170deg, rgba(14,18,32,0.92), rgba(7,8,17,0.95))"
+            : "linear-gradient(170deg, #FFFFFF, #F4F6FC)",
         }}
       >
 
@@ -101,13 +121,13 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
           display: "flex", alignItems: "center", justifyContent: "space-between",
           borderBottom: "1px solid var(--v2-line)",
           background:
-            "radial-gradient(110% 160% at 0% 0%, rgba(124,138,255,0.18) 0%, transparent 55%)",
+            "radial-gradient(110% 160% at 0% 0%, rgba(var(--v2-signal-rgb),0.18) 0%, transparent 55%)",
         }}>
           <div>
             <HudLabel tone="signal" style={{ marginBottom: 6 }}>
               Live reading
             </HudLabel>
-            <h2 className="v2-display" style={{ fontSize: 24, fontWeight: 550, color: "#fff", lineHeight: 1.1 }}>
+            <h2 className="v2-display" style={{ fontSize: 24, fontWeight: 550, color: dark ? "#fff" : "var(--v2-ink)", lineHeight: 1.1 }}>
               Focus Snapshot
             </h2>
           </div>
@@ -119,7 +139,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
             style={{ position: "relative", width: 76, height: 76, display: "grid", placeItems: "center" }}
           >
             <svg width="76" height="76" viewBox="0 0 76 76" style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}>
-              <circle cx="38" cy="38" r="33" fill="none" stroke="rgba(163,178,255,0.15)" strokeWidth="3" />
+              <circle cx="38" cy="38" r="33" fill="none" style={{ stroke: "rgba(var(--v2-line-rgb),0.15)" }} strokeWidth="3" />
               <m.circle
                 cx="38" cy="38" r="33" fill="none"
                 stroke={level.darkColor}
@@ -133,7 +153,7 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
               />
             </svg>
             <div style={{ textAlign: "center" }}>
-              <p className="v2-display" style={{ fontSize: 24, fontWeight: 600, color: "#fff", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+              <p className="v2-display" style={{ fontSize: 24, fontWeight: 600, color: dark ? "#fff" : "var(--v2-ink)", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
                 {score.toFixed(0)}
               </p>
               <p className="v2-hud" style={{ fontSize: 8, marginTop: 3 }}>score</p>
@@ -165,8 +185,10 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
               bands are even 20% segments, so labels center under each band. */}
           <div style={{
             position: "relative", height: 8, borderRadius: 999,
-            background: "linear-gradient(to right, #9BE8FF, #7C8AFF, #B39BFF, #FFB28B, #FF8B8B)",
-            opacity: 0.85,
+            background: dark
+              ? "linear-gradient(to right, #9BE8FF, #7C8AFF, #B39BFF, #FFB28B, #FF8B8B)"
+              : "linear-gradient(to right, #1487B5, #4655E6, #7A4FD0, #C2691E, #C53A2E)",
+            opacity: dark ? 0.85 : 0.9,
             marginBottom: 10,
           }}>
             <m.div
@@ -180,9 +202,9 @@ function AdhdProfileCard({ onContinue }: { onContinue: () => void }) {
                 x: "-50%",
                 y: "-50%",
                 width: 20, height: 20, borderRadius: "50%",
-                background: "#0B0E1A",
+                background: dark ? "#0B0E1A" : "var(--v2-bg-raise)",
                 border: `3px solid ${level.darkColor}`,
-                boxShadow: `0 0 14px ${level.darkColor}`,
+                boxShadow: dark ? `0 0 14px ${level.darkColor}` : `0 0 12px ${level.darkColor}66`,
               }}
             />
           </div>
@@ -293,8 +315,461 @@ const STAGE_ICON: Record<string, LucideIcon> = {
   "info-seen": Fingerprint,
   "info-match": Users,
   "info-focus": Sparkles,
+  "info-system": Compass,
   "info-adhd": Compass,
 };
+
+type StrategicInfoKind = "clarity" | "start" | "recovery" | "system";
+
+const STRATEGIC_KIND: Record<string, StrategicInfoKind> = {
+  "info-seen": "clarity",
+  "info-match": "start",
+  "info-focus": "recovery",
+  "info-system": "system",
+};
+
+const STAGE_NOTE: Record<StrategicInfoKind, string> = {
+  clarity: "Clarity shift",
+  start: "Start point",
+  recovery: "Recovery route",
+  system: "System preview",
+};
+
+function TinyLabel({
+  children,
+  tone = "muted",
+}: {
+  children: ReactNode;
+  tone?: "muted" | "signal";
+}) {
+  return (
+    <span
+      className="v2-hud"
+      style={{
+        fontSize: 9,
+        letterSpacing: 0,
+        color: tone === "signal" ? "var(--v2-signal-2)" : "var(--v2-ink-faint)",
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
+function SoftPanel({
+  children,
+  tone = "quiet",
+}: {
+  children: ReactNode;
+  tone?: "quiet" | "signal";
+}) {
+  return (
+    <div
+      style={{
+        padding: "13px 14px",
+        borderRadius: 14,
+        border:
+          tone === "signal"
+            ? "1px solid rgba(var(--v2-cyan-rgb),0.28)"
+            : "1px solid rgba(var(--v2-line-rgb),0.16)",
+        background:
+          tone === "signal"
+            ? "linear-gradient(160deg, rgba(var(--v2-signal-rgb),0.16), rgba(var(--v2-cyan-rgb),0.07))"
+            : "linear-gradient(165deg, rgba(148,163,255,0.08), rgba(148,163,255,0.03))",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function BodyText({
+  children,
+  strong = false,
+}: {
+  children: ReactNode;
+  strong?: boolean;
+}) {
+  return (
+    <p
+      style={{
+        marginTop: 7,
+        fontSize: 13.2,
+        fontWeight: strong ? 720 : 500,
+        color: strong ? "var(--v2-ink)" : "var(--v2-ink-dim)",
+        lineHeight: 1.48,
+      }}
+    >
+      {children}
+    </p>
+  );
+}
+
+function ClarityInfoContent({ question }: { question: QuizQuestion }) {
+  return (
+    <m.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.16, duration: 0.26 }}
+      style={{ width: "100%", marginBottom: 24 }}
+    >
+      <SoftPanel>
+        <TinyLabel>Before</TinyLabel>
+        <BodyText>{question.infoPattern}</BodyText>
+        <BodyText>{question.infoConsequence}</BodyText>
+      </SoftPanel>
+
+      <div style={{ display: "flex", justifyContent: "center", padding: "8px 0" }}>
+        <m.span
+          aria-hidden="true"
+          animate={{ opacity: [0.35, 1, 0.35] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+          style={{
+            width: 2,
+            height: 28,
+            borderRadius: 999,
+            background: "linear-gradient(to bottom, transparent, rgba(var(--v2-cyan-rgb),0.75), transparent)",
+          }}
+        />
+      </div>
+
+      <SoftPanel tone="signal">
+        <TinyLabel tone="signal">FocusRoute converts the fog</TinyLabel>
+        <BodyText strong>{question.infoCapability}</BodyText>
+      </SoftPanel>
+
+      <m.div
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.28, duration: 0.22 }}
+        style={{
+          marginTop: 10,
+          padding: "12px 14px",
+          borderRadius: 999,
+          color: "var(--v2-ink)",
+          background: "rgba(var(--v2-cyan-rgb),0.08)",
+          border: "1px solid rgba(var(--v2-cyan-rgb),0.24)",
+          fontSize: 13.2,
+          fontWeight: 760,
+          lineHeight: 1.35,
+        }}
+      >
+        {question.infoBenefit}
+      </m.div>
+    </m.div>
+  );
+}
+
+function StartInfoContent({ question }: { question: QuizQuestion }) {
+  return (
+    <m.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.16, duration: 0.26 }}
+      style={{ width: "100%", marginBottom: 24 }}
+    >
+      <div style={{ display: "grid", gap: 10 }}>
+        <SoftPanel>
+          <TinyLabel>Priority still feels abstract</TinyLabel>
+          <BodyText>{question.infoPattern}</BodyText>
+          <BodyText>{question.infoConsequence}</BodyText>
+        </SoftPanel>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr auto 1fr",
+            gap: 8,
+            alignItems: "center",
+          }}
+        >
+          <m.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.22 }}
+            style={{
+              minHeight: 58,
+              borderRadius: 14,
+              border: "1px solid rgba(var(--v2-line-rgb),0.18)",
+              background: "rgba(148,163,255,0.05)",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              padding: "10px 8px",
+            }}
+          >
+            <TinyLabel>Big idea</TinyLabel>
+            <p
+              style={{
+                marginTop: 5,
+                fontSize: 13,
+                fontWeight: 760,
+                color: "var(--v2-ink-dim)",
+                lineHeight: 1.22,
+              }}
+            >
+              the whole plan
+            </p>
+          </m.div>
+
+          <m.span
+            aria-hidden="true"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.28, duration: 0.2 }}
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 999,
+              display: "grid",
+              placeItems: "center",
+              color: "var(--v2-signal-2)",
+              border: "1px solid rgba(var(--v2-cyan-rgb),0.32)",
+              background: "rgba(var(--v2-cyan-rgb),0.07)",
+              fontFamily: "var(--v2-font-mono)",
+              fontSize: 15,
+            }}
+          >
+            &gt;
+          </m.span>
+
+          <m.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.28, duration: 0.22 }}
+            style={{
+              minHeight: 58,
+              borderRadius: 14,
+              border: "1px solid rgba(var(--v2-line-rgb),0.18)",
+              background: "linear-gradient(160deg, rgba(var(--v2-signal-rgb),0.17), rgba(var(--v2-cyan-rgb),0.07))",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              padding: "10px 8px",
+            }}
+          >
+            <TinyLabel tone="signal">First move</TinyLabel>
+            <p
+              style={{
+                marginTop: 5,
+                fontSize: 13,
+                fontWeight: 760,
+                color: "var(--v2-ink)",
+                lineHeight: 1.22,
+              }}
+            >
+              one daily action
+            </p>
+          </m.div>
+        </div>
+
+        <SoftPanel tone="signal">
+          <TinyLabel tone="signal">How FocusRoute changes the entry point</TinyLabel>
+          <BodyText strong>{question.infoCapability}</BodyText>
+        </SoftPanel>
+
+        <BodyText strong>{question.infoBenefit}</BodyText>
+      </div>
+    </m.div>
+  );
+}
+
+function RecoveryInfoContent({ question }: { question: QuizQuestion }) {
+  const steps = [
+    { label: "Interruption", text: question.infoPattern },
+    { label: "The drag", text: question.infoConsequence },
+    { label: "Route back", text: question.infoCapability },
+  ];
+
+  return (
+    <m.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.16, duration: 0.26 }}
+      style={{ width: "100%", marginBottom: 24 }}
+    >
+      <div style={{ position: "relative", paddingLeft: 24 }}>
+        <span
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            left: 8,
+            top: 7,
+            bottom: 16,
+            width: 1,
+            background: "linear-gradient(to bottom, rgba(var(--v2-line-rgb),0.18), rgba(var(--v2-cyan-rgb),0.56), rgba(var(--v2-line-rgb),0.14))",
+          }}
+        />
+        {steps.map((step, i) => {
+          const isRoute = i === 2;
+
+          return (
+            <m.div
+              key={step.label}
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.18 + i * 0.07, duration: 0.22 }}
+              style={{
+                position: "relative",
+                marginBottom: i === steps.length - 1 ? 0 : 10,
+              }}
+            >
+              <span
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  left: -22,
+                  top: 7,
+                  width: 13,
+                  height: 13,
+                  borderRadius: "50%",
+                  background: isRoute ? "var(--v2-grad-signal)" : "rgba(148,163,255,0.12)",
+                  border: isRoute ? "none" : "1px solid rgba(var(--v2-line-rgb),0.34)",
+                  boxShadow: isRoute ? "0 0 16px rgba(var(--v2-signal-rgb),0.55)" : "none",
+                }}
+              />
+              <SoftPanel tone={isRoute ? "signal" : "quiet"}>
+                <TinyLabel tone={isRoute ? "signal" : "muted"}>{step.label}</TinyLabel>
+                <BodyText strong={isRoute}>{step.text}</BodyText>
+              </SoftPanel>
+            </m.div>
+          );
+        })}
+      </div>
+
+      <m.p
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.42, duration: 0.22 }}
+        style={{
+          marginTop: 12,
+          padding: "0 4px",
+          color: "var(--v2-ink)",
+          fontSize: 13.5,
+          fontWeight: 760,
+          lineHeight: 1.45,
+        }}
+      >
+        {question.infoBenefit}
+      </m.p>
+    </m.div>
+  );
+}
+
+function SystemInfoContent({ question }: { question: QuizQuestion }) {
+  const layers = ["Priorities", "Daily actions", "Focus patterns", "Progress"];
+
+  return (
+    <m.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.16, duration: 0.26 }}
+      style={{ width: "100%", marginBottom: 20 }}
+    >
+      <SoftPanel>
+        <TinyLabel>What your answers show</TinyLabel>
+        <p
+          style={{
+            marginTop: 7,
+            fontSize: 13,
+            fontWeight: 500,
+            color: "var(--v2-ink-dim)",
+            lineHeight: 1.42,
+          }}
+        >
+          {question.infoPattern} {question.infoConsequence}
+        </p>
+      </SoftPanel>
+
+      <div
+        style={{
+          marginTop: 9,
+          display: "grid",
+          gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+          gap: 7,
+        }}
+      >
+        {layers.map((layer, i) => (
+          <m.div
+            key={layer}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.22 + i * 0.05, duration: 0.22 }}
+            style={{
+              minHeight: 36,
+              padding: "8px 10px",
+              borderRadius: 13,
+              border: "1px solid rgba(var(--v2-line-rgb),0.17)",
+              background:
+                i === layers.length - 1
+                  ? "linear-gradient(160deg, rgba(var(--v2-signal-rgb),0.18), rgba(var(--v2-cyan-rgb),0.07))"
+                  : "rgba(148,163,255,0.055)",
+              color: i === layers.length - 1 ? "var(--v2-ink)" : "var(--v2-ink-dim)",
+              fontSize: 12.2,
+              fontWeight: 730,
+              textAlign: "center",
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
+            {layer}
+          </m.div>
+        ))}
+      </div>
+
+      <div style={{ marginTop: 9 }}>
+        <SoftPanel tone="signal">
+          <TinyLabel tone="signal">One connected route</TinyLabel>
+          <p
+            style={{
+              marginTop: 7,
+              fontSize: 13,
+              fontWeight: 730,
+              color: "var(--v2-ink)",
+              lineHeight: 1.42,
+            }}
+          >
+            {question.infoCapability} {question.infoBenefit}
+          </p>
+        </SoftPanel>
+      </div>
+
+      {question.infoClosing && (
+        <m.p
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.46, duration: 0.24 }}
+          style={{
+            marginTop: 9,
+            padding: "9px 12px",
+            borderRadius: 13,
+            border: "1px solid rgba(217,188,127,0.26)",
+            background: "rgba(217,188,127,0.08)",
+            color: "var(--v2-gold-bright)",
+            fontSize: 12.6,
+            fontWeight: 760,
+            lineHeight: 1.36,
+          }}
+        >
+          {question.infoClosing}
+        </m.p>
+      )}
+    </m.div>
+  );
+}
+
+function OrganicInfoContent({
+  question,
+  kind,
+}: {
+  question: QuizQuestion;
+  kind: StrategicInfoKind;
+}) {
+  if (kind === "clarity") return <ClarityInfoContent question={question} />;
+  if (kind === "start") return <StartInfoContent question={question} />;
+  if (kind === "recovery") return <RecoveryInfoContent question={question} />;
+  return <SystemInfoContent question={question} />;
+}
 
 function GenericInfoCard({
   question,
@@ -304,6 +779,8 @@ function GenericInfoCard({
   onContinue: () => void;
 }) {
   const StageIcon = STAGE_ICON[question.id] ?? Sparkles;
+  const strategicKind = STRATEGIC_KIND[question.id];
+  const isStrategic = Boolean(strategicKind);
 
   return (
     <div style={{
@@ -321,17 +798,23 @@ function GenericInfoCard({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.36, ease: "easeOut" }}
         style={{
-          flex: 1,
+          flex: isStrategic ? "0 0 auto" : 1,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           width: "100%",
           maxWidth: 420,
-          paddingTop: 40,
-          paddingBottom: 16,
+          paddingTop: isStrategic ? 14 : 40,
+          paddingBottom: isStrategic ? 6 : 16,
         }}
       >
-        <div style={{ position: "relative", width: 132, height: 132, display: "grid", placeItems: "center" }}>
+        <div style={{
+          position: "relative",
+          width: isStrategic ? 96 : 132,
+          height: isStrategic ? 96 : 132,
+          display: "grid",
+          placeItems: "center",
+        }}>
           {/* orbital rings */}
           <m.span
             aria-hidden="true"
@@ -341,7 +824,7 @@ function GenericInfoCard({
               position: "absolute",
               inset: 0,
               borderRadius: "50%",
-              border: "1px dashed rgba(124,138,255,0.4)",
+              border: "1px dashed rgba(var(--v2-signal-rgb),0.4)",
             }}
           />
           <span
@@ -350,7 +833,7 @@ function GenericInfoCard({
               position: "absolute",
               inset: 13,
               borderRadius: "50%",
-              border: "1px solid rgba(163,178,255,0.22)",
+              border: "1px solid rgba(var(--v2-line-rgb),0.22)",
             }}
           />
           <span
@@ -359,26 +842,28 @@ function GenericInfoCard({
               position: "absolute",
               inset: -18,
               borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(124,138,255,0.22) 0%, transparent 65%)",
+              background: "radial-gradient(circle, rgba(var(--v2-signal-rgb),0.22) 0%, transparent 65%)",
               filter: "blur(8px)",
             }}
           />
           <div style={{
-            width: 86, height: 86, borderRadius: "50%",
-            background: "linear-gradient(150deg, rgba(124,138,255,0.20), rgba(155,232,255,0.06))",
-            border: "1px solid rgba(163,178,255,0.4)",
+            width: isStrategic ? 66 : 86,
+            height: isStrategic ? 66 : 86,
+            borderRadius: "50%",
+            background: "linear-gradient(150deg, rgba(var(--v2-signal-rgb),0.20), rgba(var(--v2-cyan-rgb),0.06))",
+            border: "1px solid rgba(var(--v2-line-rgb),0.4)",
             display: "flex", alignItems: "center", justifyContent: "center",
             color: "var(--v2-signal-2)",
-            boxShadow: "0 14px 44px rgba(124,138,255,0.3), inset 0 1px 0 rgba(255,255,255,0.16)",
+            boxShadow: "0 14px 44px rgba(var(--v2-signal-rgb),0.3), inset 0 1px 0 rgba(255,255,255,0.16)",
           }}>
-            <StageIcon size={36} strokeWidth={1.6} />
+            <StageIcon size={isStrategic ? 28 : 36} strokeWidth={1.6} />
           </div>
         </div>
       </m.div>
 
       {/* ── Text + CTA — centered ────────────────────────────── */}
       <div style={{
-        paddingBottom: 48,
+        paddingBottom: isStrategic ? 20 : 48,
         maxWidth: 480,
         width: "100%",
         display: "flex",
@@ -394,7 +879,7 @@ function GenericInfoCard({
           className="v2-hud"
           style={{ color: "var(--v2-signal-2)", marginBottom: 14 }}
         >
-          System note
+          {strategicKind ? STAGE_NOTE[strategicKind] : "System note"}
         </m.p>
         <m.h2
           initial={{ opacity: 0, y: 10 }}
@@ -402,11 +887,11 @@ function GenericInfoCard({
           transition={{ delay: 0.1, duration: 0.26 }}
           className="v2-display"
           style={{
-            fontSize: "clamp(24px, 6.4vw, 30px)",
+            fontSize: isStrategic ? 23 : 28,
             fontWeight: 550,
-            lineHeight: 1.2,
-            letterSpacing: "-0.02em",
-            marginBottom: 14,
+            lineHeight: 1.18,
+            letterSpacing: 0,
+            marginBottom: isStrategic ? 12 : 14,
           }}
         >
           <HighlightedStat
@@ -415,17 +900,21 @@ function GenericInfoCard({
           />
         </m.h2>
 
-        <m.p
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.16, duration: 0.26 }}
-          style={{
-            fontSize: 14.5, color: "var(--v2-ink-dim)",
-            lineHeight: 1.7, marginBottom: 34,
-          }}
-        >
-          {question.infoBody}
-        </m.p>
+        {strategicKind ? (
+          <OrganicInfoContent question={question} kind={strategicKind} />
+        ) : (
+          <m.p
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.16, duration: 0.26 }}
+            style={{
+              fontSize: 14.5, color: "var(--v2-ink-dim)",
+              lineHeight: 1.7, marginBottom: 34,
+            }}
+          >
+            {question.infoBody}
+          </m.p>
+        )}
 
         <m.button
           initial={{ opacity: 0, y: 8 }}
@@ -433,7 +922,7 @@ function GenericInfoCard({
           transition={{ delay: 0.22, duration: 0.24 }}
           onClick={onContinue}
           className="v2-cta"
-          style={{ width: "100%", minHeight: 56, fontSize: 15 }}
+          style={{ width: "100%", minHeight: isStrategic ? 52 : 56, fontSize: 15 }}
         >
           Keep Going
         </m.button>

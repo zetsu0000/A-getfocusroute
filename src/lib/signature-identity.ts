@@ -51,6 +51,13 @@ export const SIGNATURE_ORDER: SignatureKey[] = [
   "Drifter",
 ];
 
+/* Light-mode note: these `accent` hues are the original Warm-Ink light palette
+ * (Sprinter teal, Archivist navy, Spark indigo, Reactor terracotta, Drifter
+ * amber). They are deliberately mid-deep tones that already meet WCAG AA on the
+ * white .v2-light funnel surfaces (SigilArtifact, ChartScreen, EmailScreen), so
+ * no light-specific darkening is needed. They are intentionally NOT shifted here
+ * because the same values are consumed on dark dashboard surfaces via different
+ * composition (rgba tints / glows); per-surface adaptation happens there. */
 export const SIGNATURE_IDENTITY: Record<SignatureKey, SignatureIdentity> = {
   Sprinter: {
     key: "Sprinter",

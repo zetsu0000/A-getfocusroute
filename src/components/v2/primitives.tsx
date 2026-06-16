@@ -36,7 +36,7 @@ export function SignalRule({ style }: { style?: CSSProperties }) {
         height: 1,
         width: "100%",
         background:
-          "linear-gradient(90deg, transparent, rgba(124,138,255,0.4) 50%, transparent)",
+          "linear-gradient(90deg, transparent, rgba(var(--v2-signal-rgb),0.4) 50%, transparent)",
         ...style,
       }}
     />

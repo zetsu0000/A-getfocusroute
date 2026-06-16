@@ -11,12 +11,15 @@ export function TiltCard({
   children,
   maxTilt = 7,
   glare = true,
+  glareColor = "rgba(255,255,255,0.10)",
   style,
   className,
 }: {
   children: React.ReactNode;
   maxTilt?: number;
   glare?: boolean;
+  /** Roaming highlight tint. Light surfaces want a cool sheen, not white. */
+  glareColor?: string;
   style?: React.CSSProperties;
   className?: string;
 }) {
@@ -40,10 +43,10 @@ export function TiltCard({
       const g = glareRef.current;
       if (g) {
         g.style.opacity = "1";
-        g.style.background = `radial-gradient(420px circle at ${(px * 100).toFixed(1)}% ${(py * 100).toFixed(1)}%, rgba(255,255,255,0.10), transparent 55%)`;
+        g.style.background = `radial-gradient(420px circle at ${(px * 100).toFixed(1)}% ${(py * 100).toFixed(1)}%, ${glareColor}, transparent 55%)`;
       }
     },
-    [maxTilt],
+    [maxTilt, glareColor],
   );
 
   const onLeave = useCallback(() => {

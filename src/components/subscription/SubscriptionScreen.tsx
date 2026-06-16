@@ -14,6 +14,7 @@ import { useQuizStore } from "@/store/quizStore";
 import { safeName } from "@/lib/personalization";
 import { BRAIN_OS } from "@/lib/positioning";
 import { HudLabel } from "@/components/v2/primitives";
+import { useFunnelTheme } from "@/components/v2/FunnelThemeProvider";
 import {
   getAnalyticsContext,
   getOrCreateActionEventId,
@@ -209,6 +210,8 @@ function selectedProductKey(priceId: string): "membership_annual" | "membership_
 /* Plan selector card */
 function PlanCard({ planKey, isSelected, onSelect }: { planKey: "annual" | "monthly"; isSelected: boolean; onSelect: () => void }) {
   const plan = PLANS[planKey];
+  const { theme } = useFunnelTheme();
+  const dark = theme === "dark";
   return (
     <m.button
       onClick={onSelect}
@@ -221,12 +224,16 @@ function PlanCard({ planKey, isSelected, onSelect }: { planKey: "annual" | "mont
         borderRadius: 20,
         overflow: "hidden",
         background: isSelected
-          ? "linear-gradient(150deg, rgba(124,138,255,0.14), rgba(155,232,255,0.05))"
+          ? "linear-gradient(150deg, rgba(var(--v2-signal-rgb),0.14), rgba(var(--v2-cyan-rgb),0.05))"
           : "linear-gradient(165deg, rgba(148,163,255,0.07), rgba(148,163,255,0.03))",
-        border: isSelected ? "2px solid rgba(124,138,255,0.8)" : "2px solid var(--v2-line)",
+        border: isSelected ? "2px solid rgba(var(--v2-signal-rgb),0.8)" : "2px solid var(--v2-line)",
         boxShadow: isSelected
-          ? "0 0 0 1px rgba(124,138,255,0.25), 0 16px 50px rgba(124,138,255,0.2)"
-          : "inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 36px rgba(2,3,10,0.45)",
+          ? (dark
+              ? "0 0 0 1px rgba(var(--v2-signal-rgb),0.25), 0 16px 50px rgba(var(--v2-signal-rgb),0.2)"
+              : "0 0 0 1px rgba(70,85,230,0.25), 0 16px 44px rgba(70,85,230,0.18)")
+          : (dark
+              ? "inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 36px rgba(2,3,10,0.45)"
+              : "inset 0 1px 0 rgba(255,255,255,0.8), var(--v2-shadow-md)"),
         backdropFilter: "blur(10px)",
         WebkitBackdropFilter: "blur(10px)",
         transition: "box-shadow 0.2s, border-color 0.2s, background 0.2s",
@@ -237,7 +244,7 @@ function PlanCard({ planKey, isSelected, onSelect }: { planKey: "annual" | "mont
         <div style={{
           padding: "8px 20px",
           background: "var(--v2-grad-signal)",
-          color: "#06070D",
+          color: dark ? "#06070D" : "#FFFFFF",
           fontFamily: "var(--v2-font-mono)",
           fontSize: 10.5,
           fontWeight: 700,
@@ -264,7 +271,7 @@ function PlanCard({ planKey, isSelected, onSelect }: { planKey: "annual" | "mont
             marginTop: 4, width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
             border: `2px solid ${isSelected ? "var(--v2-signal)" : "var(--v2-line-bright)"}`,
             display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: isSelected ? "0 0 12px rgba(124,138,255,0.5)" : "none",
+            boxShadow: isSelected ? "0 0 12px rgba(var(--v2-signal-rgb),0.5)" : "none",
           }}>
             {isSelected && (
               <m.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500, damping: 25 }}
@@ -294,6 +301,7 @@ function PlanCard({ planKey, isSelected, onSelect }: { planKey: "annual" | "mont
 export function SubscriptionScreen() {
   const { name, email, setStep, quizResultId } = useQuizStore();
   const displayName = safeName(name, "you");
+  const { theme } = useFunnelTheme();
 
   const [selected, setSelected] = useState<"annual" | "monthly">("annual");
   const [showPayment, setShowPayment] = useState(false);
@@ -404,10 +412,20 @@ export function SubscriptionScreen() {
                 mode: "subscription",
                 amount: plan.amount,
                 currency: "usd",
-                appearance: {
-                  theme: "night",
-                  variables: { colorPrimary: "#9BE8FF", colorBackground: "#10131F", colorText: "#EEF1FF", colorDanger: "#FF8B8B", fontFamily: "inherit", borderRadius: "12px" },
-                },
+                appearance: theme === "light"
+                  ? {
+                      theme: "stripe",
+                      variables: { colorPrimary: "#4655E6", colorBackground: "#FFFFFF", colorText: "#0E1124", colorTextSecondary: "#5A6079", colorTextPlaceholder: "#9AA0B8", colorDanger: "#C53A2E", fontFamily: "inherit", borderRadius: "12px" },
+                      rules: {
+                        ".Input": { border: "1.5px solid rgba(48,64,150,0.22)", backgroundColor: "#FFFFFF", boxShadow: "0 1px 2px rgba(20,30,90,0.05)" },
+                        ".Input:focus": { border: "1.5px solid rgba(70,85,230,0.85)", boxShadow: "0 0 0 3px rgba(70,85,230,0.14)" },
+                        ".Tab--selected": { border: "1.5px solid rgba(70,85,230,0.85)", backgroundColor: "rgba(70,85,230,0.08)", color: "#0E1124" },
+                      },
+                    }
+                  : {
+                      theme: "night",
+                      variables: { colorPrimary: "#9BE8FF", colorBackground: "#10131F", colorText: "#EEF1FF", colorDanger: "#FF8B8B", fontFamily: "inherit", borderRadius: "12px" },
+                    },
               }}
             >
               <SubCheckoutForm

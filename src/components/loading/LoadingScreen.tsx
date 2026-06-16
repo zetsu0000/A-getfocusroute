@@ -9,6 +9,7 @@ import { getOrCreateActionEventId, trackEvent } from "@/lib/analytics/client";
 import { getSignatureFromAnswers } from "@/lib/signature";
 import { FocusField } from "@/components/v2/FocusField";
 import { HudLabel } from "@/components/v2/primitives";
+import { useFunnelTheme } from "@/components/v2/FunnelThemeProvider";
 
 const PHASES = [
   { label: "Reading your answers", end: 28 },
@@ -32,6 +33,8 @@ const REVIEWS = [
 export function LoadingScreen() {
   const setStep = useQuizStore((s) => s.setStep);
   const answers = useQuizStore((s) => s.answers);
+  const { theme } = useFunnelTheme();
+  const dark = theme === "dark";
 
   const [progress, setProgress] = useState(0);
   const loadingTracked = useRef(false);
@@ -94,7 +97,7 @@ export function LoadingScreen() {
 
       {/* The field organizes in lockstep with the computation. */}
       <div aria-hidden="true" style={{ position: "fixed", inset: 0, pointerEvents: "none" }}>
-        <FocusField coherence={progress / 100} intensity={0.8} showRoute />
+        <FocusField key={theme} coherence={progress / 100} intensity={0.8} showRoute theme={theme} />
       </div>
 
       {/* Title + dial */}
@@ -131,7 +134,7 @@ export function LoadingScreen() {
               position: "absolute",
               inset: 0,
               borderRadius: "50%",
-              border: "1px dashed rgba(124,138,255,0.35)",
+              border: "1px dashed rgba(var(--v2-signal-rgb),0.35)",
             }}
           />
           {/* radar sweep — the system actively scanning */}
@@ -142,7 +145,7 @@ export function LoadingScreen() {
               inset: 6,
               borderRadius: "50%",
               background:
-                "conic-gradient(from 0deg, rgba(155,232,255,0.20) 0deg, rgba(155,232,255,0.04) 46deg, transparent 80deg)",
+                "conic-gradient(from 0deg, rgba(var(--v2-cyan-rgb),0.20) 0deg, rgba(var(--v2-cyan-rgb),0.04) 46deg, transparent 80deg)",
               animation: "v2-radar-spin 3.2s linear infinite",
             }}
           />
@@ -152,11 +155,11 @@ export function LoadingScreen() {
               position: "absolute",
               inset: 26,
               borderRadius: "50%",
-              border: "1px solid rgba(163,178,255,0.16)",
+              border: "1px solid rgba(var(--v2-line-rgb),0.16)",
             }}
           />
           <svg width="148" height="148" viewBox="0 0 148 148" style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}>
-            <circle cx="74" cy="74" r="63" fill="none" stroke="rgba(163,178,255,0.14)" strokeWidth="2.5" />
+            <circle cx="74" cy="74" r="63" fill="none" style={{ stroke: "rgba(var(--v2-line-rgb),0.14)" }} strokeWidth="2.5" />
             <circle
               cx="74" cy="74" r="63" fill="none"
               stroke="url(#v2-load-grad)"
@@ -164,19 +167,19 @@ export function LoadingScreen() {
               strokeLinecap="round"
               strokeDasharray={2 * Math.PI * 63}
               strokeDashoffset={2 * Math.PI * 63 * (1 - progress / 100)}
-              style={{ filter: "drop-shadow(0 0 8px rgba(124,138,255,0.7))", transition: "stroke-dashoffset 0.1s linear" }}
+              style={{ filter: dark ? "drop-shadow(0 0 8px rgba(124,138,255,0.7))" : "drop-shadow(0 0 6px rgba(70,85,230,0.4))", transition: "stroke-dashoffset 0.1s linear" }}
             />
             <defs>
               <linearGradient id="v2-load-grad" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#7C8AFF" />
-                <stop offset="100%" stopColor="#9BE8FF" />
+                <stop offset="0%" stopColor={dark ? "#7C8AFF" : "#4655E6"} />
+                <stop offset="100%" stopColor={dark ? "#9BE8FF" : "#1487B5"} />
               </linearGradient>
             </defs>
           </svg>
           <div>
             <p
               className="v2-display"
-              style={{ fontSize: 38, fontWeight: 600, color: "#fff", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}
+              style={{ fontSize: 38, fontWeight: 600, color: dark ? "#fff" : "var(--v2-ink)", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}
             >
               {Math.round(progress)}
               <span style={{ fontSize: 18, color: "var(--v2-ink-faint)" }}>%</span>
@@ -208,9 +211,9 @@ export function LoadingScreen() {
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  border: `1px solid ${done ? "rgba(155,232,255,0.8)" : active ? "rgba(124,138,255,0.7)" : "var(--v2-line)"}`,
-                  background: done ? "rgba(124,138,255,0.18)" : "transparent",
-                  boxShadow: active ? "0 0 10px rgba(124,138,255,0.5)" : "none",
+                  border: `1px solid ${done ? "rgba(var(--v2-cyan-rgb),0.8)" : active ? "rgba(var(--v2-signal-rgb),0.7)" : "var(--v2-line)"}`,
+                  background: done ? "rgba(var(--v2-signal-rgb),0.18)" : "transparent",
+                  boxShadow: active ? "0 0 10px rgba(var(--v2-signal-rgb),0.5)" : "none",
                   animation: active ? "v2-blink 1.1s ease-in-out infinite" : "none",
                 }}
               >

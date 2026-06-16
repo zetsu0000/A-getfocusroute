@@ -2,6 +2,7 @@
 
 import { m } from "framer-motion";
 import { questions, progressQuestions } from "@/data/questions";
+import { useFunnelTheme } from "@/components/v2/FunnelThemeProvider";
 
 interface ProgressBarProps { currentIndex: number }
 
@@ -29,6 +30,8 @@ const STATIONS: number[] = (() => {
 })();
 
 export function ProgressBar({ currentIndex }: ProgressBarProps) {
+  const { theme } = useFunnelTheme();
+  const dark = theme === "dark";
   const answered = questions
     .slice(0, currentIndex + 1)
     .filter((q) => q.inputType !== "info").length;
@@ -53,9 +56,10 @@ export function ProgressBar({ currentIndex }: ProgressBarProps) {
           position: "absolute",
           inset: "6px 0",
           borderRadius: 999,
-          background:
-            "repeating-linear-gradient(90deg, rgba(163,178,255,0.28) 0 7px, transparent 7px 14px)",
-          opacity: 0.5,
+          background: dark
+            ? "repeating-linear-gradient(90deg, rgba(var(--v2-line-rgb),0.28) 0 7px, transparent 7px 14px)"
+            : "repeating-linear-gradient(90deg, rgba(70,85,230,0.30) 0 7px, transparent 7px 14px)",
+          opacity: dark ? 0.5 : 0.6,
           height: 2,
           top: "50%",
           marginTop: -1,
@@ -76,9 +80,9 @@ export function ProgressBar({ currentIndex }: ProgressBarProps) {
               width: 6,
               height: 6,
               borderRadius: 1.5,
-              background: passed ? "var(--v2-signal-2)" : "rgba(163,178,255,0.25)",
-              border: `1px solid ${passed ? "var(--v2-signal-2)" : "rgba(163,178,255,0.4)"}`,
-              boxShadow: passed ? "0 0 10px rgba(155,232,255,0.8)" : "none",
+              background: passed ? "var(--v2-signal-2)" : (dark ? "rgba(163,178,255,0.25)" : "rgba(70,85,230,0.22)"),
+              border: `1px solid ${passed ? "var(--v2-signal-2)" : (dark ? "rgba(163,178,255,0.4)" : "rgba(70,85,230,0.45)")}`,
+              boxShadow: passed ? (dark ? "0 0 10px rgba(155,232,255,0.8)" : "0 0 10px rgba(20,135,181,0.55)") : "none",
               transition: "background 0.4s, box-shadow 0.4s, border-color 0.4s",
               zIndex: 1,
             }}
@@ -96,7 +100,7 @@ export function ProgressBar({ currentIndex }: ProgressBarProps) {
           height: 3,
           borderRadius: 999,
           background: "var(--v2-grad-signal)",
-          boxShadow: "0 0 12px rgba(124,138,255,0.55)",
+          boxShadow: "0 0 12px rgba(var(--v2-signal-rgb),0.55)",
           zIndex: 2,
         }}
       >
@@ -112,7 +116,7 @@ export function ProgressBar({ currentIndex }: ProgressBarProps) {
             height: 9,
             borderRadius: 999,
             background: "var(--v2-signal-2)",
-            boxShadow: "0 0 10px var(--v2-signal-2), 0 0 22px rgba(155,232,255,0.5)",
+            boxShadow: "0 0 10px var(--v2-signal-2), 0 0 22px rgba(var(--v2-cyan-rgb),0.5)",
             animation: "v2-pulse-ring 2.2s ease-out infinite",
           }}
         />

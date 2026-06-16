@@ -8,12 +8,15 @@ import { useQuizStore } from "@/store/quizStore";
 import { safeName } from "@/lib/personalization";
 import { FocusField } from "@/components/v2/FocusField";
 import { HudLabel } from "@/components/v2/primitives";
+import { useFunnelTheme } from "@/components/v2/FunnelThemeProvider";
 import { trackEvent } from "@/lib/analytics/client";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 
 export function SuccessScreen() {
   const { name, email } = useQuizStore();
   const displayName = safeName(name, "there");
+  const { theme } = useFunnelTheme();
+  const dark = theme === "dark";
 
   /* Client-side confirmation the buyer reached the end state. First-party only. */
   useEffect(() => {
@@ -29,7 +32,7 @@ export function SuccessScreen() {
     >
       {/* the route, fully organized — celebration as signal, not confetti */}
       <div aria-hidden="true" style={{ position: "fixed", inset: 0, pointerEvents: "none" }}>
-        <FocusField coherence={1} intensity={0.9} showRoute accentRgb="217,188,127" accentRgb2="155,232,255" />
+        <FocusField key={theme} coherence={1} intensity={0.9} showRoute theme={theme} accentRgb={dark ? "217,188,127" : "154,122,46"} accentRgb2={dark ? "155,232,255" : "20,135,181"} />
       </div>
 
       <m.div
@@ -42,19 +45,23 @@ export function SuccessScreen() {
           aria-hidden="true"
           animate={{ rotate: 360 }}
           transition={{ duration: 16, repeat: Infinity, ease: "linear" }}
-          style={{ position: "absolute", inset: -8, borderRadius: "50%", border: "1px dashed rgba(217,188,127,0.45)" }}
+          style={{ position: "absolute", inset: -8, borderRadius: "50%", border: dark ? "1px dashed rgba(217,188,127,0.45)" : "1px dashed rgba(154,122,46,0.5)" }}
         />
         <div
           style={{
             width: 84,
             height: 84,
             borderRadius: 26,
-            background: "linear-gradient(140deg, rgba(217,188,127,0.3), rgba(124,138,255,0.2))",
-            border: "1px solid rgba(217,188,127,0.55)",
+            background: dark
+              ? "linear-gradient(140deg, rgba(217,188,127,0.3), rgba(var(--v2-signal-rgb),0.2))"
+              : "linear-gradient(140deg, rgba(201,154,67,0.22), rgba(70,85,230,0.14)), #FFFFFF",
+            border: dark ? "1px solid rgba(217,188,127,0.55)" : "1px solid rgba(154,122,46,0.45)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: "0 14px 50px rgba(217,188,127,0.3), inset 0 1px 0 rgba(255,248,226,0.3)",
+            boxShadow: dark
+              ? "0 14px 50px rgba(217,188,127,0.3), inset 0 1px 0 rgba(255,248,226,0.3)"
+              : "0 14px 40px rgba(154,122,46,0.22), inset 0 1px 0 rgba(255,255,255,0.8)",
           }}
         >
           <CheckCircle2 size={42} color="var(--v2-gold-bright)" strokeWidth={2} />
@@ -137,7 +144,7 @@ export function SuccessScreen() {
             { step: "3", text: "Work through your plan at your pace. Even 10 minutes counts." },
           ].map(({ step, text }) => (
             <div key={step} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-              <div style={{ width: 28, height: 28, borderRadius: 999, border: "1px solid rgba(163,178,255,0.35)", background: "rgba(124,138,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <div style={{ width: 28, height: 28, borderRadius: 999, border: "1px solid rgba(var(--v2-line-rgb),0.35)", background: "rgba(var(--v2-signal-rgb),0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <span style={{ fontFamily: "var(--v2-font-mono)", fontSize: 12, color: "var(--v2-signal-2)" }}>{step}</span>
               </div>
               <p style={{ fontSize: 13, color: "var(--v2-ink-dim)", lineHeight: 1.55, paddingTop: 4 }}>{text}</p>

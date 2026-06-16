@@ -5,6 +5,7 @@ import { SignatureSigil } from "@/components/signature/SignatureSigil";
 import { getSignatureIdentity, SIGNATURE_ORDER, type SignatureKey } from "@/lib/signature-identity";
 import { TiltCard } from "./TiltCard";
 import { SparkBurst } from "./SparkBurst";
+import { useFunnelTheme } from "./FunnelThemeProvider";
 
 /**
  * SigilArtifact — the V2 premium identity artifact.
@@ -61,6 +62,8 @@ export function SigilArtifact({
   const identity = getSignatureIdentity(signatureKey);
   const reduce = useReducedMotion();
   const isPaywall = variant === "paywall";
+  const { theme } = useFunnelTheme();
+  const dark = theme === "dark";
 
   const fade = (delay: number) => ({
     initial: reduce ? undefined : { opacity: 0, y: 12 },
@@ -85,23 +88,41 @@ export function SigilArtifact({
       }}
     >
       {/* signature locking in — one radial burst behind the reveal */}
-      {!isPaywall && <SparkBurst accentRgb={identity.accentRgb} delay={650} />}
-    <TiltCard maxTilt={isPaywall ? 4 : 8} style={{ width: "100%" }}>
+      {!isPaywall && <SparkBurst accentRgb={identity.accentRgb} delay={650} theme={theme} />}
+    <TiltCard
+      maxTilt={isPaywall ? 4 : 8}
+      glareColor={dark ? "rgba(255,255,255,0.10)" : `rgba(${identity.accentRgb},0.16)`}
+      style={{ width: "100%" }}
+    >
       <div
         style={{
           position: "relative",
           borderRadius: 26,
           overflow: "hidden",
-          background: `
+          background: dark
+            ? `
             radial-gradient(120% 90% at 80% -10%, rgba(${identity.accentRgb},0.30) 0%, transparent 55%),
             radial-gradient(100% 100% at 10% 110%, rgba(${identity.accentRgb},0.14) 0%, transparent 50%),
             linear-gradient(160deg, #0B0E1A 0%, #070811 60%, #05060C 100%)
+          `
+            : `
+            radial-gradient(120% 90% at 80% -10%, rgba(${identity.accentRgb},0.16) 0%, transparent 55%),
+            radial-gradient(100% 100% at 10% 110%, rgba(${identity.accentRgb},0.07) 0%, transparent 50%),
+            linear-gradient(160deg, #FFFFFF 0%, #F6F8FD 60%, #EEF1FA 100%)
           `,
-          border: `1px solid rgba(${identity.accentRgb},0.30)`,
-          boxShadow: `
+          border: dark
+            ? `1px solid rgba(${identity.accentRgb},0.30)`
+            : `1px solid rgba(${identity.accentRgb},0.32)`,
+          boxShadow: dark
+            ? `
             0 1px 0 rgba(255,255,255,0.08) inset,
             0 30px 80px rgba(2,3,10,0.7),
             0 0 60px rgba(${identity.accentRgb},0.16)
+          `
+            : `
+            0 1px 0 rgba(255,255,255,0.9) inset,
+            0 18px 50px rgba(20,30,90,0.13),
+            0 0 50px rgba(${identity.accentRgb},0.12)
           `,
         }}
       >
@@ -111,7 +132,9 @@ export function SigilArtifact({
           style={{
             position: "absolute",
             inset: 0,
-            backgroundImage: "radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)",
+            backgroundImage: dark
+              ? "radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)"
+              : "radial-gradient(rgba(14,17,36,0.05) 1px, transparent 1px)",
             backgroundSize: "24px 24px",
             pointerEvents: "none",
           }}
@@ -131,13 +154,22 @@ export function SigilArtifact({
               aspectRatio: "1",
               marginLeft: "-90%",
               marginTop: "-90%",
-              background: `conic-gradient(from 0deg,
+              background: dark
+                ? `conic-gradient(from 0deg,
                 transparent 0deg,
                 rgba(${identity.accentRgb},0.08) 40deg,
                 transparent 90deg,
                 rgba(255,255,255,0.04) 180deg,
                 transparent 230deg,
                 rgba(${identity.accentRgb},0.06) 300deg,
+                transparent 360deg)`
+                : `conic-gradient(from 0deg,
+                transparent 0deg,
+                rgba(${identity.accentRgb},0.09) 40deg,
+                transparent 90deg,
+                rgba(${identity.accentRgb},0.04) 180deg,
+                transparent 230deg,
+                rgba(${identity.accentRgb},0.07) 300deg,
                 transparent 360deg)`,
               pointerEvents: "none",
             }}
@@ -156,8 +188,9 @@ export function SigilArtifact({
               top: 0,
               bottom: 0,
               width: "55%",
-              background:
-                "linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.07) 50%, transparent 80%)",
+              background: dark
+                ? "linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.07) 50%, transparent 80%)"
+                : `linear-gradient(100deg, transparent 20%, rgba(${identity.accentRgb},0.10) 50%, transparent 80%)`,
               transform: "skewX(-12deg)",
               pointerEvents: "none",
             }}
@@ -170,7 +203,7 @@ export function SigilArtifact({
             {...fade(0)}
             style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: isPaywall ? 18 : 24 }}
           >
-            <span className="v2-hud" style={{ color: "rgba(255,255,255,0.40)", whiteSpace: "nowrap" }}>
+            <span className="v2-hud" style={{ color: dark ? "rgba(255,255,255,0.40)" : "var(--v2-ink-faint)", whiteSpace: "nowrap" }}>
               Cognitive Signature
             </span>
             <span
@@ -254,8 +287,10 @@ export function SigilArtifact({
                   fontWeight: 600,
                   lineHeight: 0.96,
                   letterSpacing: "-0.025em",
-                  color: "#FFFFFF",
-                  textShadow: `0 12px 44px rgba(${identity.accentRgb},0.4)`,
+                  color: dark ? "#FFFFFF" : "var(--v2-ink)",
+                  textShadow: dark
+                    ? `0 12px 44px rgba(${identity.accentRgb},0.4)`
+                    : `0 8px 30px rgba(${identity.accentRgb},0.22)`,
                   overflowWrap: "break-word",
                 }}
               >
@@ -269,7 +304,7 @@ export function SigilArtifact({
                   aria-hidden="true"
                   style={{ width: 20, height: 2, borderRadius: 999, background: identity.accent }}
                 />
-                <span className="v2-hud" style={{ color: "rgba(255,255,255,0.55)" }}>
+                <span className="v2-hud" style={{ color: dark ? "rgba(255,255,255,0.55)" : "var(--v2-ink-faint)" }}>
                   Mapped from your answers
                 </span>
               </m.div>
@@ -300,7 +335,7 @@ export function SigilArtifact({
                 boxShadow: `0 0 10px ${identity.accent}`,
               }}
             />
-            <span style={{ fontSize: 12.5, fontWeight: 700, color: "#fff", letterSpacing: "-0.005em" }}>
+            <span style={{ fontSize: 12.5, fontWeight: 700, color: dark ? "#fff" : "var(--v2-ink)", letterSpacing: "-0.005em" }}>
               {shownEssence}
             </span>
           </m.div>
@@ -312,7 +347,7 @@ export function SigilArtifact({
               fontSize: isPaywall ? 15.5 : 17,
               fontWeight: 500,
               fontStyle: "italic",
-              color: "rgba(255,255,255,0.92)",
+              color: dark ? "rgba(255,255,255,0.92)" : "var(--v2-ink)",
               lineHeight: 1.5,
               marginBottom: 10,
               letterSpacing: "-0.005em",
@@ -321,7 +356,7 @@ export function SigilArtifact({
             {shownStatement}
           </m.p>
 
-          <m.p {...fade(0.6)} style={{ fontSize: 13, color: "rgba(255,255,255,0.58)", lineHeight: 1.65 }}>
+          <m.p {...fade(0.6)} style={{ fontSize: 13, color: dark ? "rgba(255,255,255,0.58)" : "var(--v2-ink-dim)", lineHeight: 1.65 }}>
             {shownSummary}
           </m.p>
         </div>

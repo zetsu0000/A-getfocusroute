@@ -11,6 +11,7 @@ import { QuizEngine }               from "@/components/quiz/QuizEngine";
 import { FIRST_PARTY_EVENTS }       from "@/lib/analytics/events";
 import { trackEvent }               from "@/lib/analytics/client";
 import { OrbitLoader }              from "@/components/v2/primitives";
+import { useFunnelTheme, ThemeToggleButton } from "@/components/v2/FunnelThemeProvider";
 import { shouldTrackAssessmentStart } from "@/lib/assessment/entry";
 import {
   STEP_ORDER,
@@ -127,6 +128,8 @@ export default function AssessmentClient({
   const setEmail = useQuizStore((s) => s.setEmail);
   const setName = useQuizStore((s) => s.setName);
   const resetQuiz = useQuizStore((s) => s.resetQuiz);
+  const { theme } = useFunnelTheme();
+  const screenClass = `${theme === "light" ? "v2-light " : ""}v2-screen v2-grain`;
   const assessmentStartTracked = useRef(false);
   const [gateMode, setGateMode] = useState<
     "checking" | "ready" | "verifying" | "recovery"
@@ -310,7 +313,8 @@ export default function AssessmentClient({
 
   if (gateMode === "recovery") {
     return (
-      <main className="v2-screen v2-grain" style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: "32px 20px", textAlign: "center" }}>
+      <main className={screenClass} style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: "32px 20px", textAlign: "center" }}>
+      <ThemeToggleButton />
         <p className="v2-hud" style={{ color: "var(--v2-signal-2)" }}>One step first</p>
         <h1 style={{ fontSize: 22, fontWeight: 800, color: "var(--v2-gold-bright)", maxWidth: 420, lineHeight: 1.3 }}>
           Finish your assessment to unlock this
@@ -336,7 +340,8 @@ export default function AssessmentClient({
 
   if (gateMode !== "ready") {
     return (
-      <main className="v2-screen v2-grain" style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 18 }}>
+      <main className={screenClass} style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 18 }}>
+      <ThemeToggleButton />
         <OrbitLoader />
         <p className="v2-hud" style={{ color: "var(--v2-signal-2)" }}>{gateMode === "verifying" ? "Verifying payment" : "Loading"}</p>
         <p style={{ fontSize: 13, color: "var(--v2-ink-faint)", maxWidth: 300, textAlign: "center", lineHeight: 1.6 }}>
@@ -349,7 +354,8 @@ export default function AssessmentClient({
   }
 
   return (
-    <main className="v2-screen v2-grain" style={{ overflowX: "hidden" }}>
+    <main className={screenClass} style={{ overflowX: "hidden" }}>
+    <ThemeToggleButton />
     {gateNotice && (
       <div
         role="status"
@@ -358,8 +364,10 @@ export default function AssessmentClient({
           top: 0,
           zIndex: 60,
           padding: "12px 16px",
-          background: "rgba(20, 16, 10, 0.94)",
-          borderBottom: "1px solid rgba(217,188,127,0.4)",
+          background: theme === "light" ? "rgba(252, 247, 235, 0.96)" : "rgba(20, 16, 10, 0.94)",
+          borderBottom: theme === "light" ? "1px solid rgba(154,122,46,0.32)" : "1px solid rgba(217,188,127,0.4)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",

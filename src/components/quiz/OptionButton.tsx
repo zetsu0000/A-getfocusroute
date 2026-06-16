@@ -3,6 +3,7 @@
 import { useRef, useCallback } from "react";
 import { m } from "framer-motion";
 import { QuizOption } from "@/types/quiz";
+import { useFunnelTheme } from "@/components/v2/FunnelThemeProvider";
 
 interface OptionButtonProps {
   option: QuizOption & { badge?: string };
@@ -19,6 +20,8 @@ interface OptionButtonProps {
  */
 export function OptionButton({ option, isSelected, inputType, onClick }: OptionButtonProps) {
   const glowRef = useRef<HTMLSpanElement>(null);
+  const { theme } = useFunnelTheme();
+  const dark = theme === "dark";
 
   const onMove = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
     const g = glowRef.current;
@@ -27,8 +30,9 @@ export function OptionButton({ option, isSelected, inputType, onClick }: OptionB
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     g.style.opacity = "1";
-    g.style.background = `radial-gradient(150px circle at ${x.toFixed(0)}px ${y.toFixed(0)}px, rgba(124,138,255,0.14), transparent 70%)`;
-  }, []);
+    const glow = dark ? "rgba(124,138,255,0.14)" : "rgba(70,85,230,0.10)";
+    g.style.background = `radial-gradient(150px circle at ${x.toFixed(0)}px ${y.toFixed(0)}px, ${glow}, transparent 70%)`;
+  }, [dark]);
 
   const onLeave = useCallback(() => {
     const g = glowRef.current;
@@ -50,12 +54,20 @@ export function OptionButton({ option, isSelected, inputType, onClick }: OptionB
         padding: "15px 17px",
         borderRadius: 16,
         background: isSelected
-          ? "linear-gradient(120deg, rgba(124,138,255,0.18), rgba(155,232,255,0.08))"
-          : "linear-gradient(165deg, rgba(148,163,255,0.07), rgba(148,163,255,0.03))",
-        border: `1.5px solid ${isSelected ? "rgba(124,138,255,0.85)" : "var(--v2-line)"}`,
+          ? (dark
+              ? "linear-gradient(120deg, rgba(var(--v2-signal-rgb),0.18), rgba(var(--v2-cyan-rgb),0.08))"
+              : "linear-gradient(120deg, rgba(70,85,230,0.14), rgba(20,135,181,0.07))")
+          : (dark
+              ? "linear-gradient(165deg, rgba(148,163,255,0.07), rgba(148,163,255,0.03))"
+              : "linear-gradient(165deg, rgba(255,255,255,0.96), rgba(244,247,253,0.86))"),
+        border: `1.5px solid ${isSelected ? (dark ? "rgba(124,138,255,0.85)" : "rgba(70,85,230,0.85)") : (dark ? "var(--v2-line)" : "var(--v2-line-bright)")}`,
         boxShadow: isSelected
-          ? "0 0 0 1px rgba(124,138,255,0.3), 0 8px 30px rgba(124,138,255,0.22), inset 0 1px 0 rgba(255,255,255,0.1)"
-          : "inset 0 1px 0 rgba(255,255,255,0.05), 0 6px 18px rgba(2,3,10,0.35)",
+          ? (dark
+              ? "0 0 0 1px rgba(var(--v2-signal-rgb),0.3), 0 8px 30px rgba(var(--v2-signal-rgb),0.22), inset 0 1px 0 rgba(255,255,255,0.1)"
+              : "0 0 0 1px rgba(70,85,230,0.25), 0 10px 26px rgba(70,85,230,0.18), inset 0 1px 0 rgba(255,255,255,0.7)")
+          : (dark
+              ? "inset 0 1px 0 rgba(255,255,255,0.05), 0 6px 18px rgba(2,3,10,0.35)"
+              : "inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 2px rgba(20,30,90,0.06), 0 5px 16px rgba(20,30,90,0.08)"),
         backdropFilter: "blur(10px)",
         WebkitBackdropFilter: "blur(10px)",
         transition: "border-color 0.15s, background 0.15s, box-shadow 0.15s",
@@ -80,7 +92,7 @@ export function OptionButton({ option, isSelected, inputType, onClick }: OptionB
         style={{
           fontSize: 15,
           fontWeight: isSelected ? 700 : 500,
-          color: isSelected ? "#FFFFFF" : "var(--v2-ink-dim)",
+          color: isSelected ? (dark ? "#FFFFFF" : "var(--v2-ink)") : "var(--v2-ink-dim)",
         }}
       >
         {option.label}
@@ -105,8 +117,8 @@ export function OptionButton({ option, isSelected, inputType, onClick }: OptionB
       {inputType === "multiple" && (
         <m.div
           animate={{
-            backgroundColor: isSelected ? "rgba(124,138,255,1)" : "rgba(124,138,255,0)",
-            borderColor: isSelected ? "rgba(155,232,255,0.9)" : "rgba(163,178,255,0.35)",
+            backgroundColor: isSelected ? (dark ? "rgba(124,138,255,1)" : "rgba(70,85,230,1)") : (dark ? "rgba(124,138,255,0)" : "rgba(70,85,230,0)"),
+            borderColor: isSelected ? (dark ? "rgba(155,232,255,0.9)" : "rgba(70,85,230,0.95)") : (dark ? "rgba(163,178,255,0.35)" : "rgba(48,64,150,0.35)"),
           }}
           transition={{ duration: 0.14 }}
           style={{
@@ -114,7 +126,7 @@ export function OptionButton({ option, isSelected, inputType, onClick }: OptionB
             border: "1.5px solid",
             flexShrink: 0,
             display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: isSelected ? "0 0 12px rgba(124,138,255,0.6)" : "none",
+            boxShadow: isSelected ? (dark ? "0 0 12px rgba(124,138,255,0.6)" : "0 0 12px rgba(70,85,230,0.4)") : "none",
           }}
         >
           {isSelected && (
@@ -140,12 +152,12 @@ export function OptionButton({ option, isSelected, inputType, onClick }: OptionB
           style={{
             width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
             background: "var(--v2-grad-signal)",
-            boxShadow: "0 0 14px rgba(124,138,255,0.7)",
+            boxShadow: dark ? "0 0 14px rgba(124,138,255,0.7)" : "0 0 12px rgba(70,85,230,0.4)",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}
         >
           <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-            <path d="M1 4L3.5 6.5L9 1" stroke="#06070D" strokeWidth="2.2"
+            <path d="M1 4L3.5 6.5L9 1" stroke={dark ? "#06070D" : "#FFFFFF"} strokeWidth="2.2"
               strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </m.div>

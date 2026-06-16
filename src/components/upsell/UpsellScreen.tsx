@@ -21,6 +21,7 @@ import {
 import { useQuizStore } from "@/store/quizStore";
 import { BRAIN_OS } from "@/lib/positioning";
 import { HudLabel } from "@/components/v2/primitives";
+import { useFunnelTheme } from "@/components/v2/FunnelThemeProvider";
 import {
   createAnalyticsEventId,
   getAnalyticsContext,
@@ -42,8 +43,9 @@ function getStripePromise() {
 }
 const PRICE_ID = process.env.NEXT_PUBLIC_PRICE_ROADMAP!;
 
-/* Literal dark colors — the Payment Element iframe can't read page CSS vars. */
-const upsellStripeAppearance = {
+/* Literal colors — the Payment Element iframe can't read page CSS vars. The
+   dark object is the original vault; the light object mirrors .v2-light. */
+const upsellStripeAppearanceDark = {
   theme: "night" as const,
   variables: {
     colorPrimary: "#9BE8FF",
@@ -52,6 +54,36 @@ const upsellStripeAppearance = {
     colorDanger: "#FF8B8B",
     fontFamily: "inherit",
     borderRadius: "12px",
+  },
+};
+
+const upsellStripeAppearanceLight = {
+  theme: "stripe" as const,
+  variables: {
+    colorPrimary: "#4655E6",
+    colorBackground: "#FFFFFF",
+    colorText: "#0E1124",
+    colorTextSecondary: "#5A6079",
+    colorTextPlaceholder: "#9AA0B8",
+    colorDanger: "#C53A2E",
+    fontFamily: "inherit",
+    borderRadius: "12px",
+  },
+  rules: {
+    ".Input": {
+      border: "1.5px solid rgba(48,64,150,0.22)",
+      backgroundColor: "#FFFFFF",
+      boxShadow: "0 1px 2px rgba(20,30,90,0.05)",
+    },
+    ".Input:focus": {
+      border: "1.5px solid rgba(70,85,230,0.85)",
+      boxShadow: "0 0 0 3px rgba(70,85,230,0.14)",
+    },
+    ".Tab--selected": {
+      border: "1.5px solid rgba(70,85,230,0.85)",
+      backgroundColor: "rgba(70,85,230,0.08)",
+      color: "#0E1124",
+    },
   },
 };
 
@@ -64,9 +96,13 @@ function UpsellStripeElements({
   onSuccess: () => void;
   onDecline: () => void;
 }) {
+  const { theme } = useFunnelTheme();
   const options = useMemo(
-    () => ({ clientSecret, appearance: upsellStripeAppearance }),
-    [clientSecret],
+    () => ({
+      clientSecret,
+      appearance: theme === "light" ? upsellStripeAppearanceLight : upsellStripeAppearanceDark,
+    }),
+    [clientSecret, theme],
   );
 
   return (
@@ -228,8 +264,8 @@ function ProtocolRouteStrip() {
             background: i < 4
               ? "var(--v2-grad-signal)"
               : "rgba(148,163,255,0.14)",
-            border: i < 4 ? "none" : "1px solid rgba(163,178,255,0.25)",
-            boxShadow: i < 4 ? "0 0 8px rgba(124,138,255,0.6)" : "none",
+            border: i < 4 ? "none" : "1px solid rgba(var(--v2-line-rgb),0.25)",
+            boxShadow: i < 4 ? "0 0 8px rgba(var(--v2-signal-rgb),0.6)" : "none",
           }}
         />
       ))}
@@ -242,6 +278,8 @@ function ProtocolRouteStrip() {
 export function UpsellScreen() {
   const { name, email, setStep, quizResultId } = useQuizStore();
   const displayName = name || "You";
+  const { theme } = useFunnelTheme();
+  const dark = theme === "dark";
 
   const [clientSecret,  setClientSecret]  = useState<string | null>(null);
   const [loadingSecret, setLoadingSecret] = useState(false);
@@ -386,7 +424,7 @@ export function UpsellScreen() {
     >
       {/* Offer context */}
       <div style={{
-        background: "linear-gradient(90deg, rgba(124,138,255,0.16), rgba(155,232,255,0.08))",
+        background: "linear-gradient(90deg, rgba(var(--v2-signal-rgb),0.16), rgba(var(--v2-cyan-rgb),0.08))",
         borderBottom: "1px solid var(--v2-line)",
         padding: "12px 20px",
         display: "flex", alignItems: "center", justifyContent: "center", gap: 10, flexWrap: "wrap",
@@ -427,7 +465,7 @@ export function UpsellScreen() {
               Your Brain Profile — your pattern, your radar map, and your first next steps.
             </p>
           </div>
-          <div style={{ padding: "15px 18px", background: "rgba(124,138,255,0.06)" }}>
+          <div style={{ padding: "15px 18px", background: "rgba(var(--v2-signal-rgb),0.06)" }}>
             <HudLabel tone="signal" style={{ marginBottom: 6, fontSize: 9.5 }}>This adds</HudLabel>
             <p style={{ fontSize: 13, color: "var(--v2-ink-dim)", lineHeight: 1.55, marginBottom: 10 }}>
               The {BRAIN_OS.protocol} — a day-by-day practice system built on that profile: 28 short daily actions instead of figuring out each day yourself.
@@ -450,7 +488,7 @@ export function UpsellScreen() {
               { icon: CheckCircle2, title: "Weekly milestone check-ins", desc: "Track real progress with your personalized metrics." },
             ].map(({ icon: Icon, title, desc }) => (
               <div key={title} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                <div style={{ width: 36, height: 36, borderRadius: 11, flexShrink: 0, background: "rgba(124,138,255,0.1)", border: "1px solid rgba(124,138,255,0.28)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: 36, height: 36, borderRadius: 11, flexShrink: 0, background: "rgba(var(--v2-signal-rgb),0.1)", border: "1px solid rgba(var(--v2-signal-rgb),0.28)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Icon size={15} color="var(--v2-signal-2)" />
                 </div>
                 <div>
@@ -534,7 +572,7 @@ export function UpsellScreen() {
               <div
                 role="alert"
                 aria-live="polite"
-                style={{ display: "grid", gap: 11, color: "#FFE3E3", textAlign: "left", background: "rgba(255,139,139,0.15)", border: "1px solid rgba(255,139,139,0.42)", borderRadius: 14, padding: "13px 14px" }}
+                style={{ display: "grid", gap: 11, color: dark ? "#FFE3E3" : "var(--v2-error)", textAlign: "left", background: dark ? "rgba(255,139,139,0.15)" : "rgba(197,58,46,0.08)", border: dark ? "1px solid rgba(255,139,139,0.42)" : "1px solid rgba(197,58,46,0.30)", borderRadius: 14, padding: "13px 14px" }}
               >
                 <div style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
                   <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
