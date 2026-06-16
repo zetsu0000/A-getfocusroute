@@ -1,6 +1,7 @@
 import type Stripe from "stripe";
 
 import type { ProductKey } from "@/lib/access/products";
+import { planProductKeyForPriceId } from "@/lib/billing/planRegistry";
 
 /**
  * Resolves any configured Stripe price ID to its product key.
@@ -33,7 +34,10 @@ export function resolvePriceIdToProductKey(priceId: string): ProductKey | null {
   for (const [envId, key] of entries) {
     if (envId && envId.trim() === needle) return key;
   }
-  return null;
+
+  // V2 3-plan model: resolve both the intro and renewal Price IDs of each plan
+  // (plan_1week / plan_4week / plan_12week) to their membership product key.
+  return planProductKeyForPriceId(needle);
 }
 
 /**
@@ -51,9 +55,17 @@ export function resolveOneTimeProductKey(
   return null;
 }
 
+const MEMBERSHIP_PRODUCT_KEYS: readonly ProductKey[] = [
+  "membership_monthly",
+  "membership_annual",
+  "membership_1week",
+  "membership_4week",
+  "membership_12week",
+];
+
 export function resolveMembershipProductKey(priceId: string): ProductKey | null {
   const key = resolvePriceIdToProductKey(priceId);
-  if (key === "membership_monthly" || key === "membership_annual") return key;
+  if (key && MEMBERSHIP_PRODUCT_KEYS.includes(key)) return key;
   return null;
 }
 

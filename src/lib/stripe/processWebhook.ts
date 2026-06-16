@@ -4,6 +4,8 @@ import Stripe from "stripe";
 
 import { grantProductByEmail } from "@/lib/access/entitlements";
 import type { ProductKey } from "@/lib/access/products";
+import { isPlanKey } from "@/lib/billing/plans";
+import { planKeyForPriceId } from "@/lib/billing/planRegistry";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 import { recordAnalyticsEvent } from "@/lib/analytics/server";
 import { sendMetaEvent } from "@/lib/meta/conversions";
@@ -113,23 +115,50 @@ async function upsertSubscriptionRow(
     (await resolveCustomerEmail(customerId)) ??
     "";
 
-  const { error } = await admin.from("subscriptions").upsert(
-    {
-      stripe_subscription_id: sub.id,
-      stripe_customer_id: customerId,
-      user_id: null,
-      email,
-      price_id: priceId,
-      status: sub.status,
-      current_period_start: cps,
-      current_period_end: cpe,
-      cancel_at_period_end: sub.cancel_at_period_end ?? false,
-    },
-    { onConflict: "stripe_subscription_id" },
-  );
+  // V2 3-plan model: persist plan_key from metadata, else derive from the
+  // current price (intro or renewal both map back to the plan).
+  const metaPlanKey =
+    typeof sub.metadata?.plan_key === "string" && isPlanKey(sub.metadata.plan_key)
+      ? sub.metadata.plan_key
+      : null;
+  const planKey = metaPlanKey ?? planKeyForPriceId(priceId);
+
+  const baseRow = {
+    stripe_subscription_id: sub.id,
+    stripe_customer_id: customerId,
+    user_id: null,
+    email,
+    price_id: priceId,
+    status: sub.status,
+    current_period_start: cps,
+    current_period_end: cpe,
+    cancel_at_period_end: sub.cancel_at_period_end ?? false,
+  };
+  const row = planKey ? { ...baseRow, plan_key: planKey } : baseRow;
+
+  let { error } = await admin
+    .from("subscriptions")
+    .upsert(row, { onConflict: "stripe_subscription_id" });
+
+  // Defensive: if the plan_key column hasn't been migrated yet, retry without it
+  // so subscription bookkeeping never breaks on deploy ordering.
+  if (error && planKey && isUnknownColumnError(error, "plan_key")) {
+    ({ error } = await admin
+      .from("subscriptions")
+      .upsert(baseRow, { onConflict: "stripe_subscription_id" }));
+  }
   if (error) {
     throw new Error(`subscriptions upsert: ${error.message}`);
   }
+}
+
+/** Detect a PostgREST "unknown column" error for graceful pre-migration fallback. */
+function isUnknownColumnError(
+  error: { code?: string | null; message?: string | null },
+  column: string,
+): boolean {
+  if (error.code === "PGRST204" || error.code === "42703") return true;
+  return Boolean(error.message && error.message.includes(column));
 }
 
 async function hasEmailGrantForPaymentIntent(
