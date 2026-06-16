@@ -1,5 +1,10 @@
+import { cookies } from "next/headers";
 import AssessmentClient from "./AssessmentClient";
-import { FunnelThemeProvider } from "@/components/v2/FunnelThemeProvider";
+import {
+  FunnelThemeProvider,
+  THEME_STORAGE_KEY,
+  type FunnelTheme,
+} from "@/components/v2/FunnelThemeProvider";
 import {
   isPaidAssessmentTraffic,
   shouldAutoStartAssessment,
@@ -33,8 +38,15 @@ export default async function Page({
   const upgrade = Array.isArray(rawUpgrade) ? rawUpgrade[0] : rawUpgrade;
   const hasUpgradeHandoff = isUpgradeNeed(upgrade);
 
+  // Read the persisted theme cookie so the funnel's first paint matches the
+  // returning user's choice — no flash of the default light shell before
+  // hydration. (Reading a cookie keeps this route dynamic, which it already is.)
+  const cookieStore = await cookies();
+  const storedTheme = cookieStore.get(THEME_STORAGE_KEY)?.value;
+  const initialTheme: FunnelTheme = storedTheme === "dark" ? "dark" : "light";
+
   return (
-    <FunnelThemeProvider>
+    <FunnelThemeProvider initialTheme={initialTheme}>
       <AssessmentClient
         paidAutoStart={paidAutoStart}
         hasEntryStep={hasEntryStep}
