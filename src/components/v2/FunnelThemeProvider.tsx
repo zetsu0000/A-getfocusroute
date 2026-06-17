@@ -144,6 +144,29 @@ export function ThemeToggleButton() {
   const { theme, toggleTheme } = useFunnelTheme();
   const isLight = theme === "light";
 
+  // Collapse the floating pill after meaningful downward scrolling so it never
+  // floats over the long checkout (plans, summary, social proof, Stripe, CTA).
+  // It returns on scroll-up or near the top, so theme switching stays reachable.
+  const [hidden, setHidden] = useState(false);
+  useEffect(() => {
+    let last = window.scrollY;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        const y = window.scrollY;
+        if (y < 64) setHidden(false);
+        else if (y > last + 4) setHidden(true);
+        else if (y < last - 4) setHidden(false);
+        last = y;
+        ticking = false;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const hover = (on: boolean) => (e: React.PointerEvent<HTMLButtonElement>) => {
     if (e.pointerType !== "mouse") return;
     const el = e.currentTarget;
@@ -158,6 +181,8 @@ export function ThemeToggleButton() {
       onClick={toggleTheme}
       aria-label={isLight ? "Switch to dark mode" : "Switch to light mode"}
       aria-pressed={!isLight}
+      aria-hidden={hidden || undefined}
+      tabIndex={hidden ? -1 : 0}
       title={isLight ? "Switch to dark mode" : "Switch to light mode"}
       onPointerEnter={hover(true)}
       onPointerLeave={hover(false)}
@@ -181,7 +206,10 @@ export function ThemeToggleButton() {
         boxShadow: "var(--v2-shadow-sm)",
         backdropFilter: "blur(12px) saturate(1.3)",
         WebkitBackdropFilter: "blur(12px) saturate(1.3)",
-        transition: "color 0.18s ease, border-color 0.18s ease, transform 0.18s ease",
+        opacity: hidden ? 0 : 1,
+        pointerEvents: hidden ? "none" : "auto",
+        transition:
+          "color 0.18s ease, border-color 0.18s ease, transform 0.18s ease, opacity 0.25s ease",
       }}
     >
       {isLight ? <Moon size={17} strokeWidth={2.1} /> : <Sun size={17} strokeWidth={2.1} />}

@@ -1,6 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useLayoutEffect, useRef, type ReactNode } from "react";
+import gsap from "gsap";
 import { QuizQuestion } from "@/types/quiz";
 import { useFunnelTheme } from "@/components/v2/FunnelThemeProvider";
 import { useGsapReveal } from "@/components/v2/useGsapReveal";
@@ -122,98 +123,373 @@ function Pill({ children, color }: { children: ReactNode; color: string }) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────
-   CARD 1 — Recognition: surface (what you feel) → depth (what we map)
+   CARD 1 — Recognition. Rebuilt as a fast, visual mechanism explainer:
+   surface feeling → FocusRoute scan → where the route breaks (four signals)
+   → payoff → CTA. One GSAP timeline (~2.6s) drives the narrative; SVG + CSS
+   draw the route, scan, nodes and glow. The shared SignalFieldGL ambient
+   (mounted by QuizEngine) is untouched, every word stays in the DOM and
+   readable if WebGL or JS fails, and reduced motion snaps to the final
+   state. No "momentum" wording here.
 ───────────────────────────────────────────────────────────────────── */
 function Card1Recognition({ onContinue }: CardProps) {
   const { theme } = useFunnelTheme();
   const dark = theme === "dark";
   const role = useRole(dark).recognition;
 
-  const ref = useGsapReveal((tl) => {
-    tl.from(".fr-rv", { y: 14, opacity: 0, stagger: 0.08 })
-      .fromTo(".fr-route-line", { strokeDashoffset: 240 }, { strokeDashoffset: 0, duration: 0.9 }, "-=0.2")
-      .from(".fr-depth", { opacity: 0, y: 10 }, "-=0.5");
-  });
+  // Detected friction signals — the text carries the meaning; color is a
+  // secondary cue only (never the sole differentiator).
+  const signals = [
+    { text: "Unclear priority", color: dark ? "#B39BFF" : "#7A4FD0" },
+    { text: "Start feels too big", color: dark ? "#7C8AFF" : "#4655E6" },
+    { text: "Pressure takes over", color: dark ? "#FFB28B" : "#C2691E" },
+    { text: "Interruption resets you", color: dark ? "#6FE0C2" : "#1487B5" },
+  ];
+
+  const ref = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const root = ref.current;
+    if (!root) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const mobile = window.matchMedia("(max-width: 480px)").matches;
+    const blur = (px: number) => `blur(${mobile ? Math.min(px, 4) : px}px)`;
+
+    const ctx = gsap.context(() => {
+      // Length-accurate dash so the route is fully hidden, then draws clean.
+      const path = root.querySelector<SVGPathElement>(".fr1-route");
+      const len = path?.getTotalLength?.() ?? 240;
+      gsap.set(".fr1-route", { strokeDasharray: len, strokeDashoffset: len });
+
+      const tl = gsap.timeline({ paused: true, defaults: { ease: "power2.out" } });
+
+      // 1 · Label — a system state appearing
+      tl.fromTo(
+        ".fr1-label",
+        { opacity: 0, y: 8, letterSpacing: "0.42em" },
+        { opacity: 1, y: 0, letterSpacing: "0.2em", duration: 0.35 },
+        0,
+      );
+
+      // 2 · Headline — two beats + a luminous underline scan
+      tl.fromTo(
+        ".fr1-h1",
+        { opacity: 0, y: 14, filter: blur(8) },
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.45 },
+        0.15,
+      );
+      tl.fromTo(
+        ".fr1-h2",
+        { opacity: 0, scale: 0.97, filter: blur(10) },
+        { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.5 },
+        0.35,
+      );
+      tl.fromTo(
+        ".fr1-hscan",
+        { scaleX: 0, opacity: 0.9, transformOrigin: "left center" },
+        { scaleX: 1, duration: 0.4 },
+        0.42,
+      ).to(".fr1-hscan", { opacity: 0, duration: 0.3 }, 0.84);
+
+      // 3 · Surface-problem block — a thought becoming visible + one pulse
+      tl.fromTo(
+        ".fr1-surface",
+        { opacity: 0, y: 18, scale: 0.985, filter: blur(6) },
+        { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", duration: 0.45 },
+        0.7,
+      );
+      tl.fromTo(".fr1-quote", { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.35 }, 0.85);
+      tl.fromTo(".fr1-surface-pulse", { opacity: 0 }, { opacity: 1, duration: 0.2, yoyo: true, repeat: 1 }, 0.98);
+
+      // 4 · FocusRoute scan — luminous line maps the surface; mechanism appears
+      tl.fromTo(".fr1-vscan", { top: "-14%", opacity: 0 }, { opacity: 1, duration: 0.12 }, 1.0)
+        .to(".fr1-vscan", { top: "104%", duration: 0.7, ease: "power1.inOut" }, 1.0)
+        .to(".fr1-vscan", { opacity: 0, duration: 0.2 }, 1.62);
+      tl.to(".fr1-surface", { opacity: 0.85, duration: 0.4 }, 1.12);
+      tl.to(".fr1-noise", { opacity: 0, y: "-=10", x: "random(-12, 12)", duration: 0.5, stagger: 0.03 }, 1.12);
+      tl.fromTo(
+        ".fr1-mech",
+        { opacity: 0, y: 8, filter: blur(5) },
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.4 },
+        1.2,
+      );
+
+      // 5 · Route draws toward the signals; a node travels it
+      tl.to(".fr1-route", { strokeDashoffset: 0, duration: 0.65, ease: "power2.inOut" }, 1.3);
+      tl.fromTo(".fr1-travel", { opacity: 0, top: "2%" }, { opacity: 1, duration: 0.12 }, 1.3)
+        .to(".fr1-travel", { top: "94%", duration: 0.65, ease: "power2.inOut" }, 1.3)
+        .to(".fr1-travel", { opacity: 0, duration: 0.2 }, 1.95);
+
+      // 6 · Friction signals — each ignites from its route node
+      tl.fromTo(".fr1-signal-node", { scale: 0 }, { scale: 1, duration: 0.28, stagger: 0.12, ease: "back.out(2)" }, 1.55);
+      tl.fromTo(
+        ".fr1-signal-label",
+        { opacity: 0, x: -8, scale: 0.96 },
+        { opacity: 1, x: 0, scale: 1, duration: 0.28, stagger: 0.12 },
+        1.6,
+      );
+      tl.fromTo(".fr1-signal-glow", { opacity: 0 }, { opacity: 0.9, duration: 0.18, yoyo: true, repeat: 1, stagger: 0.12 }, 1.64);
+
+      // 7 · Transformation + payoff (the practical line lands harder)
+      tl.to(".fr1-route", { opacity: 1, duration: 0.4 }, 2.1);
+      tl.fromTo(".fr1-payoff1", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.35 }, 2.1);
+      tl.fromTo(
+        ".fr1-payoff2",
+        { opacity: 0, y: 10, filter: blur(5) },
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.4 },
+        2.25,
+      );
+
+      // 8 · CTA arrives
+      tl.fromTo(".fr1-cta", { opacity: 0, y: 14, scale: 0.985 }, { opacity: 1, y: 0, scale: 1, duration: 0.45 }, 2.35);
+      tl.fromTo(".fr1-cta-glow", { opacity: 0 }, { opacity: 0.85, duration: 0.3, yoyo: true, repeat: 1 }, 2.5);
+      tl.to(".fr1-arrow", { x: 4, duration: 0.2, yoyo: true, repeat: 1 }, 2.62);
+
+      if (reduce) {
+        tl.progress(1).pause(); // final state, no motion, nothing hidden
+        return;
+      }
+      tl.play();
+
+      // Ambient (post-reveal) — restrained, and tracked by ctx for clean revert.
+      const AMBIENT = 3.0;
+      gsap.to(".fr1-route", { opacity: 0.78, duration: 2.6, yoyo: true, repeat: -1, ease: "sine.inOut", delay: AMBIENT });
+      gsap.fromTo(
+        ".fr1-pulse",
+        { opacity: 0, top: "0%" },
+        { opacity: 0.75, top: "100%", duration: 1.5, ease: "sine.inOut", repeat: -1, repeatDelay: 3.4, delay: AMBIENT },
+      );
+      gsap.to(".fr1-cta-glow", { opacity: 0.16, duration: 2.4, yoyo: true, repeat: -1, ease: "sine.inOut", delay: AMBIENT });
+    }, root);
+
+    return () => ctx.revert();
+    // The reveal runs once on mount; reduced motion + ctx.revert keep it safe.
+  }, []);
+
+  // Desktop-only magnetic glow; press-depth on every pointer (mobile tap too).
+  const press = (to: number) => (e: React.PointerEvent<HTMLButtonElement>) =>
+    gsap.to(e.currentTarget, { scale: to, duration: to < 1 ? 0.12 : 0.22, overwrite: "auto" });
+  const magnet = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (e.pointerType !== "mouse") return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const dx = (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
+    gsap.to(e.currentTarget, { x: dx * 4, duration: 0.3, ease: "power2.out", overwrite: "auto" });
+  };
+  const demagnet = (e: React.PointerEvent<HTMLButtonElement>) =>
+    gsap.to(e.currentTarget, { x: 0, scale: 1, duration: 0.4, ease: "power2.out", overwrite: "auto" });
 
   return (
-    <CardShell
-      rootRef={ref}
-      eyebrow={role.eyebrow}
-      eyebrowColor={role.accent}
-      title="What you're feeling is real — and it's only the surface."
-      cta="Show me the pattern"
-      onContinue={onContinue}
+    // Single scroller (the quiz stage) — no own overflow. Safe-area bottom pad.
+    <div
+      ref={ref}
+      style={{
+        minHeight: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        padding: "20px 18px calc(26px + env(safe-area-inset-bottom, 0px))",
+      }}
     >
-      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 0 }}>
-        {/* Surface */}
-        <div
-          className="fr-rv"
+      <div style={{ width: "100%", maxWidth: 480, display: "flex", flexDirection: "column", flex: 1 }}>
+        {/* 1 · Recognition label */}
+        <p className="fr1-label v2-hud" style={{ color: role.accent, marginBottom: 10, letterSpacing: "0.2em" }}>
+          Recognition
+        </p>
+
+        {/* 2 · Two-beat headline + scan underline */}
+        <h2
+          className="v2-display"
           style={{
+            position: "relative",
+            fontSize: "clamp(23px, 6.4vw, 29px)",
+            fontWeight: 580,
+            lineHeight: 1.14,
+            letterSpacing: "-0.01em",
+            marginBottom: 16,
+            color: "var(--v2-ink)",
+          }}
+        >
+          <span className="fr1-h1">It’s not just </span>
+          <span className="fr1-h2" style={{ display: "inline-block", color: role.accent, fontWeight: 680 }}>
+            procrastination.
+          </span>
+          <span
+            className="fr1-hscan"
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              left: 0,
+              bottom: -4,
+              height: 2,
+              width: "100%",
+              borderRadius: 2,
+              transformOrigin: "left center",
+              background: `linear-gradient(90deg, ${role.accent2}, ${role.accent})`,
+              boxShadow: `0 0 10px ${role.accent2}`,
+              opacity: 0,
+            }}
+          />
+        </h2>
+
+        {/* 3 · Surface problem — what it feels like */}
+        <div
+          className="fr1-surface"
+          style={{
+            position: "relative",
+            overflow: "hidden",
             padding: "14px 16px",
             borderRadius: 16,
-            border: "1px solid rgba(var(--v2-line-rgb),0.18)",
+            border: `1px solid color-mix(in srgb, ${role.accent} 24%, transparent)`,
             background: "rgba(148,163,255,0.05)",
           }}
         >
+          <span
+            className="fr1-surface-pulse"
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: 16,
+              border: `1px solid ${role.accent2}`,
+              boxShadow: `inset 0 0 16px color-mix(in srgb, ${role.accent2} 55%, transparent)`,
+              opacity: 0,
+              pointerEvents: "none",
+            }}
+          />
+          <span
+            className="fr1-vscan"
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: "-14%",
+              height: 34,
+              opacity: 0,
+              pointerEvents: "none",
+              background: `linear-gradient(180deg, transparent, ${role.accent2}, ${role.accent}, transparent)`,
+              filter: "blur(3px)",
+              boxShadow: `0 0 18px ${role.accent2}`,
+            }}
+          />
           <Pill color={role.accent}>What it feels like</Pill>
-          <p style={{ marginTop: 9, fontSize: 14, color: "var(--v2-ink-dim)", lineHeight: 1.5 }}>
-            “It looks like procrastination — like I just can’t make myself start.”
+          <p className="fr1-quote" style={{ marginTop: 9, fontSize: 15, fontWeight: 600, color: "var(--v2-ink)", lineHeight: 1.45 }}>
+            “I just can’t start.”
           </p>
-        </div>
-
-        {/* Animated route connecting surface → depth */}
-        <div style={{ display: "flex", justifyContent: "center", padding: "2px 0" }}>
-          <svg width="40" height="54" viewBox="0 0 40 54" fill="none" aria-hidden="true">
-            <path
-              className="fr-route-line"
-              d="M20 2 C20 18, 8 26, 20 34 S20 50, 20 52"
-              stroke={role.accent2}
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeDasharray="240"
-              style={{ filter: `drop-shadow(0 0 4px ${role.accent2})` }}
+          {[0, 1, 2, 3].map((n) => (
+            <span
+              key={n}
+              className="fr1-noise"
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                right: 14 + n * 13,
+                top: 14 + (n % 2) * 12,
+                width: 3,
+                height: 3,
+                borderRadius: "50%",
+                background: role.accent2,
+                opacity: 0.55,
+              }}
             />
-          </svg>
+          ))}
         </div>
 
-        {/* Depth — what FocusRoute maps underneath */}
+        {/* 4 · Mechanism line — revealed as the scan passes */}
+        <p className="fr1-mech" style={{ margin: "12px 0", textAlign: "center", fontSize: 13.5, fontWeight: 600, color: role.accent2, lineHeight: 1.45 }}>
+          FocusRoute maps where the route breaks.
+        </p>
+
+        {/* 5 + 6 · Route draws toward the four detected signals */}
         <div
-          className="fr-depth"
           style={{
-            padding: "15px 16px",
+            position: "relative",
+            padding: "14px 16px",
             borderRadius: 16,
-            border: `1px solid color-mix(in srgb, ${role.accent2} 32%, transparent)`,
-            background: `linear-gradient(160deg, color-mix(in srgb, ${role.accent2} 14%, transparent), transparent)`,
+            border: `1px solid color-mix(in srgb, ${role.accent2} 30%, transparent)`,
+            background: `linear-gradient(160deg, color-mix(in srgb, ${role.accent2} 12%, transparent), transparent)`,
           }}
         >
-          <Pill color={role.accent2}>What FocusRoute maps underneath</Pill>
-          <p style={{ marginTop: 9, fontSize: 14, fontWeight: 600, color: "var(--v2-ink)", lineHeight: 1.5 }}>
-            Where the friction actually begins — unclear priorities, an entry point
-            that feels too big, quiet pressure, an interruption, or momentum slipping away.
-          </p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 12 }}>
-            {["Priority", "Entry point", "Pressure", "Interruption", "Momentum"].map((t) => (
-              <span
-                key={t}
-                style={{
-                  fontSize: 11,
-                  color: "var(--v2-ink-dim)",
-                  padding: "4px 10px",
-                  borderRadius: 999,
-                  border: "1px solid rgba(var(--v2-line-rgb),0.2)",
-                }}
-              >
-                {t}
-              </span>
-            ))}
+          <Pill color={role.accent2}>Where the route breaks</Pill>
+          <div style={{ position: "relative", marginTop: 12 }}>
+            <svg width="28" height="192" viewBox="0 0 28 192" fill="none" aria-hidden="true" style={{ position: "absolute", left: 0, top: 0 }}>
+              <path
+                className="fr1-route"
+                d="M14 6 C 20 30, 8 50, 14 72 C 20 96, 8 144, 14 168"
+                stroke={role.accent2}
+                strokeWidth="2"
+                strokeLinecap="round"
+                style={{ filter: `drop-shadow(0 0 4px ${role.accent2})` }}
+              />
+            </svg>
+            <span
+              className="fr1-travel"
+              aria-hidden="true"
+              style={{ position: "absolute", left: 7, top: "2%", width: 14, height: 14, borderRadius: "50%", background: "var(--v2-grad-signal)", boxShadow: `0 0 12px ${role.accent2}`, opacity: 0 }}
+            />
+            <span
+              className="fr1-pulse"
+              aria-hidden="true"
+              style={{ position: "absolute", left: 9, top: "0%", width: 10, height: 10, borderRadius: "50%", background: role.accent2, boxShadow: `0 0 10px ${role.accent2}`, opacity: 0, pointerEvents: "none" }}
+            />
+            <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+              {signals.map((s) => (
+                <li key={s.text} style={{ position: "relative", height: 48, display: "flex", alignItems: "center", paddingLeft: 40 }}>
+                  <span
+                    className="fr1-signal-glow"
+                    aria-hidden="true"
+                    style={{ position: "absolute", left: 1, top: 11, width: 26, height: 26, borderRadius: "50%", background: s.color, filter: "blur(6px)", opacity: 0, pointerEvents: "none" }}
+                  />
+                  <span
+                    className="fr1-signal-node"
+                    aria-hidden="true"
+                    style={{ position: "absolute", left: 7, top: 17, width: 14, height: 14, borderRadius: "50%", background: s.color, boxShadow: `0 0 8px ${s.color}` }}
+                  />
+                  <span className="fr1-signal-label" style={{ fontSize: 13.5, fontWeight: 640, color: "var(--v2-ink)" }}>
+                    {s.text}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
-        <p className="fr-rv" style={{ marginTop: 12, fontSize: 12.5, color: "var(--v2-ink-faint)", lineHeight: 1.5 }}>
-          It maps where the friction begins — instead of treating every stalled task as one more personal failure.
-        </p>
+        {/* 7 · Payoff — the practical second line gets more weight */}
+        <div style={{ marginTop: 16 }}>
+          <p className="fr1-payoff1" style={{ fontSize: 14, color: "var(--v2-ink-dim)", lineHeight: 1.4 }}>
+            Less self-blame.
+          </p>
+          <p className="fr1-payoff2" style={{ marginTop: 3, fontSize: 17, fontWeight: 700, color: "var(--v2-ink)", lineHeight: 1.3 }}>
+            A clearer next move.
+          </p>
+        </div>
+
+        <div style={{ flex: 1, minHeight: 12 }} />
+
+        {/* 8 · CTA — clickable immediately; glow sits outside the clipped pill */}
+        <div style={{ position: "relative", marginTop: 18 }}>
+          <span
+            className="fr1-cta-glow"
+            aria-hidden="true"
+            style={{ position: "absolute", inset: -2, borderRadius: 999, boxShadow: `0 0 24px color-mix(in srgb, ${role.accent2} 70%, transparent)`, opacity: 0, pointerEvents: "none", zIndex: 0 }}
+          />
+          <button
+            onClick={onContinue}
+            onPointerEnter={press(1)}
+            onPointerMove={magnet}
+            onPointerDown={press(0.97)}
+            onPointerUp={press(1)}
+            onPointerLeave={demagnet}
+            className="fr1-cta v2-cta"
+            style={{ position: "relative", zIndex: 1, width: "100%", minHeight: 54, fontSize: 15 }}
+          >
+            Show me the pattern
+            <span className="fr1-arrow" aria-hidden="true" style={{ display: "inline-block", marginLeft: 2 }}>
+              →
+            </span>
+          </button>
+        </div>
       </div>
-    </CardShell>
+    </div>
   );
 }
 

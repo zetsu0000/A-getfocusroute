@@ -190,7 +190,9 @@ function TestimonialRow({
       style={{
         margin: 0,
         display: "flex",
-        alignItems: "center",
+        // Expanded quotes can run several lines \u2014 align the avatar to the top of
+        // the quote so it reads as a column, not a vertically-centred blob.
+        alignItems: fullQuote ? "flex-start" : "center",
         gap: compact ? 10 : 12,
         minWidth: 0,
       }}
@@ -202,7 +204,8 @@ function TestimonialRow({
             margin: 0,
             fontSize: compact ? 12.5 : 13.25,
             color: "var(--v2-ink-dim)",
-            lineHeight: fullQuote ? 1.55 : 1.45,
+            textAlign: "left",
+            lineHeight: fullQuote ? 1.6 : 1.45,
             ...(fullQuote
               ? {}
               : {
@@ -219,7 +222,9 @@ function TestimonialRow({
           style={{
             fontSize: compact ? 11 : 11.5,
             marginTop: compact ? 4 : 6,
-            color: "var(--v2-ink-faint)",
+            // Modest local contrast bump (faint \u2192 dim) for the attribution.
+            color: "var(--v2-ink-dim)",
+            textAlign: "left",
             fontWeight: 600,
             letterSpacing: "0.01em",
           }}

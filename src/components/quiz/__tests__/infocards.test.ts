@@ -93,12 +93,57 @@ describe("Card 3 chart copy is honest", () => {
   });
 });
 
-// ── Card 1 label matches its content (no recycled benefit copy) ───────────────
+// ── Card 1 rebuild — fast visual mechanism explainer ──────────────────────────
 
-describe("Card 1 label matches its content", () => {
-  it("does not reuse question.infoCapability under the 'maps underneath' label", () => {
-    expect(infocards).not.toContain("question.infoCapability");
-    expect(infocards).toContain("Where the friction actually begins");
+describe("Card 1 rebuilt as a fast mechanism explainer", () => {
+  const card1 = infocards.slice(
+    infocards.indexOf("function Card1Recognition"),
+    infocards.indexOf("function Card2Differentiation"),
+  );
+
+  it("renders the approved copy (label, two-beat headline, surface, mechanism)", () => {
+    expect(card1).toContain("Recognition");
+    expect(card1).toContain("It’s not just ");
+    expect(card1).toContain("procrastination.");
+    expect(card1).toContain("What it feels like");
+    expect(card1).toContain("“I just can’t start.”");
+    expect(card1).toContain("FocusRoute maps where the route breaks.");
+    expect(card1).toContain("Where the route breaks");
+  });
+
+  it("uses exactly the four detected friction signals", () => {
+    for (const s of [
+      "Unclear priority",
+      "Start feels too big",
+      "Pressure takes over",
+      "Interruption resets you",
+    ]) {
+      expect(card1).toContain(s);
+    }
+  });
+
+  it("ends on the payoff + CTA", () => {
+    expect(card1).toContain("Less self-blame.");
+    expect(card1).toContain("A clearer next move.");
+    expect(card1).toContain("Show me the pattern");
+  });
+
+  it("drops the old long-paragraph grammar and the banned 'momentum' word", () => {
+    expect(card1.toLowerCase()).not.toContain("momentum");
+    expect(card1).not.toContain("Where the friction actually begins");
+    expect(card1).not.toContain("question.infoCapability");
+  });
+
+  it("drives the narrative with a GSAP route draw + scan, honoring reduced motion", () => {
+    expect(card1).toContain(".fr1-route");
+    expect(card1).toContain("strokeDashoffset");
+    expect(card1).toContain(".fr1-vscan");
+    expect(card1).toContain("prefers-reduced-motion");
+    expect(card1).toContain("tl.progress(1)");
+  });
+
+  it("keeps the single scroll container (no nested scroller in Card 1)", () => {
+    expect(card1).not.toContain('overflowY: "auto"');
   });
 });
 
