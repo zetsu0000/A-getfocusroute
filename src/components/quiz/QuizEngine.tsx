@@ -8,7 +8,7 @@ import { useQuizStore } from "@/store/quizStore";
 import { questions } from "@/data/questions";
 import { ProgressBar } from "./ProgressBar";
 import { QuestionCard } from "./QuestionCard";
-import { FocusField } from "@/components/v2/FocusField";
+import { INFOCARD_STAGE } from "@/components/quiz/infocardStages";
 import { useFunnelTheme } from "@/components/v2/FunnelThemeProvider";
 import { getOrCreateActionEventId, trackEvent } from "@/lib/analytics/client";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
@@ -22,6 +22,11 @@ const ScaleQuestion = dynamic(
 );
 const InfoCard = dynamic(
   () => import("./InfoCard").then(m => ({ default: m.InfoCard })),
+  { ssr: false },
+);
+// WebGL ambient — lazy so `three` never enters the quiz's critical bundle.
+const SignalFieldGL = dynamic(
+  () => import("@/components/v2/SignalFieldGL").then(m => ({ default: m.SignalFieldGL })),
   { ssr: false },
 );
 
@@ -51,8 +56,13 @@ export function QuizEngine() {
     .filter((q) => q.inputType !== "info").length;
   const totalCount = questions.filter((q) => q.inputType !== "info").length;
 
-  /* The attention field organizes as the user progresses: noise → signal. */
-  const fieldCoherence = Math.min(0.85, (answeredCount / totalCount) * 0.9);
+  /* The attention field organizes as the user progresses: noise → signal.
+     On the infocards it follows the narrative stage (1 scattered → 5 organized)
+     so the shared field visibly evolves across the five cards. */
+  const infoStage = isInfo ? INFOCARD_STAGE[question.id] ?? 0 : 0;
+  const fieldCoherence = isInfo
+    ? 0.1 + ((Math.max(1, infoStage) - 1) / 4) * 0.85
+    : Math.min(0.85, (answeredCount / totalCount) * 0.9);
 
   useEffect(() => {
     const answeredCount = answers.filter((answer) => {
@@ -159,10 +169,12 @@ export function QuizEngine() {
   return (
     <div className="min-h-screen flex flex-col" style={{ position: "relative" }}>
 
-      {/* ── Calibration field — scattered attention organizing into a route
-          as answers accumulate. Pure backdrop, zero pointer interception. */}
+      {/* ── Shared signal field (WebGL) — one persistent ambient that evolves
+          from scattered noise to an organized route as answers accumulate and
+          across the five infocards. Pure backdrop, zero pointer interception;
+          keyed by theme so a runtime toggle repaints the palette. */}
       <div aria-hidden="true" style={{ position: "fixed", inset: 0, pointerEvents: "none" }}>
-        <FocusField key={theme} coherence={fieldCoherence} intensity={0.55} showRoute theme={theme} />
+        <SignalFieldGL key={theme} coherence={fieldCoherence} intensity={0.7} theme={theme} />
       </div>
 
       {/* ── Brand anchor — paid traffic lands straight on a question,
