@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { m } from "framer-motion";
-import { Shield, RotateCcw } from "lucide-react";
+import { Shield, RotateCcw, Compass, TrendingUp } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js/pure";
 import type { Appearance } from "@stripe/stripe-js";
 import {
@@ -12,8 +12,8 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { useQuizStore } from "@/store/quizStore";
-import { safeName } from "@/lib/personalization";
 import { HudLabel } from "@/components/v2/primitives";
+import { PaywallSocialProofDisclosure } from "@/components/signature/SocialProof";
 import { useFunnelTheme, type FunnelTheme } from "@/components/v2/FunnelThemeProvider";
 import {
   getAnalyticsContext,
@@ -285,9 +285,6 @@ function OrderSummary({ plan }: { plan: PlanDisplay }) {
         `Renews after ${introWindowLabel(plan)}`,
         `${formatMoney(plan.renewalAmount)}/${renewalCadenceLabel(plan)}`,
       )}
-      <p style={{ fontSize: 11.5, color: "var(--v2-ink-ghost)", marginTop: 2 }}>
-        Cancel anytime before renewal — manage it from your dashboard.
-      </p>
     </div>
   );
 }
@@ -424,7 +421,15 @@ function PlanCheckoutForm({
             metadata: { product_key: productKey, plan_key: plan.key },
           });
         }}
-        options={{ layout: "tabs" }}
+        options={{
+          layout: "tabs",
+          // Customer-facing business name in the Payment Element (mandate /
+          // terms text). The legal entity stored in Stripe is unchanged.
+          business: { name: "FocusRoute" },
+          // Default the billing country to the US; the customer can still
+          // change it in the Element.
+          defaultValues: { billingDetails: { address: { country: "US" } } },
+        }}
       />
       {error && (
         <p
@@ -441,6 +446,17 @@ function PlanCheckoutForm({
           {error}
         </p>
       )}
+      {/* Single billing disclosure near the final payment action. */}
+      <p
+        style={{
+          fontSize: 11.5,
+          color: "var(--v2-ink-faint)",
+          textAlign: "center",
+          lineHeight: 1.55,
+        }}
+      >
+        Intro price today. Renews at the regular price shown. Cancel anytime.
+      </p>
       <m.button
         type="submit"
         disabled={!stripe || loading}
@@ -464,21 +480,102 @@ function PlanCheckoutForm({
             : {}),
         }}
       >
-        {loading
-          ? "Processing..."
-          : `Start ${plan.shortName} — ${formatMoney(plan.introAmount)} today`}
+        {loading ? "Processing..." : "Get My FocusRoute"}
       </m.button>
-      <p style={{ fontSize: 11, color: "var(--v2-ink-ghost)", textAlign: "center" }}>
-        Cancel anytime — manage it from your dashboard
-      </p>
     </form>
+  );
+}
+
+/* ── Compact product-value route ──────────────────────────────────────────────
+   Three connected stops tied to the funnel pain — start, recover, follow
+   through — kept deliberately compact (no SaaS cards, no paragraphs). */
+const VALUE_STEPS = [
+  {
+    icon: Compass,
+    title: "Know where to start",
+    meaning: "A clearer first move when priorities compete.",
+  },
+  {
+    icon: RotateCcw,
+    title: "Know how to recover",
+    meaning: "A route back when pressure or interruption breaks focus.",
+  },
+  {
+    icon: TrendingUp,
+    title: "Keep moving forward",
+    meaning: "Progress without rebuilding the entire plan.",
+  },
+] as const;
+
+function ValueRoute() {
+  return (
+    <ul
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 0,
+        listStyle: "none",
+        margin: 0,
+        padding: 0,
+      }}
+    >
+      {VALUE_STEPS.map((step, i) => {
+        const Icon = step.icon;
+        const last = i === VALUE_STEPS.length - 1;
+        return (
+          <li
+            key={step.title}
+            style={{ display: "grid", gridTemplateColumns: "auto 1fr", columnGap: 12 }}
+          >
+            {/* Node + connector — the "route" thread. */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <div
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: "50%",
+                  flexShrink: 0,
+                  background: "rgba(var(--v2-signal-rgb),0.12)",
+                  border: "1px solid rgba(var(--v2-signal-rgb),0.35)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Icon size={14} color="var(--v2-signal-2)" strokeWidth={2.2} />
+              </div>
+              {!last && (
+                <div
+                  style={{
+                    width: 2,
+                    flex: 1,
+                    minHeight: 14,
+                    marginTop: 2,
+                    background:
+                      "linear-gradient(rgba(var(--v2-signal-rgb),0.45), rgba(var(--v2-signal-rgb),0.08))",
+                  }}
+                />
+              )}
+            </div>
+            {/* Stop copy. */}
+            <div style={{ paddingBottom: last ? 0 : 14 }}>
+              <p style={{ fontSize: 13.5, fontWeight: 700, color: "var(--v2-ink)", lineHeight: 1.3 }}>
+                {step.title}
+              </p>
+              <p style={{ fontSize: 12.5, color: "var(--v2-ink-faint)", lineHeight: 1.5, marginTop: 2 }}>
+                {step.meaning}
+              </p>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
 /* ── Screen ───────────────────────────────────────────────────────────────── */
 export function SubscriptionPlansScreen() {
   const { name, email, setStep, quizResultId } = useQuizStore();
-  const displayName = safeName(name, "you");
   const { theme } = useFunnelTheme();
 
   const [selected, setSelected] = useState<PlanKey>(DEFAULT_PLAN_KEY);
@@ -502,24 +599,33 @@ export function SubscriptionPlansScreen() {
       style={{ minHeight: "100dvh", padding: "32px 16px 64px" }}
     >
       <div style={{ maxWidth: 500, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
-        {/* Header */}
+        {/* Header — approved opening (headline + one supporting line, no eyebrow) */}
         <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <HudLabel tone="signal" style={{ marginBottom: 12 }}>
-            Choose your plan
-          </HudLabel>
           <h1
             className="v2-display"
             style={{ fontSize: "clamp(25px, 6.4vw, 31px)", fontWeight: 550, lineHeight: 1.2, marginBottom: 9 }}
           >
-            Start your FocusRoute system,{" "}
-            <em className="v2-text-signal" style={{ fontStyle: "italic" }}>
-              {displayName}
-            </em>
+            Stop starting over.
           </h1>
           <p style={{ fontSize: 14, color: "var(--v2-ink-dim)", lineHeight: 1.65 }}>
-            Pick an intro window. You pay the intro price today; it renews at the
-            standard rate afterward, and you can cancel anytime before then.
+            Your answers showed where focus breaks. Choose the plan that helps you
+            start, recover, and follow through.
           </p>
+        </m.div>
+
+        {/* Compact product-value route */}
+        <m.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+          style={{
+            padding: "16px 16px",
+            borderRadius: 16,
+            border: "1px solid var(--v2-line)",
+            background: "rgba(var(--v2-signal-rgb),0.04)",
+          }}
+        >
+          <ValueRoute />
         </m.div>
 
         {/* Plan cards — accessible radio group */}
@@ -544,7 +650,7 @@ export function SubscriptionPlansScreen() {
           ))}
         </m.div>
 
-        {/* Order summary + CTA / payment */}
+        {/* Order summary → social proof → CTA / payment */}
         <m.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -553,6 +659,9 @@ export function SubscriptionPlansScreen() {
           style={{ padding: "22px 22px", display: "flex", flexDirection: "column", gap: 16 }}
         >
           <OrderSummary plan={plan} />
+
+          {/* Restored expandable customer proof, before the payment action. */}
+          <PaywallSocialProofDisclosure />
 
           {!showPayment ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -577,7 +686,7 @@ export function SubscriptionPlansScreen() {
                 className="v2-cta"
                 style={{ width: "100%", minHeight: 58, padding: "18px 24px", fontSize: 16, fontWeight: 800 }}
               >
-                Continue — {formatMoney(plan.introAmount)} today
+                Continue to secure checkout
               </m.button>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 26 }}>
                 {[
@@ -600,6 +709,9 @@ export function SubscriptionPlansScreen() {
                 mode: "subscription",
                 amount: plan.introAmount,
                 currency: plan.currency,
+                // Force the Stripe Payment Element UI to English regardless of
+                // the visitor's browser locale.
+                locale: "en",
                 appearance: buildAppearance(theme),
               }}
             >
@@ -613,20 +725,6 @@ export function SubscriptionPlansScreen() {
             </Elements>
           )}
         </m.div>
-
-        {/* Reassurance — the subscription is the gate; no free bypass, but the
-            commitment is explicitly low-risk. */}
-        <p
-          style={{
-            fontSize: 12,
-            color: "var(--v2-ink-faint)",
-            textAlign: "center",
-            lineHeight: 1.6,
-            padding: "4px 8px 0",
-          }}
-        >
-          Cancel anytime before your intro window ends and you won&apos;t be charged again.
-        </p>
       </div>
     </m.div>
   );
