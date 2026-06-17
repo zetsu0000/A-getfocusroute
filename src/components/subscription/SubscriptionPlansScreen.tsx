@@ -175,7 +175,7 @@ function PlanCard({
           }}
         >
           <div style={{ flex: 1 }}>
-            <HudLabel style={{ marginBottom: 8, fontSize: 9.5 }}>{plan.name}</HudLabel>
+            <HudLabel tone="dim" style={{ marginBottom: 8, fontSize: 9.5 }}>{plan.name}</HudLabel>
 
             {/* Intro charge — what the customer pays today. */}
             <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
@@ -185,7 +185,7 @@ function PlanCard({
               >
                 {formatMoney(plan.introAmount)}
               </span>
-              <span style={{ fontSize: 12.5, color: "var(--v2-ink-faint)" }}>
+              <span style={{ fontSize: 12.5, color: "var(--v2-ink-dim)" }}>
                 for {introWindowLabel(plan)}
               </span>
             </div>
@@ -203,7 +203,7 @@ function PlanCard({
             </p>
 
             {/* Renewal — honest step-up after the intro window. */}
-            <p style={{ fontSize: 12, color: "var(--v2-ink-faint)", marginTop: 4 }}>
+            <p style={{ fontSize: 12, color: "var(--v2-ink-dim)", marginTop: 4 }}>
               then {formatMoney(plan.renewalAmount)}
               {renewalSuffix(plan)} after {introWindowLabel(plan)}
             </p>
@@ -562,7 +562,7 @@ function ValueRoute() {
               <p style={{ fontSize: 13.5, fontWeight: 700, color: "var(--v2-ink)", lineHeight: 1.3 }}>
                 {step.title}
               </p>
-              <p style={{ fontSize: 12.5, color: "var(--v2-ink-faint)", lineHeight: 1.5, marginTop: 2 }}>
+              <p style={{ fontSize: 12.5, color: "var(--v2-ink-dim)", lineHeight: 1.5, marginTop: 2 }}>
                 {step.meaning}
               </p>
             </div>
@@ -596,7 +596,11 @@ export function SubscriptionPlansScreen() {
       initial={{ opacity: 0, x: 40 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3 }}
-      style={{ minHeight: "100dvh", padding: "32px 16px 64px" }}
+      // Extra bottom inset so the final CTA clears the iOS Safari bottom bar.
+      style={{
+        minHeight: "100dvh",
+        padding: "32px 16px calc(110px + env(safe-area-inset-bottom, 0px))",
+      }}
     >
       <div style={{ maxWidth: 500, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
         {/* Header — approved opening (headline + one supporting line, no eyebrow) */}
