@@ -15,11 +15,26 @@ import {
   type SocialProofPlacement,
 } from "@/data/testimonials";
 import { getOrCreateSocialProofJourney } from "@/lib/social-proof-session";
+import { useFunnelTheme } from "@/components/v2/FunnelThemeProvider";
 import { trackEvent } from "@/lib/analytics/client";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 
 const RESULT_GROUP_ID = "result_trust";
 const PAYWALL_GROUP_ID = "paywall_trust";
+
+/* Theme-adaptive surfaces. The component is identical in both worlds — same
+   content, structure, spacing, behavior — only the surface/contrast change so
+   the proof reads as a defined card on the daylight canvas, not a washed-out
+   blue tint. */
+const SURFACE = {
+  dark: { panel: "rgba(148,163,255,0.045)", avatar: "rgba(124,138,255,0.18)" },
+  light: { panel: "rgba(70,85,230,0.045)", avatar: "rgba(70,85,230,0.12)" },
+} as const;
+
+function useSocialProofSurface() {
+  const { theme } = useFunnelTheme();
+  return theme === "light" ? SURFACE.light : SURFACE.dark;
+}
 
 const visuallyHidden: CSSProperties = {
   position: "absolute",
@@ -110,6 +125,7 @@ function TestimonialAvatar({
   size?: number;
 }) {
   const [imageOk, setImageOk] = useState(Boolean(testimonial.image));
+  const surface = useSocialProofSurface();
   const initial = testimonial.attribution.trim().charAt(0).toUpperCase() || "?";
 
   return (
@@ -124,7 +140,7 @@ function TestimonialAvatar({
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "rgba(124,138,255,0.18)",
+        background: surface.avatar,
         border: "1px solid var(--v2-line)",
         color: "var(--v2-ink-dim)",
         fontSize: Math.max(11, Math.round(size * 0.34)),
@@ -218,6 +234,7 @@ function TestimonialRow({
 
 export function ResultSocialProof() {
   const journey = useSocialProofJourney();
+  const surface = useSocialProofSurface();
   const testimonials = journey?.result ?? [];
   const nodeRef = useVisibleImpression<HTMLElement>({
     testimonials,
@@ -238,7 +255,7 @@ export function ResultSocialProof() {
         padding: "11px 12px",
         borderRadius: 16,
         border: "1px solid var(--v2-line)",
-        background: "rgba(148,163,255,0.045)",
+        background: surface.panel,
       }}
     >
       {testimonials.map((testimonial) => (
@@ -256,6 +273,7 @@ export function ResultSocialProof() {
 
 export function PaywallSocialProofDisclosure() {
   const journey = useSocialProofJourney();
+  const surface = useSocialProofSurface();
   const [open, setOpen] = useState(false);
   const expandedTrackedRef = useRef(false);
   const extraImpressionsTrackedRef = useRef(false);
@@ -302,7 +320,7 @@ export function PaywallSocialProofDisclosure() {
       style={{
         borderRadius: 16,
         border: "1px solid var(--v2-line)",
-        background: "rgba(148,163,255,0.045)",
+        background: surface.panel,
         overflow: "hidden",
       }}
     >
