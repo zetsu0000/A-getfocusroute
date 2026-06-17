@@ -177,9 +177,16 @@ export function SignalFieldGL({
       renderer.render(scene, camera);
     }
 
-    function loop() {
+    // Cap the frame rate on small screens (~30fps) to spare mobile GPU/battery.
+    const minInterval = isSmall ? 1000 / 30 : 0;
+    let lastRender = 0;
+    function loop(now?: number) {
       if (!running) return;
-      frame();
+      const ts = now ?? performance.now();
+      if (ts - lastRender >= minInterval) {
+        lastRender = ts;
+        frame();
+      }
       raf = requestAnimationFrame(loop);
     }
     function start() {
