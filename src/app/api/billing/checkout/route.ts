@@ -5,6 +5,7 @@ import { recordAnalyticsEvent } from "@/lib/analytics/server";
 import { jsonInputError, readJsonObject } from "@/lib/api/request";
 import { isPlanKey, PLANS } from "@/lib/billing/plans";
 import { planKeyToProductKey, resolvePlanPrices } from "@/lib/billing/planRegistry";
+import { ensurePlanSchedule } from "@/lib/billing/schedule";
 import { sendMetaEvent } from "@/lib/meta/conversions";
 import { subscriptionVerificationEvidenceReady } from "@/lib/payment-verification";
 import {
@@ -191,38 +192,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // 4. Attach the intro→renewal schedule (best-effort: payment already
-    //    initialized; if scheduling fails the webhook/portal can reconcile the
-    //    renewal step rather than failing a charged checkout).
-    try {
-      const schedule = await stripe.subscriptionSchedules.create(
-        { from_subscription: subscription.id },
-        { idempotencyKey: `sched_create:${subscription.id}` },
-      );
-      const currentPhaseStart = schedule.phases[0]?.start_date;
-      await stripe.subscriptionSchedules.update(schedule.id, {
-        end_behavior: "release",
-        metadata: funnelMeta,
-        phases: [
-          {
-            items: [{ price: prices.introPriceId, quantity: 1 }],
-            ...(currentPhaseStart ? { start_date: currentPhaseStart } : {}),
-            // Stripe SDK 22.x: phases use `duration` ({ interval, interval_count }),
-            // not the legacy `iterations`. The intro phase lasts exactly the intro
-            // window (all windows are whole weeks: 7/28/84d → 1/4/12), after which
-            // the schedule steps to the renewal phase. Equivalent to one intro
-            // billing cycle because the intro price's interval == the window.
-            duration: { interval: "week", interval_count: plan.introDays / 7 },
-          },
-          {
-            items: [{ price: prices.renewalPriceId, quantity: 1 }],
-          },
-        ],
-      });
-    } catch (scheduleError) {
+    // 4. Attach the intro→renewal schedule (fast path). The payment is already
+    //    initialized, so this never fails the charged checkout: `ensurePlanSchedule`
+    //    is idempotent and never throws, and the webhook re-runs the same
+    //    reconciliation on subscription.created / every renewal invoice.paid — so
+    //    a transient failure here is healed rather than left as intro-forever.
+    const scheduleResult = await ensurePlanSchedule(stripe, subscription, planKey);
+    if (scheduleResult.status === "pending") {
       console.error(
-        "[api/billing/checkout] failed to attach intro→renewal schedule",
-        scheduleError,
+        `[api/billing/checkout] intro→renewal schedule pending for ${subscription.id}: ${scheduleResult.reason} (webhook will reconcile)`,
       );
     }
 

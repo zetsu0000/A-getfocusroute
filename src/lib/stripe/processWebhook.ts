@@ -6,6 +6,7 @@ import { grantProductByEmail } from "@/lib/access/entitlements";
 import type { ProductKey } from "@/lib/access/products";
 import { isPlanKey } from "@/lib/billing/plans";
 import { planKeyForPriceId } from "@/lib/billing/planRegistry";
+import { ensurePlanSchedule } from "@/lib/billing/schedule";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 import { recordAnalyticsEvent } from "@/lib/analytics/server";
 import { sendMetaEvent } from "@/lib/meta/conversions";
@@ -123,6 +124,24 @@ async function upsertSubscriptionRow(
       : null;
   const planKey = metaPlanKey ?? planKeyForPriceId(priceId);
 
+  // Reconcile the intro→renewal schedule on every plan-subscription event. This
+  // is the reliability backbone: Stripe retries webhook delivery and every
+  // renewal invoice.paid re-runs this, so a schedule that failed to attach at
+  // checkout is healed here rather than silently renewing forever at the intro
+  // price. ensurePlanSchedule is idempotent and never throws.
+  let scheduleId: string | null = null;
+  let scheduleStatus: string | null = null;
+  if (planKey) {
+    const result = await ensurePlanSchedule(stripe, sub, planKey);
+    scheduleStatus = result.status;
+    scheduleId = result.status === "active" ? result.scheduleId : null;
+    if (result.status === "pending") {
+      console.error(
+        `[stripe webhook] plan subscription ${sub.id} has no intro→renewal schedule: ${result.reason}`,
+      );
+    }
+  }
+
   const baseRow = {
     stripe_subscription_id: sub.id,
     stripe_customer_id: customerId,
@@ -134,15 +153,22 @@ async function upsertSubscriptionRow(
     current_period_end: cpe,
     cancel_at_period_end: sub.cancel_at_period_end ?? false,
   };
-  const row = planKey ? { ...baseRow, plan_key: planKey } : baseRow;
+  const extras: Record<string, unknown> = {};
+  if (planKey) extras.plan_key = planKey;
+  if (scheduleStatus) {
+    extras.schedule_id = scheduleId;
+    extras.schedule_status = scheduleStatus;
+  }
+  const row = { ...baseRow, ...extras };
 
   let { error } = await admin
     .from("subscriptions")
     .upsert(row, { onConflict: "stripe_subscription_id" });
 
-  // Defensive: if the plan_key column hasn't been migrated yet, retry without it
-  // so subscription bookkeeping never breaks on deploy ordering.
-  if (error && planKey && isUnknownColumnError(error, "plan_key")) {
+  // Defensive: if any V2 column (plan_key / schedule_*) hasn't been migrated yet,
+  // retry with the base row so subscription bookkeeping never breaks on deploy
+  // ordering.
+  if (error && Object.keys(extras).length > 0 && isUnknownColumnError(error)) {
     ({ error } = await admin
       .from("subscriptions")
       .upsert(baseRow, { onConflict: "stripe_subscription_id" }));
@@ -152,13 +178,16 @@ async function upsertSubscriptionRow(
   }
 }
 
-/** Detect a PostgREST "unknown column" error for graceful pre-migration fallback. */
-function isUnknownColumnError(
-  error: { code?: string | null; message?: string | null },
-  column: string,
-): boolean {
+/** Detect a PostgREST / Postgres "unknown column" error for graceful pre-migration fallback. */
+function isUnknownColumnError(error: {
+  code?: string | null;
+  message?: string | null;
+}): boolean {
   if (error.code === "PGRST204" || error.code === "42703") return true;
-  return Boolean(error.message && error.message.includes(column));
+  return Boolean(
+    error.message &&
+      /(column .* does not exist|could not find the .* column)/i.test(error.message),
+  );
 }
 
 async function hasEmailGrantForPaymentIntent(
