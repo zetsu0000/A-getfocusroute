@@ -8,6 +8,10 @@ export const PRODUCT_KEYS = [
   "roadmap_28_day",
   "membership_monthly",
   "membership_annual",
+  // V2 3-plan subscription model (intro → renewal). All grant membership.
+  "membership_1week",
+  "membership_4week",
+  "membership_12week",
 ] as const;
 
 export type ProductKey = (typeof PRODUCT_KEYS)[number];
@@ -15,6 +19,9 @@ export type ProductKey = (typeof PRODUCT_KEYS)[number];
 export const SUBSCRIPTION_PRODUCT_KEYS = [
   "membership_monthly",
   "membership_annual",
+  "membership_1week",
+  "membership_4week",
+  "membership_12week",
 ] as const satisfies readonly ProductKey[];
 
 /** Feature-branch name — canonical export. */
@@ -23,6 +30,9 @@ export const PRODUCT_TO_ENTITLEMENTS = {
   roadmap_28_day:     ["roadmap_28_day", "bonus_toolkit", "bonus_audio"],
   membership_monthly: ["membership", "retake_quiz", "billing_portal"],
   membership_annual:  ["membership", "retake_quiz", "billing_portal"],
+  membership_1week:   ["membership", "retake_quiz", "billing_portal"],
+  membership_4week:   ["membership", "retake_quiz", "billing_portal"],
+  membership_12week:  ["membership", "retake_quiz", "billing_portal"],
 } as const satisfies Record<ProductKey, readonly string[]>;
 
 /** main-branch alias for backward compatibility. */
@@ -48,7 +58,12 @@ export function isSubscriptionProduct(productKey: ProductKey) {
   return (SUBSCRIPTION_PRODUCT_KEYS as readonly string[]).includes(productKey);
 }
 
-/** Maps price ID env vars to their product key. Used as a fallback when metadata is absent. */
+/**
+ * Maps price ID env vars to their product key. Used as a fallback when metadata
+ * is absent. For the V2 3-plan products the *renewal* price is the representative
+ * value here; both intro and renewal IDs resolve via
+ * `planProductKeyForPriceId` in `productKeyPolicy.resolvePriceIdToProductKey`.
+ */
 function priceEnvMap(): Record<ProductKey, string | undefined> {
   return {
     brain_profile:
@@ -63,6 +78,9 @@ function priceEnvMap(): Record<ProductKey, string | undefined> {
     membership_annual:
       process.env.STRIPE_PRICE_MEMBERSHIP_ANNUAL ??
       process.env.NEXT_PUBLIC_PRICE_ANNUAL,
+    membership_1week:  process.env.STRIPE_PRICE_PLAN_1WEEK_RENEWAL,
+    membership_4week:  process.env.STRIPE_PRICE_PLAN_4WEEK_RENEWAL,
+    membership_12week: process.env.STRIPE_PRICE_PLAN_12WEEK_RENEWAL,
   };
 }
 

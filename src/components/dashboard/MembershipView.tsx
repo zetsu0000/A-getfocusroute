@@ -2,6 +2,7 @@
 import { ArrowRight, Crown } from "lucide-react";
 
 import { DashboardMembershipSummary } from "@/components/dashboard/DashboardMembershipSummary";
+import { ManageBillingButton } from "@/components/dashboard/ManageBillingButton";
 import type { DashboardSubscriptionRow } from "@/lib/dashboard/load-dashboard-context";
 
 // ── Shared atoms ──────────────────────────────────────────────────────────────
@@ -363,8 +364,9 @@ function AccountBilling({ email }: { email: string }) {
   return (
     <SectionCard eyebrow="Member · Account" title="Account & Billing">
       <p style={{ ...bodyText, marginBottom: 14 }}>
-        To change your plan, update payment details, or cancel your subscription, email support
-        with your account address and we will handle it within one business day.
+        Change your plan, update your payment method, view invoices, or cancel — all from the
+        secure Stripe billing portal. Cancelling keeps your access until the end of the period
+        you&apos;ve already paid for.
       </p>
       <div
         style={{
@@ -378,24 +380,17 @@ function AccountBilling({ email }: { email: string }) {
         <p style={fieldLabel}>Account email</p>
         <p style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-body)" }}>{email}</p>
       </div>
-      <a
-        href="mailto:support@focusroute.com"
-        style={{
-          display: "inline-flex",
-          padding: "10px 18px",
-          borderRadius: 10,
-          background: "var(--color-bg-card-2)",
-          border: "1px solid var(--color-border)",
-          color: "var(--color-primary)",
-          fontSize: 13,
-          fontWeight: 700,
-          textDecoration: "none",
-          alignItems: "center",
-          gap: 6,
-        }}
-      >
-        Email support <ArrowRight size={14} strokeWidth={2.4} />
-      </a>
+      <ManageBillingButton returnPath="/dashboard/membership" />
+      <p style={{ fontSize: 12, color: "var(--color-text-muted)", lineHeight: 1.5, marginTop: 12 }}>
+        Trouble opening the portal?{" "}
+        <a
+          href="mailto:support@focusroute.com"
+          style={{ color: "var(--color-primary)", fontWeight: 700, textDecoration: "none" }}
+        >
+          Email support
+        </a>{" "}
+        and we&apos;ll handle it within one business day.
+      </p>
     </SectionCard>
   );
 }
