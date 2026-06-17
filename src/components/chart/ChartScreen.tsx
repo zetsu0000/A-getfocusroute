@@ -414,7 +414,9 @@ export function ChartScreen() {
                 meta: false,
                 metadata: { signature_key: signature.signature },
               });
-              setStep("paywall");
+              // Subscription-first funnel: the 3-plan subscription is the
+              // primary paywall and unlocks the full profile + everything.
+              setStep("subscription");
             }}
             className="v2-cta v2-cta-gold"
             style={{ width: "100%", minHeight: 58, fontSize: 16 }}

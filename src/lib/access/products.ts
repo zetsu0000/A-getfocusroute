@@ -30,9 +30,14 @@ export const PRODUCT_TO_ENTITLEMENTS = {
   roadmap_28_day:     ["roadmap_28_day", "bonus_toolkit", "bonus_audio"],
   membership_monthly: ["membership", "retake_quiz", "billing_portal"],
   membership_annual:  ["membership", "retake_quiz", "billing_portal"],
-  membership_1week:   ["membership", "retake_quiz", "billing_portal"],
-  membership_4week:   ["membership", "retake_quiz", "billing_portal"],
-  membership_12week:  ["membership", "retake_quiz", "billing_portal"],
+  // V2 subscription-first model: a plan subscription is the funnel's primary
+  // paywall, so it unlocks the ENTIRE product — full Brain Profile, 28-Day
+  // Protocol, and bonuses — plus the membership-only capabilities. These ride
+  // the same subscription grant/expiry lifecycle as the membership entitlements,
+  // so access tracks the subscription's period (ends when the subscription does).
+  membership_1week:   ["membership", "retake_quiz", "billing_portal", "brain_profile", "bonus_explain_script", "roadmap_28_day", "bonus_toolkit", "bonus_audio"],
+  membership_4week:   ["membership", "retake_quiz", "billing_portal", "brain_profile", "bonus_explain_script", "roadmap_28_day", "bonus_toolkit", "bonus_audio"],
+  membership_12week:  ["membership", "retake_quiz", "billing_portal", "brain_profile", "bonus_explain_script", "roadmap_28_day", "bonus_toolkit", "bonus_audio"],
 } as const satisfies Record<ProductKey, readonly string[]>;
 
 /** main-branch alias for backward compatibility. */
