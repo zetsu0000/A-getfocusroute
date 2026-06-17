@@ -2,9 +2,6 @@
 
 import type { ReactNode } from "react";
 import { QuizQuestion } from "@/types/quiz";
-import { useQuizStore } from "@/store/quizStore";
-import { scoreFromAnswers } from "@/lib/symptom-level";
-import { getSignatureFromAnswers } from "@/lib/signature";
 import { useFunnelTheme } from "@/components/v2/FunnelThemeProvider";
 import { useGsapReveal } from "@/components/v2/useGsapReveal";
 
@@ -56,15 +53,18 @@ function CardShell({
   children: ReactNode;
 }) {
   return (
+    // No own scroll container — the quiz slide stage is the single scroller.
+    // minHeight:100% keeps the CTA near the bottom on tall screens while letting
+    // long cards grow and the one outer container scroll. Safe-area bottom pad
+    // keeps the CTA clear of the iOS/Safari bottom bar.
     <div
       ref={rootRef}
       style={{
-        height: "100%",
+        minHeight: "100%",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        overflowY: "auto",
-        padding: "20px 18px 24px",
+        padding: "20px 18px calc(26px + env(safe-area-inset-bottom, 0px))",
       }}
     >
       <div style={{ width: "100%", maxWidth: 480, display: "flex", flexDirection: "column", flex: 1 }}>
@@ -124,7 +124,7 @@ function Pill({ children, color }: { children: ReactNode; color: string }) {
 /* ─────────────────────────────────────────────────────────────────────
    CARD 1 — Recognition: surface (what you feel) → depth (what we map)
 ───────────────────────────────────────────────────────────────────── */
-function Card1Recognition({ question, onContinue }: CardProps) {
+function Card1Recognition({ onContinue }: CardProps) {
   const { theme } = useFunnelTheme();
   const dark = theme === "dark";
   const role = useRole(dark).recognition;
@@ -140,7 +140,7 @@ function Card1Recognition({ question, onContinue }: CardProps) {
       rootRef={ref}
       eyebrow={role.eyebrow}
       eyebrowColor={role.accent}
-      title="The part you see isn't the whole pattern."
+      title="What you're feeling is real — and it's only the surface."
       cta="Show me the pattern"
       onContinue={onContinue}
     >
@@ -188,8 +188,8 @@ function Card1Recognition({ question, onContinue }: CardProps) {
         >
           <Pill color={role.accent2}>What FocusRoute maps underneath</Pill>
           <p style={{ marginTop: 9, fontSize: 14, fontWeight: 600, color: "var(--v2-ink)", lineHeight: 1.5 }}>
-            {question.infoCapability ??
-              "Whether the friction starts with unclear priorities, an entry point that feels too big, pressure, interruption, or lost momentum."}
+            Where the friction actually begins — unclear priorities, an entry point
+            that feels too big, quiet pressure, an interruption, or momentum slipping away.
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 12 }}>
             {["Priority", "Entry point", "Pressure", "Interruption", "Momentum"].map((t) => (
@@ -337,7 +337,7 @@ function Card3Cost({ onContinue }: CardProps) {
       rootRef={ref}
       eyebrow={role.eyebrow}
       eyebrowColor={role.accent}
-      title="The cost isn't one task. It's re-deciding the same things, over and over."
+      title="The hardest part is rarely the task. It's deciding the same things, again and again."
       cta="See how my route forms"
       onContinue={onContinue}
     >
@@ -391,7 +391,7 @@ function Card3Cost({ onContinue }: CardProps) {
       </div>
 
       <p className="fr-rv" style={{ marginTop: 8, fontSize: 11, color: "var(--v2-ink-faint)", fontStyle: "italic" }}>
-        Illustrative — based on your answers so far, not a measured outcome.
+        Illustrative example of how a clearer system can reduce repeated decision load.
       </p>
       <p className="fr-rv" style={{ marginTop: 8, fontSize: 13, color: "var(--v2-ink-dim)", lineHeight: 1.5 }}>
         FocusRoute lowers the repeated decision load: a clearer next action, and a route back when focus breaks — so less of your day goes to rebuilding the plan.
@@ -487,23 +487,15 @@ function Card4Mechanism({ onContinue }: CardProps) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────
-   CARD 5 — Unlock: free snapshot + answer-derived locked layers
+   CARD 5 — Unlock: a confident teaser, then the locked layers. The exact
+   score and the pattern's name/descriptor are intentionally WITHHELD here so
+   they land for the first time on the result reveal — this card builds the
+   curiosity, it does not spend it.
 ───────────────────────────────────────────────────────────────────── */
-const PATTERN_HINT: Record<string, string> = {
-  Sprinter: "Fast-cycle, pressure-powered",
-  Archivist: "Detail-led, load-sensitive",
-  Spark: "Novelty-led, interest-powered",
-  Reactor: "Adaptive, mood-sensitive",
-  Drifter: "Anchor-seeking, flexible attention",
-};
-
 function Card5Unlock({ onContinue }: CardProps) {
   const { theme } = useFunnelTheme();
   const dark = theme === "dark";
   const role = useRole(dark).unlock;
-  const answers = useQuizStore((s) => s.answers);
-  const score = scoreFromAnswers(answers);
-  const hint = PATTERN_HINT[getSignatureFromAnswers(answers).signature] ?? "Personal focus pattern";
 
   const ref = useGsapReveal((tl) => {
     tl.from(".fr-rv", { y: 14, opacity: 0, stagger: 0.07 })
@@ -528,30 +520,39 @@ function Card5Unlock({ onContinue }: CardProps) {
       cta="Reveal my FocusRoute"
       onContinue={onContinue}
     >
-      {/* Free preview — answer-derived snapshot */}
+      {/* Signal teaser — what we found, without spending the reveal. No score,
+          no pattern name; those appear for the first time on the result. */}
       <div
         className="fr-free"
         style={{
-          padding: "14px 16px",
+          padding: "15px 16px",
           borderRadius: 16,
           border: `1px solid color-mix(in srgb, ${role.accent2} 30%, transparent)`,
           background: "var(--v2-bg-raise)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
         }}
       >
-        <div>
-          <Pill color={role.accent2}>Preview · from your answers</Pill>
-          <p style={{ marginTop: 8, fontSize: 14, fontWeight: 740, color: "var(--v2-ink)" }}>{hint}</p>
-          <p style={{ fontSize: 11.5, color: "var(--v2-ink-faint)", marginTop: 2 }}>Focus snapshot ready</p>
-        </div>
-        <div style={{ textAlign: "center", flexShrink: 0 }}>
-          <p className="v2-display" style={{ fontSize: 26, fontWeight: 600, color: role.accent2, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
-            {score.toFixed(0)}
-          </p>
-          <p className="v2-hud" style={{ fontSize: 8, marginTop: 2 }}>score</p>
+        <Pill color={role.accent2}>Signal detected · from your answers</Pill>
+        <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+          {[
+            "We picked up your focus pattern signal",
+            "Your strongest friction area is mapped",
+            "Your personalized route is ready to draw",
+          ].map((t) => (
+            <div key={t} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span
+                aria-hidden="true"
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: "50%",
+                  flexShrink: 0,
+                  background: role.accent2,
+                  boxShadow: `0 0 8px ${role.accent2}`,
+                }}
+              />
+              <span style={{ fontSize: 13.5, fontWeight: 620, color: "var(--v2-ink)" }}>{t}</span>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -599,6 +600,31 @@ function Card5Unlock({ onContinue }: CardProps) {
   );
 }
 
+/* Neutral fallback for an unexpected infocard id. It deliberately does NOT
+   reuse Card 1, so a routing/data bug surfaces as a plain card instead of
+   silently masquerading as a real one — while never trapping the user. */
+function SafeContinueCard({ onContinue }: CardProps) {
+  const { theme } = useFunnelTheme();
+  const role = useRole(theme === "dark").system;
+  const ref = useGsapReveal((tl) => {
+    tl.from(".fr-rv", { y: 12, opacity: 0, stagger: 0.08 });
+  });
+  return (
+    <CardShell
+      rootRef={ref}
+      eyebrow="One moment"
+      eyebrowColor={role.accent}
+      title="Your FocusRoute is still coming together."
+      cta="Continue"
+      onContinue={onContinue}
+    >
+      <p className="fr-rv" style={{ fontSize: 14, color: "var(--v2-ink-dim)", lineHeight: 1.6 }}>
+        Your answers are taking shape into a personalized focus route.
+      </p>
+    </CardShell>
+  );
+}
+
 /* ── Router ───────────────────────────────────────────────────────────── */
 export function InfocardV2({ question, onContinue }: CardProps) {
   switch (question.id) {
@@ -613,7 +639,7 @@ export function InfocardV2({ question, onContinue }: CardProps) {
     case "adhd-profile":
       return <Card5Unlock question={question} onContinue={onContinue} />;
     default:
-      return <Card1Recognition question={question} onContinue={onContinue} />;
+      return <SafeContinueCard question={question} onContinue={onContinue} />;
   }
 }
 

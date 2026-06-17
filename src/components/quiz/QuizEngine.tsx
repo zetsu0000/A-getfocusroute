@@ -24,7 +24,13 @@ const InfoCard = dynamic(
   () => import("./InfoCard").then(m => ({ default: m.InfoCard })),
   { ssr: false },
 );
-// WebGL ambient — lazy so `three` never enters the quiz's critical bundle.
+// Lightweight canvas field for the questions (the common case).
+const FocusField = dynamic(
+  () => import("@/components/v2/FocusField").then(m => ({ default: m.FocusField })),
+  { ssr: false },
+);
+// WebGL field is mounted ONLY on the five infocards, so `three` is never
+// requested during the questions and the GPU work is scoped to those screens.
 const SignalFieldGL = dynamic(
   () => import("@/components/v2/SignalFieldGL").then(m => ({ default: m.SignalFieldGL })),
   { ssr: false },
@@ -60,9 +66,14 @@ export function QuizEngine() {
      On the infocards it follows the narrative stage (1 scattered → 5 organized)
      so the shared field visibly evolves across the five cards. */
   const infoStage = isInfo ? INFOCARD_STAGE[question.id] ?? 0 : 0;
+  const progressCoherence = Math.min(0.85, (answeredCount / totalCount) * 0.9);
+  const stageCoherence = 0.1 + ((Math.max(1, infoStage) - 1) / 4) * 0.85;
+  // The field must never regress as the user advances: on an infocard take the
+  // higher of progress and the card's stage target, so noise→signal only ever
+  // organizes further — it never falls back toward chaos.
   const fieldCoherence = isInfo
-    ? 0.1 + ((Math.max(1, infoStage) - 1) / 4) * 0.85
-    : Math.min(0.85, (answeredCount / totalCount) * 0.9);
+    ? Math.max(progressCoherence, stageCoherence)
+    : progressCoherence;
 
   useEffect(() => {
     const answeredCount = answers.filter((answer) => {
@@ -169,12 +180,17 @@ export function QuizEngine() {
   return (
     <div className="min-h-screen flex flex-col" style={{ position: "relative" }}>
 
-      {/* ── Shared signal field (WebGL) — one persistent ambient that evolves
-          from scattered noise to an organized route as answers accumulate and
-          across the five infocards. Pure backdrop, zero pointer interception;
-          keyed by theme so a runtime toggle repaints the palette. */}
+      {/* ── Signal field — scattered attention organizing into a route. The
+          questions use the lightweight canvas field; the WebGL field is mounted
+          ONLY on the five infocards (heavier, scoped to those screens, disposed
+          when the user returns to a question). Coherence only ever rises, so the
+          metaphor organizes forward. Pure backdrop; keyed by theme to repaint. */}
       <div aria-hidden="true" style={{ position: "fixed", inset: 0, pointerEvents: "none" }}>
-        <SignalFieldGL key={theme} coherence={fieldCoherence} intensity={0.7} theme={theme} />
+        {isInfo ? (
+          <SignalFieldGL key={`gl-${theme}`} coherence={fieldCoherence} intensity={0.7} theme={theme} />
+        ) : (
+          <FocusField key={`ff-${theme}`} coherence={fieldCoherence} intensity={0.55} showRoute theme={theme} />
+        )}
       </div>
 
       {/* ── Brand anchor — paid traffic lands straight on a question,
