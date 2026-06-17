@@ -120,7 +120,7 @@ describe("GET /api/assessment/upgrade-handoff", () => {
     expect(cache).toBe("no-store");
     expect(body).toEqual({
       authorized: true,
-      step: "paywall",
+      step: "subscription",
       email: "buyer@example.com",
       name: "Sam",
       quizResultId: "row-1",
@@ -140,36 +140,36 @@ describe("GET /api/assessment/upgrade-handoff", () => {
     expect(body).not.toHaveProperty("payment_intent");
   });
 
-  it("does not let a completed assessment without Brain Profile open roadmap upsell", async () => {
+  it("routes a not-yet-owned roadmap need to the subscription", async () => {
     quizRows = [ROW_WITH_ANSWERS];
 
     const { body } = await callHandoff("roadmap_28_day");
 
     expect(body).toMatchObject({
       authorized: true,
-      step: "paywall",
+      step: "subscription",
     });
   });
 
-  it("lets Brain Profile entitlement open roadmap upsell", async () => {
+  it("still routes a roadmap need to the subscription with only Brain Profile", async () => {
     quizRows = [ROW_WITH_ANSWERS];
     setEntitlements("brain_profile");
 
     await expect(callHandoff("roadmap_28_day")).resolves.toMatchObject({
-      body: { authorized: true, step: "upsell" },
+      body: { authorized: true, step: "subscription" },
     });
   });
 
-  it("does not let a user without Roadmap open membership subscription", async () => {
+  it("routes a membership need to the subscription with partial entitlements", async () => {
     quizRows = [ROW_WITH_ANSWERS];
     setEntitlements("brain_profile");
 
     await expect(callHandoff("membership")).resolves.toMatchObject({
-      body: { authorized: true, step: "upsell" },
+      body: { authorized: true, step: "subscription" },
     });
   });
 
-  it("lets Roadmap entitlement open membership subscription", async () => {
+  it("routes a membership need to the subscription with Roadmap access", async () => {
     quizRows = [ROW_WITH_ANSWERS];
     setEntitlements("roadmap_28_day");
 
@@ -178,16 +178,16 @@ describe("GET /api/assessment/upgrade-handoff", () => {
     });
   });
 
-  it("routes bonus_toolkit through its real included-with-Roadmap rules", async () => {
+  it("routes an unowned bonus_toolkit to the subscription, opens it once owned via Roadmap", async () => {
     quizRows = [ROW_WITH_ANSWERS];
 
     await expect(callHandoff("bonus_toolkit")).resolves.toMatchObject({
-      body: { authorized: true, step: "paywall" },
+      body: { authorized: true, step: "subscription" },
     });
 
     setEntitlements("brain_profile");
     await expect(callHandoff("bonus_toolkit")).resolves.toMatchObject({
-      body: { authorized: true, step: "upsell" },
+      body: { authorized: true, step: "subscription" },
     });
 
     setEntitlements("roadmap_28_day");
@@ -201,13 +201,12 @@ describe("GET /api/assessment/upgrade-handoff", () => {
     });
   });
 
-  it("downgrades a manipulated valid membership need based on entitlements", async () => {
+  it("routes a membership need to the subscription regardless of partial entitlements", async () => {
     quizRows = [ROW_WITH_ANSWERS];
 
     const { body } = await callHandoff("membership");
 
-    expect(body).toMatchObject({ authorized: true, step: "paywall" });
-    expect(body).not.toMatchObject({ step: "subscription" });
+    expect(body).toMatchObject({ authorized: true, step: "subscription" });
   });
 
   it("routes owned Brain Profile without assessment data to the dashboard profile", async () => {

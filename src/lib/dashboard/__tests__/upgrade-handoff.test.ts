@@ -77,40 +77,38 @@ describe("need parsing and step mapping", () => {
     expect(readUpgradeNeed("")).toBeNull();
   });
 
-  it("keeps the raw need-to-step mapping stable", () => {
-    expect(stepForUpgradeNeed("brain_profile")).toBe("paywall");
-    expect(stepForUpgradeNeed("roadmap_28_day")).toBe("upsell");
-    expect(stepForUpgradeNeed("bonus_toolkit")).toBe("upsell");
+  it("routes every purchasable need to the subscription step", () => {
+    expect(stepForUpgradeNeed("brain_profile")).toBe("subscription");
+    expect(stepForUpgradeNeed("roadmap_28_day")).toBe("subscription");
+    expect(stepForUpgradeNeed("bonus_toolkit")).toBe("subscription");
     expect(stepForUpgradeNeed("membership")).toBe("subscription");
   });
 
-  it("resolves each need to the currently purchasable offer from entitlements", () => {
+  it("sends not-yet-owned needs to the subscription, and owned areas to their dashboard page", () => {
+    // Not owned -> the single subscription is the offer that unlocks it.
     expect(resolveUpgradeNeedTarget("brain_profile", entitlements())).toEqual({
       kind: "purchase",
       need: "brain_profile",
-      step: "paywall",
+      step: "subscription",
     });
     expect(resolveUpgradeNeedTarget("roadmap_28_day", entitlements())).toEqual({
       kind: "purchase",
-      need: "brain_profile",
-      step: "paywall",
+      need: "roadmap_28_day",
+      step: "subscription",
     });
     expect(
-      resolveUpgradeNeedTarget(
-        "roadmap_28_day",
-        entitlements("brain_profile"),
-      ),
+      resolveUpgradeNeedTarget("roadmap_28_day", entitlements("brain_profile")),
     ).toEqual({
       kind: "purchase",
       need: "roadmap_28_day",
-      step: "upsell",
+      step: "subscription",
     });
     expect(
       resolveUpgradeNeedTarget("membership", entitlements("brain_profile")),
     ).toEqual({
       kind: "purchase",
-      need: "roadmap_28_day",
-      step: "upsell",
+      need: "membership",
+      step: "subscription",
     });
     expect(
       resolveUpgradeNeedTarget("membership", entitlements("roadmap_28_day")),
@@ -120,15 +118,13 @@ describe("need parsing and step mapping", () => {
       step: "subscription",
     });
     expect(
-      resolveUpgradeNeedTarget(
-        "bonus_toolkit",
-        entitlements("brain_profile"),
-      ),
+      resolveUpgradeNeedTarget("bonus_toolkit", entitlements("brain_profile")),
     ).toEqual({
       kind: "purchase",
-      need: "roadmap_28_day",
-      step: "upsell",
+      need: "bonus_toolkit",
+      step: "subscription",
     });
+    // Owned areas still open their dashboard page directly.
     expect(
       resolveUpgradeNeedTarget("bonus_toolkit", entitlements("roadmap_28_day")),
     ).toEqual({
@@ -143,14 +139,21 @@ describe("need parsing and step mapping", () => {
       href: "/dashboard/bonuses",
       cta: "View Bonuses",
     });
+    expect(
+      resolveUpgradeNeedTarget("brain_profile", entitlements("brain_profile")),
+    ).toEqual({
+      kind: "dashboard",
+      href: "/dashboard/profile",
+      cta: "Open Brain Profile",
+    });
   });
 });
 
 describe("decideUpgradeHandoff", () => {
-  it("authorizes the Brain Profile CTA and reaches the paywall (never Q1)", () => {
+  it("authorizes the Brain Profile CTA and reaches the subscription (never Q1)", () => {
     expect(decideUpgradeHandoff("brain_profile", ctx())).toEqual({
       authorized: true,
-      step: "paywall",
+      step: "subscription",
       email: "buyer@example.com",
       name: "Sam",
       quizResultId: "row-1",
@@ -158,22 +161,22 @@ describe("decideUpgradeHandoff", () => {
     });
   });
 
-  it("routes later needs to the prerequisite offer until entitlements are earned", () => {
+  it("routes every not-yet-owned need to the subscription offer", () => {
     expect(decideUpgradeHandoff("roadmap_28_day", ctx())).toMatchObject({
       authorized: true,
-      step: "paywall",
+      step: "subscription",
     });
     expect(decideUpgradeHandoff("bonus_toolkit", ctx())).toMatchObject({
       authorized: true,
-      step: "paywall",
+      step: "subscription",
     });
     expect(decideUpgradeHandoff("membership", ctx())).toMatchObject({
       authorized: true,
-      step: "paywall",
+      step: "subscription",
     });
   });
 
-  it("opens roadmap only after Brain Profile access exists", () => {
+  it("routes a not-yet-owned roadmap need to the subscription", () => {
     expect(
       decideUpgradeHandoff(
         "roadmap_28_day",
@@ -181,11 +184,11 @@ describe("decideUpgradeHandoff", () => {
       ),
     ).toMatchObject({
       authorized: true,
-      step: "upsell",
+      step: "subscription",
     });
   });
 
-  it("opens membership only after Roadmap access exists", () => {
+  it("routes a not-yet-owned membership need to the subscription", () => {
     expect(
       decideUpgradeHandoff(
         "membership",
@@ -193,7 +196,7 @@ describe("decideUpgradeHandoff", () => {
       ),
     ).toMatchObject({
       authorized: true,
-      step: "upsell",
+      step: "subscription",
     });
     expect(
       decideUpgradeHandoff(
@@ -206,7 +209,7 @@ describe("decideUpgradeHandoff", () => {
     });
   });
 
-  it("does not sell Bonus Toolkit standalone", () => {
+  it("routes an unowned Bonus Toolkit to the subscription, and opens it once owned", () => {
     expect(
       decideUpgradeHandoff(
         "bonus_toolkit",
@@ -214,7 +217,7 @@ describe("decideUpgradeHandoff", () => {
       ),
     ).toMatchObject({
       authorized: true,
-      step: "upsell",
+      step: "subscription",
     });
     expect(
       decideUpgradeHandoff(

@@ -271,10 +271,12 @@ export default function AssessmentClient({
       }
       setGateNotice(verdict === "processing" ? GATE_NOTICE_PENDING : GATE_NOTICE_FAILED);
       // Recoverable landing: keep an honest store position, otherwise offer
-      // the purchase again. Never success.
+      // the purchase again. Never success. Subscription-first funnel: the
+      // subscription is the primary paywall, so an unverified return lands back
+      // on it rather than the retired one-time paywall step.
       const current = useQuizStore.getState().currentStep;
-      if ((STEP_ORDER[current] ?? 0) < STEP_ORDER.paywall) {
-        setStep("paywall");
+      if ((STEP_ORDER[current] ?? 0) < STEP_ORDER.subscription) {
+        setStep("subscription");
       }
       setGateMode("ready");
     });

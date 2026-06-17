@@ -493,13 +493,6 @@ export function SubscriptionPlansScreen() {
   }, []);
 
   const handleSuccess = () => setStep("success");
-  const handleSkip = () => {
-    trackEvent(FIRST_PARTY_EVENTS.subscriptionSkipped, {
-      meta: false,
-      metadata: { product_key: PRODUCT_KEY_BY_PLAN[selected], plan_key: selected },
-    });
-    setStep("success");
-  };
 
   return (
     <m.div
@@ -621,23 +614,19 @@ export function SubscriptionPlansScreen() {
           )}
         </m.div>
 
-        {/* Skip */}
-        <button
-          type="button"
-          onClick={handleSkip}
+        {/* Reassurance — the subscription is the gate; no free bypass, but the
+            commitment is explicitly low-risk. */}
+        <p
           style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            fontSize: 13,
-            color: "var(--v2-ink-dim)",
-            textDecoration: "underline",
+            fontSize: 12,
+            color: "var(--v2-ink-faint)",
             textAlign: "center",
-            padding: "10px 0",
+            lineHeight: 1.6,
+            padding: "4px 8px 0",
           }}
         >
-          No thanks — take me to my plan
-        </button>
+          Cancel anytime before your intro window ends and you won&apos;t be charged again.
+        </p>
       </div>
     </m.div>
   );

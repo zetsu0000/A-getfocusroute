@@ -53,16 +53,15 @@ export function isUpgradeNeed(value: unknown): value is UpgradeNeed {
  * the steps the /dashboard/upgrade page already linked to, so CTA wording keeps
  * matching its destination.
  */
+// Signature keeps the `need` parameter (callers pass one) even though the
+// subscription-first funnel maps every need to the same step.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function stepForUpgradeNeed(need: UpgradeNeed): FunnelStep {
-  switch (need) {
-    case "brain_profile":
-      return "paywall";
-    case "roadmap_28_day":
-    case "bonus_toolkit":
-      return "upsell";
-    case "membership":
-      return "subscription";
-  }
+  // Subscription-first funnel: the 3-plan subscription is the only thing for
+  // sale and it unlocks the entire product, so every purchasable upgrade need
+  // routes to the subscription step (the retired paywall/upsell steps are no
+  // longer part of the funnel).
+  return "subscription";
 }
 
 export type UpgradeNeedTarget =
@@ -106,36 +105,19 @@ export function resolveUpgradeNeedTarget(
   need: UpgradeNeed,
   entitlementSet: Set<EntitlementKey>,
 ): UpgradeNeedTarget {
-  const hasBrainProfile = hasBrainProfileAccess(entitlementSet);
-  const hasRoadmap = hasRoadmapAccess(entitlementSet);
-  const hasMembership = hasMembershipAccess(entitlementSet);
-  const hasBonusToolkit = entitlementSet.has("bonus_toolkit");
+  // Subscription-first: a single subscription unlocks every area, so the old
+  // sequential "brain_profile → roadmap → membership" purchase ladder collapses.
+  // If the user already has access to the requested area, open it; otherwise the
+  // subscription is the one offer that grants it.
+  const owned: Record<UpgradeNeed, boolean> = {
+    brain_profile: hasBrainProfileAccess(entitlementSet),
+    roadmap_28_day: hasRoadmapAccess(entitlementSet),
+    membership: hasMembershipAccess(entitlementSet),
+    bonus_toolkit:
+      hasRoadmapAccess(entitlementSet) || entitlementSet.has("bonus_toolkit"),
+  };
 
-  switch (need) {
-    case "brain_profile":
-      return hasBrainProfile
-        ? ownedTarget("brain_profile")
-        : purchaseTarget("brain_profile");
-
-    case "roadmap_28_day":
-      if (hasRoadmap) return ownedTarget("roadmap_28_day");
-      if (!hasBrainProfile) return purchaseTarget("brain_profile");
-      return purchaseTarget("roadmap_28_day");
-
-    case "membership":
-      if (hasMembership) return ownedTarget("membership");
-      if (!hasRoadmap) {
-        return hasBrainProfile
-          ? purchaseTarget("roadmap_28_day")
-          : purchaseTarget("brain_profile");
-      }
-      return purchaseTarget("membership");
-
-    case "bonus_toolkit":
-      if (hasRoadmap || hasBonusToolkit) return ownedTarget("bonus_toolkit");
-      if (!hasBrainProfile) return purchaseTarget("brain_profile");
-      return purchaseTarget("roadmap_28_day");
-  }
+  return owned[need] ? ownedTarget(need) : purchaseTarget(need);
 }
 
 /** Reads the dashboard handoff need from a URL query string ("?upgrade=..."). */
