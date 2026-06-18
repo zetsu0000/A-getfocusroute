@@ -215,9 +215,11 @@ function Card1Recognition({ onContinue }: CardProps) {
 
       // 5 · Route draws toward the signals; a node travels it
       tl.to(".fr1-route", { strokeDashoffset: 0, duration: 0.65, ease: "power2.inOut" }, 1.3);
-      tl.fromTo(".fr1-travel", { opacity: 0, top: "2%" }, { opacity: 1, duration: 0.12 }, 1.3)
-        .to(".fr1-travel", { top: "94%", duration: 0.65, ease: "power2.inOut" }, 1.3)
-        .to(".fr1-travel", { opacity: 0, duration: 0.2 }, 1.95);
+      // Travel arrives exactly at the final (green) node, then fades — it must
+      // never rest below the last signal.
+      tl.fromTo(".fr1-travel", { opacity: 0, top: "4%" }, { opacity: 1, duration: 0.12 }, 1.3)
+        .to(".fr1-travel", { top: "86%", duration: 0.65, ease: "power2.inOut" }, 1.3)
+        .to(".fr1-travel", { opacity: 0, duration: 0.2 }, 1.9);
 
       // 6 · Friction signals — each ignites from its route node
       tl.fromTo(".fr1-signal-node", { scale: 0 }, { scale: 1, duration: 0.28, stagger: 0.12, ease: "back.out(2)" }, 1.55);
@@ -253,11 +255,15 @@ function Card1Recognition({ onContinue }: CardProps) {
       // Ambient (post-reveal) — restrained, and tracked by ctx for clean revert.
       const AMBIENT = 3.0;
       gsap.to(".fr1-route", { opacity: 0.78, duration: 2.6, yoyo: true, repeat: -1, ease: "sine.inOut", delay: AMBIENT });
-      gsap.fromTo(
-        ".fr1-pulse",
-        { opacity: 0, top: "0%" },
-        { opacity: 0.75, top: "100%", duration: 1.5, ease: "sine.inOut", repeat: -1, repeatDelay: 3.4, delay: AMBIENT },
-      );
+      // Slow pulse travels the route between nodes and FADES OUT at the final
+      // node, then rests fully invisible during the gap — so the final state
+      // never shows an orphan dot below "Interruption resets you".
+      gsap
+        .timeline({ repeat: -1, repeatDelay: 3.2, delay: AMBIENT })
+        .set(".fr1-pulse", { top: "10%", opacity: 0 })
+        .to(".fr1-pulse", { opacity: 0.7, duration: 0.3, ease: "sine.out" })
+        .to(".fr1-pulse", { top: "86%", duration: 1.1, ease: "sine.inOut" }, "<")
+        .to(".fr1-pulse", { opacity: 0, duration: 0.35, ease: "sine.in" }, ">-0.1");
       gsap.to(".fr1-cta-glow", { opacity: 0.16, duration: 2.4, yoyo: true, repeat: -1, ease: "sine.inOut", delay: AMBIENT });
     }, root);
 

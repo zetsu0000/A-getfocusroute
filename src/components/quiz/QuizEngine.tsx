@@ -194,13 +194,16 @@ export function QuizEngine() {
       </div>
 
       {/* ── Brand anchor — paid traffic lands straight on a question,
-          so this is the only "where am I?" cue during the quiz. */}
+          so this is the only "where am I?" cue during the quiz. The top inset
+          keeps the centred wordmark clear of the iPhone Dynamic Island / notch;
+          env() resolves to 0 on desktop and older devices, so spacing there is
+          unchanged and there is no hydration jump. */}
       <p
         className="v2-hud"
         style={{
           position: "relative",
           textAlign: "center",
-          paddingTop: 16,
+          paddingTop: "calc(16px + env(safe-area-inset-top, 0px))",
           color: "var(--v2-signal-2)",
         }}
       >

@@ -145,6 +145,16 @@ describe("Card 1 rebuilt as a fast mechanism explainer", () => {
   it("keeps the single scroll container (no nested scroller in Card 1)", () => {
     expect(card1).not.toContain('overflowY: "auto"');
   });
+
+  it("never rests an ambient pulse below the final node (no orphan dot)", () => {
+    expect(card1).toContain(".fr1-pulse");
+    // The pulse must not travel to / rest at the very bottom of the route, and
+    // the entrance travel node must not stop at 94% (below the final node).
+    expect(card1).not.toContain('top: "100%"');
+    expect(card1).not.toContain('top: "94%"');
+    // It fades out (opacity → 0) rather than resting visible at the route end.
+    expect(card1).toMatch(/\.fr1-pulse[\s\S]*?opacity: 0/);
+  });
 });
 
 // ── Coherence never regresses; WebGL scoped to infocards ──────────────────────
