@@ -179,14 +179,58 @@ describe("resolveResultScoreData", () => {
   });
 
   it("returns null for invalid scale values with no other valid signal", () => {
-    for (const value of ["0", "6", "9", "abc", ""]) {
-      expect(
-        resolveResultScoreData({
-          answers: build({ "scale-focus": value }),
-        }),
-      ).toBeNull();
-      expect(hasUsableScoreSignal(build({ "scale-focus": value }))).toBe(false);
+    for (const value of [
+      "0",
+      "6",
+      "9",
+      "abc",
+      "",
+      "1.5",
+      "4abc",
+      "5something",
+      " 4 ",
+      "+4",
+      "04",
+      "4 ",
+      " 4",
+    ]) {
+      const answers = build({ "scale-focus": value });
+      expect(resolveResultScoreData({ answers })).toBeNull();
+      expect(hasUsableScoreSignal(answers)).toBe(false);
     }
+  });
+
+  it("returns null when every scored answer is malformed", () => {
+    const answers = [
+      { questionId: "distraction", selectedOptions: ["invalid-frequency"] },
+      { questionId: "scale-focus", selectedOptions: ["4abc"] },
+    ];
+    expect(resolveResultScoreData({ answers })).toBeNull();
+    expect(hasUsableScoreSignal(answers)).toBe(false);
+    expect(scoreFromAnswers(answers)).toBe(57);
+  });
+
+  it("accepts exact scale values 1 through 5", () => {
+    for (const scale of ["1", "2", "3", "4", "5"] as const) {
+      const answers = build({ "scale-focus": scale });
+      expect(hasUsableScoreSignal(answers)).toBe(true);
+      expect(resolveResultScoreData({ answers })).toMatchObject({
+        value: scoreFromAnswers(answers),
+        source: "computed",
+      });
+    }
+  });
+
+  it("computes from mixed valid frequency and invalid scale answers", () => {
+    const answers = [
+      { questionId: "scale-focus", selectedOptions: ["4abc"] },
+      { questionId: "mood", selectedOptions: ["often"] },
+    ];
+    expect(resolveResultScoreData({ answers })).toMatchObject({
+      value: scoreFromAnswers(answers),
+      source: "computed",
+    });
+    expect(scoreFromAnswers(answers)).toBe(74);
   });
 
   it("computes from mixed valid and invalid answers using only valid signals", () => {
@@ -207,7 +251,7 @@ describe("resolveResultScoreData", () => {
       expect(result?.source).toBe("computed");
       expect(result?.value).toBe(scoreFromAnswers(build({ distraction: freq })));
     }
-    for (const scale of ["1", "5"] as const) {
+    for (const scale of ["1", "2", "3", "4", "5"] as const) {
       const result = resolveResultScoreData({
         answers: build({ "scale-focus": scale }),
       });

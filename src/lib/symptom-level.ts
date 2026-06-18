@@ -14,6 +14,8 @@ const SCORE_MAP: Record<string, number> = {
 
 const SCALE_MAP: Record<number, number> = { 1: 12, 2: 34, 3: 56, 4: 76, 5: 92 }
 
+const VALID_SCALE_VALUES = new Set(["1", "2", "3", "4", "5"])
+
 const FREQ_QUESTIONS = ['distraction', 'mood'] as const
 const SCALE_QUESTIONS = [
   'scale-procrastination',
@@ -36,8 +38,9 @@ function collectScoreSignals(answers: ScoreAnswerInput): number[] {
 
   for (const qid of SCALE_QUESTIONS) {
     const raw = answers.find(a => a.questionId === qid)?.selectedOptions[0]
-    const n = raw ? parseInt(raw, 10) : NaN
-    if (Number.isFinite(n) && SCALE_MAP[n] != null) signals.push(SCALE_MAP[n])
+    if (raw && VALID_SCALE_VALUES.has(raw)) {
+      signals.push(SCALE_MAP[Number(raw)])
+    }
   }
 
   return signals
