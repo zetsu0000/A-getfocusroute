@@ -154,6 +154,66 @@ describe("subscription checkout — pricing values regression", () => {
   });
 });
 
+describe("subscription checkout — subscription funnel analytics instrumentation", () => {
+  it("registers the new subscription funnel events", () => {
+    for (const ev of [
+      "FIRST_PARTY_EVENTS.planSelected",
+      "FIRST_PARTY_EVENTS.secureCheckoutRevealed",
+      "FIRST_PARTY_EVENTS.paymentAttempted",
+    ]) {
+      expect(src).toContain(ev);
+    }
+  });
+
+  it("fires plan_selected only on explicit plan changes", () => {
+    expect(src).toContain("shouldTrackPlanSelection(selected, nextKey)");
+    expect(src).toMatch(
+      /const handlePlanSelect = \(nextKey: PlanKey\) => \{[\s\S]*FIRST_PARTY_EVENTS\.planSelected/,
+    );
+    expect(src).toMatch(/if \(!shouldTrackPlanSelection\(selected, nextKey\)\) return;/);
+  });
+
+  it("fires secure_checkout_revealed on Continue to secure checkout while preserving paywall_viewed", () => {
+    expect(src).toContain("handleRevealSecureCheckout");
+    expect(src).toContain("FIRST_PARTY_EVENTS.secureCheckoutRevealed");
+    expect(src).toContain("FIRST_PARTY_EVENTS.paywallViewed");
+    expect(src).toContain("Canonical subscription checkout reveal: secure_checkout_revealed");
+    expect(src).toMatch(/if \(showPayment\) return;/);
+  });
+
+  it("fires payment_attempted after Stripe Elements validation and before billing checkout", () => {
+    expect(src).toContain("FIRST_PARTY_EVENTS.paymentAttempted");
+    expect(src).toContain("await elements.submit()");
+    expect(src).toMatch(
+      /await elements\.submit\(\)[\s\S]*FIRST_PARTY_EVENTS\.paymentAttempted[\s\S]*createPaymentMethod/,
+    );
+  });
+
+  it("uses a fresh action_event_id per payment attempt and pairs failures", () => {
+    expect(src).toContain('createAnalyticsEventId("payment_attempt")');
+    expect(src).toContain("buildPaymentAttemptMetadata");
+    expect(src).toContain("buildPaymentFailureMetadata");
+    expect(src).toContain("buildPreAttemptPaymentFailureMetadata");
+    expect(src).toContain("analytics_event_id: attemptId");
+  });
+
+  it("keeps payment_element_loaded separate from checkout reveal", () => {
+    expect(src).toContain("FIRST_PARTY_EVENTS.paymentElementLoaded");
+    expect(src).toMatch(/onReady=\{\(\) => \{[\s\S]*paymentElementLoaded/);
+    expect(src).not.toMatch(
+      /handleRevealSecureCheckout[\s\S]*FIRST_PARTY_EVENTS\.paymentElementLoaded/,
+    );
+  });
+
+  it("routes analytics metadata through shared subscription funnel helpers", () => {
+    expect(src).toContain("buildPlanAnalyticsMetadata");
+    expect(src).toContain("buildPaywallViewedMetadata");
+    expect(src).toContain("buildPaymentAttemptMetadata");
+    expect(src).toContain("buildPaymentFailureMetadata");
+    expect(src).toContain("buildPreAttemptPaymentFailureMetadata");
+  });
+});
+
 describe("subscription checkout — protected analytics events (no renames)", () => {
   it("preserves every funnel-stage analytics event", () => {
     for (const ev of [

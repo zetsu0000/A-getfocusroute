@@ -43,6 +43,9 @@ export const FIRST_PARTY_EVENTS = {
   checkoutCtaClicked: "checkout_cta_clicked",
   upsellViewed: "upsell_viewed",
   subscriptionViewed: "subscription_viewed",
+  planSelected: "plan_selected",
+  secureCheckoutRevealed: "secure_checkout_revealed",
+  paymentAttempted: "payment_attempted",
   dashboardFirstActionClicked: "dashboard_first_action_clicked",
   // Social proof - first-party only. Fires only when approved customer proof
   // enters the viewport or when the user explicitly expands the paywall proof.
