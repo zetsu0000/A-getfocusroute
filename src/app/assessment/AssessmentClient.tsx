@@ -357,7 +357,10 @@ export default function AssessmentClient({
 
   return (
     <main className={screenClass} style={{ overflowX: "hidden" }}>
-    <ThemeToggleButton />
+    {/* On the subscription checkout the toggle is pinned to the opening band so
+        it can never float over plan cards, summary, social proof, Stripe or the
+        CTA; every other step keeps the scroll-aware auto-hide. */}
+    <ThemeToggleButton pinTopOnly={step === "subscription"} />
     {gateNotice && (
       <div
         role="status"

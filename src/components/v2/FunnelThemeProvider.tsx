@@ -140,32 +140,54 @@ export function useFunnelTheme(): FunnelThemeContextValue {
  * ThemeToggleButton — floating sun/moon pill. Token-styled, so it reads on both
  * worlds. Fixed to the top-right, clear of notches via env(safe-area-inset-*).
  */
-export function ThemeToggleButton() {
+export function ThemeToggleButton({
+  /**
+   * Checkout mode. When true the pill is shown ONLY near the very top of the
+   * page and stays hidden once the user scrolls into the purchase content —
+   * it does not return on a small upward scroll. This guarantees it can never
+   * float over the plan cards, order summary, social proof, Stripe fields or
+   * the final CTA, while theme switching stays reachable near the top.
+   *
+   * When false (the default, used on the quiz and other funnel screens) the
+   * pill auto-hides on downward scroll and returns on scroll-up.
+   */
+  pinTopOnly = false,
+}: {
+  pinTopOnly?: boolean;
+} = {}) {
   const { theme, toggleTheme } = useFunnelTheme();
   const isLight = theme === "light";
 
-  // Collapse the floating pill after meaningful downward scrolling so it never
-  // floats over the long checkout (plans, summary, social proof, Stripe, CTA).
-  // It returns on scroll-up or near the top, so theme switching stays reachable.
   const [hidden, setHidden] = useState(false);
   useEffect(() => {
     let last = window.scrollY;
     let ticking = false;
+    const evaluate = () => {
+      const y = window.scrollY;
+      if (pinTopOnly) {
+        // Visible only in the opening band; never reappears over purchase content.
+        setHidden(y >= 56);
+      } else if (y < 64) {
+        setHidden(false);
+      } else if (y > last + 4) {
+        setHidden(true);
+      } else if (y < last - 4) {
+        setHidden(false);
+      }
+      last = y;
+    };
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
       window.requestAnimationFrame(() => {
-        const y = window.scrollY;
-        if (y < 64) setHidden(false);
-        else if (y > last + 4) setHidden(true);
-        else if (y < last - 4) setHidden(false);
-        last = y;
+        evaluate();
         ticking = false;
       });
     };
+    evaluate(); // reconcile immediately (e.g. landing already scrolled)
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [pinTopOnly]);
 
   const hover = (on: boolean) => (e: React.PointerEvent<HTMLButtonElement>) => {
     if (e.pointerType !== "mouse") return;
