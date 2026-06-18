@@ -199,8 +199,9 @@ describe("subscription checkout — subscription funnel analytics instrumentatio
     expect(src).toContain("buildPaymentAttemptMetadata");
     expect(src).toContain("buildPaymentFailureMetadata");
     expect(src).toContain("buildPreAttemptPaymentFailureMetadata");
-    expect(src).toContain("eventId: attemptId");
-    expect(src).toMatch(/eventId: attemptId[\s\S]*FIRST_PARTY_EVENTS\.paymentAttempted/);
+    expect(src).toMatch(
+      /FIRST_PARTY_EVENTS\.paymentAttempted[\s\S]*eventId: attemptId/,
+    );
   });
 
   describe("Meta InitiateCheckout deduplication IDs", () => {
@@ -213,7 +214,7 @@ describe("subscription checkout — subscription funnel analytics instrumentatio
 
     it("uses checkoutEventId for checkout_intent and the billing request", () => {
       expect(src).toMatch(
-        /eventId: checkoutEventId[\s\S]*FIRST_PARTY_EVENTS\.checkoutIntent/,
+        /FIRST_PARTY_EVENTS\.checkoutIntent[\s\S]*eventId: checkoutEventId/,
       );
       expect(src).toContain("analytics_event_id: checkoutEventId");
       expect(src).not.toContain("analytics_event_id: attemptId");
@@ -221,10 +222,14 @@ describe("subscription checkout — subscription funnel analytics instrumentatio
 
     it("uses attemptId only for attempt-level first-party events", () => {
       expect(src).toMatch(
-        /eventId: attemptId[\s\S]*FIRST_PARTY_EVENTS\.paymentAttempted/,
+        /FIRST_PARTY_EVENTS\.paymentAttempted[\s\S]*eventId: attemptId/,
       );
-      expect(src).toMatch(/eventId: actionEventId[\s\S]*FIRST_PARTY_EVENTS\.paymentError/);
-      expect(src).not.toMatch(/eventId: attemptId[\s\S]*FIRST_PARTY_EVENTS\.checkoutIntent/);
+      expect(src).toMatch(
+        /FIRST_PARTY_EVENTS\.paymentError[\s\S]*eventId: actionEventId/,
+      );
+      expect(src).not.toMatch(
+        /FIRST_PARTY_EVENTS\.checkoutIntent[\s\S]*eventId: attemptId/,
+      );
     });
 
     it("fires checkout_intent once per form mount while attempt IDs rotate on retry", () => {
