@@ -166,12 +166,12 @@ describe("subscription checkout — subscription funnel analytics instrumentatio
   });
 
   it("fires plan_selected only on explicit plan changes while always updating UI state", () => {
-    expect(src).toContain("shouldTrackPlanSelection(selected, nextKey)");
+    expect(src).toContain("planSelectAnalyticsDecision(selected, nextKey)");
     expect(src).toMatch(
-      /if \(shouldTrackPlanSelection\(selected, nextKey\)\) \{[\s\S]*FIRST_PARTY_EVENTS\.planSelected/,
+      /if \(decision\.trackPlanSelected\) \{[\s\S]*FIRST_PARTY_EVENTS\.planSelected/,
     );
     expect(src).toMatch(
-      /setSelected\(nextKey\);[\s\S]*setShowPayment\(false\);/,
+      /if \(decision\.updateUiState\) \{[\s\S]*setSelected\(nextKey\);[\s\S]*setShowPayment\(false\);/,
     );
     expect(src).not.toMatch(
       /if \(!shouldTrackPlanSelection\(selected, nextKey\)\) return;/,
@@ -197,8 +197,7 @@ describe("subscription checkout — subscription funnel analytics instrumentatio
   it("uses a fresh action_event_id per payment attempt and pairs failures", () => {
     expect(src).toContain('createAnalyticsEventId("payment_attempt")');
     expect(src).toContain("buildPaymentAttemptMetadata");
-    expect(src).toContain("buildPaymentFailureMetadata");
-    expect(src).toContain("buildPreAttemptPaymentFailureMetadata");
+    expect(src).toContain("resolvePaymentFailureMetadata");
     expect(src).toMatch(
       /FIRST_PARTY_EVENTS\.paymentAttempted[\s\S]*eventId: attemptId/,
     );
@@ -207,8 +206,9 @@ describe("subscription checkout — subscription funnel analytics instrumentatio
   describe("Meta InitiateCheckout deduplication IDs", () => {
     it("creates a stable checkoutEventId per plan checkout session", () => {
       expect(src).toContain("const checkoutEventId = useMemo(");
-      expect(src).toContain(
-        'getOrCreateActionEventId(`billing_${plan.key}`, "initiate_checkout")',
+      expect(src).toContain("checkoutAnalyticsStorageKey(plan.key)");
+      expect(src).toMatch(
+        /getOrCreateActionEventId\([\s\S]*checkoutAnalyticsStorageKey\(plan\.key\)[\s\S]*"initiate_checkout"/,
       );
     });
 
@@ -237,6 +237,14 @@ describe("subscription checkout — subscription funnel analytics instrumentatio
       expect(src).toMatch(/if \(!checkoutIntentTracked\.current\)/);
       expect(src).toContain('createAnalyticsEventId("payment_attempt")');
     });
+
+    it("clears stale attempt context before Stripe Elements validation", () => {
+      expect(src).toContain("currentAttemptIdRef.current = null");
+      expect(src).toMatch(
+        /currentAttemptIdRef\.current = null;[\s\S]*await elements\.submit\(\)/,
+      );
+      expect(src).toContain("resolvePaymentFailureMetadata");
+    });
   });
 
   it("keeps payment_element_loaded separate from checkout reveal", () => {
@@ -251,8 +259,9 @@ describe("subscription checkout — subscription funnel analytics instrumentatio
     expect(src).toContain("buildPlanAnalyticsMetadata");
     expect(src).toContain("buildPaywallViewedMetadata");
     expect(src).toContain("buildPaymentAttemptMetadata");
-    expect(src).toContain("buildPaymentFailureMetadata");
-    expect(src).toContain("buildPreAttemptPaymentFailureMetadata");
+    expect(src).toContain("resolvePaymentFailureMetadata");
+    expect(src).toContain("checkoutAnalyticsStorageKey");
+    expect(src).toContain("planSelectAnalyticsDecision");
   });
 });
 

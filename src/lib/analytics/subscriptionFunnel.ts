@@ -152,6 +152,32 @@ export function buildPaymentFailureMetadata(
   };
 }
 
+export function shouldUsePreAttemptPaymentFailureMetadata(
+  actionEventId: string | null,
+  attemptNumber: number,
+): boolean {
+  return !actionEventId || attemptNumber === 0;
+}
+
+export function resolvePaymentFailureMetadata(
+  plan: PlanDisplay,
+  stage: SubscriptionPaymentFailureStage,
+  attemptNumber: number,
+  actionEventId: string | null,
+  stripeError?: { type?: string; code?: string } | null,
+) {
+  if (shouldUsePreAttemptPaymentFailureMetadata(actionEventId, attemptNumber)) {
+    return buildPreAttemptPaymentFailureMetadata(plan, stage, stripeError);
+  }
+  return buildPaymentFailureMetadata(
+    plan,
+    attemptNumber,
+    actionEventId!,
+    stage,
+    stripeError,
+  );
+}
+
 /** Stripe Elements validation failed before a payment_attempted was recorded. */
 export function buildPreAttemptPaymentFailureMetadata(
   plan: PlanDisplay,

@@ -25,10 +25,10 @@ import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 import {
   buildPaywallViewedMetadata,
   buildPaymentAttemptMetadata,
-  buildPaymentFailureMetadata,
   buildPlanAnalyticsMetadata,
-  buildPreAttemptPaymentFailureMetadata,
-  shouldTrackPlanSelection,
+  checkoutAnalyticsStorageKey,
+  planSelectAnalyticsDecision,
+  resolvePaymentFailureMetadata,
   type SubscriptionPaymentFailureStage,
 } from "@/lib/analytics/subscriptionFunnel";
 import {
@@ -324,7 +324,11 @@ function PlanCheckoutForm({
   // Stable per plan + checkout session — Pixel InitiateCheckout, CAPI, and the
   // billing request must share this ID. Retries rotate attemptId only.
   const checkoutEventId = useMemo(
-    () => getOrCreateActionEventId(`billing_${plan.key}`, "initiate_checkout"),
+    () =>
+      getOrCreateActionEventId(
+        checkoutAnalyticsStorageKey(plan.key),
+        "initiate_checkout",
+      ),
     [plan.key],
   );
 
@@ -332,25 +336,18 @@ function PlanCheckoutForm({
     stage: SubscriptionPaymentFailureStage,
     stripeError?: { type?: string; code?: string } | null,
   ) => {
-    const attemptNumber = attemptCounterRef.current;
+    const metadata = resolvePaymentFailureMetadata(
+      plan,
+      stage,
+      attemptCounterRef.current,
+      currentAttemptIdRef.current,
+      stripeError,
+    );
     const actionEventId = currentAttemptIdRef.current;
-    if (!actionEventId || attemptNumber === 0) {
-      trackEvent(FIRST_PARTY_EVENTS.paymentError, {
-        meta: false,
-        metadata: buildPreAttemptPaymentFailureMetadata(plan, stage, stripeError),
-      });
-      return;
-    }
     trackEvent(FIRST_PARTY_EVENTS.paymentError, {
       meta: false,
-      eventId: actionEventId,
-      metadata: buildPaymentFailureMetadata(
-        plan,
-        attemptNumber,
-        actionEventId,
-        stage,
-        stripeError,
-      ),
+      ...(actionEventId ? { eventId: actionEventId } : {}),
+      metadata,
     });
   };
 
@@ -360,6 +357,9 @@ function PlanCheckoutForm({
 
     setLoading(true);
     setError(null);
+    // A new submit starts a fresh attempt context; retry validation errors
+    // must not reuse the previous attempt ID.
+    currentAttemptIdRef.current = null;
 
     const { error: submitErr } = await elements.submit();
     if (submitErr) {
@@ -627,14 +627,17 @@ export function SubscriptionPlansScreen() {
   const handleSuccess = () => setStep("success");
 
   const handlePlanSelect = (nextKey: PlanKey) => {
-    if (shouldTrackPlanSelection(selected, nextKey)) {
+    const decision = planSelectAnalyticsDecision(selected, nextKey);
+    if (decision.trackPlanSelected) {
       trackEvent(FIRST_PARTY_EVENTS.planSelected, {
         meta: false,
         metadata: buildPlanAnalyticsMetadata(PLANS[nextKey]),
       });
     }
-    setSelected(nextKey);
-    setShowPayment(false);
+    if (decision.updateUiState) {
+      setSelected(nextKey);
+      setShowPayment(false);
+    }
   };
 
   const handleRevealSecureCheckout = () => {

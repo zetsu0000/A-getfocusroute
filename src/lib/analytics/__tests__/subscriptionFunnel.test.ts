@@ -9,7 +9,9 @@ import {
   checkoutAnalyticsStorageKey,
   mapPaymentFailureStage,
   planSelectAnalyticsDecision,
+  resolvePaymentFailureMetadata,
   shouldTrackPlanSelection,
+  shouldUsePreAttemptPaymentFailureMetadata,
   stripeErrorAnalyticsFields,
 } from "../subscriptionFunnel";
 
@@ -63,6 +65,58 @@ describe("subscription funnel analytics helpers", () => {
     expect(attemptA.action_event_id).not.toBe(checkoutId);
     expect(attemptB.action_event_id).not.toBe(checkoutId);
     expect(attemptA.action_event_id).not.toBe(attemptB.action_event_id);
+  });
+
+  it("routes pre-attempt validation failures without attempt pairing", () => {
+    expect(shouldUsePreAttemptPaymentFailureMetadata(null, 1)).toBe(true);
+    expect(shouldUsePreAttemptPaymentFailureMetadata("attempt_A", 0)).toBe(true);
+    expect(shouldUsePreAttemptPaymentFailureMetadata("attempt_A", 1)).toBe(false);
+  });
+
+  it("models attempt A failure, retry validation failure, and attempt B", () => {
+    let attemptNumber = 0;
+    let actionEventId: string | null = null;
+    const checkoutId = "checkout_A";
+
+    actionEventId = null;
+    attemptNumber += 1;
+    actionEventId = "attempt_A";
+    const attemptA = buildPaymentAttemptMetadata(fourWeek, attemptNumber, actionEventId);
+    expect(attemptA.attempt_number).toBe(1);
+    expect(attemptA.action_event_id).toBe("attempt_A");
+    expect(attemptA.action_event_id).not.toBe(checkoutId);
+
+    const failA = resolvePaymentFailureMetadata(
+      fourWeek,
+      "confirm_payment",
+      attemptNumber,
+      actionEventId,
+      { type: "card_error", code: "card_declined" },
+    );
+    expect(failA).toMatchObject({
+      action_event_id: "attempt_A",
+      attempt_number: 1,
+      failure_stage: "stripe_confirmation",
+    });
+
+    actionEventId = null;
+    const validationFail = resolvePaymentFailureMetadata(
+      fourWeek,
+      "element_submit",
+      attemptNumber,
+      actionEventId,
+      { type: "validation_error", code: "incomplete_number" },
+    );
+    expect(validationFail.failure_stage).toBe("elements_validation");
+    expect(validationFail).not.toHaveProperty("action_event_id");
+    expect(validationFail).not.toHaveProperty("attempt_number");
+
+    attemptNumber += 1;
+    actionEventId = "attempt_B";
+    const attemptB = buildPaymentAttemptMetadata(fourWeek, attemptNumber, actionEventId);
+    expect(attemptB.attempt_number).toBe(2);
+    expect(attemptB.action_event_id).toBe("attempt_B");
+    expect(attemptB.action_event_id).not.toBe("attempt_A");
   });
 
   it("maps legacy failure stages to canonical analytics stages", () => {
