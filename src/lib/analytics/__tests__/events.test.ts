@@ -44,6 +44,9 @@ describe("first-party funnel event registry", () => {
       FIRST_PARTY_EVENTS.checkoutCtaClicked,
       FIRST_PARTY_EVENTS.upsellViewed,
       FIRST_PARTY_EVENTS.subscriptionViewed,
+      FIRST_PARTY_EVENTS.planSelected,
+      FIRST_PARTY_EVENTS.secureCheckoutRevealed,
+      FIRST_PARTY_EVENTS.paymentAttempted,
       FIRST_PARTY_EVENTS.dashboardFirstActionClicked,
       FIRST_PARTY_EVENTS.socialProofImpression,
       FIRST_PARTY_EVENTS.socialProofExpanded,
@@ -96,5 +99,31 @@ describe("first-party funnel event registry", () => {
     // full_result_viewed is diagnostic-only; the preview keeps its Meta bridge.
     expect(META_ALLOWED_FIRST_PARTY_EVENTS.has(FIRST_PARTY_EVENTS.resultPreviewViewed)).toBe(true);
     expect(META_ALLOWED_FIRST_PARTY_EVENTS.has(FIRST_PARTY_EVENTS.fullResultViewed)).toBe(false);
+  });
+
+  it("registers subscription checkout funnel events as first-party only", () => {
+    const subscriptionEvents = [
+      FIRST_PARTY_EVENTS.planSelected,
+      FIRST_PARTY_EVENTS.secureCheckoutRevealed,
+      FIRST_PARTY_EVENTS.paymentAttempted,
+    ] as const;
+    for (const eventName of subscriptionEvents) {
+      expect(isAllowedFirstPartyEvent(eventName)).toBe(true);
+      expect(META_ALLOWED_FIRST_PARTY_EVENTS.has(eventName)).toBe(false);
+      expect(META_EVENT_BY_FIRST_PARTY[eventName]).toBeUndefined();
+    }
+  });
+
+  it("keeps subscription checkout stages distinguishable by name", () => {
+    const distinct = new Set([
+      FIRST_PARTY_EVENTS.subscriptionViewed,
+      FIRST_PARTY_EVENTS.planSelected,
+      FIRST_PARTY_EVENTS.secureCheckoutRevealed,
+      FIRST_PARTY_EVENTS.paymentElementLoaded,
+      FIRST_PARTY_EVENTS.paymentAttempted,
+      FIRST_PARTY_EVENTS.paymentError,
+      FIRST_PARTY_EVENTS.checkoutIntent,
+    ]);
+    expect(distinct.size).toBe(7);
   });
 });

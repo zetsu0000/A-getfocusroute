@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { m } from "framer-motion";
 import { Shield, RotateCcw, Compass, TrendingUp } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js/pure";
@@ -16,11 +16,21 @@ import { HudLabel } from "@/components/v2/primitives";
 import { PaywallSocialProofDisclosure } from "@/components/signature/SocialProof";
 import { useFunnelTheme, type FunnelTheme } from "@/components/v2/FunnelThemeProvider";
 import {
+  createAnalyticsEventId,
   getAnalyticsContext,
   getOrCreateActionEventId,
   trackEvent,
 } from "@/lib/analytics/client";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
+import {
+  buildPaywallViewedMetadata,
+  buildPaymentAttemptMetadata,
+  buildPlanAnalyticsMetadata,
+  checkoutAnalyticsStorageKey,
+  planSelectAnalyticsDecision,
+  resolvePaymentFailureMetadata,
+  type SubscriptionPaymentFailureStage,
+} from "@/lib/analytics/subscriptionFunnel";
 import {
   PLAN_LIST,
   PLANS,
@@ -307,55 +317,80 @@ function PlanCheckoutForm({
   const elements = useElements();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const checkoutTracked = useRef(false);
+  const checkoutIntentTracked = useRef(false);
+  const attemptCounterRef = useRef(0);
+  const currentAttemptIdRef = useRef<string | null>(null);
   const productKey = PRODUCT_KEY_BY_PLAN[plan.key];
+  // Stable per plan + checkout session — Pixel InitiateCheckout, CAPI, and the
+  // billing request must share this ID. Retries rotate attemptId only.
+  const checkoutEventId = useMemo(
+    () =>
+      getOrCreateActionEventId(
+        checkoutAnalyticsStorageKey(plan.key),
+        "initiate_checkout",
+      ),
+    [plan.key],
+  );
 
-  const trackPaymentError = (stage: string) =>
+  const trackPaymentFailure = (
+    stage: SubscriptionPaymentFailureStage,
+    stripeError?: { type?: string; code?: string } | null,
+  ) => {
+    const metadata = resolvePaymentFailureMetadata(
+      plan,
+      stage,
+      attemptCounterRef.current,
+      currentAttemptIdRef.current,
+      stripeError,
+    );
+    const actionEventId = currentAttemptIdRef.current;
     trackEvent(FIRST_PARTY_EVENTS.paymentError, {
       meta: false,
-      metadata: { product_key: productKey, plan_key: plan.key, stage },
+      ...(actionEventId ? { eventId: actionEventId } : {}),
+      metadata,
     });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!stripe || !elements) return;
+    if (!stripe || !elements || loading) return;
 
-    const checkoutEventId = getOrCreateActionEventId(
-      `billing_${plan.key}`,
-      "initiate_checkout",
-    );
     setLoading(true);
     setError(null);
-
-    if (!checkoutTracked.current) {
-      checkoutTracked.current = true;
-      trackEvent(FIRST_PARTY_EVENTS.checkoutIntent, {
-        eventId: checkoutEventId,
-        metadata: {
-          product_key: productKey,
-          plan_key: plan.key,
-          content_name: `FocusRoute Membership — ${plan.name}`,
-          content_ids: [productKey, plan.key],
-          content_type: "subscription",
-          num_items: 1,
-          value: plan.introAmount / 100,
-          currency: "USD",
-        },
-      });
-    }
+    // A new submit starts a fresh attempt context; retry validation errors
+    // must not reuse the previous attempt ID.
+    currentAttemptIdRef.current = null;
 
     const { error: submitErr } = await elements.submit();
     if (submitErr) {
       setError(submitErr.message ?? "Error");
-      trackPaymentError("element_submit");
+      trackPaymentFailure("element_submit", submitErr);
       setLoading(false);
       return;
+    }
+
+    attemptCounterRef.current += 1;
+    const attemptId = createAnalyticsEventId("payment_attempt");
+    currentAttemptIdRef.current = attemptId;
+
+    trackEvent(FIRST_PARTY_EVENTS.paymentAttempted, {
+      meta: false,
+      eventId: attemptId,
+      metadata: buildPaymentAttemptMetadata(plan, attemptCounterRef.current, attemptId),
+    });
+
+    if (!checkoutIntentTracked.current) {
+      checkoutIntentTracked.current = true;
+      trackEvent(FIRST_PARTY_EVENTS.checkoutIntent, {
+        eventId: checkoutEventId,
+        metadata: buildPaywallViewedMetadata(plan),
+      });
     }
 
     const { paymentMethod, error: pmErr } = await stripe.createPaymentMethod({ elements });
     if (pmErr || !paymentMethod) {
       setError(pmErr?.message ?? "Error creating payment");
-      trackPaymentError("create_payment_method");
+      trackPaymentFailure("create_payment_method", pmErr);
       setLoading(false);
       return;
     }
@@ -378,7 +413,7 @@ function PlanCheckoutForm({
 
     if (data.error) {
       setError(data.error);
-      trackPaymentError("billing_checkout");
+      trackPaymentFailure("billing_checkout");
       setLoading(false);
       return;
     }
@@ -386,7 +421,7 @@ function PlanCheckoutForm({
     if (data.clientSecret) {
       if (typeof data.subscriptionId !== "string" || !data.subscriptionId) {
         setError("Unable to initialize subscription payment verification. Please try again.");
-        trackPaymentError("subscription_verification_evidence");
+        trackPaymentFailure("subscription_verification_evidence");
         setLoading(false);
         return;
       }
@@ -403,7 +438,7 @@ function PlanCheckoutForm({
       });
       if (confirmErr) {
         setError(confirmErr.message ?? "Payment failed");
-        trackPaymentError("confirm_payment");
+        trackPaymentFailure("confirm_payment", confirmErr);
         setLoading(false);
         return;
       }
@@ -591,6 +626,34 @@ export function SubscriptionPlansScreen() {
 
   const handleSuccess = () => setStep("success");
 
+  const handlePlanSelect = (nextKey: PlanKey) => {
+    const decision = planSelectAnalyticsDecision(selected, nextKey);
+    if (decision.trackPlanSelected) {
+      trackEvent(FIRST_PARTY_EVENTS.planSelected, {
+        meta: false,
+        metadata: buildPlanAnalyticsMetadata(PLANS[nextKey]),
+      });
+    }
+    if (decision.updateUiState) {
+      setSelected(nextKey);
+      setShowPayment(false);
+    }
+  };
+
+  const handleRevealSecureCheckout = () => {
+    if (showPayment) return;
+    setShowPayment(true);
+    trackEvent(FIRST_PARTY_EVENTS.secureCheckoutRevealed, {
+      meta: false,
+      metadata: buildPlanAnalyticsMetadata(plan),
+    });
+    // Legacy Meta ViewContent bridge — keep for backward-compatible reporting.
+    // Canonical subscription checkout reveal: secure_checkout_revealed.
+    trackEvent(FIRST_PARTY_EVENTS.paywallViewed, {
+      metadata: buildPaywallViewedMetadata(plan),
+    });
+  };
+
   return (
     <m.div
       initial={{ opacity: 0, x: 40 }}
@@ -646,10 +709,7 @@ export function SubscriptionPlansScreen() {
               key={p.key}
               plan={p}
               isSelected={selected === p.key}
-              onSelect={() => {
-                setSelected(p.key);
-                setShowPayment(false);
-              }}
+              onSelect={() => handlePlanSelect(p.key)}
             />
           ))}
         </m.div>
@@ -671,20 +731,7 @@ export function SubscriptionPlansScreen() {
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <m.button
                 type="button"
-                onClick={() => {
-                  setShowPayment(true);
-                  trackEvent(FIRST_PARTY_EVENTS.paywallViewed, {
-                    metadata: {
-                      product_key: PRODUCT_KEY_BY_PLAN[selected],
-                      plan_key: selected,
-                      content_name: `FocusRoute Membership — ${plan.name}`,
-                      content_ids: [PRODUCT_KEY_BY_PLAN[selected], selected],
-                      content_type: "subscription",
-                      value: plan.introAmount / 100,
-                      currency: "USD",
-                    },
-                  });
-                }}
+                onClick={handleRevealSecureCheckout}
                 whileTap={{ scale: 0.975 }}
                 whileHover={{ y: -1 }}
                 className="v2-cta"
