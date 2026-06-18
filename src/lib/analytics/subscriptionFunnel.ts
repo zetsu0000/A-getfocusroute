@@ -53,6 +53,22 @@ export function buildPlanAnalyticsMetadata(plan: PlanDisplay): PlanAnalyticsMeta
   };
 }
 
+/** Stable storage key for Meta InitiateCheckout deduplication (per plan checkout). */
+export function checkoutAnalyticsStorageKey(planKey: PlanKey): string {
+  return `billing_${planKey}`;
+}
+
+/** Separates analytics tracking from UI state when a plan card is activated. */
+export function planSelectAnalyticsDecision(
+  currentPlanKey: PlanKey,
+  nextPlanKey: PlanKey,
+): { trackPlanSelected: boolean; updateUiState: boolean } {
+  return {
+    trackPlanSelected: shouldTrackPlanSelection(currentPlanKey, nextPlanKey),
+    updateUiState: true,
+  };
+}
+
 /** Only explicit plan changes — never the default selection on mount. */
 export function shouldTrackPlanSelection(
   currentPlanKey: PlanKey,

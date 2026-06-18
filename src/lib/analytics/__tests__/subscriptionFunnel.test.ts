@@ -6,7 +6,9 @@ import {
   buildPaymentFailureMetadata,
   buildPlanAnalyticsMetadata,
   buildPreAttemptPaymentFailureMetadata,
+  checkoutAnalyticsStorageKey,
   mapPaymentFailureStage,
+  planSelectAnalyticsDecision,
   shouldTrackPlanSelection,
   stripeErrorAnalyticsFields,
 } from "../subscriptionFunnel";
@@ -36,6 +38,31 @@ describe("subscription funnel analytics helpers", () => {
     expect(shouldTrackPlanSelection("plan_4week", "plan_4week")).toBe(false);
     expect(shouldTrackPlanSelection("plan_4week", "plan_1week")).toBe(true);
     expect(shouldTrackPlanSelection("plan_1week", "plan_12week")).toBe(true);
+  });
+
+  it("keeps plan-card UI updates separate from plan_selected tracking", () => {
+    expect(planSelectAnalyticsDecision("plan_4week", "plan_4week")).toEqual({
+      trackPlanSelected: false,
+      updateUiState: true,
+    });
+    expect(planSelectAnalyticsDecision("plan_4week", "plan_1week")).toEqual({
+      trackPlanSelected: true,
+      updateUiState: true,
+    });
+  });
+
+  it("uses a stable checkout analytics storage key per plan for Meta deduplication", () => {
+    expect(checkoutAnalyticsStorageKey("plan_4week")).toBe("billing_plan_4week");
+    expect(checkoutAnalyticsStorageKey("plan_1week")).toBe("billing_plan_1week");
+  });
+
+  it("keeps checkout and attempt IDs distinct for retry correlation", () => {
+    const checkoutId = "initiate_checkout_stable";
+    const attemptA = buildPaymentAttemptMetadata(fourWeek, 1, "payment_attempt_a");
+    const attemptB = buildPaymentAttemptMetadata(fourWeek, 2, "payment_attempt_b");
+    expect(attemptA.action_event_id).not.toBe(checkoutId);
+    expect(attemptB.action_event_id).not.toBe(checkoutId);
+    expect(attemptA.action_event_id).not.toBe(attemptB.action_event_id);
   });
 
   it("maps legacy failure stages to canonical analytics stages", () => {

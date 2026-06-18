@@ -165,12 +165,17 @@ describe("subscription checkout — subscription funnel analytics instrumentatio
     }
   });
 
-  it("fires plan_selected only on explicit plan changes", () => {
+  it("fires plan_selected only on explicit plan changes while always updating UI state", () => {
     expect(src).toContain("shouldTrackPlanSelection(selected, nextKey)");
     expect(src).toMatch(
-      /const handlePlanSelect = \(nextKey: PlanKey\) => \{[\s\S]*FIRST_PARTY_EVENTS\.planSelected/,
+      /if \(shouldTrackPlanSelection\(selected, nextKey\)\) \{[\s\S]*FIRST_PARTY_EVENTS\.planSelected/,
     );
-    expect(src).toMatch(/if \(!shouldTrackPlanSelection\(selected, nextKey\)\) return;/);
+    expect(src).toMatch(
+      /setSelected\(nextKey\);[\s\S]*setShowPayment\(false\);/,
+    );
+    expect(src).not.toMatch(
+      /if \(!shouldTrackPlanSelection\(selected, nextKey\)\) return;/,
+    );
   });
 
   it("fires secure_checkout_revealed on Continue to secure checkout while preserving paywall_viewed", () => {
@@ -194,7 +199,39 @@ describe("subscription checkout — subscription funnel analytics instrumentatio
     expect(src).toContain("buildPaymentAttemptMetadata");
     expect(src).toContain("buildPaymentFailureMetadata");
     expect(src).toContain("buildPreAttemptPaymentFailureMetadata");
-    expect(src).toContain("analytics_event_id: attemptId");
+    expect(src).toContain("eventId: attemptId");
+    expect(src).toMatch(/eventId: attemptId[\s\S]*FIRST_PARTY_EVENTS\.paymentAttempted/);
+  });
+
+  describe("Meta InitiateCheckout deduplication IDs", () => {
+    it("creates a stable checkoutEventId per plan checkout session", () => {
+      expect(src).toContain("const checkoutEventId = useMemo(");
+      expect(src).toContain(
+        'getOrCreateActionEventId(`billing_${plan.key}`, "initiate_checkout")',
+      );
+    });
+
+    it("uses checkoutEventId for checkout_intent and the billing request", () => {
+      expect(src).toMatch(
+        /eventId: checkoutEventId[\s\S]*FIRST_PARTY_EVENTS\.checkoutIntent/,
+      );
+      expect(src).toContain("analytics_event_id: checkoutEventId");
+      expect(src).not.toContain("analytics_event_id: attemptId");
+    });
+
+    it("uses attemptId only for attempt-level first-party events", () => {
+      expect(src).toMatch(
+        /eventId: attemptId[\s\S]*FIRST_PARTY_EVENTS\.paymentAttempted/,
+      );
+      expect(src).toMatch(/eventId: actionEventId[\s\S]*FIRST_PARTY_EVENTS\.paymentError/);
+      expect(src).not.toMatch(/eventId: attemptId[\s\S]*FIRST_PARTY_EVENTS\.checkoutIntent/);
+    });
+
+    it("fires checkout_intent once per form mount while attempt IDs rotate on retry", () => {
+      expect(src).toContain("checkoutIntentTracked");
+      expect(src).toMatch(/if \(!checkoutIntentTracked\.current\)/);
+      expect(src).toContain('createAnalyticsEventId("payment_attempt")');
+    });
   });
 
   it("keeps payment_element_loaded separate from checkout reveal", () => {

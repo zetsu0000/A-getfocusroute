@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { m } from "framer-motion";
 import { Shield, RotateCcw, Compass, TrendingUp } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js/pure";
@@ -321,6 +321,12 @@ function PlanCheckoutForm({
   const attemptCounterRef = useRef(0);
   const currentAttemptIdRef = useRef<string | null>(null);
   const productKey = PRODUCT_KEY_BY_PLAN[plan.key];
+  // Stable per plan + checkout session — Pixel InitiateCheckout, CAPI, and the
+  // billing request must share this ID. Retries rotate attemptId only.
+  const checkoutEventId = useMemo(
+    () => getOrCreateActionEventId(`billing_${plan.key}`, "initiate_checkout"),
+    [plan.key],
+  );
 
   const trackPaymentFailure = (
     stage: SubscriptionPaymentFailureStage,
@@ -375,10 +381,6 @@ function PlanCheckoutForm({
 
     if (!checkoutIntentTracked.current) {
       checkoutIntentTracked.current = true;
-      const checkoutEventId = getOrCreateActionEventId(
-        `billing_${plan.key}`,
-        "initiate_checkout",
-      );
       trackEvent(FIRST_PARTY_EVENTS.checkoutIntent, {
         eventId: checkoutEventId,
         metadata: buildPaywallViewedMetadata(plan),
@@ -403,7 +405,7 @@ function PlanCheckoutForm({
         funnel_step: "subscription",
         quiz_result_id: quizResultId ?? "",
         user_name: userName.trim(),
-        analytics_event_id: attemptId,
+        analytics_event_id: checkoutEventId,
         analytics_context: getAnalyticsContext(),
       }),
     });
@@ -625,11 +627,12 @@ export function SubscriptionPlansScreen() {
   const handleSuccess = () => setStep("success");
 
   const handlePlanSelect = (nextKey: PlanKey) => {
-    if (!shouldTrackPlanSelection(selected, nextKey)) return;
-    trackEvent(FIRST_PARTY_EVENTS.planSelected, {
-      meta: false,
-      metadata: buildPlanAnalyticsMetadata(PLANS[nextKey]),
-    });
+    if (shouldTrackPlanSelection(selected, nextKey)) {
+      trackEvent(FIRST_PARTY_EVENTS.planSelected, {
+        meta: false,
+        metadata: buildPlanAnalyticsMetadata(PLANS[nextKey]),
+      });
+    }
     setSelected(nextKey);
     setShowPayment(false);
   };
