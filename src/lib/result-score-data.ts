@@ -1,5 +1,5 @@
 import type { QuizAnswer } from "@/types/quiz";
-import { scoreFromAnswers } from "@/lib/symptom-level";
+import { hasUsableScoreSignal, scoreFromAnswers } from "@/lib/symptom-level";
 
 /** Canonical focus-friction score range produced by scoreFromAnswers. */
 export const RESULT_SCORE_MIN = 0;
@@ -16,47 +16,14 @@ export type ResultScoreData = {
 
 export type ResultScoreResolveInput = {
   answers?: unknown;
-  /** Persisted focus-friction score when present on a stored quiz result row. */
+  /** Explicit persisted score passed by a future consumer after schema approval. */
   storedScore?: unknown;
 };
-
-/** Optional keys that may carry a persisted focus-friction score on quiz_results rows. */
-const STORED_SCORE_KEYS = ["focus_friction_score", "friction_score"] as const;
-
-export function readStoredFocusFrictionScore(
-  row: Record<string, unknown>,
-): unknown {
-  for (const key of STORED_SCORE_KEYS) {
-    if (key in row) return row[key];
-  }
-  return undefined;
-}
 
 function parseStoredScore(value: unknown): number | null {
   if (typeof value !== "number" || !Number.isFinite(value)) return null;
   if (value < RESULT_SCORE_MIN || value > RESULT_SCORE_MAX) return null;
   return value;
-}
-
-/** Question ids read by scoreFromAnswers — used for stored-result compatibility checks. */
-const SCORED_QUESTION_IDS = new Set<string>([
-  "distraction",
-  "mood",
-  "scale-procrastination",
-  "scale-focus",
-  "scale-overwhelm",
-  "scale-organization",
-  "scale-memory",
-  "scale-emotions",
-]);
-
-function hasCompatibleScoredAnswers(answers: QuizAnswer[]): boolean {
-  return answers.some(
-    (row) =>
-      SCORED_QUESTION_IDS.has(row.questionId) &&
-      typeof row.selectedOptions[0] === "string" &&
-      row.selectedOptions[0].length > 0,
-  );
 }
 
 /** Normalizes persisted quiz answers without mutating the source payload. */
@@ -95,7 +62,7 @@ export function resolveResultScoreData(
   }
 
   const answers = normalizeQuizAnswers(input.answers);
-  if (answers.length === 0 || !hasCompatibleScoredAnswers(answers)) return null;
+  if (answers.length === 0 || !hasUsableScoreSignal(answers)) return null;
 
   const value = scoreFromAnswers(answers);
   if (!Number.isFinite(value)) return null;
@@ -108,13 +75,10 @@ export function resolveResultScoreData(
   };
 }
 
-/** Convenience wrapper for dashboard / stored quiz_results rows. */
+/** Computes from current quiz_results row answers only — no persisted score column exists today. */
 export function resolveResultScoreDataFromQuizRow(
   row: Record<string, unknown> | null | undefined,
 ): ResultScoreData | null {
   if (!row) return null;
-  return resolveResultScoreData({
-    answers: row.answers,
-    storedScore: readStoredFocusFrictionScore(row),
-  });
+  return resolveResultScoreData({ answers: row.answers });
 }

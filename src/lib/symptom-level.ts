@@ -24,13 +24,9 @@ const SCALE_QUESTIONS = [
   'scale-emotions',
 ] as const
 
-/**
- * Overall focus-friction score (0-100), averaged across every available signal:
- * the two frequency questions (distraction, mood/recovery) and the six scale
- * statements. Reads only what the user actually answered, so it is deterministic
- * and safe for partial answers. With no usable signal it returns a neutral 57.
- */
-export function scoreFromAnswers(answers: { questionId: string; selectedOptions: string[] }[]): number {
+type ScoreAnswerInput = { questionId: string; selectedOptions: string[] }[]
+
+function collectScoreSignals(answers: ScoreAnswerInput): number[] {
   const signals: number[] = []
 
   for (const qid of FREQ_QUESTIONS) {
@@ -43,6 +39,23 @@ export function scoreFromAnswers(answers: { questionId: string; selectedOptions:
     const n = raw ? parseInt(raw, 10) : NaN
     if (Number.isFinite(n) && SCALE_MAP[n] != null) signals.push(SCALE_MAP[n])
   }
+
+  return signals
+}
+
+/** True when at least one answer value is usable by scoreFromAnswers. */
+export function hasUsableScoreSignal(answers: ScoreAnswerInput): boolean {
+  return collectScoreSignals(answers).length > 0
+}
+
+/**
+ * Overall focus-friction score (0-100), averaged across every available signal:
+ * the two frequency questions (distraction, mood/recovery) and the six scale
+ * statements. Reads only what the user actually answered, so it is deterministic
+ * and safe for partial answers. With no usable signal it returns a neutral 57.
+ */
+export function scoreFromAnswers(answers: ScoreAnswerInput): number {
+  const signals = collectScoreSignals(answers)
 
   if (signals.length === 0) return 57
   const avg = signals.reduce((sum, v) => sum + v, 0) / signals.length

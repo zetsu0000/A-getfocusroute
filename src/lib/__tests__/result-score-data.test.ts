@@ -4,13 +4,12 @@ import { fileURLToPath } from "node:url";
 
 import { deriveBrainProfile } from "@/lib/dashboard/brain-profile";
 import { getSignatureFromAnswers, type BrainSignature } from "@/lib/signature";
-import { scoreFromAnswers } from "@/lib/symptom-level";
+import { hasUsableScoreSignal, scoreFromAnswers } from "@/lib/symptom-level";
 import type { QuizAnswer } from "@/types/quiz";
 import {
   RESULT_SCORE_MAX,
   RESULT_SCORE_MIN,
   normalizeQuizAnswers,
-  readStoredFocusFrictionScore,
   resolveResultScoreData,
   resolveResultScoreDataFromQuizRow,
 } from "../result-score-data";
@@ -156,6 +155,78 @@ describe("resolveResultScoreData", () => {
         storedScore: "not-a-number",
       }),
     ).toBeNull();
+    expect(
+      resolveResultScoreData({
+        answers: build({ distraction: "invalid-value" }),
+        storedScore: 150,
+      }),
+    ).toBeNull();
+  });
+
+  it("returns null for invalid frequency values with no other valid signal", () => {
+    expect(
+      resolveResultScoreData({
+        answers: build({ distraction: "invalid-value" }),
+      }),
+    ).toBeNull();
+    expect(
+      resolveResultScoreData({
+        answers: build({ mood: "unknown" }),
+      }),
+    ).toBeNull();
+    expect(hasUsableScoreSignal(build({ distraction: "invalid-value" }))).toBe(false);
+    expect(scoreFromAnswers(build({ distraction: "invalid-value" }))).toBe(57);
+  });
+
+  it("returns null for invalid scale values with no other valid signal", () => {
+    for (const value of ["0", "6", "9", "abc", ""]) {
+      expect(
+        resolveResultScoreData({
+          answers: build({ "scale-focus": value }),
+        }),
+      ).toBeNull();
+      expect(hasUsableScoreSignal(build({ "scale-focus": value }))).toBe(false);
+    }
+  });
+
+  it("computes from mixed valid and invalid answers using only valid signals", () => {
+    const answers = build({
+      distraction: "invalid-value",
+      "scale-focus": "4",
+    });
+    expect(resolveResultScoreData({ answers })).toMatchObject({
+      value: scoreFromAnswers(answers),
+      source: "computed",
+    });
+    expect(scoreFromAnswers(answers)).toBe(76);
+  });
+
+  it("accepts canonical frequency and scale boundaries", () => {
+    for (const freq of ["never", "rarely", "sometimes", "often", "always"] as const) {
+      const result = resolveResultScoreData({ answers: build({ distraction: freq }) });
+      expect(result?.source).toBe("computed");
+      expect(result?.value).toBe(scoreFromAnswers(build({ distraction: freq })));
+    }
+    for (const scale of ["1", "5"] as const) {
+      const result = resolveResultScoreData({
+        answers: build({ "scale-focus": scale }),
+      });
+      expect(result?.source).toBe("computed");
+      expect(result?.value).toBe(scoreFromAnswers(build({ "scale-focus": scale })));
+    }
+  });
+
+  it("does not read speculative stored-score fields from quiz rows", () => {
+    expect(
+      resolveResultScoreDataFromQuizRow({
+        answers: heavyAnswers,
+        friction_score: 55,
+        focus_friction_score: 61,
+      }),
+    ).toMatchObject({
+      value: scoreFromAnswers(heavyAnswers),
+      source: "computed",
+    });
   });
 
   it("is deterministic and order-independent for the same answer content", () => {
@@ -177,18 +248,6 @@ describe("resolveResultScoreData", () => {
       expect(result?.value).toBeLessThanOrEqual(RESULT_SCORE_MAX);
       expect(Number.isFinite(result?.value)).toBe(true);
     }
-  });
-
-  it("reads optional stored score keys from quiz rows", () => {
-    expect(
-      readStoredFocusFrictionScore({ focus_friction_score: 61 }),
-    ).toBe(61);
-    expect(
-      resolveResultScoreDataFromQuizRow({
-        answers: heavyAnswers,
-        friction_score: 55,
-      }),
-    ).toMatchObject({ value: 55, source: "stored" });
   });
 
   it("does not mutate answer payloads", () => {
