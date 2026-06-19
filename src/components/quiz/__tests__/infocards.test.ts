@@ -274,12 +274,18 @@ describe("Card 2 rebuilt as a Priority Lens", () => {
     expect(card2).toContain("Show Me My Next Step");
   });
 
-  it("uses the single final message and drops the old three-line panel copy", () => {
-    // The final panel says only START HERE, / NOT EVERYWHERE. — two explicit
-    // lines (block spans), never a browser-wrap dependency.
-    expect(card2).toContain('<span style={{ display: "block" }}>START HERE,</span>');
-    expect(card2).toContain('<span style={{ display: "block", marginTop: 3 }}>NOT EVERYWHERE.</span>');
-    expect(card2).toMatch(/START HERE,[\s\S]*?NOT EVERYWHERE\./);
+  it("uses the single sentence-case final message as two explicit nowrap lines", () => {
+    // The final panel says only Start here. / Not everywhere. — two explicit
+    // block lines, each pinned to a single line (whiteSpace: nowrap), never a
+    // browser-wrap dependency and never a third line.
+    expect(card2).toContain("Start here.");
+    expect(card2).toContain("Not everywhere.");
+    expect(card2).toMatch(/display: "block", whiteSpace: "nowrap"[\s\S]*?Start here\./);
+    expect(card2).toMatch(/whiteSpace: "nowrap",\s*marginTop: 4,[\s\S]*?Not everywhere\./);
+    expect(card2).toMatch(/Start here\.[\s\S]*?Not everywhere\./);
+    // The loud uppercase final copy is gone.
+    expect(card2).not.toContain("START HERE");
+    expect(card2).not.toContain("NOT EVERYWHERE");
     // The old final-state copy is gone.
     expect(card2).not.toContain("DO THIS NEXT");
     expect(card2).not.toContain("A clear place to begin");
@@ -354,7 +360,7 @@ describe("Card 2 rebuilt as a Priority Lens", () => {
     expect((card2.match(/className="ic2-selected"/g) || []).length).toBe(1);
     // The tracked Finish overlay + the in-flow final message both live inside it,
     // in DOM order (message first, then the Finish overlay).
-    expect(card2).toMatch(/className="ic2-final"[\s\S]*?START HERE,[\s\S]*?NOT EVERYWHERE\.[\s\S]*?className="ic2-finish"[\s\S]*?Finish/);
+    expect(card2).toMatch(/className="ic2-final"[\s\S]*?Start here\.[\s\S]*?Not everywhere\.[\s\S]*?className="ic2-finish"[\s\S]*?Finish/);
     // Finish is the decorative tracked label (aria-hidden); the message carries
     // the meaning.
     expect(card2).toMatch(/className="ic2-finish"[\s\S]*?aria-hidden="true"/);
@@ -370,13 +376,20 @@ describe("Card 2 rebuilt as a Priority Lens", () => {
     expect(card2).toMatch(/".ic2-final", \{ opacity: 0[\s\S]*?opacity: 1/);
   });
 
-  it("sizes the compact two-line panel and centres it exactly", () => {
+  it("sizes the restrained two-line panel and centres it exactly", () => {
     expect(card2).toContain('left: "50%"');
     expect(card2).toContain('top: "50%"');
-    expect(card2).toContain('width: "clamp(176px, 52%, 190px)"'); // 176–194px
-    expect(card2).toContain('padding: "18px 20px"'); // 18px vertical / 20px horizontal
-    expect(card2).toMatch(/className="ic2-final"[\s\S]*?fontSize: 22/); // 21–23px
+    expect(card2).toContain('width: "clamp(210px, 62%, 224px)"'); // 210–224px
+    expect(card2).toContain('padding: "17px 22px"'); // 17px vertical / 22px horizontal
+    expect(card2).toMatch(/className="ic2-final"[\s\S]*?fontSize: 20/); // 19–20px
+    expect(card2).toMatch(/className="ic2-final"[\s\S]*?fontWeight: 700/); // ≤ 720
     expect(card2).toMatch(/className="ic2-final"[\s\S]*?lineHeight: 1\.1/); // 1.08–1.12
+    expect(card2).toMatch(/className="ic2-final"[\s\S]*?letterSpacing: "-0\.02em"/); // -0.015 to -0.025em
+    // One thin selected-colour border + a restrained shadow — the strong
+    // double-border glow ring is gone.
+    expect(card2).not.toContain("1.5px solid"); // no thick double border
+    expect(card2).not.toContain("0 0 0 4px"); // no strong colour glow ring
+    expect(card2).toContain('boxShadow: "var(--v2-shadow-sm)"'); // subtle restrained shadow
     // No third line inside the final panel.
     expect(card2).not.toContain("ic2-do");
     expect(card2).not.toContain("ic2-place");
@@ -412,7 +425,7 @@ describe("Card 2 rebuilt as a Priority Lens", () => {
     // Phase 4 — travel begins only at 1.7s (≥0.25s after selection).
     expect(card2).toContain('"power3.inOut" }, 1.7)');
     // Phase 5 — message resolves near the END of the travel (Finish out 2.25s,
-    // START HERE in 2.32s) — not before.
+    // the sentence-case message in 2.32s) — not before.
     expect(card2).toContain('".ic2-finish", { opacity: 0, duration: 0.22 }, 2.25)');
     expect(card2).toContain("}, 2.32)");
     // Phase 6 — payoff 2.6s, CTA settle 2.78s → total ≈ 3.08s.
@@ -434,17 +447,23 @@ describe("Card 2 rebuilt as a Priority Lens", () => {
     expect(card2).toContain("tl.progress(1)");
     // The final message is plain markup (always in the DOM), so progress(1) shows
     // it complete with no hidden/partial-opacity content.
-    expect(card2).toContain("START HERE,");
-    expect(card2).toContain("NOT EVERYWHERE.");
+    expect(card2).toContain("Start here.");
+    expect(card2).toContain("Not everywhere.");
   });
 
   it("frames mobile: safe-area, centred (no big void / anchor slot), no scroll, no fixed vh", () => {
     expect(card2).toContain("env(safe-area-inset-bottom");
     expect(card2).toContain('minHeight: "100%"');
     expect(card2).toContain('justifyContent: "center"'); // removes the stage→CTA void
-    // Tightened spacing now that the anchor is gone: stage→payoff 18, payoff→CTA 14.
-    expect(card2).toMatch(/ic2-payoff[\s\S]*?marginTop: 18/);
+    // Restrained hierarchy: stage→payoff 22 (20–24), payoff→CTA 14 (14–16).
+    expect(card2).toMatch(/ic2-payoff[\s\S]*?marginTop: 22/);
     expect(card2).toMatch(/ic2-cta v2-cta[\s\S]*?marginTop: 14/);
+    // Payoff reads clearly secondary to the panel + CTA: 14px, light weight,
+    // dimmed ink, comfortable line-height.
+    expect(card2).toMatch(/ic2-payoff[\s\S]*?fontSize: 14,/);
+    expect(card2).toMatch(/ic2-payoff[\s\S]*?fontWeight: 550/);
+    expect(card2).toMatch(/ic2-payoff[\s\S]*?color: "var\(--v2-ink-dim\)"/);
+    expect(card2).toMatch(/ic2-payoff[\s\S]*?lineHeight: 1\.35/);
     // No leftover flex spacer pushing the CTA to the bottom.
     expect(card2).not.toContain("flex: 1, minHeight");
     expect(card2).not.toContain('overflowY: "auto"');

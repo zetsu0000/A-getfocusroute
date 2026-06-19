@@ -502,7 +502,7 @@ function Card1Recognition({ onContinue }: CardProps) {
 /* ─────────────────────────────────────────────────────────────────────
    CARD 2 — Priority Lens. Many competing priorities → ONE ("Finish") is
    selected → that SAME element travels to the centre and resolves into one
-   clear message: START HERE, NOT EVERYWHERE. The selected element is a single
+   clear message: Start here. Not everywhere. The selected element is a single
    morphing DOM node (FLIP-measured travel + grow), so the user tracks Finish
    the whole way — never a crossfade between two boxes.
 ───────────────────────────────────────────────────────────────────── */
@@ -524,7 +524,6 @@ function Card2PriorityLens({ onContinue }: CardProps) {
         selBorderOff: "rgba(163, 178, 255, 0.20)",
         selBorderOn: "#7C8AFF",
         selText: "#AEB7FF",
-        ringSoft: "rgba(124, 138, 255, 0.40)",
         warm: "#FFB28B",
       }
     : {
@@ -538,7 +537,6 @@ function Card2PriorityLens({ onContinue }: CardProps) {
         selBorderOff: "rgba(40, 52, 90, 0.18)",
         selBorderOn: "#4655E6",
         selText: "#3B45C9",
-        ringSoft: "rgba(70, 85, 230, 0.18)",
         warm: "#C2691E",
       };
 
@@ -770,29 +768,30 @@ function Card2PriorityLens({ onContinue }: CardProps) {
               top: "50%",
               transform: "translate(-50%, -50%)",
               zIndex: 4,
-              width: "clamp(176px, 52%, 190px)",
-              padding: "18px 20px",
-              borderRadius: 15,
+              width: "clamp(210px, 62%, 224px)",
+              padding: "17px 22px",
+              borderRadius: 16,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               textAlign: "center",
               background: c.panelBg,
-              border: `1.5px solid ${c.selBorderOff}`,
+              border: `1px solid ${c.selBorderOff}`,
             }}
           >
-            {/* Selected-state ring + depth — overlays the panel's neutral border
-                with the strong selected blue. Only opacity animates (the border,
-                ring and shadow are static), so theme re-colours cleanly. */}
+            {/* Selected-state border + depth — overlays the panel's neutral
+                border with ONE thin selected-blue line and a subtle restrained
+                shadow (no strong colour ring / double-border glow). Only opacity
+                animates (border + shadow static), so theme re-colours cleanly. */}
             <span
               className="ic2-sel-ring"
               aria-hidden="true"
               style={{
                 position: "absolute",
                 inset: 0,
-                borderRadius: 15,
-                border: `1.5px solid ${c.selBorderOn}`,
-                boxShadow: `0 0 0 4px ${c.ringSoft}, var(--v2-shadow-md)`,
+                borderRadius: 16,
+                border: `1px solid ${c.selBorderOn}`,
+                boxShadow: "var(--v2-shadow-sm)",
                 opacity: 0,
                 pointerEvents: "none",
               }}
@@ -805,15 +804,25 @@ function Card2PriorityLens({ onContinue }: CardProps) {
               className="ic2-final"
               style={{
                 margin: 0,
-                fontSize: 22,
-                fontWeight: 780,
+                fontSize: 20,
+                fontWeight: 700,
                 lineHeight: 1.1,
-                letterSpacing: "-0.005em",
+                letterSpacing: "-0.02em",
                 color: c.selText,
               }}
             >
-              <span style={{ display: "block" }}>START HERE,</span>
-              <span style={{ display: "block", marginTop: 3 }}>NOT EVERYWHERE.</span>
+              <span style={{ display: "block", whiteSpace: "nowrap" }}>
+                Start here.
+              </span>
+              <span
+                style={{
+                  display: "block",
+                  whiteSpace: "nowrap",
+                  marginTop: 4,
+                }}
+              >
+                Not everywhere.
+              </span>
             </p>
 
             {/* Finish — the tracked task during competition + travel; an absolute
@@ -827,9 +836,10 @@ function Card2PriorityLens({ onContinue }: CardProps) {
                 inset: 0,
                 display: "grid",
                 placeItems: "center",
-                fontSize: 22,
-                fontWeight: 780,
+                fontSize: 20,
+                fontWeight: 700,
                 lineHeight: 1.1,
+                letterSpacing: "-0.02em",
                 color: c.selText,
               }}
             >
@@ -840,7 +850,7 @@ function Card2PriorityLens({ onContinue }: CardProps) {
 
         {/* Payoff — readable, but quieter than the CTA. Sits directly below the
             stage (no return-anchor slot) so it reads as the visual conclusion. */}
-        <p className="ic2-payoff" style={{ fontSize: 14.5, fontWeight: 620, color: "var(--v2-ink-dim)", textAlign: "center", lineHeight: 1.35, marginTop: 18 }}>
+        <p className="ic2-payoff" style={{ fontSize: 14, fontWeight: 550, color: "var(--v2-ink-dim)", textAlign: "center", lineHeight: 1.35, marginTop: 22 }}>
           Less time deciding. More time doing.
         </p>
 
