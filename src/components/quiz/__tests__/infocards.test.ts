@@ -50,7 +50,7 @@ describe("INFOCARD_STAGE", () => {
 describe("infocard router", () => {
   it("routes each of the five ids to its dedicated card", () => {
     expect(infocards).toMatch(/case "info-seen":\s*\n\s*return <Card1Recognition/);
-    expect(infocards).toMatch(/case "info-match":\s*\n\s*return <Card2Differentiation/);
+    expect(infocards).toMatch(/case "info-match":\s*\n\s*return <Card2PriorityLens/);
     expect(infocards).toMatch(/case "info-focus":\s*\n\s*return <Card3Cost/);
     expect(infocards).toMatch(/case "info-system":\s*\n\s*return <Card4Mechanism/);
     expect(infocards).toMatch(/case "adhd-profile":\s*\n\s*return <Card5Unlock/);
@@ -199,7 +199,7 @@ describe("Card 3 chart copy is honest", () => {
 describe("Card 1 rebuilt as a fast mechanism explainer", () => {
   const card1 = infocards.slice(
     infocards.indexOf("function Card1Recognition"),
-    infocards.indexOf("function Card2Differentiation"),
+    infocards.indexOf("function Card2PriorityLens"),
   );
 
   it("renders the approved copy (label, two-beat headline, surface, mechanism)", () => {
@@ -255,6 +255,250 @@ describe("Card 1 rebuilt as a fast mechanism explainer", () => {
     expect(card1).not.toContain('top: "94%"');
     // It fades out (opacity → 0) rather than resting visible at the route end.
     expect(card1).toMatch(/\.fr1-pulse[\s\S]*?opacity: 0/);
+  });
+});
+
+// ── Card 2 — Finish is selected, travels to centre, resolves to one message ────
+
+describe("Card 2 rebuilt as a Priority Lens", () => {
+  const card2 = infocards.slice(
+    infocards.indexOf("function Card2PriorityLens"),
+    infocards.indexOf("function Card3Cost"),
+  );
+
+  it("preserves the approved surrounding copy verbatim", () => {
+    expect(card2).toContain("WHEN EVERYTHING FEELS URGENT");
+    expect(card2).toContain("Know what matters right now.");
+    expect(card2).toContain("FocusRoute turns too many priorities into one clear next step.");
+    expect(card2).toContain("Less time deciding. More time doing.");
+    expect(card2).toContain("Show Me My Next Step");
+  });
+
+  it("uses the single sentence-case final message as two explicit nowrap lines", () => {
+    // The final panel says only Start here. / Not everywhere. — two explicit
+    // block lines, each pinned to a single line (whiteSpace: nowrap), never a
+    // browser-wrap dependency and never a third line.
+    expect(card2).toContain("Start here.");
+    expect(card2).toContain("Not everywhere.");
+    expect(card2).toMatch(/display: "block", whiteSpace: "nowrap"[\s\S]*?Start here\./);
+    expect(card2).toMatch(/whiteSpace: "nowrap",\s*marginTop: 4,[\s\S]*?Not everywhere\./);
+    expect(card2).toMatch(/Start here\.[\s\S]*?Not everywhere\./);
+    // The loud uppercase final copy is gone.
+    expect(card2).not.toContain("START HERE");
+    expect(card2).not.toContain("NOT EVERYWHERE");
+    // The old final-state copy is gone.
+    expect(card2).not.toContain("DO THIS NEXT");
+    expect(card2).not.toContain("A clear place to begin");
+  });
+
+  it("removes the return-anchor section completely (copy, icon, class, tween)", () => {
+    expect(card2).not.toContain("If interrupted, come back here");
+    expect(card2).not.toContain("ic2-anchor"); // class, ref, selector and tween all gone
+    expect(card2).not.toContain("M6 3h12"); // the bookmark icon path
+    // No softened replacement of the interruption idea.
+    const lc = card2.toLowerCase();
+    for (const s of ["resume here", "return here", "pick up", "recovery", "come back", "interrupt"]) {
+      expect(lc).not.toContain(s);
+    }
+  });
+
+  it("removes the abstract IC2 product terminology", () => {
+    const lc = card2.toLowerCase();
+    for (const term of [
+      "entry point",
+      "recovery route",
+      "connected path",
+      "priority route",
+      "action map",
+      "system logic",
+      "focus architecture",
+      "cognitive load",
+      "protocol",
+      "calibration",
+    ]) {
+      expect(lc).not.toContain(term);
+    }
+  });
+
+  it("drops the old comparison-table / two-path grammar entirely", () => {
+    expect(card2).not.toContain("Generic plan");
+    expect(card2).not.toContain("One connected route");
+    expect(card2).not.toContain("Map what gets in the way");
+    expect(card2).not.toContain("A to-do list tells you what");
+    expect(card2).not.toContain('gridTemplateColumns: "1fr 1fr"');
+    expect(card2).not.toContain("question.infoBenefit");
+    expect(card2).not.toContain("CardShell");
+  });
+
+  it("has no scanner / instrumentation wording", () => {
+    const lc = card2.toLowerCase();
+    expect(lc).not.toContain("signal detected");
+    expect(lc).not.toContain("scan complete");
+    expect(lc).not.toContain("scan line");
+    expect(card2).not.toContain("Scan");
+  });
+
+  it("removes the oversized circular lens / cyan wash treatment", () => {
+    expect(card2).not.toContain(".ic2-lens");
+    expect(card2).not.toContain('borderRadius: "50%"'); // no large circle
+    expect(card2).not.toContain("radial-gradient"); // no cyan radial field
+    expect(card2).not.toContain("inset 0 0 28px"); // no inset cyan glow
+    expect(card2).not.toContain("#9BE8FF"); // cyan dropped from the solution palette
+  });
+
+  it("keeps the competing-priorities field (secondary chips, not a grid)", () => {
+    expect(card2).toContain(".ic2-frag");
+    expect(card2).toContain('className="ic2-stage"');
+    for (const frag of ["Reply", "Plan", "Fix", "Remember", "Review"]) {
+      expect(card2).toContain(frag);
+    }
+    expect(card2).not.toContain('gridTemplateColumns');
+  });
+
+  it("uses ONE morphing element: Finish travels in, the message resolves in place", () => {
+    // Exactly one selected panel — no separate replacement card.
+    expect((card2.match(/className="ic2-selected"/g) || []).length).toBe(1);
+    // The tracked Finish overlay + the in-flow final message both live inside it,
+    // in DOM order (message first, then the Finish overlay).
+    expect(card2).toMatch(/className="ic2-final"[\s\S]*?Start here\.[\s\S]*?Not everywhere\.[\s\S]*?className="ic2-finish"[\s\S]*?Finish/);
+    // Finish is the decorative tracked label (aria-hidden); the message carries
+    // the meaning.
+    expect(card2).toMatch(/className="ic2-finish"[\s\S]*?aria-hidden="true"/);
+    // FLIP: the SAME element is measured and travels from the upper-right slot.
+    expect(card2).toContain("getBoundingClientRect");
+    expect(card2).toContain(".ic2-finish-origin");
+    expect(card2).toContain("CHIP_SCALE");
+    expect(card2).toContain("x: 0, y: 0, scale: 1"); // travels to the exact centre + full size
+    expect(card2).toContain('ease: "power3.inOut"'); // confident, non-bouncy
+    expect(card2).not.toContain("back.out"); // no back-bounce
+    // Near landing: Finish softens out and the message resolves (no panel vanish).
+    expect(card2).toContain('".ic2-finish", { opacity: 0');
+    expect(card2).toMatch(/".ic2-final", \{ opacity: 0[\s\S]*?opacity: 1/);
+  });
+
+  it("sizes the restrained two-line panel and centres it exactly", () => {
+    expect(card2).toContain('left: "50%"');
+    expect(card2).toContain('top: "50%"');
+    expect(card2).toContain('width: "clamp(210px, 62%, 224px)"'); // 210–224px
+    expect(card2).toContain('padding: "17px 22px"'); // 17px vertical / 22px horizontal
+    expect(card2).toMatch(/className="ic2-final"[\s\S]*?fontSize: 20/); // 19–20px
+    expect(card2).toMatch(/className="ic2-final"[\s\S]*?fontWeight: 700/); // ≤ 720
+    expect(card2).toMatch(/className="ic2-final"[\s\S]*?lineHeight: 1\.1/); // 1.08–1.12
+    expect(card2).toMatch(/className="ic2-final"[\s\S]*?letterSpacing: "-0\.02em"/); // -0.015 to -0.025em
+    // One thin selected-colour border + a restrained shadow — the strong
+    // double-border glow ring is gone.
+    expect(card2).not.toContain("1.5px solid"); // no thick double border
+    expect(card2).not.toContain("0 0 0 4px"); // no strong colour glow ring
+    expect(card2).toContain('boxShadow: "var(--v2-shadow-sm)"'); // subtle restrained shadow
+    // No third line inside the final panel.
+    expect(card2).not.toContain("ic2-do");
+    expect(card2).not.toContain("ic2-place");
+  });
+
+  it("is distinct from IC1 and IC5 (no reused route / scan / converging-dot grammar)", () => {
+    expect(card2).not.toContain("fr1-route");
+    expect(card2).not.toContain("fr1-vscan");
+    expect(card2).not.toContain("fr1-hscan");
+    expect(card2).not.toContain("ic5-dot");
+    expect(card2).not.toContain("ic5-route");
+    expect(card2).not.toContain("ic5-group");
+  });
+
+  it("drives one scoped, cleaned-up GSAP timeline that plays once", () => {
+    expect(card2).toContain("gsap.context");
+    expect(card2).toContain("ctx.revert()");
+    expect(card2).toContain("paused: true");
+    expect(card2).not.toContain("repeat: -1");
+    expect(card2).not.toContain("ScrollTrigger");
+    expect(card2).not.toContain("pin:");
+    expect(card2).not.toContain("scrub");
+  });
+
+  it("preserves the phased timing and resolves the message near landing (~3.1s)", () => {
+    // Phase 1 — the field enters (and settles ~0.72s) BEFORE competition.
+    expect(card2).toContain("stagger: 0.035 }, 0.28)"); // secondary tasks begin entering
+    expect(card2).toContain("{ opacity: 1, duration: 0.3 }, 0.36)"); // Finish enters
+    // Phase 2 — competition starts only at 0.8s.
+    expect(card2).toContain('ease: "sine.inOut" }, 0.8)');
+    // Phase 3 — selection ring at 1.4s, BEFORE any travel.
+    expect(card2).toContain('".ic2-sel-ring", { opacity: 1, duration: 0.3 }, 1.4)');
+    // Phase 4 — travel begins only at 1.7s (≥0.25s after selection).
+    expect(card2).toContain('"power3.inOut" }, 1.7)');
+    // Phase 5 — message resolves near the END of the travel (Finish out 2.25s,
+    // the sentence-case message in 2.32s) — not before.
+    expect(card2).toContain('".ic2-finish", { opacity: 0, duration: 0.22 }, 2.25)');
+    expect(card2).toContain("}, 2.32)");
+    // Phase 6 — payoff 2.6s, CTA settle 2.78s → total ≈ 3.08s.
+    expect(card2).toContain("}, 2.6)");
+    expect(card2).toContain('".ic2-cta", { opacity: 0.94, scale: 0.99 }, { opacity: 1, scale: 1, duration: 0.3 }, 2.78)');
+    // The removed anchor phase and old copy timings are gone; phases not compressed.
+    expect(card2).not.toContain("}, 2.45)"); // anchor phase removed
+    expect(card2).not.toContain('}, 0.62)'); // not the old compressed competition
+  });
+
+  it("renders the CTA visibly from the start — only a subtle settle, never from 0", () => {
+    expect(card2).toContain('".ic2-cta", { opacity: 0.94');
+    expect(card2).not.toMatch(/\.ic2-cta",\s*\{\s*opacity:\s*0\s*,/);
+    expect(card2).toContain("onClick={onContinue}");
+  });
+
+  it("snaps to a complete final state (with the final message) under reduced motion", () => {
+    expect(card2).toContain("prefers-reduced-motion");
+    expect(card2).toContain("tl.progress(1)");
+    // The final message is plain markup (always in the DOM), so progress(1) shows
+    // it complete with no hidden/partial-opacity content.
+    expect(card2).toContain("Start here.");
+    expect(card2).toContain("Not everywhere.");
+  });
+
+  it("frames mobile: safe-area, centred (no big void / anchor slot), no scroll, no fixed vh", () => {
+    expect(card2).toContain("env(safe-area-inset-bottom");
+    expect(card2).toContain('minHeight: "100%"');
+    expect(card2).toContain('justifyContent: "center"'); // removes the stage→CTA void
+    // Restrained hierarchy: stage→payoff 22 (20–24), payoff→CTA 14 (14–16).
+    expect(card2).toMatch(/ic2-payoff[\s\S]*?marginTop: 22/);
+    expect(card2).toMatch(/ic2-cta v2-cta[\s\S]*?marginTop: 14/);
+    // Payoff reads clearly secondary to the panel + CTA: 14px, light weight,
+    // dimmed ink, comfortable line-height.
+    expect(card2).toMatch(/ic2-payoff[\s\S]*?fontSize: 14,/);
+    expect(card2).toMatch(/ic2-payoff[\s\S]*?fontWeight: 550/);
+    expect(card2).toMatch(/ic2-payoff[\s\S]*?color: "var\(--v2-ink-dim\)"/);
+    expect(card2).toMatch(/ic2-payoff[\s\S]*?lineHeight: 1\.35/);
+    // No leftover flex spacer pushing the CTA to the bottom.
+    expect(card2).not.toContain("flex: 1, minHeight");
+    expect(card2).not.toContain('overflowY: "auto"');
+    expect(card2).not.toContain('overflowY: "scroll"');
+    expect(card2).not.toMatch(/height:\s*"100vh"/);
+    expect(card2).not.toMatch(/height:\s*"100dvh"/);
+  });
+});
+
+// ── Other infocards remain untouched by the IC2 rebuild ───────────────────────
+
+describe("IC1, IC3, IC4, IC5 remain unchanged by the IC2 rebuild", () => {
+  it("keeps IC1, IC3, IC4 and IC5 signature copy intact", () => {
+    // IC1
+    expect(infocards).toContain("It’s not just ");
+    expect(infocards).toContain("procrastination.");
+    // IC3
+    expect(infocards).toContain(
+      "The hardest part is rarely the task. It's deciding the same things, again and again.",
+    );
+    // IC4
+    expect(infocards).toContain("Not a result screen — a connected system built around your pattern.");
+    // IC5
+    expect(infocards).toContain("Your answers are starting to show a clear pattern.");
+    expect(infocards).toContain("See My Result");
+  });
+
+  it("keeps the five stage ids + routing stable", () => {
+    expect(INFOCARD_STAGE).toEqual({
+      "info-seen": 1,
+      "info-match": 2,
+      "info-focus": 3,
+      "info-system": 4,
+      "adhd-profile": 5,
+    });
   });
 });
 
