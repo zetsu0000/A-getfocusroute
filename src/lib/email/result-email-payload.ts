@@ -1,10 +1,12 @@
 import { getResultEmailTemplateVersion } from "@/lib/email/config";
 import { buildResultEmailIdempotencyKey } from "@/lib/email/result-email-idempotency";
 import { buildResultEmailUrls } from "@/lib/email/result-email-urls";
-import type { ResultEmailBuildInput, ResultEmailPayload } from "@/lib/email/types";
+import type { ResultEmailBuildInput, ResultEmailPayloadBuildResult } from "@/lib/email/types";
 import { normalizeRecipientEmail } from "@/lib/email/validation";
 import { normalizeQuizAnswers, resolveResultScoreDataFromQuizRow } from "@/lib/result-score-data";
 import { getSignatureFromAnswers } from "@/lib/signature";
+
+const DEMOGRAPHIC_ONLY_QUESTION_IDS = new Set(["age", "name"]);
 
 function stringField(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
@@ -13,6 +15,12 @@ function stringField(value: unknown): string {
 function readResultId(row: Record<string, unknown>): string | null {
   const id = stringField(row.id);
   return id || null;
+}
+
+function hasMeaningfulAssessmentAnswers(
+  answers: ReturnType<typeof normalizeQuizAnswers>,
+): boolean {
+  return answers.some((row) => !DEMOGRAPHIC_ONLY_QUESTION_IDS.has(row.questionId));
 }
 
 function readStoredPattern(row: Record<string, unknown>): {
@@ -27,11 +35,11 @@ function readStoredPattern(row: Record<string, unknown>): {
 
 /**
  * Builds the canonical transactional result-email payload from a persisted quiz row.
- * Does not include raw answers or payment data.
+ * Pattern fields always come from getSignatureFromAnswers — never client-supplied storage.
  */
 export function buildResultEmailPayload(
   input: ResultEmailBuildInput,
-): ResultEmailPayload {
+): ResultEmailPayloadBuildResult {
   const resultId = readResultId(input.quizRow);
   if (!resultId) {
     throw new Error("result_email_missing_result_id");
@@ -48,44 +56,49 @@ export function buildResultEmailPayload(
   }
 
   const answers = normalizeQuizAnswers(input.quizRow.answers);
+  if (!hasMeaningfulAssessmentAnswers(answers)) {
+    throw new Error("result_email_insufficient_answers");
+  }
+
+  const signature = getSignatureFromAnswers(answers);
   const storedPattern = readStoredPattern(input.quizRow);
-  const signature =
-    storedPattern ??
-    (() => {
-      const computed = getSignatureFromAnswers(answers);
-      return {
-        patternKey: computed.signature,
-        patternName: computed.title,
-      };
-    })();
+  const patternMismatch = storedPattern
+    ? storedPattern.patternKey !== signature.signature ||
+      storedPattern.patternName !== signature.title
+    : false;
 
   const scoreData = resolveResultScoreDataFromQuizRow(input.quizRow);
-  const { resultUrl, dashboardUrl } = buildResultEmailUrls(input.siteOrigin);
+  const { resultUrl, dashboardUrl } = buildResultEmailUrls();
   const templateVersion = input.templateVersion ?? getResultEmailTemplateVersion();
 
   return {
-    resultId,
-    recipientEmail,
-    recipientName: input.recipientName?.trim() || stringField(input.quizRow.name) || null,
-    patternKey: signature.patternKey,
-    patternName: signature.patternName,
-    focusFrictionScore: scoreData
-      ? {
-          value: scoreData.value,
-          minimum: 0,
-          maximum: 100,
-        }
-      : null,
-    resultUrl,
-    dashboardUrl,
-    locale: input.locale?.trim() || "en-US",
-    emailType: "transactional",
-    idempotencyKey: buildResultEmailIdempotencyKey(resultId, templateVersion),
+    patternMismatch,
+    payload: {
+      resultId,
+      recipientEmail,
+      recipientName: input.recipientName?.trim() || stringField(input.quizRow.name) || null,
+      patternKey: signature.signature,
+      patternName: signature.title,
+      focusFrictionScore: scoreData
+        ? {
+            value: scoreData.value,
+            minimum: 0,
+            maximum: 100,
+          }
+        : null,
+      resultUrl,
+      dashboardUrl,
+      locale: input.locale?.trim() || "en-US",
+      emailType: "transactional",
+      idempotencyKey: buildResultEmailIdempotencyKey(resultId, templateVersion),
+    },
   };
 }
 
 /** Ensures payload stays free of raw answers and other forbidden fields. */
-export function assertResultEmailPayloadSafe(payload: ResultEmailPayload): void {
+export function assertResultEmailPayloadSafe(
+  payload: ResultEmailPayloadBuildResult["payload"],
+): void {
   const serialized = JSON.stringify(payload);
   const forbidden = ["selectedOptions", "answers", "client_secret", "payment_method"];
   for (const token of forbidden) {

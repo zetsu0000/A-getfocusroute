@@ -2,13 +2,9 @@ import "server-only";
 
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 import { recordAnalyticsEvent } from "@/lib/analytics/server";
-import type { EmailDeliveryStatus } from "@/lib/email/types";
 import type { ResultEmailPayload } from "@/lib/email/types";
 
-export type ResultEmailAnalyticsStage =
-  | "requested"
-  | "sent"
-  | "failed";
+export type ResultEmailAnalyticsStage = "requested" | "sent" | "failed";
 
 const EVENT_BY_STAGE = {
   requested: FIRST_PARTY_EVENTS.resultEmailRequested,
@@ -22,6 +18,7 @@ export function buildResultEmailAnalyticsMetadata(
     failureStage?: string;
     safeErrorCode?: string | null;
     provider?: string;
+    patternMismatch?: boolean;
   } = {},
 ): Record<string, string | number | boolean | null> {
   return {
@@ -29,6 +26,7 @@ export function buildResultEmailAnalyticsMetadata(
     template_version: payload.idempotencyKey.split(":").pop() ?? "1",
     pattern_key: payload.patternKey,
     has_score: payload.focusFrictionScore != null,
+    pattern_mismatch: input.patternMismatch ?? false,
     failure_stage: input.failureStage ?? null,
     safe_error_code: input.safeErrorCode ?? null,
     provider: input.provider ?? null,
@@ -43,7 +41,7 @@ export async function trackResultEmailAnalytics(
     failureStage?: string;
     safeErrorCode?: string | null;
     provider?: string;
-    deliveryStatus?: EmailDeliveryStatus;
+    patternMismatch?: boolean;
   } = {},
 ): Promise<void> {
   try {

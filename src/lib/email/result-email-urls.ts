@@ -8,10 +8,10 @@ export type ResultEmailUrls = {
 
 /**
  * Authenticated dashboard routes only — no signed tokens or query-string PII.
- * Users access their saved result after signing in with the same email.
+ * Origin comes from server configuration only.
  */
-export function buildResultEmailUrls(siteOrigin = getResultEmailSiteOrigin()): ResultEmailUrls {
-  const origin = siteOrigin.replace(/\/+$/, "");
+export function buildResultEmailUrls(): ResultEmailUrls {
+  const origin = getResultEmailSiteOrigin().replace(/\/+$/, "");
   const resultUrl = `${origin}/dashboard/profile`;
   const dashboardUrl = `${origin}/dashboard`;
   if (!isSafeAbsoluteUrl(resultUrl) || !isSafeAbsoluteUrl(dashboardUrl)) {

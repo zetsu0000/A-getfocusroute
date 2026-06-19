@@ -2,7 +2,10 @@ import "server-only";
 
 import {
   getConfiguredEmailProviderName,
+  isMockProviderAllowed,
+  isRealEmailProviderName,
   isResultEmailSendingEnabled,
+  validateProductionEmailConfiguration,
 } from "@/lib/email/config";
 import type { EmailDeliveryLedger } from "@/lib/email/delivery-ledger";
 import { InMemoryEmailDeliveryLedger } from "@/lib/email/delivery-ledger";
@@ -22,9 +25,9 @@ import { trackResultEmailAnalytics } from "@/lib/email/result-email-analytics";
 import type {
   ResultEmailBuildInput,
   ResultEmailMessage,
+  ResultEmailRecipientSource,
   SendResultEmailOptions,
   SendResultEmailResult,
-  TrustedRecipientSource,
 } from "@/lib/email/types";
 import { normalizeRecipientEmail } from "@/lib/email/validation";
 
@@ -39,21 +42,36 @@ function stringField(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
-/** Validates that the recipient email comes from an approved server-side source. */
-export function resolveTrustedRecipientEmail(
-  source: TrustedRecipientSource,
+function invalidResult(
+  safeErrorCode: string,
+  provider = "none",
+): SendResultEmailResult {
+  return {
+    status: "skipped_invalid",
+    idempotencyKey: "",
+    provider,
+    safeErrorCode,
+  };
+}
+
+/** Validates server-side recipient sources — guest email is submitted, not verified. */
+export function resolveResultEmailRecipient(
+  source: ResultEmailRecipientSource,
   quizRow: Record<string, unknown>,
 ): string | null {
   const rowEmail = normalizeRecipientEmail(stringField(quizRow.email));
   const rowId = stringField(quizRow.id);
+  const rowUserId = stringField(quizRow.user_id);
 
   if (source.kind === "authenticated_user") {
     const email = normalizeRecipientEmail(source.email);
     if (!email) return null;
+    if (!rowUserId || rowUserId !== source.userId) return null;
     if (rowEmail && rowEmail !== email) return null;
     return email;
   }
 
+  if (!source.explicitDeliveryRequest) return null;
   const email = normalizeRecipientEmail(source.email);
   if (!email || !rowId || rowId !== source.resultId) return null;
   if (rowEmail && rowEmail !== email) return null;
@@ -68,7 +86,7 @@ export function assertMarketingEmailAllowed(category: SendResultEmailOptions["ca
 
 export function createResultEmailProvider(): ResultEmailProvider {
   const configured = getConfiguredEmailProviderName();
-  if (configured === "mock") {
+  if (configured === "mock" && isMockProviderAllowed()) {
     return new MockResultEmailProvider();
   }
   return new NoopResultEmailProvider();
@@ -83,13 +101,25 @@ function getDefaultLedger(): EmailDeliveryLedger {
   return defaultLedger;
 }
 
+function resolveMessage(
+  provider: ResultEmailProvider,
+  payload: import("@/lib/email/types").ResultEmailPayload,
+  message: ResultEmailMessage | undefined,
+): ResultEmailMessage | { error: string } {
+  if (message) return message;
+  if (provider.name === "mock") {
+    return buildPlaceholderResultEmailMessage(payload);
+  }
+  return { error: "message_not_configured" };
+}
+
 /**
  * Sends a transactional result email through the provider-agnostic service boundary.
  * Disabled by default via RESULT_EMAIL_SENDING_ENABLED.
  */
 export async function sendResultEmail(
   buildInput: Omit<ResultEmailBuildInput, "recipientEmail"> & {
-    trustedRecipient: TrustedRecipientSource;
+    recipientSource: ResultEmailRecipientSource;
   },
   message?: ResultEmailMessage,
   options: SendResultEmailOptions = {},
@@ -97,45 +127,65 @@ export async function sendResultEmail(
 ): Promise<SendResultEmailResult> {
   assertMarketingEmailAllowed(options.category ?? "transactional");
 
-  const recipientEmail = resolveTrustedRecipientEmail(
-    buildInput.trustedRecipient,
+  const recipientEmail = resolveResultEmailRecipient(
+    buildInput.recipientSource,
     buildInput.quizRow,
   );
   if (!recipientEmail) {
+    return invalidResult("invalid_recipient_source");
+  }
+
+  let built;
+  try {
+    built = buildResultEmailPayload({
+      ...buildInput,
+      recipientEmail,
+      locale: options.locale ?? buildInput.locale,
+      templateVersion: options.templateVersion ?? buildInput.templateVersion,
+    });
+  } catch {
+    return invalidResult("invalid_result_payload");
+  }
+
+  const { payload, patternMismatch } = built;
+  assertResultEmailPayloadSafe(payload);
+
+  const configValidation = validateProductionEmailConfiguration();
+  if (!configValidation.ok) {
+    return invalidResult(configValidation.safeErrorCode);
+  }
+
+  const sendingEnabled = deps.sendingEnabled ?? isResultEmailSendingEnabled;
+  if (!sendingEnabled()) {
     return {
-      status: "skipped_invalid",
-      idempotencyKey: "",
+      status: "skipped_disabled",
+      idempotencyKey: payload.idempotencyKey,
       provider: "none",
-      safeErrorCode: "invalid_recipient_source",
     };
   }
 
-  const payload = buildResultEmailPayload({
-    ...buildInput,
-    recipientEmail,
-    locale: options.locale ?? buildInput.locale,
-    templateVersion: options.templateVersion ?? buildInput.templateVersion,
-  });
-  assertResultEmailPayloadSafe(payload);
-
-  const resolvedMessage = message ?? buildPlaceholderResultEmailMessage(payload);
-
   const ledger = deps.ledger ?? getDefaultLedger();
   const provider = deps.provider ?? createResultEmailProvider();
-  const sendingEnabled = deps.sendingEnabled ?? isResultEmailSendingEnabled;
   const trackAnalytics = deps.trackAnalytics ?? true;
   const userId =
-    buildInput.trustedRecipient.kind === "authenticated_user"
-      ? buildInput.trustedRecipient.userId
+    buildInput.recipientSource.kind === "authenticated_user"
+      ? buildInput.recipientSource.userId
       : null;
 
-  const existing = await ledger.findByIdempotencyKey(payload.idempotencyKey);
-  if (existing && (existing.status === "sent" || existing.status === "skipped_duplicate")) {
+  const claim = await ledger.claim({
+    idempotencyKey: payload.idempotencyKey,
+    emailType: "transactional",
+    resultId: payload.resultId,
+    userId,
+    provider: provider.name,
+  });
+
+  if (claim.status === "duplicate") {
     return {
       status: "skipped_duplicate",
       idempotencyKey: payload.idempotencyKey,
-      provider: existing.provider,
-      providerMessageId: existing.providerMessageId,
+      provider: claim.record.provider,
+      providerMessageId: claim.record.providerMessageId,
     };
   }
 
@@ -143,33 +193,14 @@ export async function sendResultEmail(
     await trackResultEmailAnalytics("requested", payload, {
       userId,
       provider: provider.name,
+      patternMismatch,
     });
-  }
-
-  if (!sendingEnabled()) {
-    await ledger.upsert({
-      idempotencyKey: payload.idempotencyKey,
-      emailType: "transactional",
-      resultId: payload.resultId,
-      userId,
-      provider: provider.name,
-      status: "skipped_disabled",
-    });
-    return {
-      status: "skipped_disabled",
-      idempotencyKey: payload.idempotencyKey,
-      provider: provider.name,
-    };
   }
 
   if (provider.name === "noop") {
-    await ledger.upsert({
+    await ledger.markFailed({
       idempotencyKey: payload.idempotencyKey,
-      emailType: "transactional",
-      resultId: payload.resultId,
-      userId,
       provider: provider.name,
-      status: "failed",
       lastErrorCode: "provider_not_configured",
     });
     if (trackAnalytics) {
@@ -178,6 +209,7 @@ export async function sendResultEmail(
         provider: provider.name,
         failureStage: "provider_selection",
         safeErrorCode: "provider_not_configured",
+        patternMismatch,
       });
     }
     return {
@@ -188,25 +220,60 @@ export async function sendResultEmail(
     };
   }
 
-  await ledger.upsert({
-    idempotencyKey: payload.idempotencyKey,
-    emailType: "transactional",
-    resultId: payload.resultId,
-    userId,
-    provider: provider.name,
-    status: "pending",
-  });
+  const resolvedMessage = resolveMessage(provider, payload, message);
+  if ("error" in resolvedMessage) {
+    await ledger.markFailed({
+      idempotencyKey: payload.idempotencyKey,
+      provider: provider.name,
+      lastErrorCode: resolvedMessage.error,
+    });
+    if (trackAnalytics) {
+      await trackResultEmailAnalytics("failed", payload, {
+        userId,
+        provider: provider.name,
+        failureStage: "message_validation",
+        safeErrorCode: resolvedMessage.error,
+        patternMismatch,
+      });
+    }
+    return {
+      status: "failed",
+      idempotencyKey: payload.idempotencyKey,
+      provider: provider.name,
+      safeErrorCode: resolvedMessage.error,
+    };
+  }
 
-  const sendResult = await provider.send(payload, resolvedMessage);
+  let sendResult;
+  try {
+    sendResult = await provider.send(payload, resolvedMessage);
+  } catch {
+    await ledger.markFailed({
+      idempotencyKey: payload.idempotencyKey,
+      provider: provider.name,
+      lastErrorCode: "provider_exception",
+    });
+    if (trackAnalytics) {
+      await trackResultEmailAnalytics("failed", payload, {
+        userId,
+        provider: provider.name,
+        failureStage: "provider_send",
+        safeErrorCode: "provider_exception",
+        patternMismatch,
+      });
+    }
+    return {
+      status: "failed",
+      idempotencyKey: payload.idempotencyKey,
+      provider: provider.name,
+      safeErrorCode: "provider_exception",
+    };
+  }
 
   if (!sendResult.ok) {
-    await ledger.upsert({
+    await ledger.markFailed({
       idempotencyKey: payload.idempotencyKey,
-      emailType: "transactional",
-      resultId: payload.resultId,
-      userId,
       provider: provider.name,
-      status: "failed",
       lastErrorCode: sendResult.safeErrorCode,
     });
     if (trackAnalytics) {
@@ -215,6 +282,7 @@ export async function sendResultEmail(
         provider: provider.name,
         failureStage: "provider_send",
         safeErrorCode: sendResult.safeErrorCode,
+        patternMismatch,
       });
     }
     return {
@@ -225,13 +293,37 @@ export async function sendResultEmail(
     };
   }
 
-  await ledger.upsert({
+  if (provider.name === "mock") {
+    await ledger.markPreviewed({
+      idempotencyKey: payload.idempotencyKey,
+      provider: provider.name,
+      providerMessageId: sendResult.providerMessageId,
+    });
+    return {
+      status: "previewed",
+      idempotencyKey: payload.idempotencyKey,
+      provider: provider.name,
+      providerMessageId: sendResult.providerMessageId,
+    };
+  }
+
+  if (!isRealEmailProviderName(provider.name)) {
+    await ledger.markFailed({
+      idempotencyKey: payload.idempotencyKey,
+      provider: provider.name,
+      lastErrorCode: "provider_not_configured",
+    });
+    return {
+      status: "failed",
+      idempotencyKey: payload.idempotencyKey,
+      provider: provider.name,
+      safeErrorCode: "provider_not_configured",
+    };
+  }
+
+  await ledger.markSent({
     idempotencyKey: payload.idempotencyKey,
-    emailType: "transactional",
-    resultId: payload.resultId,
-    userId,
     provider: provider.name,
-    status: "sent",
     providerMessageId: sendResult.providerMessageId,
   });
 
@@ -239,6 +331,7 @@ export async function sendResultEmail(
     await trackResultEmailAnalytics("sent", payload, {
       userId,
       provider: provider.name,
+      patternMismatch,
     });
   }
 

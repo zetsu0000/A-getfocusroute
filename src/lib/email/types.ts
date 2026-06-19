@@ -6,6 +6,7 @@ export type TransactionalEmailType = "transactional";
 export type EmailDeliveryStatus =
   | "pending"
   | "sent"
+  | "previewed"
   | "failed"
   | "skipped_disabled"
   | "skipped_duplicate"
@@ -31,7 +32,7 @@ export type ResultEmailPayload = {
   idempotencyKey: string;
 };
 
-/** Minimal placeholder content for provider adapters — PR 7B supplies final copy. */
+/** Non-production placeholder only — PR 7B supplies final copy. */
 export type ResultEmailMessage = {
   subject: string;
   previewText: string;
@@ -59,9 +60,28 @@ export type ResultEmailBuildInput = {
   recipientName?: string | null;
   locale?: string;
   templateVersion?: string;
-  siteOrigin?: string;
 };
 
-export type TrustedRecipientSource =
-  | { kind: "authenticated_user"; userId: string; email: string }
-  | { kind: "persisted_quiz_result"; resultId: string; email: string };
+/**
+ * Server-side recipient sources for transactional result email.
+ * Guest submitted email is persisted but not verified as owned.
+ */
+export type ResultEmailRecipientSource =
+  | {
+      kind: "authenticated_user";
+      userId: string;
+      email: string;
+    }
+  | {
+      kind: "submitted_quiz_result_email";
+      resultId: string;
+      email: string;
+      /** Required server-side signal that the user requested this delivery. */
+      explicitDeliveryRequest: true;
+    };
+
+export type ResultEmailPayloadBuildResult = {
+  payload: ResultEmailPayload;
+  /** True when stored signature fields disagree with the canonical calculation. */
+  patternMismatch: boolean;
+};

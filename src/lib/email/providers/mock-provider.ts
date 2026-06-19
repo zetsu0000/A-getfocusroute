@@ -6,7 +6,7 @@ export type MockProviderCall = {
   message: ResultEmailMessage;
 };
 
-/** Test/dev adapter — never performs real delivery. */
+/** Local/test adapter — never performs real delivery. */
 export class MockResultEmailProvider implements ResultEmailProvider {
   readonly name = "mock";
   readonly calls: MockProviderCall[] = [];
@@ -23,7 +23,7 @@ export class MockResultEmailProvider implements ResultEmailProvider {
   }
 }
 
-/** No-op adapter used when sending is disabled. */
+/** No-op adapter used when no real provider is configured. */
 export class NoopResultEmailProvider implements ResultEmailProvider {
   readonly name = "noop";
 
