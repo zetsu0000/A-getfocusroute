@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { m } from "framer-motion";
-import { Shield, RotateCcw, Compass, TrendingUp } from "lucide-react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Shield, RotateCcw, Eye, ListChecks, LifeBuoy, ArrowDown } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js/pure";
 import type { Appearance } from "@stripe/stripe-js";
 import {
@@ -217,6 +219,26 @@ function PlanCard({
               then {formatMoney(plan.renewalAmount)}
               {renewalSuffix(plan)} after {introWindowLabel(plan)}
             </p>
+
+            {/* Why this duration is recommended — small secondary note, on the
+               default plan only. Based on having time to use the product, not
+               urgency or a fabricated statistic. */}
+            {plan.popular && (
+              <p
+                style={{
+                  fontSize: 13.5,
+                  fontWeight: 600,
+                  color: "var(--v2-signal-2)",
+                  lineHeight: 1.4,
+                  marginTop: 12,
+                  paddingTop: 10,
+                  borderTop: "1px solid var(--v2-line)",
+                }}
+              >
+                <span style={{ fontWeight: 800 }}>Recommended:</span> enough time
+                to use it, adjust it, and repeat what works.
+              </p>
+            )}
           </div>
 
           {/* Radio indicator. */}
@@ -521,90 +543,325 @@ function PlanCheckoutForm({
   );
 }
 
-/* ── Compact product-value route ──────────────────────────────────────────────
-   Three connected stops tied to the funnel pain — start, recover, follow
-   through — kept deliberately compact (no SaaS cards, no paragraphs). */
-const VALUE_STEPS = [
+/* ── Animated value route (GSAP) ──────────────────────────────────────────────
+   A compact SVG route that draws through three immediate-use stages
+   (understand → act → get back on track) and resolves into a separate
+   free-vs-FocusRoute comparison band, leading the eye into plan selection.
+
+   GSAP is progressive enhancement: every line and marker renders fully in the
+   static HTML, so the module is complete and readable if JS/GSAP/ScrollTrigger
+   never run or reduced motion is on. GSAP only animates opacity / transform /
+   strokeDashoffset / the travelling-node position — never theme colours, which
+   live in CSS variables (incl. the --fr-route-accent-* light/dark accents) so a
+   light↔dark toggle never rebuilds the timeline.
+
+   Stage copy maps to capabilities that genuinely ship to active subscribers:
+   the detailed focus breakdown, the 28-day protocol, and the member tools. */
+const ROUTE_PATH_D = "M 16 44 C 74 44 92 18 156 24 C 222 30 248 50 304 30";
+/* Decorative fallback marker coordinates (used until GSAP places them exactly on
+   the path via getPointAtLength, and in the no-JS case). */
+const MARKER_FALLBACK = [
+  { cx: 52, cy: 40 },
+  { cx: 156, cy: 24 },
+  { cx: 286, cy: 34 },
+] as const;
+/* Path-progress positions where each stage marker and the travelling node sit. */
+const MARKER_FRACTIONS = [0.1, 0.5, 0.9] as const;
+
+const ROUTE_STAGES = [
   {
-    icon: Compass,
-    title: "Know where to start",
-    meaning: "A clearer first move when priorities compete.",
+    key: "understand",
+    rgb: "--fr-route-accent-1",
+    icon: Eye,
+    eyebrow: "01 — UNDERSTAND",
+    title: "Understand what's getting in your way",
+    desc: "See the full breakdown behind starting, staying focused, prioritizing, planning, remembering, and getting back on track.",
+    label: "Your detailed focus breakdown",
   },
   {
-    icon: RotateCcw,
-    title: "Know how to recover",
-    meaning: "A route back when pressure or interruption breaks focus.",
+    key: "act",
+    rgb: "--fr-route-accent-2",
+    icon: ListChecks,
+    eyebrow: "02 — ACT",
+    title: "Know what to do next",
+    desc: "Follow a 28-day path of small actions built from your answers.",
+    label: "Your 28-day action path",
   },
   {
-    icon: TrendingUp,
-    title: "Keep moving forward",
-    meaning: "Progress without rebuilding the entire plan.",
+    key: "recover",
+    rgb: "--fr-route-accent-3",
+    icon: LifeBuoy,
+    eyebrow: "03 — GET BACK ON TRACK",
+    title: "Have help when the day goes off track",
+    desc: "Use scripts, planners, and practical guides when focus breaks again.",
+    label: "Your member tools",
   },
 ] as const;
 
-function ValueRoute() {
+function CheckoutValueRoute() {
+  const { theme } = useFunnelTheme();
+  const dark = theme === "dark";
+  const rootRef = useRef<HTMLDivElement>(null);
+  const routePathRef = useRef<SVGPathElement>(null);
+  const travelNodeRef = useRef<SVGCircleElement>(null);
+
+  // GSAP runs as enhancement after mount. useLayoutEffect applies the motion
+  // start-states before paint (no visible→hidden flash); if anything is missing
+  // the function bails and the static, fully-visible markup stands.
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    const path = routePathRef.current;
+    const node = travelNodeRef.current;
+    if (!root || !path || !node) return;
+
+    gsap.registerPlugin(ScrollTrigger);
+    let cancelled = false;
+
+    const ctx = gsap.context((self) => {
+      const q = self.selector as <T extends Element>(s: string) => T[];
+      const len = path.getTotalLength();
+      const markers = q<SVGCircleElement>(".fr-marker");
+      const stages = q<HTMLElement>(".fr-stage");
+      const heading = q<HTMLElement>(".fr-route-heading");
+      const compare = q<HTMLElement>(".fr-compare");
+
+      // Place markers exactly on the path (resolution-independent user units).
+      markers.forEach((marker, i) => {
+        const pt = path.getPointAtLength(len * (MARKER_FRACTIONS[i] ?? 0));
+        gsap.set(marker, { attr: { cx: pt.x, cy: pt.y } });
+      });
+
+      const routeProgress = { value: 0 };
+      const updateTravelNode = () => {
+        const pt = path.getPointAtLength(len * routeProgress.value);
+        gsap.set(node, { attr: { cx: pt.x, cy: pt.y } });
+      };
+      updateTravelNode();
+      const offsetAt = (progress: number) => len * (1 - progress);
+
+      const mm = gsap.matchMedia();
+      mm.add(
+        {
+          reduce: "(prefers-reduced-motion: reduce)",
+          motion: "(prefers-reduced-motion: no-preference)",
+        },
+        (mctx) => {
+          // Reduced motion (and the static default) is already the complete
+          // final state — fully-drawn route, visible markers/copy, hidden node.
+          if (mctx.conditions?.reduce) {
+            gsap.set(node, { opacity: 0 });
+            return;
+          }
+
+          // Motion: apply start-states now (init succeeded), then play once.
+          gsap.set(path, { strokeDasharray: len, strokeDashoffset: len });
+          gsap.set(node, { opacity: 0 });
+          gsap.set(markers, { opacity: 0.45, attr: { r: 3.5 } });
+          gsap.set([...heading, ...stages, ...compare], {
+            opacity: 0,
+            y: 10,
+            willChange: "transform, opacity",
+          });
+
+          const tl = gsap.timeline({
+            scrollTrigger: {
+              trigger: root,
+              start: "top 82%",
+              once: true,
+              toggleActions: "play none none none",
+            },
+            onComplete: () => {
+              gsap.set([...heading, ...stages, ...compare], { willChange: "auto" });
+            },
+          });
+
+          tl.to(heading, { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" }, 0)
+            .to(node, { opacity: 1, duration: 0.2 }, 0.08);
+
+          // Three stages: draw path → travel node → activate marker → reveal copy.
+          MARKER_FRACTIONS.forEach((frac, i) => {
+            const at = 0.1 + i * 0.36;
+            tl.to(path, { strokeDashoffset: offsetAt(frac), duration: 0.3, ease: "power2.inOut" }, at)
+              .to(routeProgress, { value: frac, duration: 0.3, ease: "power2.inOut", onUpdate: updateTravelNode }, at)
+              .to(markers[i], { opacity: 1, attr: { r: 5 }, duration: 0.25, ease: "back.out(1.5)" }, at + 0.1)
+              .to(stages[i], { y: 0, opacity: 1, duration: 0.3, ease: "power2.out" }, at + 0.16);
+          });
+
+          // Finish the route, retire the node, then resolve into the comparison
+          // band — the main sequence ends after stage 3 (≈1.6s total).
+          tl.to(path, { strokeDashoffset: offsetAt(1), duration: 0.28, ease: "power2.inOut" }, 1.05)
+            .to(routeProgress, { value: 1, duration: 0.28, ease: "power2.inOut", onUpdate: updateTravelNode }, 1.05)
+            .to(node, { opacity: 0, duration: 0.25 }, 1.22)
+            .to(compare, { y: 0, opacity: 1, duration: 0.35, ease: "power2.out" }, 1.28);
+        },
+      );
+    }, rootRef);
+
+    // Re-measure once webfonts settle, but never after unmount.
+    if (typeof document !== "undefined" && document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        if (!cancelled) ScrollTrigger.refresh();
+      });
+    }
+
+    return () => {
+      cancelled = true;
+      ctx.revert();
+    };
+  }, []);
+
   return (
-    <ul
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 0,
-        listStyle: "none",
-        margin: 0,
-        padding: 0,
-      }}
-    >
-      {VALUE_STEPS.map((step, i) => {
-        const Icon = step.icon;
-        const last = i === VALUE_STEPS.length - 1;
-        return (
-          <li
-            key={step.title}
-            style={{ display: "grid", gridTemplateColumns: "auto 1fr", columnGap: 12 }}
-          >
-            {/* Node + connector — the "route" thread. */}
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <div ref={rootRef} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {/* Three-stage value card — solid surface, intentional per theme. */}
+      <div
+        style={{
+          padding: "18px 18px",
+          borderRadius: 18,
+          border: dark ? "1px solid var(--v2-line)" : "1px solid rgba(48,64,150,0.22)",
+          background: dark ? "rgba(var(--v2-signal-rgb),0.05)" : "rgba(255,255,255,0.94)",
+          boxShadow: dark ? "inset 0 1px 0 rgba(255,255,255,0.04)" : "var(--v2-shadow-md)",
+          display: "flex",
+          flexDirection: "column",
+          gap: 16,
+        }}
+      >
+        <HudLabel className="fr-route-heading" tone="signal" style={{ fontSize: 11 }}>
+          What you unlock
+        </HudLabel>
+
+        {/* Decorative route — the visible benefit text is real HTML below. */}
+        <svg
+          viewBox="0 0 320 64"
+          width="100%"
+          style={{ display: "block", height: "auto" }}
+          aria-hidden="true"
+          focusable="false"
+        >
+          <defs>
+            <linearGradient id="fr-route-grad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" style={{ stopColor: "rgb(var(--fr-route-accent-1))" }} />
+              <stop offset="55%" style={{ stopColor: "rgb(var(--fr-route-accent-2))" }} />
+              <stop offset="100%" style={{ stopColor: "rgb(var(--fr-route-accent-3))" }} />
+            </linearGradient>
+          </defs>
+          <path d={ROUTE_PATH_D} fill="none" stroke="var(--v2-line-bright)" strokeWidth={2} strokeLinecap="round" />
+          <path
+            ref={routePathRef}
+            d={ROUTE_PATH_D}
+            fill="none"
+            stroke="url(#fr-route-grad)"
+            strokeWidth={2.5}
+            strokeLinecap="round"
+          />
+          {ROUTE_STAGES.map((s, i) => (
+            <circle
+              key={s.key}
+              className="fr-marker"
+              cx={MARKER_FALLBACK[i].cx}
+              cy={MARKER_FALLBACK[i].cy}
+              r={5}
+              fill={`rgb(var(${s.rgb}))`}
+              style={{ filter: "var(--fr-route-marker-shadow)" }}
+            />
+          ))}
+          <circle
+            ref={travelNodeRef}
+            cx={MARKER_FALLBACK[0].cx}
+            cy={MARKER_FALLBACK[0].cy}
+            r={3}
+            fill="var(--v2-ink)"
+            style={{ opacity: 0, filter: "var(--fr-route-marker-shadow)" }}
+          />
+        </svg>
+
+        {/* Three immediate-use stages */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          {ROUTE_STAGES.map((s) => {
+            const Icon = s.icon;
+            return (
               <div
-                style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: "50%",
-                  flexShrink: 0,
-                  background: "rgba(var(--v2-signal-rgb),0.12)",
-                  border: "1px solid rgba(var(--v2-signal-rgb),0.35)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
+                key={s.key}
+                className="fr-stage"
+                data-stage={s.key}
+                style={{ display: "grid", gridTemplateColumns: "auto 1fr", columnGap: 12, alignItems: "start" }}
               >
-                <Icon size={14} color="var(--v2-signal-2)" strokeWidth={2.2} />
-              </div>
-              {!last && (
-                <div
+                <span
                   style={{
-                    width: 2,
-                    flex: 1,
-                    minHeight: 14,
-                    marginTop: 2,
-                    background:
-                      "linear-gradient(rgba(var(--v2-signal-rgb),0.45), rgba(var(--v2-signal-rgb),0.08))",
+                    width: 36,
+                    height: 36,
+                    borderRadius: 11,
+                    flexShrink: 0,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: `rgba(var(${s.rgb}),0.14)`,
+                    border: `1px solid rgba(var(${s.rgb}),0.42)`,
                   }}
-                />
-              )}
-            </div>
-            {/* Stop copy. */}
-            <div style={{ paddingBottom: last ? 0 : 14 }}>
-              <p style={{ fontSize: 13.5, fontWeight: 700, color: "var(--v2-ink)", lineHeight: 1.3 }}>
-                {step.title}
-              </p>
-              <p style={{ fontSize: 12.5, color: "var(--v2-ink-dim)", lineHeight: 1.5, marginTop: 2 }}>
-                {step.meaning}
-              </p>
-            </div>
-          </li>
-        );
-      })}
-    </ul>
+                >
+                  <Icon size={17} color={`rgb(var(${s.rgb}))`} strokeWidth={2.3} />
+                </span>
+                <div>
+                  <span
+                    className="v2-hud"
+                    style={{ display: "block", fontSize: 11, color: `rgb(var(${s.rgb}))`, marginBottom: 4 }}
+                  >
+                    {s.eyebrow}
+                  </span>
+                  <p style={{ fontSize: 20, fontWeight: 700, color: "var(--v2-ink)", lineHeight: 1.22 }}>
+                    {s.title}
+                  </p>
+                  <p style={{ fontSize: 16, color: "var(--v2-ink-dim)", lineHeight: 1.5, marginTop: 5 }}>
+                    {s.desc}
+                  </p>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      marginTop: 9,
+                      padding: "3px 10px",
+                      borderRadius: 999,
+                      fontFamily: "var(--v2-font-mono)",
+                      fontSize: 12,
+                      letterSpacing: "0.03em",
+                      color: `rgb(var(${s.rgb}))`,
+                      background: `rgba(var(${s.rgb}),0.12)`,
+                      border: `1px solid rgba(var(${s.rgb}),0.3)`,
+                    }}
+                  >
+                    {s.label}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Free result vs FocusRoute — a distinct, high-contrast comparison band
+          (its own surface, not fine print), between the card and the plans. */}
+      <div
+        className="fr-compare"
+        style={{
+          borderRadius: 16,
+          padding: "16px 18px",
+          background: dark ? "rgba(var(--v2-signal-rgb),0.1)" : "rgba(var(--v2-signal-rgb),0.07)",
+          border: dark ? "1px solid var(--v2-line-bright)" : "1px solid rgba(var(--v2-signal-rgb),0.24)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 8,
+          textAlign: "center",
+        }}
+      >
+        <p style={{ margin: 0, fontSize: 15.5, color: "var(--v2-ink-dim)", lineHeight: 1.45 }}>
+          Your free result shows what may be getting in the way.
+        </p>
+        <ArrowDown size={16} color="var(--v2-signal-2)" strokeWidth={2.4} aria-hidden="true" />
+        <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--v2-ink)", lineHeight: 1.4 }}>
+          FocusRoute gives you the full breakdown, clear next steps, and practical
+          tools to work on it.
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -617,11 +874,49 @@ export function SubscriptionPlansScreen() {
   const [showPayment, setShowPayment] = useState(false);
   const plan = PLANS[selected];
 
+  const cardsRef = useRef<HTMLDivElement>(null);
+
   const viewTracked = useRef(false);
   useEffect(() => {
     if (viewTracked.current) return;
     viewTracked.current = true;
     trackEvent(FIRST_PARTY_EVENTS.subscriptionViewed, { meta: false });
+  }, []);
+
+  // Plan-card entrance — its own one-shot ScrollTrigger so the plans never
+  // depend on the value-route timeline. Cards start 82% visible (not hidden),
+  // and stay fully visible if GSAP/ScrollTrigger never run or motion is reduced.
+  useLayoutEffect(() => {
+    const el = cardsRef.current;
+    if (!el) return;
+    gsap.registerPlugin(ScrollTrigger);
+    let cancelled = false;
+    const ctx = gsap.context(() => {
+      const mm = gsap.matchMedia();
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        gsap.fromTo(
+          el.children,
+          { y: 18, opacity: 0.82 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.42,
+            stagger: 0.08,
+            ease: "power2.out",
+            scrollTrigger: { trigger: el, start: "top 88%", once: true },
+          },
+        );
+      });
+    }, cardsRef);
+    if (typeof document !== "undefined" && document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        if (!cancelled) ScrollTrigger.refresh();
+      });
+    }
+    return () => {
+      cancelled = true;
+      ctx.revert();
+    };
   }, []);
 
   const handleSuccess = () => setStep("success");
@@ -666,42 +961,61 @@ export function SubscriptionPlansScreen() {
       }}
     >
       <div style={{ maxWidth: 500, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
-        {/* Header — approved opening (headline + one supporting line, no eyebrow) */}
-        <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+        {/* Header — framed eyebrow + benefit headline (the first visual focus).
+            Extra top space clears the fixed theme toggle / status area. */}
+        <m.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          style={{ paddingTop: 28 }}
+        >
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              padding: "7px 12px",
+              marginBottom: 18,
+              borderRadius: 999,
+              fontFamily: "var(--v2-font-mono)",
+              fontSize: 13,
+              fontWeight: 700,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: "var(--v2-signal-2)",
+              background: "rgba(var(--v2-signal-rgb),0.12)",
+              border: "1px solid rgba(var(--v2-signal-rgb),0.34)",
+            }}
+          >
+            MAKE FOCUS EASIER
+          </span>
           <h1
             className="v2-display"
-            style={{ fontSize: "clamp(25px, 6.4vw, 31px)", fontWeight: 550, lineHeight: 1.2, marginBottom: 9 }}
+            style={{
+              fontSize: "clamp(34px, 9.2vw, 39px)",
+              fontWeight: 560,
+              lineHeight: 1.08,
+              letterSpacing: "-0.015em",
+              marginBottom: 16,
+              color: "var(--v2-ink)",
+            }}
           >
-            Stop starting over.
+            Get the guidance and tools to start, stay on track, and get back to
+            what matters.
           </h1>
-          <p style={{ fontSize: 14, color: "var(--v2-ink-dim)", lineHeight: 1.65 }}>
-            Your answers showed where focus breaks. Choose the plan that helps you
-            start, recover, and follow through.
+          <p style={{ fontSize: 17.5, color: "var(--v2-ink-dim)", lineHeight: 1.5 }}>
+            Unlock your full breakdown, a 28-day action path, and practical tools
+            for difficult moments.
           </p>
         </m.div>
 
-        {/* Compact product-value route */}
-        <m.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.08 }}
-          style={{
-            padding: "16px 16px",
-            borderRadius: 16,
-            border: "1px solid var(--v2-line)",
-            background: "rgba(var(--v2-signal-rgb),0.04)",
-          }}
-        >
-          <ValueRoute />
-        </m.div>
+        {/* Animated value route — immediate use + ongoing value */}
+        <CheckoutValueRoute />
 
-        {/* Plan cards — accessible radio group */}
-        <m.div
+        {/* Plan cards — accessible radio group (GSAP one-shot entrance) */}
+        <div
+          ref={cardsRef}
           role="radiogroup"
           aria-label="Membership plan"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
           style={{ display: "flex", flexDirection: "column", gap: 12 }}
         >
           {PLAN_LIST.map((p) => (
@@ -712,7 +1026,7 @@ export function SubscriptionPlansScreen() {
               onSelect={() => handlePlanSelect(p.key)}
             />
           ))}
-        </m.div>
+        </div>
 
         {/* Order summary → social proof → CTA / payment */}
         <m.div

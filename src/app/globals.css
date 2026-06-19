@@ -190,6 +190,13 @@ h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-
   --v2-gold-rgb:    217, 188, 127;
   --v2-grad-gold:   linear-gradient(94deg, #B99453 0%, #EAD7A4 52%, #C8A45F 100%);
 
+  /* Checkout value-route accents (SubscriptionPlansScreen). Dark keeps the
+     luminous periwinkle → cyan → gold route with a restrained glow. */
+  --fr-route-accent-1: 124, 138, 255;
+  --fr-route-accent-2: 155, 232, 255;
+  --fr-route-accent-3: 217, 188, 127;
+  --fr-route-marker-shadow: drop-shadow(0 0 5px rgba(155, 232, 255, 0.5));
+
   --v2-success:     #7FE0B2;
   --v2-error:       #FF8B8B;
   --v2-error-rgb:   255, 139, 139;
@@ -656,6 +663,13 @@ h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-
   --v2-gold-deep:   #856526;
   --v2-gold-rgb:    154, 122, 46;
   --v2-grad-gold:   linear-gradient(94deg, #A9863A 0%, #8A6A24 52%, #6E551B 100%);
+
+  /* Checkout value-route accents — saturated indigo / teal / amber that stay
+     readable on white; a soft contact shadow replaces the dark-world glow. */
+  --fr-route-accent-1: 85, 87, 232;
+  --fr-route-accent-2: 19, 143, 169;
+  --fr-route-accent-3: 168, 121, 24;
+  --fr-route-marker-shadow: drop-shadow(0 1px 1.5px rgba(40, 52, 110, 0.30));
 
   --v2-success:     #1C8A5A;
   --v2-error:       #C53A2E;

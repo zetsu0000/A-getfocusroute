@@ -167,7 +167,10 @@ export const APPROVED_TESTIMONIALS: readonly ApprovedTestimonial[] = [
     fullQuote: "It really is helping me re-define myself.",
     attribution: "Benjamin L.",
     image: "/testimonials/benjamin-lee.png",
-    category: "post_purchase_reassurance",
+    // A product-experience review (using FocusRoute, not support handling). It
+    // leads the checkout proof via the product_trust slot preference, while the
+    // result journey still picks proof-008 — so the result screen is unchanged.
+    category: "product_trust",
     eligiblePlacement: [RESULT, PAYWALL],
     approved: true,
   },
@@ -204,9 +207,13 @@ const RESULT_SLOT_CATEGORY_PREFERENCES: readonly (readonly SocialProofCategory[]
 
 const PAYWALL_SLOT_CATEGORY_PREFERENCES: readonly (readonly SocialProofCategory[])[] =
   [
+    // The always-visible (collapsed) checkout proof leads with product
+    // experience, so the buyer first reads how the product is actually used and
+    // valued — not a support anecdote. The remaining slots keep the support /
+    // reassurance proofs that previously carried this section.
     [
-      "customer_support",
       "product_trust",
+      "customer_support",
       "post_purchase_reassurance",
       "practical_value",
     ],

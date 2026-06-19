@@ -4,6 +4,7 @@ import { join } from "node:path";
 
 import {
   APPROVED_TESTIMONIALS,
+  SOCIAL_PROOF_POOL_VERSION,
   buildImpressionMetadata,
   hasApprovedTestimonials,
   selectSocialProofJourney,
@@ -232,6 +233,53 @@ describe("social proof journey selector", () => {
         process.env.NEXT_PUBLIC_SOCIAL_PROOF_OFF = previous;
       }
     }
+  });
+});
+
+describe("checkout product-experience proof", () => {
+  it("leads the paywall with proof-010, an approved product-experience review", () => {
+    const benjamin = APPROVED_TESTIMONIALS.find((entry) => entry.id === "proof-010")!;
+
+    // Sourced fields are the approved ones — never invented or rewritten.
+    expect(benjamin.approved).toBe(true);
+    expect(benjamin.attribution).toBe("Benjamin L.");
+    expect(benjamin.image).toBe("/testimonials/benjamin-lee.png");
+    expect(benjamin.shortQuote).toBe("It really is helping me re-define myself.");
+    expect(benjamin.fullQuote).toBe("It really is helping me re-define myself.");
+
+    // It speaks to product experience and still serves both placements.
+    expect(benjamin.category).toBe("product_trust");
+    expect(benjamin.eligiblePlacement).toEqual([
+      "result_transition",
+      "paywall_post_checkout",
+    ]);
+
+    for (const seed of ["a", "b", "c", "d", "e", "f", "g"]) {
+      const journey = selectSocialProofJourney(APPROVED_TESTIMONIALS, seed);
+      // Always-visible (collapsed) checkout proof is the product-experience story.
+      expect(journey.paywall[0].id).toBe("proof-010");
+      // Only one support-focused slot was replaced — support proof still shows.
+      expect(journey.paywall.slice(1).map((entry) => entry.category)).toContain(
+        "customer_support",
+      );
+    }
+  });
+
+  it("keeps the previous result-screen journey intact (proof-008 still featured)", () => {
+    for (const seed of ["a", "b", "c", "d", "e", "f", "g"]) {
+      const journey = selectSocialProofJourney(APPROVED_TESTIMONIALS, seed);
+      const resultIds = journey.result.map((entry) => entry.id);
+      // The result transition keeps Daria / Billy / Amy, as before.
+      expect(resultIds).toEqual(["proof-002", "proof-011", "proof-008"]);
+      // proof-010 serves the checkout, never the result screen here.
+      expect(resultIds).not.toContain("proof-010");
+    }
+  });
+
+  it("does not bump the social-proof pool version (stored journeys stay valid)", () => {
+    // The eligiblePlacement sets are unchanged from the original pool, so a
+    // category-preference tweak must not force every cached session to re-roll.
+    expect(SOCIAL_PROOF_POOL_VERSION).toBe("2026-06-14-v2");
   });
 });
 

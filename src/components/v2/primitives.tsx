@@ -10,10 +10,12 @@ export function HudLabel({
   children,
   tone = "faint",
   style,
+  className,
 }: {
   children: ReactNode;
   tone?: "faint" | "signal" | "gold" | "dim";
   style?: CSSProperties;
+  className?: string;
 }) {
   const color =
     tone === "signal" ? "var(--v2-signal-2)" :
@@ -21,7 +23,7 @@ export function HudLabel({
     tone === "dim"    ? "var(--v2-ink-dim)" :
     "var(--v2-ink-faint)";
   return (
-    <p className="v2-hud" style={{ color, ...style }}>
+    <p className={className ? `v2-hud ${className}` : "v2-hud"} style={{ color, ...style }}>
       {children}
     </p>
   );
