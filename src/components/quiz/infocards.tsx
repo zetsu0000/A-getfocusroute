@@ -30,7 +30,7 @@ function useRole(dark: boolean): Record<string, Role> {
         recognition: { accent: "#7A4FD0", accent2: "#4655E6", eyebrow: "Recognition" },
         friction:    { accent: "#C2691E", accent2: "#1487B5", eyebrow: "Why generic stalls" },
         cost:        { accent: "#1C8A5A", accent2: "#1487B5", eyebrow: "The real cost" },
-        system:      { accent: "#1487B5", accent2: "#9A7A2E", eyebrow: "Your system" },
+        system:      { accent: "#1487B5", accent2: "#B98716", eyebrow: "Your system" },
         unlock:      { accent: "#9A7A2E", accent2: "#1487B5", eyebrow: "Personalized unlock" },
       };
 }
@@ -190,11 +190,18 @@ function Card1Recognition({ onContinue }: CardProps) {
         0.42,
       ).to(".fr1-hscan", { opacity: 0, duration: 0.3 }, 0.84);
 
-      // 3 · Surface-problem block — a thought becoming visible + one pulse
+      // 3 · Surface-problem block — a thought becoming visible + one pulse.
+      // Revealed with opacity / transform only — deliberately NO filter. A
+      // persistent filter (GSAP leaves the end `blur(0px)` applied) on this
+      // rounded, overflow:hidden, translucent-background box promotes it to a
+      // WebKit/Safari compositing layer whose rounded clip fails and paints an
+      // opaque white rectangle — visible before, during and after the reveal and
+      // in reduced motion. Dropping the blur removes that layer; the opacity + y
+      // + scale entrance (and every timing) is unchanged.
       tl.fromTo(
         ".fr1-surface",
-        { opacity: 0, y: 18, scale: 0.985, filter: blur(6) },
-        { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", duration: 0.45 },
+        { opacity: 0, y: 18, scale: 0.985 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.45 },
         0.7,
       );
       tl.fromTo(".fr1-quote", { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.35 }, 0.85);
@@ -336,7 +343,13 @@ function Card1Recognition({ onContinue }: CardProps) {
           />
         </h2>
 
-        {/* 3 · Surface problem — what it feels like */}
+        {/* 3 · Surface problem — what it feels like.
+            In light mode this large container is kept un-filled: a translucent
+            fill + border read as a solid white card on iOS Safari (the visible
+            "white rectangle"). Light uses a transparent background and a quieter
+            accent-tinted border; dark keeps its existing milky-glass treatment.
+            (The earlier `.fr1-surface` blur removal is retained, but the milky
+            fill — not the blur — was the visible artifact.) */}
         <div
           className="fr1-surface"
           style={{
@@ -344,8 +357,8 @@ function Card1Recognition({ onContinue }: CardProps) {
             overflow: "hidden",
             padding: "14px 16px",
             borderRadius: 16,
-            border: `1px solid color-mix(in srgb, ${role.accent} 24%, transparent)`,
-            background: "rgba(148,163,255,0.05)",
+            border: `1px solid color-mix(in srgb, ${role.accent} ${dark ? 24 : 20}%, transparent)`,
+            background: dark ? "rgba(148,163,255,0.05)" : "transparent",
           }}
         >
           <span
@@ -373,7 +386,9 @@ function Card1Recognition({ onContinue }: CardProps) {
               opacity: 0,
               pointerEvents: "none",
               background: `linear-gradient(180deg, transparent, ${role.accent2}, ${role.accent}, transparent)`,
-              filter: "blur(3px)",
+              // No CSS filter — the gradient + box-shadow already soften the sweep,
+              // and `filter: blur()` paints an opaque white box on iOS Safari GPU
+              // compositing (same artifact as the node halos above).
               boxShadow: `0 0 18px ${role.accent2}`,
             }}
           />
@@ -405,14 +420,20 @@ function Card1Recognition({ onContinue }: CardProps) {
           FocusRoute maps where the route breaks.
         </p>
 
-        {/* 5 + 6 · Route draws toward the four detected signals */}
+        {/* 5 + 6 · Route draws toward the four detected signals.
+            Same fix as the surface above: in light mode the filled gradient +
+            border read as a solid white card on iOS Safari, so light uses a
+            transparent background and a quieter accent-tinted border. Dark keeps
+            its existing tinted-gradient treatment. */}
         <div
           style={{
             position: "relative",
             padding: "14px 16px",
             borderRadius: 16,
-            border: `1px solid color-mix(in srgb, ${role.accent2} 30%, transparent)`,
-            background: `linear-gradient(160deg, color-mix(in srgb, ${role.accent2} 12%, transparent), transparent)`,
+            border: `1px solid color-mix(in srgb, ${role.accent2} ${dark ? 30 : 20}%, transparent)`,
+            background: dark
+              ? `linear-gradient(160deg, color-mix(in srgb, ${role.accent2} 12%, transparent), transparent)`
+              : "transparent",
           }}
         >
           <Pill color={role.accent2}>Where the route breaks</Pill>
@@ -440,10 +461,15 @@ function Card1Recognition({ onContinue }: CardProps) {
             <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
               {signals.map((s) => (
                 <li key={s.text} style={{ position: "relative", height: 48, display: "flex", alignItems: "center", paddingLeft: 40 }}>
+                  {/* Soft node halo via a radial-gradient background, NOT a CSS
+                      filter. On iOS Safari a `filter: blur()` promotes the span to
+                      a GPU layer whose backing paints an opaque WHITE square that
+                      shows even at opacity 0 — these were the pale squares behind
+                      each node. A gradient gives the same soft glow with no filter. */}
                   <span
                     className="fr1-signal-glow"
                     aria-hidden="true"
-                    style={{ position: "absolute", left: 1, top: 11, width: 26, height: 26, borderRadius: "50%", background: s.color, filter: "blur(6px)", opacity: 0, pointerEvents: "none" }}
+                    style={{ position: "absolute", left: 1, top: 11, width: 26, height: 26, borderRadius: "50%", background: `radial-gradient(circle, ${s.color} 0%, transparent 70%)`, opacity: 0, pointerEvents: "none" }}
                   />
                   <span
                     className="fr1-signal-node"
@@ -953,7 +979,8 @@ function Card3Cost({ onContinue }: CardProps) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────
-   CARD 4 — Mechanism: connected system architecture (nodes ignite + link)
+   CARD 4 — From result to action: six steps light up and link, showing what
+   to do next and how to adjust (nodes ignite + link).
 ───────────────────────────────────────────────────────────────────── */
 function Card4Mechanism({ onContinue }: CardProps) {
   const { theme } = useFunnelTheme();
@@ -967,21 +994,21 @@ function Card4Mechanism({ onContinue }: CardProps) {
   });
 
   const nodes = [
-    { label: "Your pattern", sub: "from your answers" },
-    { label: "Where friction starts", sub: "the real blocker" },
-    { label: "Starting route", sub: "a concrete first move" },
-    { label: "Daily actions", sub: "small, doable" },
-    { label: "Recovery route", sub: "back on track" },
-    { label: "Progress", sub: "what’s moving" },
+    { label: "See what gets in the way", sub: "based on your answers" },
+    { label: "Choose what to do first", sub: "one clear next step" },
+    { label: "Try one small action", sub: "clear and doable" },
+    { label: "Notice what helps", sub: "keep what works" },
+    { label: "Adjust when needed", sub: "without rebuilding everything" },
+    { label: "Keep moving forward", sub: "one step at a time" },
   ];
 
   return (
     <CardShell
       rootRef={ref}
-      eyebrow={role.eyebrow}
+      eyebrow="FROM RESULT TO ACTION"
       eyebrowColor={role.accent}
-      title="Not a result screen — a connected system built around your pattern."
-      cta="Build the next step"
+      title="Know what to do next — and adjust without starting over."
+      cta="Show Me What Comes Next"
       onContinue={onContinue}
     >
       <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 0 }}>
