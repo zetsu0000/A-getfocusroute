@@ -4,6 +4,7 @@ import { join } from "node:path";
 
 import {
   APPROVED_TESTIMONIALS,
+  SOCIAL_PROOF_POOL_VERSION,
   buildImpressionMetadata,
   hasApprovedTestimonials,
   selectSocialProofJourney,
@@ -273,6 +274,12 @@ describe("checkout product-experience proof", () => {
       // proof-010 serves the checkout, never the result screen here.
       expect(resultIds).not.toContain("proof-010");
     }
+  });
+
+  it("does not bump the social-proof pool version (stored journeys stay valid)", () => {
+    // The eligiblePlacement sets are unchanged from the original pool, so a
+    // category-preference tweak must not force every cached session to re-roll.
+    expect(SOCIAL_PROOF_POOL_VERSION).toBe("2026-06-14-v2");
   });
 });
 

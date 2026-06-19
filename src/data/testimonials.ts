@@ -50,7 +50,7 @@ export interface SocialProofJourney {
   paywall: ApprovedTestimonial[];
 }
 
-export const SOCIAL_PROOF_POOL_VERSION = "2026-06-18-v3";
+export const SOCIAL_PROOF_POOL_VERSION = "2026-06-14-v2";
 
 const RESULT: SocialProofPlacement = "result_transition";
 const PAYWALL: SocialProofPlacement = "paywall_post_checkout";

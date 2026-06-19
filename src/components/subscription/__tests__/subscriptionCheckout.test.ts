@@ -75,26 +75,26 @@ describe("subscription checkout — animated value route", () => {
     expect(src).not.toContain("signal detected");
   });
 
-  it("explains recurring value with real member capabilities only", () => {
-    expect(src).toContain("Why it keeps helping");
-    expect(src).toContain("RETAKE");
-    expect(src).toContain("When work or life changes");
-    expect(src).toContain("REFRESH");
-    expect(src).toContain("Update your results and next steps");
-    expect(src).toContain("REVIEW");
-    expect(src).toContain("See what's working and adjust a step");
-    expect(src).toContain("KEEP USING");
-    expect(src).toContain("Return to your member tools and guides");
-    expect(src.toLowerCase()).not.toContain("updates itself");
-    expect(src.toLowerCase()).not.toContain("automatically personal");
+  it("removes the recurring-value section entirely", () => {
+    expect(src).not.toContain("Why it keeps helping");
+    expect(src).not.toContain("RETAKE");
+    expect(src).not.toContain("REFRESH");
+    expect(src).not.toContain("REVIEW");
+    expect(src).not.toContain("KEEP USING");
+    expect(src).not.toContain("ROUTE_RECURRING");
+    expect(src).not.toContain("fr-recur");
   });
 
-  it("distinguishes the free result without 'your plan' or fake scarcity", () => {
+  it("resolves into a high-contrast free-vs-FocusRoute comparison band", () => {
+    expect(src).toContain("fr-compare");
+    expect(src).toContain("Your free result shows what may be getting in the way.");
     expect(src).toContain(
-      "Your free result shows what may be getting in the way. FocusRoute unlocks",
+      "FocusRoute gives you the full breakdown, clear next steps, and practical",
     );
-    expect(src).toContain("a 28-day action path, and practical tools you can");
-    // the older ambiguous phrasing is gone
+    expect(src).toContain("tools to work on it.");
+    // the old in-card fine-print paragraph and ambiguous phrasing are gone
+    expect(src).not.toContain("fr-free-line");
+    expect(src).not.toContain("FocusRoute unlocks");
     expect(src).not.toContain("Your plan helps you act on it");
     expect(src.toLowerCase()).not.toContain("limited time");
     expect(src.toLowerCase()).not.toContain("spots left");
@@ -131,6 +131,13 @@ describe("subscription checkout — GSAP route is safe progressive enhancement",
     expect(src).not.toContain("repeat:-1");
   });
 
+  it("no longer animates any recurring elements in the timeline", () => {
+    expect(src).not.toContain("recurItems");
+    expect(src).not.toContain("recurHead");
+    expect(src).not.toContain("loopPath");
+    expect(src).not.toContain("fr-recur-loop");
+  });
+
   it("gives the plan cards a separate one-shot entrance, independent of the route", () => {
     expect(src).toContain("cardsRef");
     expect(src).toMatch(/gsap\.fromTo\(\s*el\.children/);
@@ -139,10 +146,10 @@ describe("subscription checkout — GSAP route is safe progressive enhancement",
 });
 
 describe("subscription checkout — 4-Week recommendation", () => {
-  it("adds a small recommendation note tied to the popular plan only", () => {
-    expect(src).toContain(
-      "Recommended: enough time to use it, adjust it, and repeat what",
-    );
+  it("keeps the recommendation wording, more readable, on the popular plan only", () => {
+    expect(src).toContain(">Recommended:</span>");
+    expect(src).toContain("enough time");
+    expect(src).toContain("to use it, adjust it, and repeat what works.");
     // rendered conditionally on the default/popular plan, as small <p> copy
     expect(src).toMatch(/plan\.popular && \(\s*<p/);
     // it does not invent a statistic or discount

@@ -4,16 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { m } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import {
-  Shield,
-  RotateCcw,
-  Eye,
-  ListChecks,
-  LifeBuoy,
-  RefreshCw,
-  ClipboardCheck,
-  Library,
-} from "lucide-react";
+import { Shield, RotateCcw, Eye, ListChecks, LifeBuoy, ArrowDown } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js/pure";
 import type { Appearance } from "@stripe/stripe-js";
 import {
@@ -235,15 +226,17 @@ function PlanCard({
             {plan.popular && (
               <p
                 style={{
-                  fontSize: 11,
+                  fontSize: 13.5,
                   fontWeight: 600,
                   color: "var(--v2-signal-2)",
                   lineHeight: 1.4,
-                  marginTop: 8,
+                  marginTop: 12,
+                  paddingTop: 10,
+                  borderTop: "1px solid var(--v2-line)",
                 }}
               >
-                Recommended: enough time to use it, adjust it, and repeat what
-                works.
+                <span style={{ fontWeight: 800 }}>Recommended:</span> enough time
+                to use it, adjust it, and repeat what works.
               </p>
             )}
           </div>
@@ -552,17 +545,18 @@ function PlanCheckoutForm({
 
 /* ── Animated value route (GSAP) ──────────────────────────────────────────────
    A compact SVG route that draws through three immediate-use stages
-   (understand → act → get back on track) and continues into a small recurring
-   loop, leading the eye into plan selection. GSAP is progressive enhancement:
-   every line, marker, and the recurring cycle render fully in the static HTML,
-   so the module is complete and readable if JS/GSAP/ScrollTrigger never run or
-   reduced motion is on. GSAP only animates opacity / transform /
-   strokeDashoffset / the travelling-node position — never theme colours, which
-   stay in CSS variables so a light/dark toggle never rebuilds the timeline.
+   (understand → act → get back on track) and resolves into a separate
+   free-vs-FocusRoute comparison band, leading the eye into plan selection.
 
-   Stage copy lines map to capabilities that genuinely ship to active
-   subscribers: the detailed focus breakdown, the 28-day protocol, and the
-   member bonus library; the recurring loop maps to member-only retakes. */
+   GSAP is progressive enhancement: every line and marker renders fully in the
+   static HTML, so the module is complete and readable if JS/GSAP/ScrollTrigger
+   never run or reduced motion is on. GSAP only animates opacity / transform /
+   strokeDashoffset / the travelling-node position — never theme colours, which
+   live in CSS variables (incl. the --fr-route-accent-* light/dark accents) so a
+   light↔dark toggle never rebuilds the timeline.
+
+   Stage copy maps to capabilities that genuinely ship to active subscribers:
+   the detailed focus breakdown, the 28-day protocol, and the member tools. */
 const ROUTE_PATH_D = "M 16 44 C 74 44 92 18 156 24 C 222 30 248 50 304 30";
 /* Decorative fallback marker coordinates (used until GSAP places them exactly on
    the path via getPointAtLength, and in the no-JS case). */
@@ -577,7 +571,7 @@ const MARKER_FRACTIONS = [0.1, 0.5, 0.9] as const;
 const ROUTE_STAGES = [
   {
     key: "understand",
-    rgb: "--v2-signal-rgb",
+    rgb: "--fr-route-accent-1",
     icon: Eye,
     eyebrow: "01 — UNDERSTAND",
     title: "Understand what's getting in your way",
@@ -586,7 +580,7 @@ const ROUTE_STAGES = [
   },
   {
     key: "act",
-    rgb: "--v2-cyan-rgb",
+    rgb: "--fr-route-accent-2",
     icon: ListChecks,
     eyebrow: "02 — ACT",
     title: "Know what to do next",
@@ -595,7 +589,7 @@ const ROUTE_STAGES = [
   },
   {
     key: "recover",
-    rgb: "--v2-gold-rgb",
+    rgb: "--fr-route-accent-3",
     icon: LifeBuoy,
     eyebrow: "03 — GET BACK ON TRACK",
     title: "Have help when the day goes off track",
@@ -604,14 +598,9 @@ const ROUTE_STAGES = [
   },
 ] as const;
 
-const ROUTE_RECURRING = [
-  { icon: RotateCcw, title: "RETAKE", meaning: "When work or life changes" },
-  { icon: RefreshCw, title: "REFRESH", meaning: "Update your results and next steps" },
-  { icon: ClipboardCheck, title: "REVIEW", meaning: "See what's working and adjust a step" },
-  { icon: Library, title: "KEEP USING", meaning: "Return to your member tools and guides" },
-] as const;
-
 function CheckoutValueRoute() {
+  const { theme } = useFunnelTheme();
+  const dark = theme === "dark";
   const rootRef = useRef<HTMLDivElement>(null);
   const routePathRef = useRef<SVGPathElement>(null);
   const travelNodeRef = useRef<SVGCircleElement>(null);
@@ -633,11 +622,8 @@ function CheckoutValueRoute() {
       const len = path.getTotalLength();
       const markers = q<SVGCircleElement>(".fr-marker");
       const stages = q<HTMLElement>(".fr-stage");
-      const recurItems = q<HTMLElement>(".fr-recur-item");
-      const recurHead = q<HTMLElement>(".fr-recur-head");
       const heading = q<HTMLElement>(".fr-route-heading");
-      const freeLine = q<HTMLElement>(".fr-free-line");
-      const loopPath = q<SVGPathElement>(".fr-recur-loop")[0];
+      const compare = q<HTMLElement>(".fr-compare");
 
       // Place markers exactly on the path (resolution-independent user units).
       markers.forEach((marker, i) => {
@@ -671,15 +657,11 @@ function CheckoutValueRoute() {
           gsap.set(path, { strokeDasharray: len, strokeDashoffset: len });
           gsap.set(node, { opacity: 0 });
           gsap.set(markers, { opacity: 0.45, attr: { r: 3.5 } });
-          gsap.set([...heading, ...stages, ...recurHead, ...recurItems, ...freeLine], {
+          gsap.set([...heading, ...stages, ...compare], {
             opacity: 0,
             y: 10,
             willChange: "transform, opacity",
           });
-          if (loopPath) {
-            const loopLen = loopPath.getTotalLength();
-            gsap.set(loopPath, { strokeDasharray: loopLen, strokeDashoffset: loopLen });
-          }
 
           const tl = gsap.timeline({
             scrollTrigger: {
@@ -689,9 +671,7 @@ function CheckoutValueRoute() {
               toggleActions: "play none none none",
             },
             onComplete: () => {
-              gsap.set([...heading, ...stages, ...recurHead, ...recurItems, ...freeLine], {
-                willChange: "auto",
-              });
+              gsap.set([...heading, ...stages, ...compare], { willChange: "auto" });
             },
           });
 
@@ -700,23 +680,19 @@ function CheckoutValueRoute() {
 
           // Three stages: draw path → travel node → activate marker → reveal copy.
           MARKER_FRACTIONS.forEach((frac, i) => {
-            const at = 0.1 + i * 0.42;
-            tl.to(path, { strokeDashoffset: offsetAt(frac), duration: 0.34, ease: "power2.inOut" }, at)
-              .to(routeProgress, { value: frac, duration: 0.34, ease: "power2.inOut", onUpdate: updateTravelNode }, at)
+            const at = 0.1 + i * 0.36;
+            tl.to(path, { strokeDashoffset: offsetAt(frac), duration: 0.3, ease: "power2.inOut" }, at)
+              .to(routeProgress, { value: frac, duration: 0.3, ease: "power2.inOut", onUpdate: updateTravelNode }, at)
               .to(markers[i], { opacity: 1, attr: { r: 5 }, duration: 0.25, ease: "back.out(1.5)" }, at + 0.1)
-              .to(stages[i], { y: 0, opacity: 1, duration: 0.32, ease: "power2.out" }, at + 0.16);
+              .to(stages[i], { y: 0, opacity: 1, duration: 0.3, ease: "power2.out" }, at + 0.16);
           });
 
-          // Continue into the recurring loop; finish the path and retire the node.
-          tl.to(path, { strokeDashoffset: offsetAt(1), duration: 0.3, ease: "power2.inOut" }, 1.4)
-            .to(routeProgress, { value: 1, duration: 0.3, ease: "power2.inOut", onUpdate: updateTravelNode }, 1.4)
-            .to(node, { opacity: 0, duration: 0.25 }, 1.55)
-            .to(recurHead, { y: 0, opacity: 1, duration: 0.3, ease: "power2.out" }, 1.5);
-          if (loopPath) {
-            tl.to(loopPath, { strokeDashoffset: 0, duration: 0.5, ease: "power2.inOut" }, 1.55);
-          }
-          tl.to(recurItems, { y: 0, opacity: 1, duration: 0.24, stagger: 0.07, ease: "power2.out" }, 1.62)
-            .to(freeLine, { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" }, 1.85);
+          // Finish the route, retire the node, then resolve into the comparison
+          // band — the main sequence ends after stage 3 (≈1.6s total).
+          tl.to(path, { strokeDashoffset: offsetAt(1), duration: 0.28, ease: "power2.inOut" }, 1.05)
+            .to(routeProgress, { value: 1, duration: 0.28, ease: "power2.inOut", onUpdate: updateTravelNode }, 1.05)
+            .to(node, { opacity: 0, duration: 0.25 }, 1.22)
+            .to(compare, { y: 0, opacity: 1, duration: 0.35, ease: "power2.out" }, 1.28);
         },
       );
     }, rootRef);
@@ -735,202 +711,156 @@ function CheckoutValueRoute() {
   }, []);
 
   return (
-    <div
-      ref={rootRef}
-      style={{
-        padding: "16px 16px",
-        borderRadius: 16,
-        border: "1px solid var(--v2-line)",
-        background: "rgba(var(--v2-signal-rgb),0.04)",
-        display: "flex",
-        flexDirection: "column",
-        gap: 14,
-      }}
-    >
-      <HudLabel className="fr-route-heading" tone="signal" style={{ fontSize: 10 }}>
-        What you unlock
-      </HudLabel>
-
-      {/* Decorative route — the visible benefit text is real HTML below. */}
-      <svg
-        viewBox="0 0 320 64"
-        width="100%"
-        style={{ display: "block", height: "auto" }}
-        aria-hidden="true"
-        focusable="false"
+    <div ref={rootRef} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {/* Three-stage value card — solid surface, intentional per theme. */}
+      <div
+        style={{
+          padding: "18px 18px",
+          borderRadius: 18,
+          border: dark ? "1px solid var(--v2-line)" : "1px solid rgba(48,64,150,0.22)",
+          background: dark ? "rgba(var(--v2-signal-rgb),0.05)" : "rgba(255,255,255,0.94)",
+          boxShadow: dark ? "inset 0 1px 0 rgba(255,255,255,0.04)" : "var(--v2-shadow-md)",
+          display: "flex",
+          flexDirection: "column",
+          gap: 16,
+        }}
       >
-        <defs>
-          <linearGradient id="fr-route-grad" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" style={{ stopColor: "rgb(var(--v2-signal-rgb))" }} />
-            <stop offset="55%" style={{ stopColor: "rgb(var(--v2-cyan-rgb))" }} />
-            <stop offset="100%" style={{ stopColor: "rgb(var(--v2-gold-rgb))" }} />
-          </linearGradient>
-        </defs>
-        <path d={ROUTE_PATH_D} fill="none" stroke="var(--v2-line-bright)" strokeWidth={2} strokeLinecap="round" />
-        <path
-          ref={routePathRef}
-          d={ROUTE_PATH_D}
-          fill="none"
-          stroke="url(#fr-route-grad)"
-          strokeWidth={2.5}
-          strokeLinecap="round"
-        />
-        {ROUTE_STAGES.map((s, i) => (
-          <circle
-            key={s.key}
-            className="fr-marker"
-            cx={MARKER_FALLBACK[i].cx}
-            cy={MARKER_FALLBACK[i].cy}
-            r={5}
-            fill={`rgb(var(${s.rgb}))`}
-            style={{ filter: `drop-shadow(0 0 5px rgb(var(${s.rgb})))` }}
+        <HudLabel className="fr-route-heading" tone="signal" style={{ fontSize: 11 }}>
+          What you unlock
+        </HudLabel>
+
+        {/* Decorative route — the visible benefit text is real HTML below. */}
+        <svg
+          viewBox="0 0 320 64"
+          width="100%"
+          style={{ display: "block", height: "auto" }}
+          aria-hidden="true"
+          focusable="false"
+        >
+          <defs>
+            <linearGradient id="fr-route-grad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" style={{ stopColor: "rgb(var(--fr-route-accent-1))" }} />
+              <stop offset="55%" style={{ stopColor: "rgb(var(--fr-route-accent-2))" }} />
+              <stop offset="100%" style={{ stopColor: "rgb(var(--fr-route-accent-3))" }} />
+            </linearGradient>
+          </defs>
+          <path d={ROUTE_PATH_D} fill="none" stroke="var(--v2-line-bright)" strokeWidth={2} strokeLinecap="round" />
+          <path
+            ref={routePathRef}
+            d={ROUTE_PATH_D}
+            fill="none"
+            stroke="url(#fr-route-grad)"
+            strokeWidth={2.5}
+            strokeLinecap="round"
           />
-        ))}
-        <circle
-          ref={travelNodeRef}
-          cx={MARKER_FALLBACK[0].cx}
-          cy={MARKER_FALLBACK[0].cy}
-          r={3}
-          fill="var(--v2-ink)"
-          style={{ opacity: 0, filter: "drop-shadow(0 0 5px rgb(var(--v2-cyan-rgb)))" }}
-        />
-      </svg>
-
-      {/* Three immediate-use stages */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        {ROUTE_STAGES.map((s) => {
-          const Icon = s.icon;
-          return (
-            <div
+          {ROUTE_STAGES.map((s, i) => (
+            <circle
               key={s.key}
-              className="fr-stage"
-              data-stage={s.key}
-              style={{ display: "grid", gridTemplateColumns: "auto 1fr", columnGap: 12, alignItems: "start" }}
-            >
-              <span
-                style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: 11,
-                  flexShrink: 0,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: `rgba(var(${s.rgb}),0.12)`,
-                  border: `1px solid rgba(var(${s.rgb}),0.32)`,
-                }}
-              >
-                <Icon size={16} color={`rgb(var(${s.rgb}))`} strokeWidth={2.2} />
-              </span>
-              <div>
-                <span
-                  className="v2-hud"
-                  style={{ display: "block", fontSize: 9.5, color: `rgb(var(${s.rgb}))`, marginBottom: 3 }}
-                >
-                  {s.eyebrow}
-                </span>
-                <p style={{ fontSize: 18, fontWeight: 700, color: "var(--v2-ink)", lineHeight: 1.25 }}>
-                  {s.title}
-                </p>
-                <p style={{ fontSize: 15, color: "var(--v2-ink-dim)", lineHeight: 1.5, marginTop: 4 }}>
-                  {s.desc}
-                </p>
-                <span
-                  style={{
-                    display: "inline-block",
-                    marginTop: 8,
-                    padding: "2px 9px",
-                    borderRadius: 999,
-                    fontFamily: "var(--v2-font-mono)",
-                    fontSize: 10,
-                    letterSpacing: "0.04em",
-                    color: `rgb(var(${s.rgb}))`,
-                    background: `rgba(var(${s.rgb}),0.1)`,
-                    border: `1px solid rgba(var(${s.rgb}),0.24)`,
-                  }}
-                >
-                  {s.label}
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Recurring value — the route loops back, kept compact (not a card wall) */}
-      <div>
-        <div className="fr-recur-head" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-          <svg viewBox="0 0 24 24" width={18} height={18} aria-hidden="true" focusable="false" style={{ flexShrink: 0 }}>
-            <path
-              className="fr-recur-loop"
-              d="M 20 12 A 8 8 0 1 1 12 4"
-              fill="none"
-              stroke="rgb(var(--v2-signal-rgb))"
-              strokeWidth={2}
-              strokeLinecap="round"
+              className="fr-marker"
+              cx={MARKER_FALLBACK[i].cx}
+              cy={MARKER_FALLBACK[i].cy}
+              r={5}
+              fill={`rgb(var(${s.rgb}))`}
+              style={{ filter: "var(--fr-route-marker-shadow)" }}
             />
-            <path d="M 12 1.5 L 12 6.5 L 16 4" fill="none" stroke="rgb(var(--v2-signal-rgb))" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <HudLabel tone="signal" style={{ fontSize: 9.5 }}>
-            Why it keeps helping
-          </HudLabel>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 }}>
-          {ROUTE_RECURRING.map((step) => {
-            const Icon = step.icon;
+          ))}
+          <circle
+            ref={travelNodeRef}
+            cx={MARKER_FALLBACK[0].cx}
+            cy={MARKER_FALLBACK[0].cy}
+            r={3}
+            fill="var(--v2-ink)"
+            style={{ opacity: 0, filter: "var(--fr-route-marker-shadow)" }}
+          />
+        </svg>
+
+        {/* Three immediate-use stages */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          {ROUTE_STAGES.map((s) => {
+            const Icon = s.icon;
             return (
               <div
-                key={step.title}
-                className="fr-recur-item"
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: 8,
-                  padding: "9px 10px",
-                  borderRadius: 12,
-                  background: "rgba(var(--v2-signal-rgb),0.05)",
-                  border: "1px solid var(--v2-line)",
-                }}
+                key={s.key}
+                className="fr-stage"
+                data-stage={s.key}
+                style={{ display: "grid", gridTemplateColumns: "auto 1fr", columnGap: 12, alignItems: "start" }}
               >
-                <Icon size={14} color="var(--v2-signal-2)" strokeWidth={2.2} style={{ flexShrink: 0, marginTop: 1 }} />
-                <p style={{ fontSize: 11.5, color: "var(--v2-ink-dim)", lineHeight: 1.4 }}>
+                <span
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 11,
+                    flexShrink: 0,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: `rgba(var(${s.rgb}),0.14)`,
+                    border: `1px solid rgba(var(${s.rgb}),0.42)`,
+                  }}
+                >
+                  <Icon size={17} color={`rgb(var(${s.rgb}))`} strokeWidth={2.3} />
+                </span>
+                <div>
+                  <span
+                    className="v2-hud"
+                    style={{ display: "block", fontSize: 11, color: `rgb(var(${s.rgb}))`, marginBottom: 4 }}
+                  >
+                    {s.eyebrow}
+                  </span>
+                  <p style={{ fontSize: 20, fontWeight: 700, color: "var(--v2-ink)", lineHeight: 1.22 }}>
+                    {s.title}
+                  </p>
+                  <p style={{ fontSize: 16, color: "var(--v2-ink-dim)", lineHeight: 1.5, marginTop: 5 }}>
+                    {s.desc}
+                  </p>
                   <span
                     style={{
-                      display: "block",
+                      display: "inline-block",
+                      marginTop: 9,
+                      padding: "3px 10px",
+                      borderRadius: 999,
                       fontFamily: "var(--v2-font-mono)",
-                      fontSize: 10,
-                      letterSpacing: "0.06em",
-                      fontWeight: 700,
-                      color: "var(--v2-ink)",
-                      marginBottom: 1,
+                      fontSize: 12,
+                      letterSpacing: "0.03em",
+                      color: `rgb(var(${s.rgb}))`,
+                      background: `rgba(var(${s.rgb}),0.12)`,
+                      border: `1px solid rgba(var(${s.rgb}),0.3)`,
                     }}
                   >
-                    {step.title}
+                    {s.label}
                   </span>
-                  {step.meaning}
-                </p>
+                </div>
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* Free result vs subscription — one concise, honest distinction. */}
-      <p
-        className="fr-free-line"
+      {/* Free result vs FocusRoute — a distinct, high-contrast comparison band
+          (its own surface, not fine print), between the card and the plans. */}
+      <div
+        className="fr-compare"
         style={{
-          margin: 0,
-          paddingLeft: 12,
-          borderLeft: "2px solid rgba(var(--v2-signal-rgb),0.5)",
-          fontSize: 13,
-          color: "var(--v2-ink-dim)",
-          lineHeight: 1.55,
+          borderRadius: 16,
+          padding: "16px 18px",
+          background: dark ? "rgba(var(--v2-signal-rgb),0.1)" : "rgba(var(--v2-signal-rgb),0.07)",
+          border: dark ? "1px solid var(--v2-line-bright)" : "1px solid rgba(var(--v2-signal-rgb),0.24)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 8,
+          textAlign: "center",
         }}
       >
-        Your free result shows what may be getting in the way. FocusRoute unlocks
-        the full breakdown, a 28-day action path, and practical tools you can
-        return to.
-      </p>
+        <p style={{ margin: 0, fontSize: 15.5, color: "var(--v2-ink-dim)", lineHeight: 1.45 }}>
+          Your free result shows what may be getting in the way.
+        </p>
+        <ArrowDown size={16} color="var(--v2-signal-2)" strokeWidth={2.4} aria-hidden="true" />
+        <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--v2-ink)", lineHeight: 1.4 }}>
+          FocusRoute gives you the full breakdown, clear next steps, and practical
+          tools to work on it.
+        </p>
+      </div>
     </div>
   );
 }
@@ -1031,31 +961,48 @@ export function SubscriptionPlansScreen() {
       }}
     >
       <div style={{ maxWidth: 500, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
-        {/* Header — eyebrow + benefit headline (the first visual focus) */}
+        {/* Header — framed eyebrow + benefit headline (the first visual focus).
+            Extra top space clears the fixed theme toggle / status area. */}
         <m.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          style={{ paddingTop: 10 }}
+          style={{ paddingTop: 28 }}
         >
-          <HudLabel tone="signal" style={{ marginBottom: 12, fontSize: 11 }}>
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              padding: "7px 12px",
+              marginBottom: 18,
+              borderRadius: 999,
+              fontFamily: "var(--v2-font-mono)",
+              fontSize: 13,
+              fontWeight: 700,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: "var(--v2-signal-2)",
+              background: "rgba(var(--v2-signal-rgb),0.12)",
+              border: "1px solid rgba(var(--v2-signal-rgb),0.34)",
+            }}
+          >
             MAKE FOCUS EASIER
-          </HudLabel>
+          </span>
           <h1
             className="v2-display"
             style={{
-              fontSize: "clamp(31px, 8.6vw, 40px)",
+              fontSize: "clamp(34px, 9.2vw, 39px)",
               fontWeight: 560,
-              lineHeight: 1.14,
-              letterSpacing: "-0.01em",
-              marginBottom: 12,
+              lineHeight: 1.08,
+              letterSpacing: "-0.015em",
+              marginBottom: 16,
               color: "var(--v2-ink)",
             }}
           >
             Get the guidance and tools to start, stay on track, and get back to
             what matters.
           </h1>
-          <p style={{ fontSize: 17, color: "var(--v2-ink-dim)", lineHeight: 1.6 }}>
+          <p style={{ fontSize: 17.5, color: "var(--v2-ink-dim)", lineHeight: 1.5 }}>
             Unlock your full breakdown, a 28-day action path, and practical tools
             for difficult moments.
           </p>
