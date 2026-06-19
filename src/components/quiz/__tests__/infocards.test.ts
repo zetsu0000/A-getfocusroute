@@ -258,7 +258,7 @@ describe("Card 1 rebuilt as a fast mechanism explainer", () => {
   });
 });
 
-// ── Card 2 rebuilt — Priority Lens (competing priorities → one clear step) ─────
+// ── Card 2 rebuilt — Finish travels from a competing chip to the next step ─────
 
 describe("Card 2 rebuilt as a Priority Lens", () => {
   const card2 = infocards.slice(
@@ -266,21 +266,15 @@ describe("Card 2 rebuilt as a Priority Lens", () => {
     infocards.indexOf("function Card3Cost"),
   );
 
-  it("renders exactly the approved eyebrow + headline", () => {
+  it("preserves every approved copy line verbatim", () => {
     expect(card2).toContain("WHEN EVERYTHING FEELS URGENT");
     expect(card2).toContain("Know what matters right now.");
-  });
-
-  it("renders the approved supporting copy, payoff and CTA verbatim", () => {
     expect(card2).toContain("FocusRoute turns too many priorities into one clear next step.");
-    expect(card2).toContain("Less time deciding. More time doing.");
-    expect(card2).toContain("Show Me My Next Step");
-  });
-
-  it("shows the focused-state copy: one clear next step + a return anchor", () => {
     expect(card2).toContain("DO THIS NEXT");
     expect(card2).toContain("A clear place to begin");
     expect(card2).toContain("If interrupted, come back here");
+    expect(card2).toContain("Less time deciding. More time doing.");
+    expect(card2).toContain("Show Me My Next Step");
   });
 
   it("removes the abstract IC2 product terminology", () => {
@@ -306,7 +300,6 @@ describe("Card 2 rebuilt as a Priority Lens", () => {
     expect(card2).not.toContain("One connected route");
     expect(card2).not.toContain("Map what gets in the way");
     expect(card2).not.toContain("A to-do list tells you what");
-    // No two-column comparison layout, no reliance on question.infoBenefit.
     expect(card2).not.toContain('gridTemplateColumns: "1fr 1fr"');
     expect(card2).not.toContain("question.infoBenefit");
     expect(card2).not.toContain("CardShell");
@@ -320,20 +313,49 @@ describe("Card 2 rebuilt as a Priority Lens", () => {
     expect(card2).not.toContain("Scan");
   });
 
-  it("uses the priority-lens grammar with competing task fragments", () => {
-    expect(card2).toContain(".ic2-lens");
+  it("removes the oversized circular lens / cyan wash treatment", () => {
+    expect(card2).not.toContain(".ic2-lens");
+    expect(card2).not.toContain('borderRadius: "50%"'); // no large circle
+    expect(card2).not.toContain("radial-gradient"); // no cyan radial field
+    expect(card2).not.toContain("inset 0 0 28px"); // no inset cyan glow
+    expect(card2).not.toContain("#9BE8FF"); // cyan dropped from the solution palette
+  });
+
+  it("keeps the competing-priorities field (secondary chips, not a grid)", () => {
     expect(card2).toContain(".ic2-frag");
-    for (const frag of ["Reply", "Finish", "Plan", "Fix", "Remember", "Review"]) {
+    expect(card2).toContain('className="ic2-stage"');
+    for (const frag of ["Reply", "Plan", "Fix", "Remember", "Review"]) {
       expect(card2).toContain(frag);
     }
+    expect(card2).not.toContain('gridTemplateColumns');
+  });
+
+  it("makes Finish the selected task — one morphing element, no off-center crossfade", () => {
+    // Exactly one selected panel; it carries DO THIS NEXT / Finish / explanation.
+    expect((card2.match(/className="ic2-selected"/g) || []).length).toBe(1);
+    expect(card2).toContain('className="ic2-finish"');
+    expect(card2).toMatch(/DO THIS NEXT[\s\S]*?ic2-finish[\s\S]*?Finish[\s\S]*?A clear place to begin/);
+    // FLIP: the SAME element is measured and travels from the upper-right slot
+    // into the centre (no two competing Finish boxes).
+    expect(card2).toContain("getBoundingClientRect");
+    expect(card2).toContain(".ic2-finish-origin");
+    expect(card2).toContain("CHIP_SCALE");
+    expect(card2).toContain("x: 0, y: 0, scale: 1"); // travels to the exact centre + full size
+    expect(card2).toContain('ease: "power3.inOut"'); // confident, non-bouncy
+    expect(card2).not.toContain("back.out"); // no back-bounce
+  });
+
+  it("centres the selected panel and gives Finish the strongest type", () => {
+    expect(card2).toContain('left: "50%"');
+    expect(card2).toContain('top: "50%"');
+    expect(card2).toMatch(/ic2-do[\s\S]*?fontSize: 13/); // DO THIS NEXT ≥ 12px
+    expect(card2).toMatch(/ic2-finish[\s\S]*?fontSize: 21/); // Finish 20–22px, strongest
   });
 
   it("is distinct from IC1 and IC5 (no reused route / scan / converging-dot grammar)", () => {
-    // No IC1 vertical-route / scan-line classes.
     expect(card2).not.toContain("fr1-route");
     expect(card2).not.toContain("fr1-vscan");
     expect(card2).not.toContain("fr1-hscan");
-    // No IC5 scattered-dots-into-three-groups / route-beneath classes.
     expect(card2).not.toContain("ic5-dot");
     expect(card2).not.toContain("ic5-route");
     expect(card2).not.toContain("ic5-group");
@@ -343,15 +365,21 @@ describe("Card 2 rebuilt as a Priority Lens", () => {
     expect(card2).toContain("gsap.context");
     expect(card2).toContain("ctx.revert()");
     expect(card2).toContain("paused: true");
-    // No infinite ambient, no pinning, no scrub, no scroll-driven reveal.
     expect(card2).not.toContain("repeat: -1");
     expect(card2).not.toContain("ScrollTrigger");
     expect(card2).not.toContain("pin:");
     expect(card2).not.toContain("scrub");
   });
 
-  it("renders the CTA visibly from the start — never animated from opacity 0", () => {
-    expect(card2).toContain('".ic2-cta", { opacity: 0.9');
+  it("paces a ~2.8–3.2s sequence with a visible recognition pause before selection", () => {
+    expect(card2).toContain(", 0.62)"); // competition begins (after recognition)
+    expect(card2).toContain(", 1.3)"); // selection + travel begin only later
+    expect(card2).toContain(", 2.75)"); // payoff reveal
+    expect(card2).toContain(", 2.85)"); // CTA settle → final reach ~3.05s
+  });
+
+  it("renders the CTA visibly from the start — only a subtle settle, never from 0", () => {
+    expect(card2).toContain('".ic2-cta", { opacity: 0.94');
     expect(card2).not.toMatch(/\.ic2-cta",\s*\{\s*opacity:\s*0\s*,/);
     expect(card2).toContain("onClick={onContinue}");
   });
@@ -361,9 +389,10 @@ describe("Card 2 rebuilt as a Priority Lens", () => {
     expect(card2).toContain("tl.progress(1)");
   });
 
-  it("frames mobile: safe-area bottom, no internal scroll, no fixed viewport height", () => {
+  it("frames mobile: safe-area, centred (no big void), no internal scroll, no fixed vh", () => {
     expect(card2).toContain("env(safe-area-inset-bottom");
     expect(card2).toContain('minHeight: "100%"');
+    expect(card2).toContain('justifyContent: "center"'); // removes the stage→CTA void
     expect(card2).not.toContain('overflowY: "auto"');
     expect(card2).not.toContain('overflowY: "scroll"');
     expect(card2).not.toMatch(/height:\s*"100vh"/);

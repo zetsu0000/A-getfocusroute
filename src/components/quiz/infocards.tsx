@@ -500,29 +500,60 @@ function Card1Recognition({ onContinue }: CardProps) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────
-   CARD 2 — Priority Lens (competing priorities → focus field → one clear step)
+   CARD 2 — Priority Lens. Many competing priorities → ONE is selected → that
+   SAME task ("Finish") travels to the centre and becomes the next step → the
+   user learns where to return after an interruption. The selected element is
+   a single morphing DOM node (FLIP-measured travel + grow), so the user can
+   visually track Finish the whole way — never a crossfade between two boxes.
 ───────────────────────────────────────────────────────────────────── */
 function Card2PriorityLens({ onContinue }: CardProps) {
   const { theme } = useFunnelTheme();
   const dark = theme === "dark";
 
-  // Urgency (warm) cools into clarity (signal). Color carries the
-  // "too many urgent things → one clear step" meaning; the copy carries it too.
-  const urgent = dark ? "#FFB28B" : "#C2691E";
-  const lens = dark ? "#9BE8FF" : "#1487B5";
-  const selected = dark ? "#9BE8FF" : "#1487B5";
+  // Simple, legible hierarchy — warm = urgency/problem, indigo = clarity/the
+  // chosen solution, neutral slate = secondary priorities. No cyan, no wash.
+  const c = dark
+    ? {
+        stage: "#10141E",
+        stageBorder: "rgba(163, 178, 255, 0.12)",
+        stageShadow: "none",
+        taskBg: "rgba(148, 163, 255, 0.06)",
+        taskBorder: "rgba(163, 178, 255, 0.16)",
+        taskText: "rgba(228, 233, 255, 0.62)",
+        panelBg: "#171C29",
+        selBorderOff: "rgba(163, 178, 255, 0.20)",
+        selBorderOn: "#7C8AFF",
+        selText: "#AEB7FF",
+        kicker: "#9AA5FF",
+        ringSoft: "rgba(124, 138, 255, 0.40)",
+        warm: "#FFB28B",
+      }
+    : {
+        stage: "#FFFFFF",
+        stageBorder: "rgba(40, 52, 90, 0.14)",
+        stageShadow: "var(--v2-shadow-sm)",
+        taskBg: "#EEF1F7",
+        taskBorder: "rgba(40, 52, 90, 0.12)",
+        taskText: "#5A6473",
+        panelBg: "#FFFFFF",
+        selBorderOff: "rgba(40, 52, 90, 0.18)",
+        selBorderOn: "#4655E6",
+        selText: "#3B45C9",
+        kicker: "#4655E6",
+        ringSoft: "rgba(70, 85, 230, 0.18)",
+        warm: "#C2691E",
+      };
 
-  // Competing task fragments — illustrative UI, never personalized claims, so
-  // they are decorative (aria-hidden); the visible copy carries their meaning.
-  // px/py = small pull toward the centre (Phase 2 competition); ox/oy = the
-  // slight outward drift as the lens quiets them (Phase 3); rot ≤ 2deg.
-  const fragments = [
-    { label: "Reply",    tag: "urgent", left: "15%", top: "13%", px: 11,  py: 9,   ox: -8, oy: -6, rot: 1.5,  cs: 1.03 },
-    { label: "Finish",   tag: null,     left: "85%", top: "17%", px: -12, py: 10,  ox: 9,  oy: -6, rot: -1,   cs: 1.0  },
-    { label: "Plan",     tag: null,     left: "9%",  top: "47%", px: 12,  py: 3,   ox: -9, oy: 2,  rot: -1.5, cs: 1.02 },
-    { label: "Fix",      tag: null,     left: "90%", top: "49%", px: -12, py: -2,  ox: 8,  oy: 0,  rot: 1,    cs: 1.04 },
-    { label: "Remember", tag: "today",  left: "22%", top: "83%", px: 10,  py: -10, ox: -7, oy: 7,  rot: -1,   cs: 1.0  },
-    { label: "Review",   tag: null,     left: "80%", top: "84%", px: -10, py: -9,  ox: 8,  oy: 7,  rot: 1.5,  cs: 1.02 },
+  // Five secondary priorities scattered (not gridded) around the edges, clear
+  // of the central panel footprint. Finish is NOT here — it is the morphing
+  // panel below. cx/cy = small Phase-2 pull toward centre; ox/oy = the slight
+  // Phase-3 drift outward as Finish is chosen. Decorative (aria-hidden).
+  const secondary = [
+    { label: "Reply",    tag: "urgent", left: "19%", top: "17%", cx: 10, cy: 8,  ox: -6, oy: -5, cs: 1.03 },
+    { label: "Plan",     tag: null,     left: "13%", top: "49%", cx: 9,  cy: 0,  ox: -7, oy: 0,  cs: 1.0  },
+    { label: "Fix",      tag: null,     left: "87%", top: "49%", cx: -12, cy: 0, ox: 7,  oy: 0,  cs: 1.03 },
+    { label: "Remember", tag: "today",  left: "21%", top: "83%", cx: 7,  cy: -8, ox: -6, oy: 5,  cs: 1.0  },
+    { label: "Review",   tag: null,     left: "79%", top: "83%", cx: -8, cy: -7, ox: 6,  oy: 5,  cs: 1.0  },
   ];
 
   const ref = useRef<HTMLDivElement>(null);
@@ -533,79 +564,70 @@ function Card2PriorityLens({ onContinue }: CardProps) {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const ctx = gsap.context(() => {
-      // Per-fragment animation targets are read off data-* so one scoped tween
-      // can pull / push every chip in its own direction.
+      // Per-chip animation targets read off data-* so one scoped tween can pull
+      // / push every secondary chip in its own direction.
       const ds = (k: string) => (_i: number, el: Element) =>
         Number((el as HTMLElement).dataset[k]);
 
-      // Centre the fragments / lens / selected card on their anchor via GSAP's
-      // own transform (xPercent/yPercent) so the animated x/y stay pure offsets
-      // and never fight a CSS translate. Mirrors the inline translate used as
-      // the no-JS fallback.
+      // FLIP-style geometry: measure where Finish starts (the upper-right slot)
+      // vs the centred panel, so the SAME element travels + grows from chip to
+      // selected panel — the user tracks one continuous object, never a swap.
+      const panel = root.querySelector<HTMLElement>(".ic2-selected");
+      const origin = root.querySelector<HTMLElement>(".ic2-finish-origin");
+      let dx = 0;
+      let dy = 0;
+      if (panel && origin) {
+        const p = panel.getBoundingClientRect();
+        const o = origin.getBoundingClientRect();
+        dx = o.left + o.width / 2 - (p.left + p.width / 2);
+        dy = o.top + o.height / 2 - (p.top + p.height / 2);
+      }
+      const CHIP_SCALE = 0.58; // Finish reads as a compact chip before selection
+
       gsap.set(".ic2-frag", { xPercent: -50, yPercent: -50 });
-      gsap.set([".ic2-lens", ".ic2-selected"], { xPercent: -50, yPercent: -50 });
+      gsap.set(panel, { xPercent: -50, yPercent: -50, x: dx, y: dy, scale: CHIP_SCALE, transformOrigin: "50% 50%" });
 
       const tl = gsap.timeline({ paused: true, defaults: { ease: "power2.out" } });
 
-      // Phase 1 · Recognition — chrome resolves; fragments crowd the field
+      // ── Phase 1 (0.0–0.55s) · Recognition — the field fills with competing
+      //    tasks; nothing is selected yet.
       tl.fromTo(".ic2-eyebrow", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.3 }, 0);
-      tl.fromTo(".ic2-headline", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.34 }, 0.1);
-      tl.fromTo(".ic2-support", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.3 }, 0.22);
-      tl.fromTo(
-        ".ic2-frag",
-        { opacity: 0, scale: 0.9, y: 10, x: () => gsap.utils.random(-6, 6) },
-        { opacity: 0.96, scale: 1, x: 0, y: 0, duration: 0.32, stagger: 0.04 },
-        0.2,
-      );
+      tl.fromTo(".ic2-headline", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.32 }, 0.08);
+      tl.fromTo(".ic2-support", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.3 }, 0.18);
+      tl.fromTo(".ic2-frag", { opacity: 0, scale: 0.9, y: 8 }, { opacity: 1, scale: 1, y: 0, duration: 0.34, stagger: 0.05 }, 0.26);
+      // Finish enters as one more chip among the others (still small + quiet).
+      tl.fromTo(panel, { opacity: 0 }, { opacity: 1, duration: 0.34 }, 0.34);
 
-      // Phase 2 · Competition — fragments jostle toward the centre; two or three
-      // briefly scale up. Controlled, not chaotic (≤20px, ≤1.04, ≤2deg).
-      tl.to(
-        ".ic2-frag",
-        {
-          x: ds("px"),
-          y: ds("py"),
-          scale: ds("cs"),
-          rotation: ds("rot"),
-          duration: 0.4,
-          ease: "sine.inOut",
-        },
-        0.42,
-      );
+      // ── Phase 2 (0.55–1.25s) · Competing priorities — a few drift toward the
+      //    centre; Reply / Fix / Finish briefly compete. Controlled (≤12–18px).
+      tl.to(".ic2-frag", { x: ds("cx"), y: ds("cy"), scale: ds("cs"), duration: 0.55, ease: "sine.inOut" }, 0.62);
+      tl.to(panel, { x: dx * 0.84, y: dy * 0.84, scale: CHIP_SCALE + 0.04, duration: 0.55, ease: "sine.inOut" }, 0.62);
+      // (a short hold ~1.17–1.3s lets the competition register before selection)
 
-      // Phase 3 · Priority lens — a soft focus field appears and the secondary
-      // fragments drift slightly outward and lose contrast.
-      tl.fromTo(".ic2-lens", { opacity: 0, scale: 0.62 }, { opacity: 1, scale: 1, duration: 0.4 }, 0.78);
-      tl.to(
-        ".ic2-frag",
-        {
-          x: ds("ox"),
-          y: ds("oy"),
-          scale: 0.9,
-          rotation: 0,
-          opacity: 0.6,
-          duration: 0.45,
-          ease: "power2.out",
-        },
-        0.85,
-      );
+      // ── Phase 3 (1.25–1.7s) · Selection begins — Finish is chosen: a strong
+      //    selected-blue ring fades in (the border strengthens) while secondary
+      //    tasks lose contrast and ease outward a few px. DO THIS NEXT not yet.
+      //    Only the ring's OPACITY animates (GSAP-owned), so a theme switch can
+      //    recolour it without replaying the timeline or resetting selection.
+      tl.to(".ic2-sel-ring", { opacity: 1, duration: 0.5 }, 1.3);
+      tl.to(".ic2-frag", { x: ds("ox"), y: ds("oy"), scale: 0.9, opacity: 0.5, duration: 0.5, ease: "power2.out" }, 1.3);
 
-      // Phase 4 · Clear next step — the selected action becomes the strongest
-      // object in the module.
-      tl.fromTo(
-        ".ic2-selected",
-        { opacity: 0, scale: 0.96, y: 6 },
-        { opacity: 1, scale: 1, y: 0, duration: 0.34 },
-        1.06,
-      );
+      // ── Phase 4 (1.7–2.35s) · Transform the SAME task — one confident travel
+      //    from the chip slot to the exact centre while it grows to full size;
+      //    the selected-state copy resolves as it lands. No bounce, no crossfade.
+      tl.to(panel, { x: 0, y: 0, scale: 1, duration: 0.95, ease: "power3.inOut" }, 1.3);
+      tl.fromTo(".ic2-do", { opacity: 0, y: 4 }, { opacity: 1, y: 0, duration: 0.3 }, 1.95);
+      tl.fromTo(".ic2-place", { opacity: 0, y: 4 }, { opacity: 1, y: 0, duration: 0.3 }, 2.05);
 
-      // Phase 5 · Return anchor — an interruption does not mean starting over.
-      tl.fromTo(".ic2-anchor", { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.3 }, 1.36);
+      // ── Phase 5 (2.35–2.7s) · Return anchor — tied to the selected panel.
+      tl.fromTo(".ic2-anchor", { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.3 }, 2.4);
 
-      // Phase 6 · Payoff + CTA. The CTA only settles from a visible 0.9 → 1; it
-      // is never invisible while interactive. Reduced motion lands it at 1.
-      tl.fromTo(".ic2-payoff", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.3 }, 1.56);
-      tl.fromTo(".ic2-cta", { opacity: 0.9, y: 4 }, { opacity: 1, y: 0, duration: 0.28 }, 1.66);
+      // ── Phase 6 (2.7–3.05s) · Payoff — quieter than the panel + CTA.
+      tl.fromTo(".ic2-payoff", { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.3 }, 2.75);
+
+      // CTA — visible + focusable from mount; only a subtle final settle, never
+      // animated from opacity 0, never pulsed.
+      tl.fromTo(".ic2-cta", { opacity: 0.94, scale: 0.99 }, { opacity: 1, scale: 1, duration: 0.3 }, 2.85);
 
       if (reduce) {
         tl.progress(1).pause(); // complete final state, no motion, nothing hidden
@@ -632,9 +654,20 @@ function Card2PriorityLens({ onContinue }: CardProps) {
         padding: "20px 18px calc(26px + env(safe-area-inset-bottom, 0px))",
       }}
     >
-      <div style={{ width: "100%", maxWidth: 480, display: "flex", flexDirection: "column", flex: 1 }}>
+      {/* Centre the composition so there is no excessive void between the stage
+          and the CTA; on tall screens the block sits centred, not stretched. */}
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 460,
+          display: "flex",
+          flexDirection: "column",
+          flex: 1,
+          justifyContent: "center",
+        }}
+      >
         {/* Eyebrow — plain language, no product jargon */}
-        <p className="ic2-eyebrow v2-hud" style={{ color: urgent, marginBottom: 10, letterSpacing: "0.16em" }}>
+        <p className="ic2-eyebrow v2-hud" style={{ color: c.warm, marginBottom: 10, letterSpacing: "0.16em" }}>
           WHEN EVERYTHING FEELS URGENT
         </p>
 
@@ -658,65 +691,55 @@ function Card2PriorityLens({ onContinue }: CardProps) {
           FocusRoute turns too many priorities into one clear next step.
         </p>
 
-        {/* Priority-lens stage — competing fragments → focus field → one step.
-            Fixed pixel height (never a viewport unit) + overflow hidden keep the
-            small fragment movements from clipping content or overflowing. */}
+        {/* Priority field — competing tasks → Finish is selected → it becomes the
+            next step. Fixed pixel height (never a viewport unit) + overflow hidden
+            keep the small movements from clipping or overflowing the page. */}
         <div
           className="ic2-stage"
           style={{
             position: "relative",
-            height: "clamp(196px, 52vw, 224px)",
+            height: "clamp(202px, 54vw, 226px)",
             borderRadius: 18,
             overflow: "hidden",
-            border: `1px solid color-mix(in srgb, ${lens} 22%, transparent)`,
-            background: `linear-gradient(165deg, color-mix(in srgb, ${lens} 8%, transparent), transparent)`,
+            background: c.stage,
+            border: `1px solid ${c.stageBorder}`,
+            boxShadow: c.stageShadow,
           }}
         >
-          {/* Soft focus lens — restrained radial light, not a sweeping line */}
+          {/* Invisible origin marker — the upper-right slot Finish travels from.
+              Measured for the FLIP transform; carries no visual or a11y weight. */}
           <span
-            className="ic2-lens"
+            className="ic2-finish-origin"
             aria-hidden="true"
-            style={{
-              position: "absolute",
-              left: "50%",
-              top: "50%",
-              transform: "translate(-50%, -50%)",
-              width: "clamp(150px, 44vw, 178px)",
-              height: "clamp(150px, 44vw, 178px)",
-              borderRadius: "50%",
-              border: `1px solid color-mix(in srgb, ${lens} 45%, transparent)`,
-              background: `radial-gradient(circle at 50% 50%, color-mix(in srgb, ${lens} 16%, transparent) 0%, transparent 68%)`,
-              boxShadow: `inset 0 0 28px color-mix(in srgb, ${lens} 24%, transparent)`,
-              pointerEvents: "none",
-            }}
+            style={{ position: "absolute", left: "75%", top: "18%", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
           />
 
-          {/* Competing task fragments — decorative; meaning is in the copy */}
-          {fragments.map((f) => (
+          {/* Secondary competing priorities — decorative; meaning is in the copy */}
+          {secondary.map((f) => (
             <span
               key={f.label}
               className="ic2-frag"
               aria-hidden="true"
-              data-px={f.px}
-              data-py={f.py}
+              data-cx={f.cx}
+              data-cy={f.cy}
               data-ox={f.ox}
               data-oy={f.oy}
-              data-rot={f.rot}
               data-cs={f.cs}
               style={{
                 position: "absolute",
                 left: f.left,
                 top: f.top,
                 transform: "translate(-50%, -50%)",
+                zIndex: 2,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                gap: 3,
+                gap: 2,
                 padding: "5px 10px",
-                borderRadius: 10,
-                background: "var(--v2-glass-2)",
-                border: "1px solid var(--v2-line-bright)",
-                color: "var(--v2-ink-dim)",
+                borderRadius: 9,
+                background: c.taskBg,
+                border: `1px solid ${c.taskBorder}`,
+                color: c.taskText,
                 fontSize: 12.5,
                 fontWeight: 600,
                 whiteSpace: "nowrap",
@@ -725,23 +748,17 @@ function Card2PriorityLens({ onContinue }: CardProps) {
             >
               {f.label}
               {f.tag && (
-                <span
-                  style={{
-                    fontSize: 9,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    fontWeight: 700,
-                    color: urgent,
-                  }}
-                >
+                <span style={{ fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, color: c.warm }}>
                   {f.tag}
                 </span>
               )}
             </span>
           ))}
 
-          {/* The one clear next step — strongest object: solid surface, strong
-              border, depth. Stays semantic text for assistive tech. */}
+          {/* Finish — the ONE task that becomes the next step. A single morphing
+              element: it begins as a compact chip in the upper-right (GSAP scales
+              + translates it there), then travels to the centre and grows into
+              this panel. Semantic text throughout for assistive tech. */}
           <div
             className="ic2-selected"
             style={{
@@ -749,33 +766,56 @@ function Card2PriorityLens({ onContinue }: CardProps) {
               left: "50%",
               top: "50%",
               transform: "translate(-50%, -50%)",
-              zIndex: 3,
-              width: "clamp(150px, 46vw, 186px)",
+              zIndex: 4,
+              width: "clamp(156px, 50%, 188px)",
               padding: "12px 14px",
               borderRadius: 14,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 5,
               textAlign: "center",
-              background: "var(--v2-bg-panel)",
-              border: `1.5px solid ${selected}`,
-              boxShadow: `0 0 0 4px color-mix(in srgb, ${selected} 14%, transparent), var(--v2-shadow-md)`,
+              background: c.panelBg,
+              border: `1.5px solid ${c.selBorderOff}`,
             }}
           >
-            <p className="ic2-do v2-hud" style={{ color: selected, letterSpacing: "0.14em", marginBottom: 5, fontSize: 11 }}>
+            {/* Selected-state ring + depth — overlays the panel's neutral border
+                with the strong selected blue. Only opacity animates (the border,
+                ring and shadow are static), so theme re-colours cleanly. */}
+            <span
+              className="ic2-sel-ring"
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                inset: 0,
+                borderRadius: 14,
+                border: `1.5px solid ${c.selBorderOn}`,
+                boxShadow: `0 0 0 4px ${c.ringSoft}, var(--v2-shadow-md)`,
+                opacity: 0,
+                pointerEvents: "none",
+              }}
+            />
+            <p className="ic2-do v2-hud" style={{ margin: 0, fontSize: 13, letterSpacing: "0.14em", color: c.kicker }}>
               DO THIS NEXT
             </p>
-            <p style={{ fontSize: 15, fontWeight: 700, color: "var(--v2-ink)", lineHeight: 1.25 }}>
+            <p className="ic2-finish" style={{ margin: 0, fontSize: 21, fontWeight: 780, lineHeight: 1.1, color: c.selText }}>
+              Finish
+            </p>
+            <p className="ic2-place" style={{ margin: 0, fontSize: 15, fontWeight: 600, lineHeight: 1.25, color: "var(--v2-ink)" }}>
               A clear place to begin
             </p>
           </div>
         </div>
 
-        {/* Return anchor — an interruption is not a full restart */}
-        <div className="ic2-anchor" style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-          <span aria-hidden="true" style={{ display: "inline-flex", flexShrink: 0, color: selected }}>
+        {/* Return anchor — bookmark in the selected colour ties it to the panel */}
+        <div className="ic2-anchor" style={{ marginTop: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <span aria-hidden="true" style={{ display: "inline-flex", flexShrink: 0, color: c.selBorderOn }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
                 d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"
-                fill={`color-mix(in srgb, ${selected} 18%, transparent)`}
-                stroke={selected}
+                fill={c.ringSoft}
+                stroke={c.selBorderOn}
                 strokeWidth="1.8"
                 strokeLinejoin="round"
               />
@@ -786,20 +826,17 @@ function Card2PriorityLens({ onContinue }: CardProps) {
           </span>
         </div>
 
-        {/* Spacer pushes the payoff + CTA toward the bottom on tall screens */}
-        <div style={{ flex: 1, minHeight: 14 }} />
-
         {/* Payoff — readable, but quieter than the CTA */}
-        <p className="ic2-payoff" style={{ fontSize: 14, fontWeight: 600, color: "var(--v2-ink-dim)", textAlign: "center", marginTop: 8 }}>
+        <p className="ic2-payoff" style={{ fontSize: 14, fontWeight: 600, color: "var(--v2-ink-dim)", textAlign: "center", marginTop: 16 }}>
           Less time deciding. More time doing.
         </p>
 
         {/* CTA — visibly present, clickable and keyboard-focusable from mount;
-            the timeline only nudges it from 0.9 → 1 opacity, never from 0. */}
+            the timeline only nudges it from 0.94 → 1, never from 0. */}
         <button
           onClick={onContinue}
           className="ic2-cta v2-cta"
-          style={{ width: "100%", minHeight: 54, fontSize: 15, marginTop: 12 }}
+          style={{ width: "100%", minHeight: 54, fontSize: 15, marginTop: 16 }}
         >
           Show Me My Next Step
         </button>
