@@ -329,6 +329,27 @@ describe("Card 1 rebuilt as a fast mechanism explainer", () => {
       expect(card1).toMatch(/tl\.fromTo\(\s*"\.fr1-surface",[\s\S]*?,\s*0\.7,/);
     });
   });
+
+  // ── iOS Safari white-box: decorative CSS filters on filled spans ────────────
+  // A second iOS-only source of white rectangles (seen on-device after the
+  // container fix): decorative IC1 layers that put `filter: blur()` on a FILLED
+  // span. iOS Safari promotes them to GPU layers whose backing paints an opaque
+  // white box that shows EVEN AT opacity 0 — the pale squares behind each signal
+  // node (`.fr1-signal-glow`) and the scan layer (`.fr1-vscan`). Both now use a
+  // non-filter glow (radial-gradient / box-shadow), so no CSS filter remains on a
+  // filled decorative span. The GSAP text reveal ending at blur(0px) (transparent
+  // text) and the SVG route drop-shadow (fill:none) are proven-safe on-device.
+  describe("IC1 decorative glows use no CSS filter (iOS white-box)", () => {
+    it("gives the node halos a radial-gradient glow, not filter: blur()", () => {
+      expect(card1).toContain("background: `radial-gradient(circle, ${s.color} 0%, transparent 70%)`");
+      expect(card1).not.toContain('filter: "blur(6px)"');
+    });
+
+    it("keeps the vertical scan glow via box-shadow, not filter: blur()", () => {
+      expect(card1).not.toContain('filter: "blur(3px)"');
+      expect(card1).toMatch(/className="fr1-vscan"[\s\S]*?boxShadow: `0 0 18px \$\{role\.accent2\}`/);
+    });
+  });
 });
 
 // ── Card 2 — Finish is selected, travels to centre, resolves to one message ────

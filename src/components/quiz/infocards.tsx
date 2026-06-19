@@ -386,7 +386,9 @@ function Card1Recognition({ onContinue }: CardProps) {
               opacity: 0,
               pointerEvents: "none",
               background: `linear-gradient(180deg, transparent, ${role.accent2}, ${role.accent}, transparent)`,
-              filter: "blur(3px)",
+              // No CSS filter — the gradient + box-shadow already soften the sweep,
+              // and `filter: blur()` paints an opaque white box on iOS Safari GPU
+              // compositing (same artifact as the node halos above).
               boxShadow: `0 0 18px ${role.accent2}`,
             }}
           />
@@ -459,10 +461,15 @@ function Card1Recognition({ onContinue }: CardProps) {
             <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
               {signals.map((s) => (
                 <li key={s.text} style={{ position: "relative", height: 48, display: "flex", alignItems: "center", paddingLeft: 40 }}>
+                  {/* Soft node halo via a radial-gradient background, NOT a CSS
+                      filter. On iOS Safari a `filter: blur()` promotes the span to
+                      a GPU layer whose backing paints an opaque WHITE square that
+                      shows even at opacity 0 — these were the pale squares behind
+                      each node. A gradient gives the same soft glow with no filter. */}
                   <span
                     className="fr1-signal-glow"
                     aria-hidden="true"
-                    style={{ position: "absolute", left: 1, top: 11, width: 26, height: 26, borderRadius: "50%", background: s.color, filter: "blur(6px)", opacity: 0, pointerEvents: "none" }}
+                    style={{ position: "absolute", left: 1, top: 11, width: 26, height: 26, borderRadius: "50%", background: `radial-gradient(circle, ${s.color} 0%, transparent 70%)`, opacity: 0, pointerEvents: "none" }}
                   />
                   <span
                     className="fr1-signal-node"
