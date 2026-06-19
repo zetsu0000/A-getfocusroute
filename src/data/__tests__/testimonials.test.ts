@@ -148,7 +148,9 @@ describe("social proof journey selector", () => {
     )).toBe(true);
     expect(journey.result[0].category).toBe("clarity");
     expect(journey.result[1].category).toBe("usability");
-    expect(["practical_value", "product_trust"]).toContain(
+    // The strongest product-experience proof (proof-008) is now dedicated to the
+    // checkout, so the third result slot resolves to the next ongoing/value proof.
+    expect(["practical_value", "product_trust", "post_purchase_reassurance"]).toContain(
       journey.result[2].category,
     );
     expect(["customer_support", "product_trust"]).toContain(
@@ -231,6 +233,37 @@ describe("social proof journey selector", () => {
       } else {
         process.env.NEXT_PUBLIC_SOCIAL_PROOF_OFF = previous;
       }
+    }
+  });
+});
+
+describe("checkout product-experience proof", () => {
+  it("leads the paywall with proof-008, an approved product-experience review", () => {
+    const amy = APPROVED_TESTIMONIALS.find((entry) => entry.id === "proof-008")!;
+
+    // Sourced fields are the approved ones — never invented or rewritten.
+    expect(amy.approved).toBe(true);
+    expect(amy.attribution).toBe("Amy R.");
+    expect(amy.image).toBe("/testimonials/amy-reyes.png");
+    expect(amy.shortQuote).toBe(
+      "I am very happy with FocusRoute so far. It has greatly helped me come up with new and creative ideas.",
+    );
+    expect(amy.fullQuote).toContain(
+      "it has greatly improved how much value my focus has",
+    );
+
+    // Dedicated to the checkout, and it speaks to product experience / value.
+    expect(amy.eligiblePlacement).toEqual(["paywall_post_checkout"]);
+    expect(amy.category).toBe("product_trust");
+
+    for (const seed of ["a", "b", "c", "d", "e", "f", "g"]) {
+      const journey = selectSocialProofJourney(APPROVED_TESTIMONIALS, seed);
+      // Always-visible (collapsed) checkout proof is the product-experience story.
+      expect(journey.paywall[0].id).toBe("proof-008");
+      // Only one support-focused slot was replaced — support proof still shows.
+      expect(journey.paywall.slice(1).map((entry) => entry.category)).toContain(
+        "customer_support",
+      );
     }
   });
 });

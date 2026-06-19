@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { m } from "framer-motion";
-import { CheckCircle2, Mail, LayoutDashboard } from "lucide-react";
+import { CheckCircle2, KeyRound, LayoutDashboard, Eye, ListChecks, LifeBuoy } from "lucide-react";
 import { useQuizStore } from "@/store/quizStore";
 import { safeName } from "@/lib/personalization";
 import { FocusField } from "@/components/v2/FocusField";
@@ -75,14 +75,13 @@ export function SuccessScreen() {
         style={{ position: "relative" }}
       >
         <HudLabel tone="gold" style={{ marginBottom: 12 }}>
-          Route unlocked
+          Subscription confirmed
         </HudLabel>
         <h1
           className="v2-display"
           style={{ fontSize: "clamp(28px, 7.4vw, 36px)", fontWeight: 550, lineHeight: 1.2, marginBottom: 12 }}
         >
-          You&apos;re all set,{" "}
-          <em className="v2-text-gold" style={{ fontStyle: "italic" }}>{displayName}</em>!
+          Your <em className="v2-text-gold" style={{ fontStyle: "italic" }}>FocusRoute</em> is unlocked.
         </h1>
       </m.div>
 
@@ -92,7 +91,9 @@ export function SuccessScreen() {
         transition={{ delay: 0.40 }}
         style={{ position: "relative", fontSize: 15, color: "var(--v2-ink-dim)", lineHeight: 1.7, maxWidth: 360, marginBottom: 28 }}
       >
-        Your full plan is ready in your account — sign in with this email anytime to get back to it. Start with your first step — it&apos;s short.
+        You&apos;re all set, {displayName}. Everything from your assessment is now
+        in your account. Start by seeing where focus breaks most for you — it&apos;s
+        a short first step.
       </m.p>
       <p style={{ position: "relative", fontSize: 11, color: "var(--v2-ink-ghost)", lineHeight: 1.6, maxWidth: 360, marginBottom: 20 }}>
         FocusRoute provides educational profiling and does not provide medical diagnosis.
@@ -106,9 +107,9 @@ export function SuccessScreen() {
           className="v2-panel"
           style={{ position: "relative", display: "flex", alignItems: "center", gap: 10, borderRadius: 999, padding: "13px 22px", marginBottom: 30 }}
         >
-          <Mail size={17} color="var(--v2-signal-2)" />
+          <KeyRound size={17} color="var(--v2-signal-2)" />
           <p style={{ fontSize: 13, color: "var(--v2-ink-dim)" }}>
-            Saved to <span style={{ fontWeight: 700, color: "var(--v2-ink)" }}>{email}</span>
+            Access saved to <span style={{ fontWeight: 700, color: "var(--v2-ink)" }}>{email}</span> — sign in with it anytime
           </p>
         </m.div>
       )}
@@ -125,7 +126,7 @@ export function SuccessScreen() {
           style={{ width: "100%", minHeight: 58, fontSize: 15 }}
         >
           <LayoutDashboard size={18} />
-          Open My Plan
+          Open My FocusRoute
         </Link>
       </m.div>
 
@@ -136,18 +137,18 @@ export function SuccessScreen() {
         className="v2-panel"
         style={{ position: "relative", padding: "24px 26px", maxWidth: 380, width: "100%" }}
       >
-        <HudLabel style={{ marginBottom: 16 }}>What happens next</HudLabel>
+        <HudLabel style={{ marginBottom: 16 }}>In your account</HudLabel>
         <div style={{ display: "flex", flexDirection: "column", gap: 13, textAlign: "left" }}>
           {[
-            { step: "1", text: "Open your account to see your full focus pattern and plan." },
-            { step: "2", text: "Start with your first step — what to try when starting feels heavy." },
-            { step: "3", text: "Work through your plan at your pace. Even 10 minutes counts." },
-          ].map(({ step, text }) => (
-            <div key={step} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+            { icon: Eye, text: "Your detailed focus breakdown" },
+            { icon: ListChecks, text: "Your 28-day action path" },
+            { icon: LifeBuoy, text: "Practical tools for difficult moments" },
+          ].map(({ icon: Icon, text }) => (
+            <div key={text} style={{ display: "flex", gap: 12, alignItems: "center" }}>
               <div style={{ width: 28, height: 28, borderRadius: 999, border: "1px solid rgba(var(--v2-line-rgb),0.35)", background: "rgba(var(--v2-signal-rgb),0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <span style={{ fontFamily: "var(--v2-font-mono)", fontSize: 12, color: "var(--v2-signal-2)" }}>{step}</span>
+                <Icon size={14} color="var(--v2-signal-2)" strokeWidth={2.2} />
               </div>
-              <p style={{ fontSize: 13, color: "var(--v2-ink-dim)", lineHeight: 1.55, paddingTop: 4 }}>{text}</p>
+              <p style={{ fontSize: 13, color: "var(--v2-ink-dim)", lineHeight: 1.55 }}>{text}</p>
             </div>
           ))}
         </div>

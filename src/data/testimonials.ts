@@ -50,7 +50,7 @@ export interface SocialProofJourney {
   paywall: ApprovedTestimonial[];
 }
 
-export const SOCIAL_PROOF_POOL_VERSION = "2026-06-14-v2";
+export const SOCIAL_PROOF_POOL_VERSION = "2026-06-18-v3";
 
 const RESULT: SocialProofPlacement = "result_transition";
 const PAYWALL: SocialProofPlacement = "paywall_post_checkout";
@@ -145,8 +145,12 @@ export const APPROVED_TESTIMONIALS: readonly ApprovedTestimonial[] = [
       "I am very happy with FocusRoute so far. It has greatly helped me come up with new and creative ideas; it has greatly improved how much value my focus has. Each time I had a problem, the support team has done everything they could to give me help and to fix my problem! It has been an overall good experience!",
     attribution: "Amy R.",
     image: "/testimonials/amy-reyes.png",
-    category: "practical_value",
-    eligiblePlacement: [RESULT, PAYWALL],
+    // The strongest product-experience review in the pool — it talks about
+    // actually using FocusRoute and getting value, not support handling. It is
+    // dedicated to the checkout (paywall) as the lead proof so the buyer sees a
+    // product-value story exactly where the purchase decision is made.
+    category: "product_trust",
+    eligiblePlacement: [PAYWALL],
     approved: true,
   },
   {
@@ -204,9 +208,13 @@ const RESULT_SLOT_CATEGORY_PREFERENCES: readonly (readonly SocialProofCategory[]
 
 const PAYWALL_SLOT_CATEGORY_PREFERENCES: readonly (readonly SocialProofCategory[])[] =
   [
+    // The always-visible (collapsed) checkout proof leads with product
+    // experience, so the buyer first reads how the product is actually used and
+    // valued — not a support anecdote. The remaining slots keep the support /
+    // reassurance proofs that previously carried this section.
     [
-      "customer_support",
       "product_trust",
+      "customer_support",
       "post_purchase_reassurance",
       "practical_value",
     ],

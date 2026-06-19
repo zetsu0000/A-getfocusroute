@@ -1,8 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { m } from "framer-motion";
-import { Shield, RotateCcw, Compass, TrendingUp } from "lucide-react";
+import { m, type Variants } from "framer-motion";
+import {
+  Shield,
+  RotateCcw,
+  Eye,
+  ListChecks,
+  LifeBuoy,
+  RefreshCw,
+  ClipboardCheck,
+  Library,
+} from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js/pure";
 import type { Appearance } from "@stripe/stripe-js";
 import {
@@ -217,6 +226,24 @@ function PlanCard({
               then {formatMoney(plan.renewalAmount)}
               {renewalSuffix(plan)} after {introWindowLabel(plan)}
             </p>
+
+            {/* Why this duration is recommended — small secondary note, on the
+               default plan only. Based on having time to use the product, not
+               urgency or a fabricated statistic. */}
+            {plan.popular && (
+              <p
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: "var(--v2-signal-2)",
+                  lineHeight: 1.4,
+                  marginTop: 8,
+                }}
+              >
+                Recommended — enough time to use the plan, adjust it, and repeat
+                what works.
+              </p>
+            )}
           </div>
 
           {/* Radio indicator. */}
@@ -521,90 +548,227 @@ function PlanCheckoutForm({
   );
 }
 
-/* ── Compact product-value route ──────────────────────────────────────────────
-   Three connected stops tied to the funnel pain — start, recover, follow
-   through — kept deliberately compact (no SaaS cards, no paragraphs). */
-const VALUE_STEPS = [
+/* ── Product-value module ─────────────────────────────────────────────────────
+   A single cohesive composition with two connected phases that explain the
+   product in plain, benefit-first language:
+
+     1. WHAT YOU CAN USE RIGHT AWAY — three immediate-use moments (understand →
+        act → recover), each with a small secondary product label.
+     2. WHY IT KEEPS HELPING — the route continues into a compact ongoing cycle
+        (retake → refresh → revisit → keep), so the subscription reads as
+        something you return to, not a longer version of the free result.
+
+   Every line maps to a capability that genuinely ships to active subscribers:
+   the detailed Focus Profile, the 28-day protocol, the member bonus library,
+   and member-only retakes. No SaaS card grid, no jargon-led headlines. */
+const IMMEDIATE_VALUE = [
   {
-    icon: Compass,
-    title: "Know where to start",
-    meaning: "A clearer first move when priorities compete.",
+    icon: Eye,
+    title: "See where focus breaks",
+    meaning:
+      "A clear view of what's behind starting, staying focused, prioritizing, and getting back on track.",
+    label: "Your detailed Focus Profile",
   },
   {
-    icon: RotateCcw,
-    title: "Know how to recover",
-    meaning: "A route back when pressure or interruption breaks focus.",
+    icon: ListChecks,
+    title: "Know what to work on first",
+    meaning:
+      "A 28-day path of small actions, organized from your assessment result.",
+    label: "Your 28-day action path",
   },
   {
-    icon: TrendingUp,
-    title: "Keep moving forward",
-    meaning: "Progress without rebuilding the entire plan.",
+    icon: LifeBuoy,
+    title: "Have help when the day goes off track",
+    meaning:
+      "Scripts, planners, and practical guides for starting, prioritizing, and getting back into the task.",
+    label: "Your member tools",
   },
 ] as const;
 
-function ValueRoute() {
+const ONGOING_VALUE = [
+  { icon: RotateCcw, title: "Retake", meaning: "when your work or life changes" },
+  { icon: RefreshCw, title: "Refresh", meaning: "your results and next steps" },
+  { icon: ClipboardCheck, title: "Revisit", meaning: "what's working, adjust a step" },
+  { icon: Library, title: "Keep", meaning: "your member tools and guides" },
+] as const;
+
+/* Stagger reveal. App-wide MotionConfig reducedMotion="user" snaps the transform
+   to its end state, and every node is in the DOM from first paint, so the module
+   is fully readable without waiting and the CTA below is never gated on it. */
+const VALUE_CONTAINER_VARIANTS: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.1, delayChildren: 0.04 } },
+};
+const VALUE_ITEM_VARIANTS: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+};
+
+function ValueModule() {
   return (
-    <ul
+    <m.div
+      variants={VALUE_CONTAINER_VARIANTS}
+      initial="hidden"
+      animate="show"
       style={{
+        padding: "16px 16px",
+        borderRadius: 16,
+        border: "1px solid var(--v2-line)",
+        background: "rgba(var(--v2-signal-rgb),0.04)",
         display: "flex",
         flexDirection: "column",
-        gap: 0,
-        listStyle: "none",
-        margin: 0,
-        padding: 0,
+        gap: 14,
       }}
     >
-      {VALUE_STEPS.map((step, i) => {
-        const Icon = step.icon;
-        const last = i === VALUE_STEPS.length - 1;
-        return (
-          <li
-            key={step.title}
-            style={{ display: "grid", gridTemplateColumns: "auto 1fr", columnGap: 12 }}
-          >
-            {/* Node + connector — the "route" thread. */}
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <div
-                style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: "50%",
-                  flexShrink: 0,
-                  background: "rgba(var(--v2-signal-rgb),0.12)",
-                  border: "1px solid rgba(var(--v2-signal-rgb),0.35)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Icon size={14} color="var(--v2-signal-2)" strokeWidth={2.2} />
-              </div>
-              {!last && (
+      {/* Phase 1 — immediate value */}
+      <m.div variants={VALUE_ITEM_VARIANTS}>
+        <HudLabel tone="signal" style={{ fontSize: 9.5 }}>
+          What you can use right away
+        </HudLabel>
+      </m.div>
+
+      <m.ul variants={VALUE_CONTAINER_VARIANTS} style={{ listStyle: "none", margin: 0, padding: 0 }}>
+        {IMMEDIATE_VALUE.map((step, i) => {
+          const Icon = step.icon;
+          const last = i === IMMEDIATE_VALUE.length - 1;
+          return (
+            <m.li
+              variants={VALUE_ITEM_VARIANTS}
+              key={step.title}
+              style={{ display: "grid", gridTemplateColumns: "auto 1fr", columnGap: 12 }}
+            >
+              {/* Node + connector — the route thread. */}
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                 <div
                   style={{
-                    width: 2,
-                    flex: 1,
-                    minHeight: 14,
-                    marginTop: 2,
-                    background:
-                      "linear-gradient(rgba(var(--v2-signal-rgb),0.45), rgba(var(--v2-signal-rgb),0.08))",
+                    width: 30,
+                    height: 30,
+                    borderRadius: "50%",
+                    flexShrink: 0,
+                    background: "rgba(var(--v2-signal-rgb),0.12)",
+                    border: "1px solid rgba(var(--v2-signal-rgb),0.35)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
+                >
+                  <Icon size={14} color="var(--v2-signal-2)" strokeWidth={2.2} />
+                </div>
+                {!last && (
+                  <div
+                    style={{
+                      width: 2,
+                      flex: 1,
+                      minHeight: 14,
+                      marginTop: 2,
+                      background:
+                        "linear-gradient(rgba(var(--v2-signal-rgb),0.45), rgba(var(--v2-signal-rgb),0.12))",
+                    }}
+                  />
+                )}
+              </div>
+              {/* Stop copy — benefit first, product label second. */}
+              <div style={{ paddingBottom: last ? 0 : 16 }}>
+                <p style={{ fontSize: 13.5, fontWeight: 700, color: "var(--v2-ink)", lineHeight: 1.3 }}>
+                  {step.title}
+                </p>
+                <p style={{ fontSize: 12.5, color: "var(--v2-ink-dim)", lineHeight: 1.5, marginTop: 3 }}>
+                  {step.meaning}
+                </p>
+                <span
+                  style={{
+                    display: "inline-block",
+                    marginTop: 7,
+                    padding: "2px 8px",
+                    borderRadius: 999,
+                    fontFamily: "var(--v2-font-mono)",
+                    fontSize: 9.5,
+                    letterSpacing: "0.05em",
+                    color: "var(--v2-signal-2)",
+                    background: "rgba(var(--v2-signal-rgb),0.08)",
+                    border: "1px solid rgba(var(--v2-signal-rgb),0.22)",
+                  }}
+                >
+                  {step.label}
+                </span>
+              </div>
+            </m.li>
+          );
+        })}
+      </m.ul>
+
+      {/* The route continues instead of ending — dashed link into the cycle. */}
+      <m.div variants={VALUE_ITEM_VARIANTS} aria-hidden="true" style={{ display: "flex", justifyContent: "flex-start", paddingLeft: 14 }}>
+        <div
+          style={{
+            width: 2,
+            height: 14,
+            borderRadius: 2,
+            backgroundImage:
+              "repeating-linear-gradient(rgba(var(--v2-signal-rgb),0.5) 0 3px, transparent 3px 6px)",
+          }}
+        />
+      </m.div>
+
+      {/* Phase 2 — ongoing value cycle (compact, not a card wall) */}
+      <m.div variants={VALUE_ITEM_VARIANTS}>
+        <HudLabel tone="signal" style={{ fontSize: 9.5, marginBottom: 10 }}>
+          Why it keeps helping
+        </HudLabel>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+            gap: 8,
+          }}
+        >
+          {ONGOING_VALUE.map((step) => {
+            const Icon = step.icon;
+            return (
+              <div
+                key={step.title}
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 8,
+                  padding: "9px 10px",
+                  borderRadius: 12,
+                  background: "rgba(var(--v2-signal-rgb),0.05)",
+                  border: "1px solid var(--v2-line)",
+                }}
+              >
+                <Icon
+                  size={14}
+                  color="var(--v2-signal-2)"
+                  strokeWidth={2.2}
+                  style={{ flexShrink: 0, marginTop: 1 }}
                 />
-              )}
-            </div>
-            {/* Stop copy. */}
-            <div style={{ paddingBottom: last ? 0 : 14 }}>
-              <p style={{ fontSize: 13.5, fontWeight: 700, color: "var(--v2-ink)", lineHeight: 1.3 }}>
-                {step.title}
-              </p>
-              <p style={{ fontSize: 12.5, color: "var(--v2-ink-dim)", lineHeight: 1.5, marginTop: 2 }}>
-                {step.meaning}
-              </p>
-            </div>
-          </li>
-        );
-      })}
-    </ul>
+                <p style={{ fontSize: 11.5, color: "var(--v2-ink-dim)", lineHeight: 1.4 }}>
+                  <span style={{ fontWeight: 700, color: "var(--v2-ink)" }}>{step.title}</span>{" "}
+                  {step.meaning}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </m.div>
+
+      {/* Free result vs subscription — two short lines, no attack on the free result. */}
+      <m.p
+        variants={VALUE_ITEM_VARIANTS}
+        style={{
+          margin: 0,
+          paddingLeft: 12,
+          borderLeft: "2px solid rgba(var(--v2-signal-rgb),0.5)",
+          fontSize: 12.5,
+          color: "var(--v2-ink-dim)",
+          lineHeight: 1.55,
+        }}
+      >
+        Your free result shows where focus breaks. Your plan helps you act on it —
+        and gives you tools to come back to when it shows up again.
+      </m.p>
+    </m.div>
   );
 }
 
@@ -680,20 +844,8 @@ export function SubscriptionPlansScreen() {
           </p>
         </m.div>
 
-        {/* Compact product-value route */}
-        <m.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.08 }}
-          style={{
-            padding: "16px 16px",
-            borderRadius: 16,
-            border: "1px solid var(--v2-line)",
-            background: "rgba(var(--v2-signal-rgb),0.04)",
-          }}
-        >
-          <ValueRoute />
-        </m.div>
+        {/* Product-value module — immediate use + ongoing value */}
+        <ValueModule />
 
         {/* Plan cards — accessible radio group */}
         <m.div

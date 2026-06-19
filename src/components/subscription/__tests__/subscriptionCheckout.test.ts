@@ -31,17 +31,90 @@ describe("subscription checkout — approved opening copy", () => {
   });
 });
 
-describe("subscription checkout — compact product-value module", () => {
-  it("communicates start / recover / follow-through as three connected stops", () => {
-    expect(src).toContain("Know where to start");
-    expect(src).toContain("Know how to recover");
-    expect(src).toContain("Keep moving forward");
-    // the supporting meaning ties to the user's pain
-    expect(src).toContain("A clearer first move when priorities compete.");
-    expect(src).toContain("A route back when pressure or interruption breaks focus.");
-    expect(src).toContain("Progress without rebuilding the entire plan.");
-    // rendered as a single connected route, not three SaaS cards
-    expect(src).toContain("<ValueRoute />");
+describe("subscription checkout — product-value module (benefit-first)", () => {
+  it("renders the two-phase ValueModule and drops the old generic route", () => {
+    expect(src).toContain("<ValueModule />");
+    expect(src).not.toContain("<ValueRoute />");
+    // the old directional-but-vague outcomes are gone
+    expect(src).not.toContain("Know where to start");
+    expect(src).not.toContain("Know how to recover");
+    expect(src).not.toContain("Keep moving forward");
+  });
+
+  it("leads each immediate-value stop with a plain-English benefit", () => {
+    expect(src).toContain("What you can use right away");
+    expect(src).toContain("See where focus breaks");
+    expect(src).toContain("Know what to work on first");
+    expect(src).toContain("Have help when the day goes off track");
+    // the benefit is explained before any product term
+    expect(src).toContain(
+      "A clear view of what's behind starting, staying focused, prioritizing, and getting back on track.",
+    );
+    expect(src).toContain(
+      "A 28-day path of small actions, organized from your assessment result.",
+    );
+    expect(src).toContain(
+      "Scripts, planners, and practical guides for starting, prioritizing, and getting back into the task.",
+    );
+  });
+
+  it("keeps product names as secondary labels, not jargon-led headlines", () => {
+    expect(src).toContain("Your detailed Focus Profile");
+    expect(src).toContain("Your 28-day action path");
+    expect(src).toContain("Your member tools");
+    // banned primary framings / instrumentation language
+    expect(src).not.toContain("Full Brain Profile");
+    expect(src).not.toContain("Brain OS");
+    expect(src).not.toContain("first practical reset");
+    expect(src).not.toContain("scan complete");
+    expect(src).not.toContain("signal detected");
+  });
+
+  it("explains recurring value with real member capabilities only", () => {
+    expect(src).toContain("Why it keeps helping");
+    expect(src).toContain("Retake");
+    expect(src).toContain("when your work or life changes");
+    expect(src).toContain("Refresh");
+    expect(src).toContain("your results and next steps");
+    expect(src).toContain("your member tools and guides");
+    // no self-updating / automatic-personalization claim
+    expect(src.toLowerCase()).not.toContain("updates itself");
+    expect(src.toLowerCase()).not.toContain("automatically personal");
+  });
+
+  it("distinguishes the free result from the subscription without devaluing it", () => {
+    expect(src).toContain("Your free result shows where focus breaks.");
+    expect(src).toContain("Your plan helps you act on it");
+    expect(src.toLowerCase()).not.toContain("fake");
+    // no fake scarcity in the value module
+    expect(src).not.toContain("limited time");
+    expect(src).not.toContain("spots left");
+  });
+});
+
+describe("subscription checkout — 4-Week recommendation", () => {
+  it("adds a small recommendation note tied to the popular plan only", () => {
+    expect(src).toContain(
+      "Recommended — enough time to use the plan, adjust it, and repeat",
+    );
+    // rendered conditionally on the default/popular plan, as small <p> copy
+    expect(src).toMatch(/plan\.popular && \(\s*<p/);
+    // it does not invent a statistic or discount
+    expect(src).not.toMatch(/\d+% of (users|members|people)/);
+  });
+});
+
+describe("subscription checkout — no upsell or unsupported claims", () => {
+  it("does not reintroduce an upsell or a second pricing/checkout step", () => {
+    expect(src.toLowerCase()).not.toContain("upsell");
+    expect(src).not.toContain("one-time offer");
+    expect(src).not.toContain("add to your order");
+  });
+
+  it("makes no email-delivery promise on the checkout", () => {
+    expect(src).not.toContain("Check your inbox");
+    expect(src).not.toContain("emailed your");
+    expect(src).not.toContain("results are waiting in your inbox");
   });
 });
 
