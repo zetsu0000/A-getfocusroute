@@ -33,17 +33,31 @@ describe("result bridge name handling", () => {
     expect(src).toContain("{personalName ? (");
     // named branch keeps the personalized, italicized lead-in
     expect(src).toContain("{personalName},</em>");
-    // named branch: exact short benefit copy, lowercase lead-in after the name
-    expect(src).toContain(
-      "your full profile shows where momentum breaks — and how to get it back.",
-    );
-    // unnamed branch: the same short sentence, capitalized
-    expect(src).toContain(
-      "Your full profile shows where momentum breaks — and how to get it back.",
-    );
+    // named branch: the bridge lead-in, lowercase after the name
+    expect(src).toContain("your result identifies the pattern.");
+    // unnamed branch: the same line, capitalized
+    expect(src).toContain("Your result identifies the pattern.");
   });
 
-  it("removes the earlier long bridge copy and the abstract plan-focus sentence", () => {
+  it("states plainly what the subscription adds, without pricing or a second sales page", () => {
+    expect(src).toContain(
+      "FocusRoute unlocks the full breakdown, a 28-day action path, and",
+    );
+    expect(src).toContain("practical tools to help you work with it.");
+    // No pricing leaks onto the result screen ($-prefixed amounts / per-period).
+    expect(src).not.toMatch(/\$\d/);
+    expect(src).not.toContain("/month");
+    expect(src).not.toContain("/mo");
+  });
+
+  it("adds one pattern-specific teaser near the CTA from existing signature data", () => {
+    expect(src).toContain("Your FocusRoute centers on {signature.planFocus}");
+  });
+
+  it("removes the earlier bridge copy and the abstract plan-focus sentence", () => {
+    expect(src).not.toContain(
+      "your full profile shows where momentum breaks — and how to get it back.",
+    );
     expect(src).not.toContain("what helps it return, and the conditions that make focus easier to hold");
     expect(src).not.toContain("your full plan focuses on");
   });

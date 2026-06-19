@@ -166,6 +166,12 @@ h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-
   --v2-ink-faint:  rgba(228, 233, 255, 0.44);
   --v2-ink-ghost:  rgba(228, 233, 255, 0.26);
 
+  /* Result score: the per-pattern accent is tuned AA on white, so on the dark
+     score card it is mixed toward white for legibility. Light mode leaves the
+     accent untouched (lift 0%). Theme-aware so the score module stays free of
+     hardcoded theme checks. */
+  --v2-score-accent-lift: 42%;
+
   /* Lines + glass */
   --v2-line:         rgba(163, 178, 255, 0.14);
   --v2-line-bright:  rgba(163, 178, 255, 0.30);
@@ -640,6 +646,9 @@ h3 { color: var(--color-text); line-height: 1.35; letter-spacing: -0.01em; font-
   --v2-ink-dim:    rgba(14, 17, 36, 0.72);
   --v2-ink-faint:  rgba(14, 17, 36, 0.50);
   --v2-ink-ghost:  rgba(14, 17, 36, 0.30);
+
+  /* Result score: the accent is already AA on white — keep it unlifted. */
+  --v2-score-accent-lift: 0%;
 
   /* Lines + glass — cool indigo hairlines on white */
   --v2-line:         rgba(48, 64, 150, 0.14);

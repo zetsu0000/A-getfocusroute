@@ -2,7 +2,7 @@
 
 import { m, useReducedMotion } from "framer-motion";
 import { SignatureSigil } from "@/components/signature/SignatureSigil";
-import { getSignatureIdentity, SIGNATURE_ORDER, type SignatureKey } from "@/lib/signature-identity";
+import { getSignatureIdentity, type SignatureKey } from "@/lib/signature-identity";
 import { TiltCard } from "./TiltCard";
 import { SparkBurst } from "./SparkBurst";
 import { useFunnelTheme } from "./FunnelThemeProvider";
@@ -10,11 +10,10 @@ import { useFunnelTheme } from "./FunnelThemeProvider";
 /**
  * SigilArtifact — the V2 premium identity artifact.
  *
- * The user's Cognitive Signature rendered as a precious dark object:
+ * The user's focus-pattern result rendered as a precious dark object:
  * pointer-tracked 3D tilt, holographic sheen, orbital emblem ring, mono
- * telemetry, editorial serif name. Used by the result reveal and (in locked
- * form) by the paywall. Replaces SignatureRevealCard inside the funnel only —
- * the dashboard keeps the original card.
+ * telemetry, editorial serif name. Used by the result reveal in the funnel —
+ * it replaces SignatureRevealCard there; the dashboard keeps the original card.
  *
  * Vocabulary note: this card sits at the purchase moment, so its label
  * system is deliberately FocusRoute-native ("pattern", "reading", "mapped
@@ -35,20 +34,20 @@ type Props = {
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-/* V2 reveal statements — keep the emotional read of each pattern, then
-   bridge straight into what the paid plan does with it. One poetic beat,
-   one practical beat. */
+/* V2 reveal statements — keep the emotional read of each pattern, then name
+   FocusRoute clearly as what works with it (never an ambiguous "plan" word,
+   which can read as a billing plan). One poetic beat, one practical beat. */
 const V2_STATEMENT: Record<SignatureKey, string> = {
   Sprinter:
-    "You move fast when it counts. Your plan shows how to start without waiting for pressure.",
+    "You move fast when it counts. FocusRoute helps you start without waiting for pressure.",
   Archivist:
-    "You see every detail. Your plan shows how to keep the load from burying your next step.",
+    "You see every detail. FocusRoute helps keep the load from burying your next step.",
   Spark:
-    "You light up for what's new. Your plan shows how to carry strong starts through to finished.",
+    "You light up for what's new. FocusRoute helps carry strong starts through to finished.",
   Reactor:
-    "You read the room before it speaks. Your plan shows how to reset before pressure takes over.",
+    "You read the room before it speaks. FocusRoute helps you reset before pressure takes over.",
   Drifter:
-    "Your attention follows meaning. Your plan shows where to place the anchors that hold it.",
+    "Your attention follows meaning. FocusRoute helps you place the anchors that hold it.",
 };
 
 export function SigilArtifact({
@@ -74,10 +73,6 @@ export function SigilArtifact({
   const shownEssence = essence ?? identity.essence;
   const shownSummary = summary ?? identity.summary;
   const shownStatement = revealStatement ?? V2_STATEMENT[identity.key];
-  /* "Pattern 04 / 05" — one of five focus patterns: specific and honest,
-     with none of the legacy class-rank flavor. */
-  const patternIndex = String(SIGNATURE_ORDER.indexOf(identity.key) + 1).padStart(2, "0");
-  const patternCount = String(SIGNATURE_ORDER.length).padStart(2, "0");
 
   return (
     <div
@@ -200,13 +195,13 @@ export function SigilArtifact({
         )}
 
         <div style={{ position: "relative", padding: isPaywall ? "22px 22px 24px" : "26px 24px 28px" }}>
-          {/* telemetry rail */}
+          {/* result rail — plain "Your result" label, no internal pattern index */}
           <m.div
             {...fade(0)}
             style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: isPaywall ? 18 : 24 }}
           >
-            <span className="v2-hud" style={{ color: dark ? "rgba(255,255,255,0.40)" : "var(--v2-ink-faint)", whiteSpace: "nowrap" }}>
-              Cognitive Signature
+            <span className="v2-hud" style={{ color: dark ? "rgba(255,255,255,0.52)" : "var(--v2-ink-faint)", whiteSpace: "nowrap" }}>
+              Your result
             </span>
             <span
               aria-hidden="true"
@@ -216,12 +211,6 @@ export function SigilArtifact({
                 background: `linear-gradient(90deg, rgba(${identity.accentRgb},0.5), transparent)`,
               }}
             />
-            <span
-              className="v2-hud"
-              style={{ color: `rgba(${identity.accentRgb},1)`, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}
-            >
-              {patternIndex} / {patternCount}
-            </span>
           </m.div>
 
           {/* sigil + name */}

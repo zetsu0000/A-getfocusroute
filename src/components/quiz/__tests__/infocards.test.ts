@@ -64,21 +64,122 @@ describe("infocard router", () => {
   });
 });
 
-// ── Card 5 must NOT spend the result reveal ───────────────────────────────────
+// ── Card 5 rebuilt as a visual teaser that withholds the result ───────────────
 
-describe("Card 5 withholds the result", () => {
-  it("never renders the exact score or the pattern name/descriptor", () => {
-    expect(infocards).not.toContain("score.toFixed");
-    expect(infocards).not.toContain("PATTERN_HINT");
-    expect(infocards).not.toContain("getSignatureFromAnswers");
-    expect(infocards).not.toContain("scoreFromAnswers");
-    // The descriptor strings that used to leak must be gone.
-    expect(infocards).not.toContain("pressure-powered");
+describe("Card 5 rebuilt teaser", () => {
+  const card5 = infocards.slice(
+    infocards.indexOf("function Card5Unlock"),
+    infocards.indexOf("function SafeContinueCard"),
+  );
+
+  it("never reveals the score or the final pattern name/descriptor", () => {
+    expect(card5).not.toContain("score.toFixed");
+    expect(card5).not.toContain("PATTERN_HINT");
+    expect(card5).not.toContain("getSignatureFromAnswers");
+    expect(card5).not.toContain("scoreFromAnswers");
+    expect(card5).not.toContain("resolveResultScoreData");
+    expect(card5).not.toContain("pressure-powered");
+    // None of the five pattern keys may surface on the teaser.
+    for (const name of ["Drifter", "Sprinter", "Archivist", "Spark", "Reactor"]) {
+      expect(card5).not.toContain(name);
+    }
   });
 
-  it("keeps a withholding teaser instead", () => {
-    expect(infocards).toContain("We picked up your focus pattern signal");
-    expect(infocards).toContain("Your strongest friction area is mapped");
+  it("removes scanner / instrumentation wording (whole module)", () => {
+    expect(infocards).not.toContain("Signal detected");
+    expect(infocards).not.toContain("Scan complete");
+    expect(infocards).not.toContain("Pattern acquired");
+    // The old withholding-teaser strings are gone.
+    expect(infocards).not.toContain("We picked up your focus pattern signal");
+    expect(infocards).not.toContain("Your strongest friction area is mapped");
+  });
+
+  it("uses the new plain-language teaser copy + CTA", () => {
+    expect(card5).toContain("Based on what you shared");
+    expect(card5).toContain("Your answers are starting to show a clear pattern.");
+    expect(card5).toContain("Your pattern is ready");
+    expect(card5).toContain("See My Result");
+  });
+
+  it("maps three clear groups with their captions (third label shortened)", () => {
+    for (const label of ["Starting", "Staying on track", "Getting back"]) {
+      expect(card5).toContain(label);
+    }
+    // The long third label is shortened for 390px readability.
+    expect(card5).not.toContain("Getting back into the task");
+    for (const cap of [
+      "where starting becomes harder",
+      "what tends to interrupt follow-through",
+      "where your next step should begin",
+    ]) {
+      expect(card5).toContain(cap);
+    }
+  });
+
+  it("keeps meaningful group typography at or above 12px (no sub-12 captions)", () => {
+    // Labels ~13.5px, captions 12px — no font reduction below 12 for content.
+    expect(card5).toContain("fontSize: 13.5"); // group label
+    expect(card5).not.toContain("fontSize: 10.5");
+    expect(card5).not.toContain("fontSize: 11,");
+    expect(card5).not.toContain("fontSize: 9,");
+    expect(card5).not.toContain("fontSize: 8,");
+  });
+
+  it("uses a responsive group layout instead of shrinking fonts on narrow screens", () => {
+    expect(card5).toContain(".ic5-groups");
+    expect(card5).toContain("grid-template-columns: 1fr 1fr"); // narrow fallback
+    expect(card5).toContain("ic5-group--wide"); // third group spans full width
+    expect(card5).toContain("@media (max-width: 359px)");
+  });
+
+  it("renders the CTA visibly from the start — never animated from opacity 0", () => {
+    // The CTA settles from a visible 0.88 → 1; it is never invisible.
+    expect(card5).toContain('".ic5-cta", { opacity: 0.88');
+    expect(card5).not.toMatch(/\.ic5-cta",\s*\{\s*opacity:\s*0\s*,/);
+    // Real focusable button, no pointer-events tricks or focus removal.
+    expect(card5).toContain('onClick={onContinue}');
+    expect(card5).not.toContain('pointerEvents: "none"');
+    expect(card5).not.toContain("tabIndex={-1}");
+  });
+
+  it("drives a scattered-fragments → groups → route grammar distinct from Card 1", () => {
+    expect(card5).toContain(".ic5-dot");
+    expect(card5).toContain(".ic5-route");
+    expect(card5).toContain("strokeDashoffset");
+    expect(card5).toContain("gsap.utils.random"); // loosely scattered fragments
+    // Distinct grammar: no IC1 scan / vertical-route classes reused.
+    expect(card5).not.toContain("fr1-vscan");
+    expect(card5).not.toContain("fr1-route");
+    expect(card5).not.toContain("fr1-hscan");
+  });
+
+  it("plays once, scoped + cleaned up, with a visible reduced-motion final state", () => {
+    expect(card5).toContain("prefers-reduced-motion");
+    expect(card5).toContain("tl.progress(1)");
+    expect(card5).toContain("gsap.context");
+    expect(card5).toContain("ctx.revert()");
+    expect(card5).toContain("paused: true");
+    // No infinite loop, no pinning, no scroll trap.
+    expect(card5).not.toContain("repeat: -1");
+    expect(card5).not.toContain("ScrollTrigger");
+    expect(card5).not.toContain("pin:");
+  });
+
+  it("frames the CTA for mobile: safe-area bottom, no internal scroll, no clipping height", () => {
+    expect(card5).toContain("env(safe-area-inset-bottom");
+    expect(card5).toContain('minHeight: "100%"');
+    expect(card5).not.toContain('overflowY: "auto"');
+    expect(card5).not.toContain('overflow: "auto"');
+    expect(card5).not.toContain('overflowY: "scroll"');
+    // The scaffold must not pin a fixed viewport height that could crop the CTA.
+    expect(card5).not.toMatch(/height:\s*"100vh"/);
+    expect(card5).not.toMatch(/height:\s*"100dvh"/);
+  });
+
+  it("does not reach into checkout/subscription/stripe from the funnel teaser", () => {
+    expect(infocards.toLowerCase()).not.toContain("subscription");
+    expect(infocards.toLowerCase()).not.toContain("stripe");
+    expect(infocards.toLowerCase()).not.toContain("checkout");
   });
 });
 

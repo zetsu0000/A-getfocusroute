@@ -356,17 +356,118 @@ describe("algorithm preservation", () => {
   });
 });
 
-describe("result screen UI guard", () => {
+describe("result screen renders the canonical score", () => {
   const chartSrc = readFileSync(
     fileURLToPath(new URL("../../components/chart/ChartScreen.tsx", import.meta.url)),
     "utf8",
   );
+  const moduleSrc = readFileSync(
+    fileURLToPath(new URL("../../components/chart/ResultScoreModule.tsx", import.meta.url)),
+    "utf8",
+  );
 
-  it("does not render the focus-friction score yet", () => {
+  it("resolves the score via resolveResultScoreData (the PR #50 canonical resolver)", () => {
+    expect(chartSrc).toContain("resolveResultScoreData({ answers })");
+    expect(chartSrc).toContain("<ResultScoreModule");
+  });
+
+  it("does not use deriveBrainProfile().overallScore as the result score", () => {
+    expect(chartSrc).not.toContain("deriveBrainProfile");
+    expect(chartSrc).not.toContain("overallScore");
+    expect(moduleSrc).not.toContain("deriveBrainProfile");
+    expect(moduleSrc).not.toContain("overallScore");
+  });
+
+  it("never runs a second score formula on the result surface", () => {
     expect(chartSrc).not.toContain("scoreFromAnswers");
-    expect(chartSrc).not.toContain("resolveResultScoreData");
-    expect(chartSrc).not.toContain("score.toFixed");
-    expect(chartSrc).not.toMatch(/Friction snapshot.*\{\s*score/i);
+    expect(moduleSrc).not.toContain("scoreFromAnswers");
+  });
+
+  it("never fabricates a 0 / 57 fallback when the score is unavailable", () => {
+    // The module renders only behind a truthy guard; no placeholder substitution.
+    expect(chartSrc).toContain("scoreData && (");
+    expect(chartSrc).not.toMatch(/scoreData[^\n]*\?\?\s*\d/);
+    expect(moduleSrc).not.toContain("?? 57");
+    expect(moduleSrc).not.toContain("?? 0");
+    expect(moduleSrc).not.toContain("|| 57");
+    expect(moduleSrc).not.toContain("|| 0");
+  });
+
+  it("shows the explicit 0–100 range and the compact non-clinical disclaimer", () => {
+    expect(moduleSrc).toContain("score.minimum");
+    expect(moduleSrc).toContain("score.maximum");
+    expect(moduleSrc).toContain("Based on your answers. Not a diagnosis.");
+    // The earlier longer disclaimer is gone.
+    expect(moduleSrc).not.toContain("This reflects your answers. It is not a diagnosis.");
+  });
+
+  it("frames the score as reported friction, not severity or a focus percentage", () => {
+    expect(moduleSrc.toLowerCase()).not.toContain("% focus");
+    expect(moduleSrc.toLowerCase()).not.toContain("percent of focus");
+    expect(moduleSrc.toLowerCase()).not.toContain("severity");
+    expect(moduleSrc.toLowerCase()).not.toContain("compared to other");
+  });
+
+  it("carries no interpretation bands or inferred problem areas", () => {
+    // The aggregate score does not prove which situation a value came from, so
+    // the custom band thresholds and per-band explanation are gone.
+    expect(moduleSrc).not.toContain("explanationFor");
+    expect(moduleSrc).not.toContain(">= 67");
+    expect(moduleSrc).not.toContain(">= 34");
+    expect(moduleSrc).not.toContain("value >=");
+    // No leftover band copy that attributed the score to specific situations.
+    expect(moduleSrc).not.toContain("pointed to more friction when starting");
+    expect(moduleSrc).not.toContain("relatively light friction");
+  });
+
+  it("uses the compact universal explanation + direction note (no 'brain' wording)", () => {
+    expect(moduleSrc).toContain(
+      "This score summarizes the focus friction you reported in this assessment.",
+    );
+    expect(moduleSrc).toContain(
+      "Higher means more frequent or stronger friction — not less ability.",
+    );
+    expect(moduleSrc).toContain("not less ability");
+    // The earlier "worse brain" phrasing — and any 'brain' wording — is gone.
+    expect(moduleSrc).not.toContain("not a worse brain");
+    expect(moduleSrc.toLowerCase()).not.toContain("brain");
+  });
+
+  it("keeps the direction note legible at >= 13px (essential to reading the score)", () => {
+    const noteIdx = moduleSrc.indexOf("Higher means more frequent or stronger friction");
+    expect(noteIdx).toBeGreaterThan(-1);
+    // The <p> wrapping the direction note carries a >= 13px font size.
+    const before = moduleSrc.slice(Math.max(0, noteIdx - 320), noteIdx);
+    expect(before).toMatch(/fontSize:\s*1[3-9]/);
+  });
+
+  it("improves dark-mode contrast via a theme-aware accent-lift token (no theme branch)", () => {
+    // The per-pattern accent is lifted toward white on the dark card through a
+    // CSS variable, not a hardcoded theme check inside the component.
+    expect(moduleSrc).toContain("--v2-score-accent-lift");
+    expect(moduleSrc).toContain("scoreAccent");
+    expect(moduleSrc).not.toContain('theme === "dark"');
+    expect(moduleSrc).not.toContain("dark ?");
+    // Stronger ink tiers than the previous faint/ghost on the supporting text.
+    expect(moduleSrc).not.toContain('color: "var(--v2-ink-ghost)"');
+  });
+
+  it("defines the score accent-lift token for both themes in globals.css", () => {
+    const css = readFileSync(
+      fileURLToPath(new URL("../../app/globals.css", import.meta.url)),
+      "utf8",
+    );
+    expect(css).toContain("--v2-score-accent-lift: 42%"); // dark: lifted
+    expect(css).toContain("--v2-score-accent-lift: 0%"); // light: unchanged
+  });
+
+  it("sizes the score range labels at >= 11px so they read on a 390px screen", () => {
+    expect(moduleSrc).not.toContain("fontSize: 9");
+    // Both range labels are 11px with reduced tracking and no wrapping.
+    expect((moduleSrc.match(/fontSize: 11,/g) || []).length).toBeGreaterThanOrEqual(2);
+    expect(moduleSrc).toContain("less friction");
+    expect(moduleSrc).toContain("more friction");
+    expect(moduleSrc).toContain('whiteSpace: "nowrap"');
   });
 });
 
