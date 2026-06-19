@@ -343,7 +343,13 @@ function Card1Recognition({ onContinue }: CardProps) {
           />
         </h2>
 
-        {/* 3 · Surface problem — what it feels like */}
+        {/* 3 · Surface problem — what it feels like.
+            In light mode this large container is kept un-filled: a translucent
+            fill + border read as a solid white card on iOS Safari (the visible
+            "white rectangle"). Light uses a transparent background and a quieter
+            accent-tinted border; dark keeps its existing milky-glass treatment.
+            (The earlier `.fr1-surface` blur removal is retained, but the milky
+            fill — not the blur — was the visible artifact.) */}
         <div
           className="fr1-surface"
           style={{
@@ -351,8 +357,8 @@ function Card1Recognition({ onContinue }: CardProps) {
             overflow: "hidden",
             padding: "14px 16px",
             borderRadius: 16,
-            border: `1px solid color-mix(in srgb, ${role.accent} 24%, transparent)`,
-            background: "rgba(148,163,255,0.05)",
+            border: `1px solid color-mix(in srgb, ${role.accent} ${dark ? 24 : 20}%, transparent)`,
+            background: dark ? "rgba(148,163,255,0.05)" : "transparent",
           }}
         >
           <span
@@ -412,14 +418,20 @@ function Card1Recognition({ onContinue }: CardProps) {
           FocusRoute maps where the route breaks.
         </p>
 
-        {/* 5 + 6 · Route draws toward the four detected signals */}
+        {/* 5 + 6 · Route draws toward the four detected signals.
+            Same fix as the surface above: in light mode the filled gradient +
+            border read as a solid white card on iOS Safari, so light uses a
+            transparent background and a quieter accent-tinted border. Dark keeps
+            its existing tinted-gradient treatment. */}
         <div
           style={{
             position: "relative",
             padding: "14px 16px",
             borderRadius: 16,
-            border: `1px solid color-mix(in srgb, ${role.accent2} 30%, transparent)`,
-            background: `linear-gradient(160deg, color-mix(in srgb, ${role.accent2} 12%, transparent), transparent)`,
+            border: `1px solid color-mix(in srgb, ${role.accent2} ${dark ? 30 : 20}%, transparent)`,
+            background: dark
+              ? `linear-gradient(160deg, color-mix(in srgb, ${role.accent2} 12%, transparent), transparent)`
+              : "transparent",
           }}
         >
           <Pill color={role.accent2}>Where the route breaks</Pill>

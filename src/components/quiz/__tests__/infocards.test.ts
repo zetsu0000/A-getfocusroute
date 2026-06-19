@@ -257,39 +257,76 @@ describe("Card 1 rebuilt as a fast mechanism explainer", () => {
     expect(card1).toMatch(/\.fr1-pulse[\s\S]*?opacity: 0/);
   });
 
-  // ── White-square artifact guard ─────────────────────────────────────────────
-  // Root cause: the `.fr1-surface` reveal animated `filter: blur(6px) → blur(0px)`.
-  // GSAP leaves the end value applied, so this rounded, overflow:hidden,
-  // translucent-background box permanently carried a `filter`. On WebKit/Safari a
-  // filtered + rounded + overflow:hidden box is promoted to a compositing layer
-  // whose rounded clip fails and paints an opaque WHITE rectangle — before,
-  // during and after the reveal and in reduced motion. The fix reveals the box
-  // with opacity/transform ONLY, so it can never carry a filter again. These
-  // guards target that exact property, not the literal word "white".
-  describe("IC1 white-square artifact cannot recur", () => {
-    // The single `.fr1-surface` entrance tween (fromTo), isolated.
+  // ── IC1 white-rectangle artifact: corrected diagnosis ───────────────────────
+  // The visible rectangles were the FILLED IC1 container surfaces in light mode:
+  // the "What it feels like" box (`.fr1-surface`) and the "Where the route
+  // breaks" box. Their translucent fills + borders read as solid white cards on
+  // iOS Safari. The earlier `.fr1-surface` blur removal is RETAINED (it removed a
+  // needless compositing layer), but it was not the complete fix — the actual
+  // visual fix was to drop the milky fills from both large containers in light
+  // mode (transparent background + a quieter accent-tinted border), while dark
+  // keeps its existing treatment.
+
+  describe("IC1 large containers are not milky cards in light mode", () => {
+    // Surface container: its own style object (up to the first `}}`).
+    const sIdx = card1.indexOf('className="fr1-surface"');
+    const surfaceStyle = card1.slice(sIdx, card1.indexOf("}}", sIdx));
+    // Route container: from a phrase unique to its comment to the pill it wraps
+    // ("Route draws toward" also appears in an earlier GSAP timeline comment).
+    const routeStyle = card1.slice(
+      card1.indexOf("Same fix as the surface above"),
+      card1.indexOf("Where the route breaks"),
+    );
+
+    it("gives both large containers a transparent light background (no solid/milky fill)", () => {
+      // Light → transparent; dark → its existing treatment (theme-gated).
+      expect(surfaceStyle).toContain('background: dark ? "rgba(148,163,255,0.05)" : "transparent"');
+      expect(routeStyle).toContain("background: dark");
+      expect(routeStyle).toContain(': "transparent"');
+      // The old UNCONDITIONAL milky fills are gone.
+      expect(card1).not.toContain('background: "rgba(148,163,255,0.05)",');
+      expect(card1).not.toContain(
+        "background: `linear-gradient(160deg, color-mix(in srgb, ${role.accent2} 12%, transparent), transparent)`,",
+      );
+      // Both fills are now theme-gated (surface + route).
+      expect((card1.match(/background: dark/g) || []).length).toBeGreaterThanOrEqual(2);
+    });
+
+    it("uses no backdrop blur and no heavy surface shadow on either container", () => {
+      for (const s of [surfaceStyle, routeStyle]) {
+        expect(s).not.toMatch(/backdropFilter|backdrop-filter|WebkitBackdropFilter/);
+        expect(s).not.toContain("boxShadow");
+      }
+    });
+
+    it("keeps subtle, accent-tinted borders (lighter in light mode)", () => {
+      expect(surfaceStyle).toContain("border: `1px solid color-mix(in srgb, ${role.accent} ${dark ? 24 : 20}%, transparent)`");
+      expect(routeStyle).toContain("border: `1px solid color-mix(in srgb, ${role.accent2} ${dark ? 30 : 20}%, transparent)`");
+    });
+
+    it("keeps the surface box layout (rounded, clipped) intact", () => {
+      expect(surfaceStyle).toContain('overflow: "hidden"');
+      expect(surfaceStyle).toContain("borderRadius: 16");
+    });
+  });
+
+  // The blur cleanup stays in place (retained, not re-introduced).
+  describe("IC1 surface filter cleanup is retained", () => {
     const surfaceReveal = (card1.match(/tl\.fromTo\(\s*"\.fr1-surface",[\s\S]*?\);/) ?? [""])[0];
 
-    it("reveals the surface box with NO filter / blur (no composited white layer)", () => {
+    it("still reveals the surface with NO filter / blur", () => {
       expect(surfaceReveal).not.toBe("");
       expect(surfaceReveal).not.toMatch(/filter/);
       expect(surfaceReveal).not.toMatch(/blur/);
+      // The surface element itself never declares an inline filter.
+      expect(card1).not.toMatch(/className="fr1-surface"[^>]*filter:/);
     });
 
     it("preserves the exact opacity + transform entrance and its timing", () => {
-      // Same from/to transform + opacity and the same 0.45s duration at t=0.7 —
-      // only the blur was dropped, the motion is unchanged.
+      // Same from/to transform + opacity and the same 0.45s duration at t=0.7.
       expect(surfaceReveal).toContain("{ opacity: 0, y: 18, scale: 0.985 }");
       expect(surfaceReveal).toContain("{ opacity: 1, y: 0, scale: 1, duration: 0.45 }");
       expect(card1).toMatch(/tl\.fromTo\(\s*"\.fr1-surface",[\s\S]*?,\s*0\.7,/);
-    });
-
-    it("keeps the surface box layout (rounded, clipped) intact — only the filter went", () => {
-      // The visual box is unchanged: still a rounded, overflow:hidden panel.
-      expect(card1).toMatch(/className="fr1-surface"[\s\S]*?overflow: "hidden"/);
-      expect(card1).toMatch(/className="fr1-surface"[\s\S]*?borderRadius: 16/);
-      // The surface element itself never declares an inline filter.
-      expect(card1).not.toMatch(/className="fr1-surface"[^>]*filter:/);
     });
   });
 });
