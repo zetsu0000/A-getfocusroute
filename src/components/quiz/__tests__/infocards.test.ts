@@ -256,6 +256,42 @@ describe("Card 1 rebuilt as a fast mechanism explainer", () => {
     // It fades out (opacity → 0) rather than resting visible at the route end.
     expect(card1).toMatch(/\.fr1-pulse[\s\S]*?opacity: 0/);
   });
+
+  // ── White-square artifact guard ─────────────────────────────────────────────
+  // Root cause: the `.fr1-surface` reveal animated `filter: blur(6px) → blur(0px)`.
+  // GSAP leaves the end value applied, so this rounded, overflow:hidden,
+  // translucent-background box permanently carried a `filter`. On WebKit/Safari a
+  // filtered + rounded + overflow:hidden box is promoted to a compositing layer
+  // whose rounded clip fails and paints an opaque WHITE rectangle — before,
+  // during and after the reveal and in reduced motion. The fix reveals the box
+  // with opacity/transform ONLY, so it can never carry a filter again. These
+  // guards target that exact property, not the literal word "white".
+  describe("IC1 white-square artifact cannot recur", () => {
+    // The single `.fr1-surface` entrance tween (fromTo), isolated.
+    const surfaceReveal = (card1.match(/tl\.fromTo\(\s*"\.fr1-surface",[\s\S]*?\);/) ?? [""])[0];
+
+    it("reveals the surface box with NO filter / blur (no composited white layer)", () => {
+      expect(surfaceReveal).not.toBe("");
+      expect(surfaceReveal).not.toMatch(/filter/);
+      expect(surfaceReveal).not.toMatch(/blur/);
+    });
+
+    it("preserves the exact opacity + transform entrance and its timing", () => {
+      // Same from/to transform + opacity and the same 0.45s duration at t=0.7 —
+      // only the blur was dropped, the motion is unchanged.
+      expect(surfaceReveal).toContain("{ opacity: 0, y: 18, scale: 0.985 }");
+      expect(surfaceReveal).toContain("{ opacity: 1, y: 0, scale: 1, duration: 0.45 }");
+      expect(card1).toMatch(/tl\.fromTo\(\s*"\.fr1-surface",[\s\S]*?,\s*0\.7,/);
+    });
+
+    it("keeps the surface box layout (rounded, clipped) intact — only the filter went", () => {
+      // The visual box is unchanged: still a rounded, overflow:hidden panel.
+      expect(card1).toMatch(/className="fr1-surface"[\s\S]*?overflow: "hidden"/);
+      expect(card1).toMatch(/className="fr1-surface"[\s\S]*?borderRadius: 16/);
+      // The surface element itself never declares an inline filter.
+      expect(card1).not.toMatch(/className="fr1-surface"[^>]*filter:/);
+    });
+  });
 });
 
 // ── Card 2 — Finish is selected, travels to centre, resolves to one message ────
@@ -473,6 +509,111 @@ describe("Card 2 rebuilt as a Priority Lens", () => {
   });
 });
 
+// ── Card 4 — clarified "from result to action" copy + light gold ──────────────
+
+describe("Card 4 clarified copy (from result to action)", () => {
+  // End the slice before Card 5's comment block (which mentions "Your pattern
+  // is ready") so the absence checks below only inspect Card 4's own source.
+  const card4 = infocards.slice(
+    infocards.indexOf("function Card4Mechanism"),
+    infocards.indexOf("CARD 5 — Teaser"),
+  );
+
+  it("uses the exact approved eyebrow, headline and CTA", () => {
+    expect(card4).toContain('eyebrow="FROM RESULT TO ACTION"');
+    expect(card4).toContain('title="Know what to do next — and adjust without starting over."');
+    expect(card4).toContain('cta="Show Me What Comes Next"');
+  });
+
+  it("renders the exact six node labels and subtitles in order", () => {
+    const nodes: [string, string][] = [
+      ["See what gets in the way", "based on your answers"],
+      ["Choose what to do first", "one clear next step"],
+      ["Try one small action", "clear and doable"],
+      ["Notice what helps", "keep what works"],
+      ["Adjust when needed", "without rebuilding everything"],
+      ["Keep moving forward", "one step at a time"],
+    ];
+    for (const [label, sub] of nodes) {
+      expect(card4).toContain(`{ label: "${label}", sub: "${sub}" }`);
+    }
+    // Order is preserved (label N's subtitle precedes label N+1).
+    for (let i = 1; i < nodes.length; i++) {
+      expect(card4.indexOf(nodes[i][0])).toBeGreaterThan(card4.indexOf(nodes[i - 1][0]));
+    }
+  });
+
+  it("drops the old generic IC4 wording and the banned terminology", () => {
+    // The previous nodes / headline / eyebrow / CTA are gone from the slice.
+    for (const old of [
+      "Not a result screen",
+      "Your pattern",
+      "Where friction starts",
+      "Starting route",
+      "Daily actions",
+      "Recovery route",
+      "Build the next step",
+      "Your system",
+    ]) {
+      expect(card4).not.toContain(old);
+    }
+    // "Progress" only appeared as the old final node label — it must be gone.
+    expect(card4).not.toContain("Progress");
+    const lc = card4.toLowerCase();
+    for (const term of [
+      "connected system",
+      "architecture",
+      "protocol",
+      "calibration",
+      "entry point",
+      "recovery route",
+      "cognitive load",
+      "personalized system",
+      "route built around your pattern",
+    ]) {
+      expect(lc).not.toContain(term);
+    }
+  });
+
+  it("keeps the six-node vertical structure (connectors, circles, GSAP reveal)", () => {
+    expect(card4).toContain("fr-link"); // connector lines
+    expect(card4).toContain("fr-node"); // circles + labels
+    expect(card4).toContain("useGsapReveal");
+    expect(card4).toContain("CardShell");
+    expect((card4.match(/label:/g) || []).length).toBe(6);
+  });
+});
+
+describe("Card 4 light gold accent (scoped to system.accent2)", () => {
+  it("uses the clearer gold #B98716 only for the light system accent2", () => {
+    // Light role: system.accent2 is the new, more saturated gold.
+    expect(infocards).toMatch(
+      /system:\s*\{ accent: "#1487B5", accent2: "#B98716", eyebrow: "Your system" \}/,
+    );
+    // The brown it replaced is no longer the system accent.
+    expect(infocards).not.toContain('accent2: "#9A7A2E"');
+    // The new value is introduced in exactly one place (not globally replaced).
+    expect((infocards.match(/#B98716/g) || []).length).toBe(1);
+  });
+
+  it("leaves the dark IC4 gold unchanged", () => {
+    expect(infocards).toMatch(
+      /system:\s*\{ accent: "#9BE8FF", accent2: "#D9BC7F", eyebrow: "Your system" \}/,
+    );
+  });
+
+  it("does not alter IC5 colors even though IC5 also uses #9A7A2E", () => {
+    // IC5's light "getting back" group color is untouched…
+    expect(infocards).toContain('color: dark ? "#F0DCAE" : "#9A7A2E"');
+    // …and the old value still exists in the module (IC5 + the unlock role),
+    // proving the change was scoped, not a global find-and-replace.
+    expect(infocards).toContain("#9A7A2E");
+    // IC5 route + eyebrow colors are unchanged.
+    expect(infocards).toContain('const routeColor = dark ? "#9BE8FF" : "#1487B5";');
+    expect(infocards).toContain('const eyebrowColor = dark ? "#B39BFF" : "#7A4FD0";');
+  });
+});
+
 // ── Other infocards remain untouched by the IC2 rebuild ───────────────────────
 
 describe("IC1, IC3, IC4, IC5 remain unchanged by the IC2 rebuild", () => {
@@ -484,8 +625,8 @@ describe("IC1, IC3, IC4, IC5 remain unchanged by the IC2 rebuild", () => {
     expect(infocards).toContain(
       "The hardest part is rarely the task. It's deciding the same things, again and again.",
     );
-    // IC4
-    expect(infocards).toContain("Not a result screen — a connected system built around your pattern.");
+    // IC4 (clarified copy — see the dedicated IC4 block below)
+    expect(infocards).toContain("Know what to do next — and adjust without starting over.");
     // IC5
     expect(infocards).toContain("Your answers are starting to show a clear pattern.");
     expect(infocards).toContain("See My Result");

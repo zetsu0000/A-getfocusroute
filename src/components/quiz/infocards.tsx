@@ -30,7 +30,7 @@ function useRole(dark: boolean): Record<string, Role> {
         recognition: { accent: "#7A4FD0", accent2: "#4655E6", eyebrow: "Recognition" },
         friction:    { accent: "#C2691E", accent2: "#1487B5", eyebrow: "Why generic stalls" },
         cost:        { accent: "#1C8A5A", accent2: "#1487B5", eyebrow: "The real cost" },
-        system:      { accent: "#1487B5", accent2: "#9A7A2E", eyebrow: "Your system" },
+        system:      { accent: "#1487B5", accent2: "#B98716", eyebrow: "Your system" },
         unlock:      { accent: "#9A7A2E", accent2: "#1487B5", eyebrow: "Personalized unlock" },
       };
 }
@@ -190,11 +190,18 @@ function Card1Recognition({ onContinue }: CardProps) {
         0.42,
       ).to(".fr1-hscan", { opacity: 0, duration: 0.3 }, 0.84);
 
-      // 3 · Surface-problem block — a thought becoming visible + one pulse
+      // 3 · Surface-problem block — a thought becoming visible + one pulse.
+      // Revealed with opacity / transform only — deliberately NO filter. A
+      // persistent filter (GSAP leaves the end `blur(0px)` applied) on this
+      // rounded, overflow:hidden, translucent-background box promotes it to a
+      // WebKit/Safari compositing layer whose rounded clip fails and paints an
+      // opaque white rectangle — visible before, during and after the reveal and
+      // in reduced motion. Dropping the blur removes that layer; the opacity + y
+      // + scale entrance (and every timing) is unchanged.
       tl.fromTo(
         ".fr1-surface",
-        { opacity: 0, y: 18, scale: 0.985, filter: blur(6) },
-        { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", duration: 0.45 },
+        { opacity: 0, y: 18, scale: 0.985 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.45 },
         0.7,
       );
       tl.fromTo(".fr1-quote", { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.35 }, 0.85);
@@ -953,7 +960,8 @@ function Card3Cost({ onContinue }: CardProps) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────
-   CARD 4 — Mechanism: connected system architecture (nodes ignite + link)
+   CARD 4 — From result to action: six steps light up and link, showing what
+   to do next and how to adjust (nodes ignite + link).
 ───────────────────────────────────────────────────────────────────── */
 function Card4Mechanism({ onContinue }: CardProps) {
   const { theme } = useFunnelTheme();
@@ -967,21 +975,21 @@ function Card4Mechanism({ onContinue }: CardProps) {
   });
 
   const nodes = [
-    { label: "Your pattern", sub: "from your answers" },
-    { label: "Where friction starts", sub: "the real blocker" },
-    { label: "Starting route", sub: "a concrete first move" },
-    { label: "Daily actions", sub: "small, doable" },
-    { label: "Recovery route", sub: "back on track" },
-    { label: "Progress", sub: "what’s moving" },
+    { label: "See what gets in the way", sub: "based on your answers" },
+    { label: "Choose what to do first", sub: "one clear next step" },
+    { label: "Try one small action", sub: "clear and doable" },
+    { label: "Notice what helps", sub: "keep what works" },
+    { label: "Adjust when needed", sub: "without rebuilding everything" },
+    { label: "Keep moving forward", sub: "one step at a time" },
   ];
 
   return (
     <CardShell
       rootRef={ref}
-      eyebrow={role.eyebrow}
+      eyebrow="FROM RESULT TO ACTION"
       eyebrowColor={role.accent}
-      title="Not a result screen — a connected system built around your pattern."
-      cta="Build the next step"
+      title="Know what to do next — and adjust without starting over."
+      cta="Show Me What Comes Next"
       onContinue={onContinue}
     >
       <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 0 }}>
