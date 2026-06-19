@@ -54,11 +54,22 @@ const sampleRow = {
   signature_name: "Tampered stored title",
 };
 
+const guestSampleRow = {
+  ...sampleRow,
+  user_id: null,
+};
+
 const guestSource = {
   kind: "submitted_quiz_result_email" as const,
   resultId: "result-123",
   email: "user@example.com",
   explicitDeliveryRequest: true as const,
+};
+
+const authSource = {
+  kind: "authenticated_user" as const,
+  userId: "user-1",
+  email: "user@example.com",
 };
 
 const messageFixture: ResultEmailMessage = {
@@ -155,6 +166,58 @@ describe("buildResultEmailPayload", () => {
     ).toThrow("result_email_insufficient_answers");
   });
 
+  it("rejects unknown question IDs without a canonical signature signal", () => {
+    expect(() =>
+      buildResultEmailPayload({
+        quizRow: {
+          ...sampleRow,
+          answers: [{ questionId: "anything-invalid", selectedOptions: ["anything"] }],
+        },
+        recipientEmail: "user@example.com",
+      }),
+    ).toThrow("result_email_insufficient_answers");
+  });
+
+  it("rejects malformed canonical values when they are the only pattern answer", () => {
+    expect(() =>
+      buildResultEmailPayload({
+        quizRow: {
+          ...sampleRow,
+          answers: [{ questionId: "focus-feeling", selectedOptions: ["invalid-value"] }],
+        },
+        recipientEmail: "user@example.com",
+      }),
+    ).toThrow("result_email_insufficient_answers");
+  });
+
+  it("builds from a valid canonical signature signal", () => {
+    const answers = build({ "focus-feeling": "stall" });
+    const { payload } = buildResultEmailPayload({
+      quizRow: { ...sampleRow, answers },
+      recipientEmail: "user@example.com",
+    });
+    const canonical = getSignatureFromAnswers(answers);
+    expect(payload.patternKey).toBe(canonical.signature);
+    expect(payload.patternName).toBe(canonical.title);
+  });
+
+  it("ignores invalid rows when a valid canonical signal is also present", () => {
+    const answers = [
+      { questionId: "anything-invalid", selectedOptions: ["anything"] },
+      { questionId: "focus-feeling", selectedOptions: ["invalid-value"] },
+      ...build({ "focus-feeling": "stall", obstacles: ["motivation"] }),
+    ];
+    const { payload } = buildResultEmailPayload({
+      quizRow: { ...sampleRow, answers },
+      recipientEmail: "user@example.com",
+    });
+    const canonical = getSignatureFromAnswers(
+      build({ "focus-feeling": "stall", obstacles: ["motivation"] }),
+    );
+    expect(payload.patternKey).toBe(canonical.signature);
+    expect(payload.patternName).toBe(canonical.title);
+  });
+
   it("excludes raw answers from the payload", () => {
     const { payload } = buildResultEmailPayload({
       quizRow: sampleRow,
@@ -188,12 +251,7 @@ describe("result email URLs", () => {
 
 describe("recipient source resolution", () => {
   it("accepts authenticated users only with matching user_id", () => {
-    expect(
-      resolveResultEmailRecipient(
-        { kind: "authenticated_user", userId: "user-1", email: "user@example.com" },
-        sampleRow,
-      ),
-    ).toBe("user@example.com");
+    expect(resolveResultEmailRecipient(authSource, sampleRow)).toBe("user@example.com");
   });
 
   it("rejects authenticated email when user_id mismatches", () => {
@@ -205,18 +263,13 @@ describe("recipient source resolution", () => {
     ).toBeNull();
   });
 
+  it("accepts guest source only for rows without user_id", () => {
+    expect(resolveResultEmailRecipient(guestSource, guestSampleRow)).toBe("user@example.com");
+    expect(resolveResultEmailRecipient(guestSource, sampleRow)).toBeNull();
+  });
+
   it("requires explicit delivery request for submitted guest email", () => {
-    expect(
-      resolveResultEmailRecipient(
-        {
-          kind: "submitted_quiz_result_email",
-          resultId: "result-123",
-          email: "user@example.com",
-          explicitDeliveryRequest: true,
-        },
-        sampleRow,
-      ),
-    ).toBe("user@example.com");
+    expect(resolveResultEmailRecipient(guestSource, guestSampleRow)).toBe("user@example.com");
 
     expect(
       resolveResultEmailRecipient(
@@ -226,7 +279,7 @@ describe("recipient source resolution", () => {
           email: "user@example.com",
           explicitDeliveryRequest: false as unknown as true,
         },
-        sampleRow,
+        guestSampleRow,
       ),
     ).toBeNull();
   });
@@ -248,6 +301,8 @@ describe("recipient source resolution", () => {
 });
 
 describe("sendResultEmail orchestration", () => {
+  const guestInput = { quizRow: guestSampleRow, recipientSource: guestSource };
+
   beforeEach(() => {
     delete process.env.RESULT_EMAIL_SENDING_ENABLED;
   });
@@ -255,15 +310,14 @@ describe("sendResultEmail orchestration", () => {
   it("does not claim idempotency when disabled", async () => {
     const ledger = new InMemoryEmailDeliveryLedger();
     const provider = new MockResultEmailProvider();
-    const input = { quizRow: sampleRow, recipientSource: guestSource };
 
-    const first = await sendResultEmail(input, undefined, {}, {
+    const first = await sendResultEmail(guestInput, undefined, {}, {
       ledger,
       provider,
       sendingEnabled: () => false,
       trackAnalytics: false,
     });
-    const second = await sendResultEmail(input, undefined, {}, {
+    const second = await sendResultEmail(guestInput, undefined, {}, {
       ledger,
       provider,
       sendingEnabled: () => true,
@@ -273,12 +327,18 @@ describe("sendResultEmail orchestration", () => {
     expect(first.status).toBe("skipped_disabled");
     expect(second.status).toBe("previewed");
     expect(provider.calls).toHaveLength(1);
+    expect(ledger.getRecord(second.idempotencyKey)?.attemptCount).toBe(1);
   });
 
   it("claims atomically so concurrent sends invoke the provider once", async () => {
     const ledger = new InMemoryEmailDeliveryLedger();
-    const provider = new MockResultEmailProvider();
-    const input = { quizRow: sampleRow, recipientSource: guestSource };
+    const provider = {
+      name: "mock",
+      send: vi.fn(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+        return { ok: true as const, providerMessageId: "mock-delayed" };
+      }),
+    };
     const deps = {
       ledger,
       provider,
@@ -287,18 +347,136 @@ describe("sendResultEmail orchestration", () => {
     };
 
     const [a, b] = await Promise.all([
-      sendResultEmail(input, undefined, {}, deps),
-      sendResultEmail(input, undefined, {}, deps),
+      sendResultEmail(guestInput, undefined, {}, deps),
+      sendResultEmail(guestInput, undefined, {}, deps),
     ]);
 
-    expect(provider.calls).toHaveLength(1);
-    expect([a.status, b.status].sort()).toEqual(["previewed", "skipped_duplicate"]);
+    expect(provider.send).toHaveBeenCalledTimes(1);
+    expect([a.status, b.status].sort()).toEqual(["previewed", "skipped_in_progress"]);
+  });
+
+  it("reclaims failed deliveries and increments attemptCount on retry", async () => {
+    const ledger = new InMemoryEmailDeliveryLedger();
+    const provider = {
+      name: "resend",
+      send: vi
+        .fn()
+        .mockResolvedValueOnce({ ok: false, safeErrorCode: "provider_rejected" })
+        .mockResolvedValueOnce({ ok: true, providerMessageId: "msg_2" }),
+    };
+
+    const first = await sendResultEmail(guestInput, messageFixture, {}, {
+      ledger,
+      provider,
+      sendingEnabled: () => true,
+      trackAnalytics: false,
+    });
+    expect(first.status).toBe("failed");
+    expect(provider.send).toHaveBeenCalledTimes(1);
+    expect(ledger.getRecord(first.idempotencyKey)?.attemptCount).toBe(1);
+    expect(ledger.getRecord(first.idempotencyKey)?.status).toBe("failed");
+
+    const second = await sendResultEmail(guestInput, messageFixture, {}, {
+      ledger,
+      provider,
+      sendingEnabled: () => true,
+      trackAnalytics: false,
+    });
+    expect(second.status).toBe("sent");
+    expect(provider.send).toHaveBeenCalledTimes(2);
+    expect(ledger.getRecord(second.idempotencyKey)?.attemptCount).toBe(2);
+    expect(ledger.getRecord(second.idempotencyKey)?.status).toBe("sent");
+  });
+
+  it("reclaims after provider_exception and message_not_configured failures", async () => {
+    const ledger = new InMemoryEmailDeliveryLedger();
+    const throwingProvider = {
+      name: "resend",
+      send: vi.fn(async () => {
+        throw new Error("smtp exploded user@example.com");
+      }),
+    };
+
+    const throwResult = await sendResultEmail(guestInput, messageFixture, {}, {
+      ledger,
+      provider: throwingProvider,
+      sendingEnabled: () => true,
+      trackAnalytics: false,
+    });
+    expect(throwResult.status).toBe("failed");
+    expect(throwResult.safeErrorCode).toBe("provider_exception");
+
+    const retryProvider = {
+      name: "resend",
+      send: vi.fn(async () => ({ ok: true, providerMessageId: "msg_retry" })),
+    };
+    const retryResult = await sendResultEmail(guestInput, messageFixture, {}, {
+      ledger,
+      provider: retryProvider,
+      sendingEnabled: () => true,
+      trackAnalytics: false,
+    });
+    expect(retryResult.status).toBe("sent");
+    expect(retryProvider.send).toHaveBeenCalledTimes(1);
+    expect(ledger.getRecord(retryResult.idempotencyKey)?.attemptCount).toBe(2);
+
+    const messageLedger = new InMemoryEmailDeliveryLedger();
+    const realProvider = {
+      name: "resend",
+      send: vi.fn(async () => ({ ok: true, providerMessageId: "msg_1" })),
+    };
+    const missingMessage = await sendResultEmail(guestInput, undefined, {}, {
+      ledger: messageLedger,
+      provider: realProvider,
+      sendingEnabled: () => true,
+      trackAnalytics: false,
+    });
+    expect(missingMessage.safeErrorCode).toBe("message_not_configured");
+    expect(realProvider.send).not.toHaveBeenCalled();
+
+    const withMessage = await sendResultEmail(guestInput, messageFixture, {}, {
+      ledger: messageLedger,
+      provider: realProvider,
+      sendingEnabled: () => true,
+      trackAnalytics: false,
+    });
+    expect(withMessage.status).toBe("sent");
+    expect(realProvider.send).toHaveBeenCalledTimes(1);
+    expect(messageLedger.getRecord(withMessage.idempotencyKey)?.attemptCount).toBe(2);
+  });
+
+  it("reclaims after provider_not_configured without blocking later attempts", async () => {
+    const ledger = new InMemoryEmailDeliveryLedger();
+    const noopProvider = { name: "noop", send: vi.fn() };
+
+    const first = await sendResultEmail(guestInput, messageFixture, {}, {
+      ledger,
+      provider: noopProvider,
+      sendingEnabled: () => true,
+      trackAnalytics: false,
+    });
+    expect(first.safeErrorCode).toBe("provider_not_configured");
+    expect(noopProvider.send).not.toHaveBeenCalled();
+
+    const realProvider = {
+      name: "resend",
+      send: vi.fn(async () => ({ ok: true, providerMessageId: "msg_1" })),
+    };
+    const second = await sendResultEmail(guestInput, messageFixture, {}, {
+      ledger,
+      provider: realProvider,
+      sendingEnabled: () => true,
+      trackAnalytics: false,
+    });
+    expect(second.status).toBe("sent");
+    expect(realProvider.send).toHaveBeenCalledTimes(1);
+    expect(ledger.getRecord(second.idempotencyKey)?.attemptCount).toBe(2);
   });
 
   it("returns previewed for mock sends and never real sent", async () => {
     const provider = new MockResultEmailProvider();
     const result = await sendResultEmail(
-      { quizRow: sampleRow, recipientSource: guestSource },
+      guestInput,
       undefined,
       {},
       {
@@ -313,13 +491,31 @@ describe("sendResultEmail orchestration", () => {
     expect(result.status).not.toBe("sent");
   });
 
+  it("treats sent and previewed records as terminal duplicates", async () => {
+    const ledger = new InMemoryEmailDeliveryLedger();
+    const provider = new MockResultEmailProvider();
+    const deps = {
+      ledger,
+      provider,
+      sendingEnabled: () => true,
+      trackAnalytics: false,
+    };
+
+    const first = await sendResultEmail(guestInput, undefined, {}, deps);
+    expect(first.status).toBe("previewed");
+
+    const duplicate = await sendResultEmail(guestInput, undefined, {}, deps);
+    expect(duplicate.status).toBe("skipped_duplicate");
+    expect(provider.calls).toHaveLength(1);
+  });
+
   it("requires an explicit message for real providers", async () => {
     const realProvider = {
       name: "resend",
       send: vi.fn(async () => ({ ok: true, providerMessageId: "msg_1" })),
     };
     const result = await sendResultEmail(
-      { quizRow: sampleRow, recipientSource: guestSource },
+      guestInput,
       undefined,
       {},
       {
@@ -341,7 +537,7 @@ describe("sendResultEmail orchestration", () => {
       send: vi.fn(async () => ({ ok: true, providerMessageId: "msg_1" })),
     };
     const result = await sendResultEmail(
-      { quizRow: sampleRow, recipientSource: guestSource },
+      guestInput,
       messageFixture,
       {},
       {
@@ -362,7 +558,7 @@ describe("sendResultEmail orchestration", () => {
       send: vi.fn(async () => ({ ok: false, safeErrorCode: "provider_rejected" })),
     };
     const failResult = await sendResultEmail(
-      { quizRow: sampleRow, recipientSource: guestSource },
+      guestInput,
       messageFixture,
       {},
       {
@@ -374,32 +570,63 @@ describe("sendResultEmail orchestration", () => {
     );
     expect(failResult.status).toBe("failed");
     expect(failResult.safeErrorCode).toBe("provider_rejected");
-
-    const throwingProvider = {
-      name: "resend",
-      send: vi.fn(async () => {
-        throw new Error("smtp exploded user@example.com");
-      }),
-    };
-    const throwResult = await sendResultEmail(
-      { quizRow: sampleRow, recipientSource: guestSource },
-      messageFixture,
-      {},
-      {
-        ledger: new InMemoryEmailDeliveryLedger(),
-        provider: throwingProvider,
-        sendingEnabled: () => true,
-        trackAnalytics: false,
-      },
-    );
-    expect(throwResult.status).toBe("failed");
-    expect(throwResult.safeErrorCode).toBe("provider_exception");
   });
 
   it("blocks marketing sends on the transactional path", () => {
     expect(() => assertMarketingEmailAllowed("marketing")).toThrow(
       "result_email_marketing_not_allowed",
     );
+  });
+});
+
+describe("delivery ledger claim semantics", () => {
+  it("blocks reclaim while pending lease is active and allows reclaim after expiry", async () => {
+    let nowMs = Date.parse("2026-01-01T00:00:00.000Z");
+    const clock = { now: () => new Date(nowMs) };
+    const ledger = new InMemoryEmailDeliveryLedger({ clock, leaseMs: 60_000 });
+    const input = {
+      idempotencyKey: "key-1",
+      emailType: "transactional" as const,
+      resultId: "result-123",
+      provider: "mock",
+    };
+
+    const first = await ledger.claim(input);
+    expect(first.status).toBe("claimed");
+    expect(first.record.attemptCount).toBe(1);
+
+    const inProgress = await ledger.claim(input);
+    expect(inProgress.status).toBe("in_progress");
+
+    nowMs += 61_000;
+    const reclaimed = await ledger.claim(input);
+    expect(reclaimed.status).toBe("reclaimed");
+    expect(reclaimed.record.attemptCount).toBe(2);
+  });
+
+  it("does not increment attemptCount on status updates", async () => {
+    const ledger = new InMemoryEmailDeliveryLedger();
+    const input = {
+      idempotencyKey: "key-2",
+      emailType: "transactional" as const,
+      resultId: "result-123",
+      provider: "mock",
+    };
+
+    await ledger.claim(input);
+    await ledger.markFailed({
+      idempotencyKey: input.idempotencyKey,
+      provider: "mock",
+      lastErrorCode: "provider_rejected",
+    });
+    expect(ledger.getRecord(input.idempotencyKey)?.attemptCount).toBe(1);
+
+    await ledger.markSent({
+      idempotencyKey: input.idempotencyKey,
+      provider: "mock",
+      providerMessageId: "msg_1",
+    });
+    expect(ledger.getRecord(input.idempotencyKey)?.attemptCount).toBe(1);
   });
 });
 

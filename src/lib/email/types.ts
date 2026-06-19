@@ -10,6 +10,7 @@ export type EmailDeliveryStatus =
   | "failed"
   | "skipped_disabled"
   | "skipped_duplicate"
+  | "skipped_in_progress"
   | "skipped_invalid";
 
 export type FocusFrictionScorePayload = {

@@ -140,6 +140,74 @@ const ORDER: BrainSignature[] = [
   "Drifter",
 ];
 
+const SIGNATURE_SINGLE_OPTIONS: Record<string, ReadonlySet<string>> = {
+  "focus-feeling": new Set(["cant-start", "stall", "heavy", "behind"]),
+  mood: new Set(["never", "rarely", "sometimes", "often", "always"]),
+  distraction: new Set(["never", "rarely", "sometimes", "often", "always"]),
+  experience: new Set(["never", "tried", "yes"]),
+  support: new Set(["therapy", "psychiatry", "coaching", "none"]),
+};
+
+const SIGNATURE_MULTI_OPTIONS: Record<string, ReadonlySet<string>> = {
+  struggles: new Set(["anxiety", "depression", "burnout", "ocd", "other", "none"]),
+  obstacles: new Set(["consistency", "motivation", "time", "method", "distraction"]),
+  goals: new Set(["focus", "memory", "adhd", "reasoning", "stress", "creativity"]),
+};
+
+const SIGNATURE_SCALE_QUESTIONS = new Set([
+  "scale-focus",
+  "scale-overwhelm",
+  "scale-emotions",
+  "scale-memory",
+  "scale-organization",
+]);
+
+const VALID_SCALE_VALUES = new Set(["1", "2", "3", "4", "5"]);
+
+function isValidSignatureAnswer(answer: QuizAnswer): boolean {
+  const { questionId, selectedOptions } = answer;
+  if (!Array.isArray(selectedOptions) || selectedOptions.length === 0) return false;
+
+  if (SIGNATURE_SINGLE_OPTIONS[questionId]) {
+    return (
+      selectedOptions.length === 1 &&
+      SIGNATURE_SINGLE_OPTIONS[questionId].has(selectedOptions[0])
+    );
+  }
+
+  if (SIGNATURE_MULTI_OPTIONS[questionId]) {
+    const allowed = SIGNATURE_MULTI_OPTIONS[questionId];
+    return selectedOptions.every((value) => allowed.has(value));
+  }
+
+  if (SIGNATURE_SCALE_QUESTIONS.has(questionId)) {
+    return selectedOptions.length === 1 && VALID_SCALE_VALUES.has(selectedOptions[0]);
+  }
+
+  return false;
+}
+
+/** Keeps only answers recognized by the canonical signature algorithm. */
+export function normalizeSignatureAnswers(answers: QuizAnswer[]): QuizAnswer[] {
+  return answers.filter(isValidSignatureAnswer);
+}
+
+/**
+ * True when normalized answers contain at least one canonical signature signal.
+ * Does not change getSignatureFromAnswers() fallback behavior.
+ */
+export function hasUsableSignatureSignal(answers: QuizAnswer[]): boolean {
+  const normalized = normalizeSignatureAnswers(answers);
+  if (normalized.length === 0) return false;
+
+  const scores = scoreArchetypes(normalized);
+  let bestScore = 0;
+  for (const key of ORDER) {
+    if (scores[key] > bestScore) bestScore = scores[key];
+  }
+  return bestScore > 0;
+}
+
 /* ── Answer accessors ─────────────────────────────────────────── */
 function single(answers: QuizAnswer[], qid: string): string | undefined {
   return answers.find((a) => a.questionId === qid)?.selectedOptions[0];

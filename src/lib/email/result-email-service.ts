@@ -71,11 +71,16 @@ export function resolveResultEmailRecipient(
     return email;
   }
 
-  if (!source.explicitDeliveryRequest) return null;
-  const email = normalizeRecipientEmail(source.email);
-  if (!email || !rowId || rowId !== source.resultId) return null;
-  if (rowEmail && rowEmail !== email) return null;
-  return email;
+  if (source.kind === "submitted_quiz_result_email") {
+    if (rowUserId) return null;
+    if (!source.explicitDeliveryRequest) return null;
+    const email = normalizeRecipientEmail(source.email);
+    if (!email || !rowId || rowId !== source.resultId) return null;
+    if (rowEmail && rowEmail !== email) return null;
+    return email;
+  }
+
+  return null;
 }
 
 export function assertMarketingEmailAllowed(category: SendResultEmailOptions["category"]): void {
@@ -183,6 +188,15 @@ export async function sendResultEmail(
   if (claim.status === "duplicate") {
     return {
       status: "skipped_duplicate",
+      idempotencyKey: payload.idempotencyKey,
+      provider: claim.record.provider,
+      providerMessageId: claim.record.providerMessageId,
+    };
+  }
+
+  if (claim.status === "in_progress") {
+    return {
+      status: "skipped_in_progress",
       idempotencyKey: payload.idempotencyKey,
       provider: claim.record.provider,
       providerMessageId: claim.record.providerMessageId,

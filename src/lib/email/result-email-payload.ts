@@ -4,7 +4,11 @@ import { buildResultEmailUrls } from "@/lib/email/result-email-urls";
 import type { ResultEmailBuildInput, ResultEmailPayloadBuildResult } from "@/lib/email/types";
 import { normalizeRecipientEmail } from "@/lib/email/validation";
 import { normalizeQuizAnswers, resolveResultScoreDataFromQuizRow } from "@/lib/result-score-data";
-import { getSignatureFromAnswers } from "@/lib/signature";
+import {
+  getSignatureFromAnswers,
+  hasUsableSignatureSignal,
+  normalizeSignatureAnswers,
+} from "@/lib/signature";
 
 const DEMOGRAPHIC_ONLY_QUESTION_IDS = new Set(["age", "name"]);
 
@@ -15,12 +19,6 @@ function stringField(value: unknown): string {
 function readResultId(row: Record<string, unknown>): string | null {
   const id = stringField(row.id);
   return id || null;
-}
-
-function hasMeaningfulAssessmentAnswers(
-  answers: ReturnType<typeof normalizeQuizAnswers>,
-): boolean {
-  return answers.some((row) => !DEMOGRAPHIC_ONLY_QUESTION_IDS.has(row.questionId));
 }
 
 function readStoredPattern(row: Record<string, unknown>): {
@@ -56,11 +54,16 @@ export function buildResultEmailPayload(
   }
 
   const answers = normalizeQuizAnswers(input.quizRow.answers);
-  if (!hasMeaningfulAssessmentAnswers(answers)) {
+  const signatureAnswers = normalizeSignatureAnswers(answers);
+  const hasDemographicOnly =
+    answers.length > 0 &&
+    answers.every((row) => DEMOGRAPHIC_ONLY_QUESTION_IDS.has(row.questionId));
+
+  if (hasDemographicOnly || !hasUsableSignatureSignal(answers)) {
     throw new Error("result_email_insufficient_answers");
   }
 
-  const signature = getSignatureFromAnswers(answers);
+  const signature = getSignatureFromAnswers(signatureAnswers);
   const storedPattern = readStoredPattern(input.quizRow);
   const patternMismatch = storedPattern
     ? storedPattern.patternKey !== signature.signature ||
