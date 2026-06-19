@@ -50,7 +50,7 @@ describe("INFOCARD_STAGE", () => {
 describe("infocard router", () => {
   it("routes each of the five ids to its dedicated card", () => {
     expect(infocards).toMatch(/case "info-seen":\s*\n\s*return <Card1Recognition/);
-    expect(infocards).toMatch(/case "info-match":\s*\n\s*return <Card2Differentiation/);
+    expect(infocards).toMatch(/case "info-match":\s*\n\s*return <Card2PriorityLens/);
     expect(infocards).toMatch(/case "info-focus":\s*\n\s*return <Card3Cost/);
     expect(infocards).toMatch(/case "info-system":\s*\n\s*return <Card4Mechanism/);
     expect(infocards).toMatch(/case "adhd-profile":\s*\n\s*return <Card5Unlock/);
@@ -199,7 +199,7 @@ describe("Card 3 chart copy is honest", () => {
 describe("Card 1 rebuilt as a fast mechanism explainer", () => {
   const card1 = infocards.slice(
     infocards.indexOf("function Card1Recognition"),
-    infocards.indexOf("function Card2Differentiation"),
+    infocards.indexOf("function Card2PriorityLens"),
   );
 
   it("renders the approved copy (label, two-beat headline, surface, mechanism)", () => {
@@ -255,6 +255,148 @@ describe("Card 1 rebuilt as a fast mechanism explainer", () => {
     expect(card1).not.toContain('top: "94%"');
     // It fades out (opacity → 0) rather than resting visible at the route end.
     expect(card1).toMatch(/\.fr1-pulse[\s\S]*?opacity: 0/);
+  });
+});
+
+// ── Card 2 rebuilt — Priority Lens (competing priorities → one clear step) ─────
+
+describe("Card 2 rebuilt as a Priority Lens", () => {
+  const card2 = infocards.slice(
+    infocards.indexOf("function Card2PriorityLens"),
+    infocards.indexOf("function Card3Cost"),
+  );
+
+  it("renders exactly the approved eyebrow + headline", () => {
+    expect(card2).toContain("WHEN EVERYTHING FEELS URGENT");
+    expect(card2).toContain("Know what matters right now.");
+  });
+
+  it("renders the approved supporting copy, payoff and CTA verbatim", () => {
+    expect(card2).toContain("FocusRoute turns too many priorities into one clear next step.");
+    expect(card2).toContain("Less time deciding. More time doing.");
+    expect(card2).toContain("Show Me My Next Step");
+  });
+
+  it("shows the focused-state copy: one clear next step + a return anchor", () => {
+    expect(card2).toContain("DO THIS NEXT");
+    expect(card2).toContain("A clear place to begin");
+    expect(card2).toContain("If interrupted, come back here");
+  });
+
+  it("removes the abstract IC2 product terminology", () => {
+    const lc = card2.toLowerCase();
+    for (const term of [
+      "entry point",
+      "recovery route",
+      "connected path",
+      "priority route",
+      "action map",
+      "system logic",
+      "focus architecture",
+      "cognitive load",
+      "protocol",
+      "calibration",
+    ]) {
+      expect(lc).not.toContain(term);
+    }
+  });
+
+  it("drops the old comparison-table / two-path grammar entirely", () => {
+    expect(card2).not.toContain("Generic plan");
+    expect(card2).not.toContain("One connected route");
+    expect(card2).not.toContain("Map what gets in the way");
+    expect(card2).not.toContain("A to-do list tells you what");
+    // No two-column comparison layout, no reliance on question.infoBenefit.
+    expect(card2).not.toContain('gridTemplateColumns: "1fr 1fr"');
+    expect(card2).not.toContain("question.infoBenefit");
+    expect(card2).not.toContain("CardShell");
+  });
+
+  it("has no scanner / instrumentation wording", () => {
+    const lc = card2.toLowerCase();
+    expect(lc).not.toContain("signal detected");
+    expect(lc).not.toContain("scan complete");
+    expect(lc).not.toContain("scan line");
+    expect(card2).not.toContain("Scan");
+  });
+
+  it("uses the priority-lens grammar with competing task fragments", () => {
+    expect(card2).toContain(".ic2-lens");
+    expect(card2).toContain(".ic2-frag");
+    for (const frag of ["Reply", "Finish", "Plan", "Fix", "Remember", "Review"]) {
+      expect(card2).toContain(frag);
+    }
+  });
+
+  it("is distinct from IC1 and IC5 (no reused route / scan / converging-dot grammar)", () => {
+    // No IC1 vertical-route / scan-line classes.
+    expect(card2).not.toContain("fr1-route");
+    expect(card2).not.toContain("fr1-vscan");
+    expect(card2).not.toContain("fr1-hscan");
+    // No IC5 scattered-dots-into-three-groups / route-beneath classes.
+    expect(card2).not.toContain("ic5-dot");
+    expect(card2).not.toContain("ic5-route");
+    expect(card2).not.toContain("ic5-group");
+  });
+
+  it("drives one scoped, cleaned-up GSAP timeline that plays once", () => {
+    expect(card2).toContain("gsap.context");
+    expect(card2).toContain("ctx.revert()");
+    expect(card2).toContain("paused: true");
+    // No infinite ambient, no pinning, no scrub, no scroll-driven reveal.
+    expect(card2).not.toContain("repeat: -1");
+    expect(card2).not.toContain("ScrollTrigger");
+    expect(card2).not.toContain("pin:");
+    expect(card2).not.toContain("scrub");
+  });
+
+  it("renders the CTA visibly from the start — never animated from opacity 0", () => {
+    expect(card2).toContain('".ic2-cta", { opacity: 0.9');
+    expect(card2).not.toMatch(/\.ic2-cta",\s*\{\s*opacity:\s*0\s*,/);
+    expect(card2).toContain("onClick={onContinue}");
+  });
+
+  it("snaps to a complete final state under reduced motion", () => {
+    expect(card2).toContain("prefers-reduced-motion");
+    expect(card2).toContain("tl.progress(1)");
+  });
+
+  it("frames mobile: safe-area bottom, no internal scroll, no fixed viewport height", () => {
+    expect(card2).toContain("env(safe-area-inset-bottom");
+    expect(card2).toContain('minHeight: "100%"');
+    expect(card2).not.toContain('overflowY: "auto"');
+    expect(card2).not.toContain('overflowY: "scroll"');
+    expect(card2).not.toMatch(/height:\s*"100vh"/);
+    expect(card2).not.toMatch(/height:\s*"100dvh"/);
+  });
+});
+
+// ── Other infocards remain untouched by the IC2 rebuild ───────────────────────
+
+describe("IC1, IC3, IC4, IC5 remain unchanged by the IC2 rebuild", () => {
+  it("keeps IC1, IC3, IC4 and IC5 signature copy intact", () => {
+    // IC1
+    expect(infocards).toContain("It’s not just ");
+    expect(infocards).toContain("procrastination.");
+    // IC3
+    expect(infocards).toContain(
+      "The hardest part is rarely the task. It's deciding the same things, again and again.",
+    );
+    // IC4
+    expect(infocards).toContain("Not a result screen — a connected system built around your pattern.");
+    // IC5
+    expect(infocards).toContain("Your answers are starting to show a clear pattern.");
+    expect(infocards).toContain("See My Result");
+  });
+
+  it("keeps the five stage ids + routing stable", () => {
+    expect(INFOCARD_STAGE).toEqual({
+      "info-seen": 1,
+      "info-match": 2,
+      "info-focus": 3,
+      "info-system": 4,
+      "adhd-profile": 5,
+    });
   });
 });
 

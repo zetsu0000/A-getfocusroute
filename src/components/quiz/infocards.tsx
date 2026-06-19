@@ -500,101 +500,311 @@ function Card1Recognition({ onContinue }: CardProps) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────
-   CARD 2 — Differentiation: generic path (breaks) vs FocusRoute (connects)
+   CARD 2 — Priority Lens (competing priorities → focus field → one clear step)
 ───────────────────────────────────────────────────────────────────── */
-function Card2Differentiation({ question, onContinue }: CardProps) {
+function Card2PriorityLens({ onContinue }: CardProps) {
   const { theme } = useFunnelTheme();
   const dark = theme === "dark";
-  const role = useRole(dark).friction;
 
-  const ref = useGsapReveal((tl) => {
-    tl.from(".fr-rv", { y: 14, opacity: 0, stagger: 0.07 })
-      .from(".fr-generic-step", { opacity: 0, x: -10, stagger: 0.06 }, "-=0.1")
-      .from(".fr-route-step", { opacity: 0, x: 10, stagger: 0.08 }, "-=0.2");
-  });
+  // Urgency (warm) cools into clarity (signal). Color carries the
+  // "too many urgent things → one clear step" meaning; the copy carries it too.
+  const urgent = dark ? "#FFB28B" : "#C2691E";
+  const lens = dark ? "#9BE8FF" : "#1487B5";
+  const selected = dark ? "#9BE8FF" : "#1487B5";
 
-  const generic = ["Task list", "Overwhelm", "Delay", "Restart"];
-  const route = ["Priority", "Entry point", "Daily action", "Recovery route", "Progress"];
+  // Competing task fragments — illustrative UI, never personalized claims, so
+  // they are decorative (aria-hidden); the visible copy carries their meaning.
+  // px/py = small pull toward the centre (Phase 2 competition); ox/oy = the
+  // slight outward drift as the lens quiets them (Phase 3); rot ≤ 2deg.
+  const fragments = [
+    { label: "Reply",    tag: "urgent", left: "15%", top: "13%", px: 11,  py: 9,   ox: -8, oy: -6, rot: 1.5,  cs: 1.03 },
+    { label: "Finish",   tag: null,     left: "85%", top: "17%", px: -12, py: 10,  ox: 9,  oy: -6, rot: -1,   cs: 1.0  },
+    { label: "Plan",     tag: null,     left: "9%",  top: "47%", px: 12,  py: 3,   ox: -9, oy: 2,  rot: -1.5, cs: 1.02 },
+    { label: "Fix",      tag: null,     left: "90%", top: "49%", px: -12, py: -2,  ox: 8,  oy: 0,  rot: 1,    cs: 1.04 },
+    { label: "Remember", tag: "today",  left: "22%", top: "83%", px: 10,  py: -10, ox: -7, oy: 7,  rot: -1,   cs: 1.0  },
+    { label: "Review",   tag: null,     left: "80%", top: "84%", px: -10, py: -9,  ox: 8,  oy: 7,  rot: 1.5,  cs: 1.02 },
+  ];
+
+  const ref = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const root = ref.current;
+    if (!root) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const ctx = gsap.context(() => {
+      // Per-fragment animation targets are read off data-* so one scoped tween
+      // can pull / push every chip in its own direction.
+      const ds = (k: string) => (_i: number, el: Element) =>
+        Number((el as HTMLElement).dataset[k]);
+
+      // Centre the fragments / lens / selected card on their anchor via GSAP's
+      // own transform (xPercent/yPercent) so the animated x/y stay pure offsets
+      // and never fight a CSS translate. Mirrors the inline translate used as
+      // the no-JS fallback.
+      gsap.set(".ic2-frag", { xPercent: -50, yPercent: -50 });
+      gsap.set([".ic2-lens", ".ic2-selected"], { xPercent: -50, yPercent: -50 });
+
+      const tl = gsap.timeline({ paused: true, defaults: { ease: "power2.out" } });
+
+      // Phase 1 · Recognition — chrome resolves; fragments crowd the field
+      tl.fromTo(".ic2-eyebrow", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.3 }, 0);
+      tl.fromTo(".ic2-headline", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.34 }, 0.1);
+      tl.fromTo(".ic2-support", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.3 }, 0.22);
+      tl.fromTo(
+        ".ic2-frag",
+        { opacity: 0, scale: 0.9, y: 10, x: () => gsap.utils.random(-6, 6) },
+        { opacity: 0.96, scale: 1, x: 0, y: 0, duration: 0.32, stagger: 0.04 },
+        0.2,
+      );
+
+      // Phase 2 · Competition — fragments jostle toward the centre; two or three
+      // briefly scale up. Controlled, not chaotic (≤20px, ≤1.04, ≤2deg).
+      tl.to(
+        ".ic2-frag",
+        {
+          x: ds("px"),
+          y: ds("py"),
+          scale: ds("cs"),
+          rotation: ds("rot"),
+          duration: 0.4,
+          ease: "sine.inOut",
+        },
+        0.42,
+      );
+
+      // Phase 3 · Priority lens — a soft focus field appears and the secondary
+      // fragments drift slightly outward and lose contrast.
+      tl.fromTo(".ic2-lens", { opacity: 0, scale: 0.62 }, { opacity: 1, scale: 1, duration: 0.4 }, 0.78);
+      tl.to(
+        ".ic2-frag",
+        {
+          x: ds("ox"),
+          y: ds("oy"),
+          scale: 0.9,
+          rotation: 0,
+          opacity: 0.6,
+          duration: 0.45,
+          ease: "power2.out",
+        },
+        0.85,
+      );
+
+      // Phase 4 · Clear next step — the selected action becomes the strongest
+      // object in the module.
+      tl.fromTo(
+        ".ic2-selected",
+        { opacity: 0, scale: 0.96, y: 6 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.34 },
+        1.06,
+      );
+
+      // Phase 5 · Return anchor — an interruption does not mean starting over.
+      tl.fromTo(".ic2-anchor", { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.3 }, 1.36);
+
+      // Phase 6 · Payoff + CTA. The CTA only settles from a visible 0.9 → 1; it
+      // is never invisible while interactive. Reduced motion lands it at 1.
+      tl.fromTo(".ic2-payoff", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.3 }, 1.56);
+      tl.fromTo(".ic2-cta", { opacity: 0.9, y: 4 }, { opacity: 1, y: 0, duration: 0.28 }, 1.66);
+
+      if (reduce) {
+        tl.progress(1).pause(); // complete final state, no motion, nothing hidden
+        return;
+      }
+      tl.play();
+      // One-shot: no repeat, no infinite ambient, no pinning, no scroll trap.
+    }, root);
+
+    return () => ctx.revert();
+    // Runs once on mount; reduced motion + ctx.revert keep it safe.
+  }, []);
 
   return (
-    <CardShell
-      rootRef={ref}
-      eyebrow={role.eyebrow}
-      eyebrowColor={role.accent}
-      title="A to-do list tells you what. Not how to begin, or how to recover."
-      cta="Map what gets in the way"
-      onContinue={onContinue}
+    // Single scroller (the quiz stage) — no own overflow, no fixed viewport
+    // height. Safe-area bottom pad keeps the CTA clear of the iOS/Safari bar.
+    <div
+      ref={ref}
+      style={{
+        minHeight: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        padding: "20px 18px calc(26px + env(safe-area-inset-bottom, 0px))",
+      }}
     >
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        {/* Generic path — breaks */}
-        <div
-          className="fr-rv"
+      <div style={{ width: "100%", maxWidth: 480, display: "flex", flexDirection: "column", flex: 1 }}>
+        {/* Eyebrow — plain language, no product jargon */}
+        <p className="ic2-eyebrow v2-hud" style={{ color: urgent, marginBottom: 10, letterSpacing: "0.16em" }}>
+          WHEN EVERYTHING FEELS URGENT
+        </p>
+
+        {/* Headline */}
+        <h2
+          className="ic2-headline v2-display"
           style={{
-            padding: "13px 12px",
-            borderRadius: 16,
-            border: `1px solid color-mix(in srgb, ${role.accent} 30%, transparent)`,
-            background: `color-mix(in srgb, ${role.accent} 7%, transparent)`,
+            fontSize: "clamp(22px, 6vw, 27px)",
+            fontWeight: 560,
+            lineHeight: 1.16,
+            letterSpacing: "-0.01em",
+            marginBottom: 10,
+            color: "var(--v2-ink)",
           }}
         >
-          <Pill color={role.accent}>Generic plan</Pill>
-          <div style={{ marginTop: 11, display: "flex", flexDirection: "column", gap: 7 }}>
-            {generic.map((s, i) => (
-              <div
-                key={s}
-                className="fr-generic-step"
-                style={{
-                  fontSize: 12.5,
-                  color: i === generic.length - 1 ? role.accent : "var(--v2-ink-dim)",
-                  fontWeight: i === generic.length - 1 ? 700 : 500,
-                  opacity: 1 - i * 0.08,
-                }}
-              >
-                {s}
-                {i < generic.length - 1 && (
-                  <span style={{ color: "var(--v2-ink-ghost)", marginLeft: 6 }}>↓</span>
-                )}
-              </div>
-            ))}
+          Know what matters right now.
+        </h2>
+
+        {/* Supporting copy */}
+        <p className="ic2-support" style={{ fontSize: 14.5, color: "var(--v2-ink-dim)", lineHeight: 1.5, marginBottom: 16 }}>
+          FocusRoute turns too many priorities into one clear next step.
+        </p>
+
+        {/* Priority-lens stage — competing fragments → focus field → one step.
+            Fixed pixel height (never a viewport unit) + overflow hidden keep the
+            small fragment movements from clipping content or overflowing. */}
+        <div
+          className="ic2-stage"
+          style={{
+            position: "relative",
+            height: "clamp(196px, 52vw, 224px)",
+            borderRadius: 18,
+            overflow: "hidden",
+            border: `1px solid color-mix(in srgb, ${lens} 22%, transparent)`,
+            background: `linear-gradient(165deg, color-mix(in srgb, ${lens} 8%, transparent), transparent)`,
+          }}
+        >
+          {/* Soft focus lens — restrained radial light, not a sweeping line */}
+          <span
+            className="ic2-lens"
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: "50%",
+              transform: "translate(-50%, -50%)",
+              width: "clamp(150px, 44vw, 178px)",
+              height: "clamp(150px, 44vw, 178px)",
+              borderRadius: "50%",
+              border: `1px solid color-mix(in srgb, ${lens} 45%, transparent)`,
+              background: `radial-gradient(circle at 50% 50%, color-mix(in srgb, ${lens} 16%, transparent) 0%, transparent 68%)`,
+              boxShadow: `inset 0 0 28px color-mix(in srgb, ${lens} 24%, transparent)`,
+              pointerEvents: "none",
+            }}
+          />
+
+          {/* Competing task fragments — decorative; meaning is in the copy */}
+          {fragments.map((f) => (
+            <span
+              key={f.label}
+              className="ic2-frag"
+              aria-hidden="true"
+              data-px={f.px}
+              data-py={f.py}
+              data-ox={f.ox}
+              data-oy={f.oy}
+              data-rot={f.rot}
+              data-cs={f.cs}
+              style={{
+                position: "absolute",
+                left: f.left,
+                top: f.top,
+                transform: "translate(-50%, -50%)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 3,
+                padding: "5px 10px",
+                borderRadius: 10,
+                background: "var(--v2-glass-2)",
+                border: "1px solid var(--v2-line-bright)",
+                color: "var(--v2-ink-dim)",
+                fontSize: 12.5,
+                fontWeight: 600,
+                whiteSpace: "nowrap",
+                pointerEvents: "none",
+              }}
+            >
+              {f.label}
+              {f.tag && (
+                <span
+                  style={{
+                    fontSize: 9,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    fontWeight: 700,
+                    color: urgent,
+                  }}
+                >
+                  {f.tag}
+                </span>
+              )}
+            </span>
+          ))}
+
+          {/* The one clear next step — strongest object: solid surface, strong
+              border, depth. Stays semantic text for assistive tech. */}
+          <div
+            className="ic2-selected"
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: "50%",
+              transform: "translate(-50%, -50%)",
+              zIndex: 3,
+              width: "clamp(150px, 46vw, 186px)",
+              padding: "12px 14px",
+              borderRadius: 14,
+              textAlign: "center",
+              background: "var(--v2-bg-panel)",
+              border: `1.5px solid ${selected}`,
+              boxShadow: `0 0 0 4px color-mix(in srgb, ${selected} 14%, transparent), var(--v2-shadow-md)`,
+            }}
+          >
+            <p className="ic2-do v2-hud" style={{ color: selected, letterSpacing: "0.14em", marginBottom: 5, fontSize: 11 }}>
+              DO THIS NEXT
+            </p>
+            <p style={{ fontSize: 15, fontWeight: 700, color: "var(--v2-ink)", lineHeight: 1.25 }}>
+              A clear place to begin
+            </p>
           </div>
-          <p style={{ marginTop: 10, fontSize: 11, color: role.accent }}>Loops back to the start.</p>
         </div>
 
-        {/* FocusRoute path — connects */}
-        <div
-          className="fr-rv"
-          style={{
-            padding: "13px 12px",
-            borderRadius: 16,
-            border: `1px solid color-mix(in srgb, ${role.accent2} 34%, transparent)`,
-            background: `linear-gradient(160deg, color-mix(in srgb, ${role.accent2} 15%, transparent), transparent)`,
-          }}
-        >
-          <Pill color={role.accent2}>FocusRoute</Pill>
-          <div style={{ marginTop: 11, display: "flex", flexDirection: "column", gap: 7 }}>
-            {route.map((s, i) => (
-              <div
-                key={s}
-                className="fr-route-step"
-                style={{
-                  fontSize: 12.5,
-                  fontWeight: i === route.length - 1 ? 760 : 600,
-                  color: i === route.length - 1 ? "var(--v2-ink)" : "var(--v2-ink-dim)",
-                }}
-              >
-                <span style={{ color: role.accent2, marginRight: 6 }}>›</span>
-                {s}
-              </div>
-            ))}
-          </div>
-          <p style={{ marginTop: 10, fontSize: 11, color: role.accent2 }}>One connected route.</p>
+        {/* Return anchor — an interruption is not a full restart */}
+        <div className="ic2-anchor" style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <span aria-hidden="true" style={{ display: "inline-flex", flexShrink: 0, color: selected }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"
+                fill={`color-mix(in srgb, ${selected} 18%, transparent)`}
+                stroke={selected}
+                strokeWidth="1.8"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--v2-ink-dim)" }}>
+            If interrupted, come back here
+          </span>
         </div>
+
+        {/* Spacer pushes the payoff + CTA toward the bottom on tall screens */}
+        <div style={{ flex: 1, minHeight: 14 }} />
+
+        {/* Payoff — readable, but quieter than the CTA */}
+        <p className="ic2-payoff" style={{ fontSize: 14, fontWeight: 600, color: "var(--v2-ink-dim)", textAlign: "center", marginTop: 8 }}>
+          Less time deciding. More time doing.
+        </p>
+
+        {/* CTA — visibly present, clickable and keyboard-focusable from mount;
+            the timeline only nudges it from 0.9 → 1 opacity, never from 0. */}
+        <button
+          onClick={onContinue}
+          className="ic2-cta v2-cta"
+          style={{ width: "100%", minHeight: 54, fontSize: 15, marginTop: 12 }}
+        >
+          Show Me My Next Step
+        </button>
       </div>
-
-      <p className="fr-rv" style={{ marginTop: 14, fontSize: 13, color: "var(--v2-ink-dim)", lineHeight: 1.5 }}>
-        {question.infoBenefit ??
-          "FocusRoute connects priorities, starting points, daily actions, recovery and progress — so you begin from a concrete next move, not a planning reset."}
-      </p>
-    </CardShell>
+    </div>
   );
 }
 
@@ -1094,7 +1304,7 @@ export function InfocardV2({ question, onContinue }: CardProps) {
     case "info-seen":
       return <Card1Recognition question={question} onContinue={onContinue} />;
     case "info-match":
-      return <Card2Differentiation question={question} onContinue={onContinue} />;
+      return <Card2PriorityLens question={question} onContinue={onContinue} />;
     case "info-focus":
       return <Card3Cost question={question} onContinue={onContinue} />;
     case "info-system":
