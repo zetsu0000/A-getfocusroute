@@ -500,11 +500,11 @@ function Card1Recognition({ onContinue }: CardProps) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────
-   CARD 2 — Priority Lens. Many competing priorities → ONE is selected → that
-   SAME task ("Finish") travels to the centre and becomes the next step → the
-   user learns where to return after an interruption. The selected element is
-   a single morphing DOM node (FLIP-measured travel + grow), so the user can
-   visually track Finish the whole way — never a crossfade between two boxes.
+   CARD 2 — Priority Lens. Many competing priorities → ONE ("Finish") is
+   selected → that SAME element travels to the centre and resolves into one
+   clear message: START HERE, NOT EVERYWHERE. The selected element is a single
+   morphing DOM node (FLIP-measured travel + grow), so the user tracks Finish
+   the whole way — never a crossfade between two boxes.
 ───────────────────────────────────────────────────────────────────── */
 function Card2PriorityLens({ onContinue }: CardProps) {
   const { theme } = useFunnelTheme();
@@ -524,7 +524,6 @@ function Card2PriorityLens({ onContinue }: CardProps) {
         selBorderOff: "rgba(163, 178, 255, 0.20)",
         selBorderOn: "#7C8AFF",
         selText: "#AEB7FF",
-        kicker: "#9AA5FF",
         ringSoft: "rgba(124, 138, 255, 0.40)",
         warm: "#FFB28B",
       }
@@ -539,7 +538,6 @@ function Card2PriorityLens({ onContinue }: CardProps) {
         selBorderOff: "rgba(40, 52, 90, 0.18)",
         selBorderOn: "#4655E6",
         selText: "#3B45C9",
-        kicker: "#4655E6",
         ringSoft: "rgba(70, 85, 230, 0.18)",
         warm: "#C2691E",
       };
@@ -550,8 +548,8 @@ function Card2PriorityLens({ onContinue }: CardProps) {
   // Phase-3 drift outward as Finish is chosen. Decorative (aria-hidden).
   const secondary = [
     { label: "Reply",    tag: "urgent", left: "19%", top: "17%", cx: 10, cy: 8,  ox: -6, oy: -5, cs: 1.03 },
-    { label: "Plan",     tag: null,     left: "13%", top: "49%", cx: 9,  cy: 0,  ox: -7, oy: 0,  cs: 1.0  },
-    { label: "Fix",      tag: null,     left: "87%", top: "49%", cx: -12, cy: 0, ox: 7,  oy: 0,  cs: 1.03 },
+    { label: "Plan",     tag: null,     left: "11%", top: "49%", cx: 9,  cy: 0,  ox: -7, oy: 0,  cs: 1.0  },
+    { label: "Fix",      tag: null,     left: "89%", top: "49%", cx: -12, cy: 0, ox: 7,  oy: 0,  cs: 1.03 },
     { label: "Remember", tag: "today",  left: "21%", top: "83%", cx: 7,  cy: -8, ox: -6, oy: 5,  cs: 1.0  },
     { label: "Review",   tag: null,     left: "79%", top: "83%", cx: -8, cy: -7, ox: 6,  oy: 5,  cs: 1.0  },
   ];
@@ -619,20 +617,20 @@ function Card2PriorityLens({ onContinue }: CardProps) {
       //    selection pause does Finish travel from its slot to the exact centre,
       //    growing to full size. One confident move, no bounce, no crossfade.
       tl.to(panel, { x: 0, y: 0, scale: 1, duration: 0.65, ease: "power3.inOut" }, 1.7);
-      // Selected-state copy resolves near the END of the travel, once Finish has
-      // visibly reached the centre.
-      tl.fromTo(".ic2-do", { opacity: 0, y: 4 }, { opacity: 1, y: 0, duration: 0.3 }, 2.15);
-      tl.fromTo(".ic2-place", { opacity: 0, y: 4 }, { opacity: 1, y: 0, duration: 0.3 }, 2.25);
 
-      // ── Phase 5 (2.45s) · Return anchor — tied to the selected panel.
-      tl.fromTo(".ic2-anchor", { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.3 }, 2.45);
+      // ── Phase 5 (~2.25–2.62s) · Resolve — as Finish lands, the tracked "Finish"
+      //    label softens out and the final message resolves IN PLACE inside the
+      //    SAME panel (no new card, no geometry change). Finish stays readable
+      //    through most of the travel; the message lands only at the end.
+      tl.to(".ic2-finish", { opacity: 0, duration: 0.22 }, 2.25);
+      tl.fromTo(".ic2-final", { opacity: 0, y: 3 }, { opacity: 1, y: 0, duration: 0.3 }, 2.32);
 
-      // ── Phase 6 (2.75s) · Payoff — quieter than the panel + CTA.
-      tl.fromTo(".ic2-payoff", { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.3 }, 2.75);
+      // ── Phase 6 (~2.6s) · Payoff — quieter than the panel + CTA.
+      tl.fromTo(".ic2-payoff", { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.3 }, 2.6);
 
-      // CTA — visible + focusable from mount; only a subtle final settle (~2.9s,
-      // ending ~3.2s), never animated from opacity 0, never pulsed.
-      tl.fromTo(".ic2-cta", { opacity: 0.94, scale: 0.99 }, { opacity: 1, scale: 1, duration: 0.3 }, 2.9);
+      // CTA — visible + focusable from mount; only a subtle final settle (~2.78s,
+      // ending ~3.08s), never animated from opacity 0, never pulsed.
+      tl.fromTo(".ic2-cta", { opacity: 0.94, scale: 0.99 }, { opacity: 1, scale: 1, duration: 0.3 }, 2.78);
 
       if (reduce) {
         tl.progress(1).pause(); // complete final state, no motion, nothing hidden
@@ -760,10 +758,10 @@ function Card2PriorityLens({ onContinue }: CardProps) {
             </span>
           ))}
 
-          {/* Finish — the ONE task that becomes the next step. A single morphing
-              element: it begins as a compact chip in the upper-right (GSAP scales
-              + translates it there), then travels to the centre and grows into
-              this panel. Semantic text throughout for assistive tech. */}
+          {/* Finish → final message. The SAME outer element is the chip, travels
+              to the centre and becomes this panel. Its two-line height is fixed by
+              the (in-flow) final message so the geometry never jumps; "Finish" is
+              an absolute overlay the user tracks until it resolves on landing. */}
           <div
             className="ic2-selected"
             style={{
@@ -772,14 +770,12 @@ function Card2PriorityLens({ onContinue }: CardProps) {
               top: "50%",
               transform: "translate(-50%, -50%)",
               zIndex: 4,
-              width: "clamp(156px, 50%, 188px)",
-              padding: "12px 14px",
-              borderRadius: 14,
+              width: "clamp(176px, 52%, 190px)",
+              padding: "18px 20px",
+              borderRadius: 15,
               display: "flex",
-              flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              gap: 5,
               textAlign: "center",
               background: c.panelBg,
               border: `1.5px solid ${c.selBorderOff}`,
@@ -794,45 +790,57 @@ function Card2PriorityLens({ onContinue }: CardProps) {
               style={{
                 position: "absolute",
                 inset: 0,
-                borderRadius: 14,
+                borderRadius: 15,
                 border: `1.5px solid ${c.selBorderOn}`,
                 boxShadow: `0 0 0 4px ${c.ringSoft}, var(--v2-shadow-md)`,
                 opacity: 0,
                 pointerEvents: "none",
               }}
             />
-            <p className="ic2-do v2-hud" style={{ margin: 0, fontSize: 13, letterSpacing: "0.14em", color: c.kicker }}>
-              DO THIS NEXT
+
+            {/* Final message — the only content: two explicit lines (never a wrap
+                dependency). In flow, so it fixes the panel's height; resolves on
+                landing. This is the accessible text the panel announces. */}
+            <p
+              className="ic2-final"
+              style={{
+                margin: 0,
+                fontSize: 22,
+                fontWeight: 780,
+                lineHeight: 1.1,
+                letterSpacing: "-0.005em",
+                color: c.selText,
+              }}
+            >
+              <span style={{ display: "block" }}>START HERE,</span>
+              <span style={{ display: "block", marginTop: 3 }}>NOT EVERYWHERE.</span>
             </p>
-            <p className="ic2-finish" style={{ margin: 0, fontSize: 21, fontWeight: 780, lineHeight: 1.1, color: c.selText }}>
+
+            {/* Finish — the tracked task during competition + travel; an absolute
+                overlay (no layout weight) that softens out as the message lands.
+                Decorative: the message above carries the panel's meaning. */}
+            <span
+              className="ic2-finish"
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "grid",
+                placeItems: "center",
+                fontSize: 22,
+                fontWeight: 780,
+                lineHeight: 1.1,
+                color: c.selText,
+              }}
+            >
               Finish
-            </p>
-            <p className="ic2-place" style={{ margin: 0, fontSize: 15, fontWeight: 600, lineHeight: 1.25, color: "var(--v2-ink)" }}>
-              A clear place to begin
-            </p>
+            </span>
           </div>
         </div>
 
-        {/* Return anchor — bookmark in the selected colour ties it to the panel */}
-        <div className="ic2-anchor" style={{ marginTop: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-          <span aria-hidden="true" style={{ display: "inline-flex", flexShrink: 0, color: c.selBorderOn }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"
-                fill={c.ringSoft}
-                stroke={c.selBorderOn}
-                strokeWidth="1.8"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--v2-ink-dim)" }}>
-            If interrupted, come back here
-          </span>
-        </div>
-
-        {/* Payoff — readable, but quieter than the CTA */}
-        <p className="ic2-payoff" style={{ fontSize: 14, fontWeight: 600, color: "var(--v2-ink-dim)", textAlign: "center", marginTop: 16 }}>
+        {/* Payoff — readable, but quieter than the CTA. Sits directly below the
+            stage (no return-anchor slot) so it reads as the visual conclusion. */}
+        <p className="ic2-payoff" style={{ fontSize: 14.5, fontWeight: 620, color: "var(--v2-ink-dim)", textAlign: "center", lineHeight: 1.35, marginTop: 18 }}>
           Less time deciding. More time doing.
         </p>
 
@@ -841,7 +849,7 @@ function Card2PriorityLens({ onContinue }: CardProps) {
         <button
           onClick={onContinue}
           className="ic2-cta v2-cta"
-          style={{ width: "100%", minHeight: 54, fontSize: 15, marginTop: 16 }}
+          style={{ width: "100%", minHeight: 54, fontSize: 15, marginTop: 14 }}
         >
           Show Me My Next Step
         </button>
