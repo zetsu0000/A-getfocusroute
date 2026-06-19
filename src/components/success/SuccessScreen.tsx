@@ -92,8 +92,7 @@ export function SuccessScreen() {
         style={{ position: "relative", fontSize: 15, color: "var(--v2-ink-dim)", lineHeight: 1.7, maxWidth: 360, marginBottom: 28 }}
       >
         You&apos;re all set, {displayName}. Everything from your assessment is now
-        in your account. Start by seeing where focus breaks most for you — it&apos;s
-        a short first step.
+        in your account. Open your full breakdown and see what to work on first.
       </m.p>
       <p style={{ position: "relative", fontSize: 11, color: "var(--v2-ink-ghost)", lineHeight: 1.6, maxWidth: 360, marginBottom: 20 }}>
         FocusRoute provides educational profiling and does not provide medical diagnosis.

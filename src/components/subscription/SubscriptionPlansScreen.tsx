@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { m, type Variants } from "framer-motion";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { m } from "framer-motion";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import {
   Shield,
   RotateCcw,
@@ -240,8 +242,8 @@ function PlanCard({
                   marginTop: 8,
                 }}
               >
-                Recommended — enough time to use the plan, adjust it, and repeat
-                what works.
+                Recommended: enough time to use it, adjust it, and repeat what
+                works.
               </p>
             )}
           </div>
@@ -548,68 +550,193 @@ function PlanCheckoutForm({
   );
 }
 
-/* ── Product-value module ─────────────────────────────────────────────────────
-   A single cohesive composition with two connected phases that explain the
-   product in plain, benefit-first language:
+/* ── Animated value route (GSAP) ──────────────────────────────────────────────
+   A compact SVG route that draws through three immediate-use stages
+   (understand → act → get back on track) and continues into a small recurring
+   loop, leading the eye into plan selection. GSAP is progressive enhancement:
+   every line, marker, and the recurring cycle render fully in the static HTML,
+   so the module is complete and readable if JS/GSAP/ScrollTrigger never run or
+   reduced motion is on. GSAP only animates opacity / transform /
+   strokeDashoffset / the travelling-node position — never theme colours, which
+   stay in CSS variables so a light/dark toggle never rebuilds the timeline.
 
-     1. WHAT YOU CAN USE RIGHT AWAY — three immediate-use moments (understand →
-        act → recover), each with a small secondary product label.
-     2. WHY IT KEEPS HELPING — the route continues into a compact ongoing cycle
-        (retake → refresh → revisit → keep), so the subscription reads as
-        something you return to, not a longer version of the free result.
+   Stage copy lines map to capabilities that genuinely ship to active
+   subscribers: the detailed focus breakdown, the 28-day protocol, and the
+   member bonus library; the recurring loop maps to member-only retakes. */
+const ROUTE_PATH_D = "M 16 44 C 74 44 92 18 156 24 C 222 30 248 50 304 30";
+/* Decorative fallback marker coordinates (used until GSAP places them exactly on
+   the path via getPointAtLength, and in the no-JS case). */
+const MARKER_FALLBACK = [
+  { cx: 52, cy: 40 },
+  { cx: 156, cy: 24 },
+  { cx: 286, cy: 34 },
+] as const;
+/* Path-progress positions where each stage marker and the travelling node sit. */
+const MARKER_FRACTIONS = [0.1, 0.5, 0.9] as const;
 
-   Every line maps to a capability that genuinely ships to active subscribers:
-   the detailed Focus Profile, the 28-day protocol, the member bonus library,
-   and member-only retakes. No SaaS card grid, no jargon-led headlines. */
-const IMMEDIATE_VALUE = [
+const ROUTE_STAGES = [
   {
+    key: "understand",
+    rgb: "--v2-signal-rgb",
     icon: Eye,
-    title: "See where focus breaks",
-    meaning:
-      "A clear view of what's behind starting, staying focused, prioritizing, and getting back on track.",
-    label: "Your detailed Focus Profile",
+    eyebrow: "01 — UNDERSTAND",
+    title: "Understand what's getting in your way",
+    desc: "See the full breakdown behind starting, staying focused, prioritizing, planning, remembering, and getting back on track.",
+    label: "Your detailed focus breakdown",
   },
   {
+    key: "act",
+    rgb: "--v2-cyan-rgb",
     icon: ListChecks,
-    title: "Know what to work on first",
-    meaning:
-      "A 28-day path of small actions, organized from your assessment result.",
+    eyebrow: "02 — ACT",
+    title: "Know what to do next",
+    desc: "Follow a 28-day path of small actions built from your answers.",
     label: "Your 28-day action path",
   },
   {
+    key: "recover",
+    rgb: "--v2-gold-rgb",
     icon: LifeBuoy,
+    eyebrow: "03 — GET BACK ON TRACK",
     title: "Have help when the day goes off track",
-    meaning:
-      "Scripts, planners, and practical guides for starting, prioritizing, and getting back into the task.",
+    desc: "Use scripts, planners, and practical guides when focus breaks again.",
     label: "Your member tools",
   },
 ] as const;
 
-const ONGOING_VALUE = [
-  { icon: RotateCcw, title: "Retake", meaning: "when your work or life changes" },
-  { icon: RefreshCw, title: "Refresh", meaning: "your results and next steps" },
-  { icon: ClipboardCheck, title: "Revisit", meaning: "what's working, adjust a step" },
-  { icon: Library, title: "Keep", meaning: "your member tools and guides" },
+const ROUTE_RECURRING = [
+  { icon: RotateCcw, title: "RETAKE", meaning: "When work or life changes" },
+  { icon: RefreshCw, title: "REFRESH", meaning: "Update your results and next steps" },
+  { icon: ClipboardCheck, title: "REVIEW", meaning: "See what's working and adjust a step" },
+  { icon: Library, title: "KEEP USING", meaning: "Return to your member tools and guides" },
 ] as const;
 
-/* Stagger reveal. App-wide MotionConfig reducedMotion="user" snaps the transform
-   to its end state, and every node is in the DOM from first paint, so the module
-   is fully readable without waiting and the CTA below is never gated on it. */
-const VALUE_CONTAINER_VARIANTS: Variants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.1, delayChildren: 0.04 } },
-};
-const VALUE_ITEM_VARIANTS: Variants = {
-  hidden: { opacity: 0, y: 8 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
-};
+function CheckoutValueRoute() {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const routePathRef = useRef<SVGPathElement>(null);
+  const travelNodeRef = useRef<SVGCircleElement>(null);
 
-function ValueModule() {
+  // GSAP runs as enhancement after mount. useLayoutEffect applies the motion
+  // start-states before paint (no visible→hidden flash); if anything is missing
+  // the function bails and the static, fully-visible markup stands.
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    const path = routePathRef.current;
+    const node = travelNodeRef.current;
+    if (!root || !path || !node) return;
+
+    gsap.registerPlugin(ScrollTrigger);
+    let cancelled = false;
+
+    const ctx = gsap.context((self) => {
+      const q = self.selector as <T extends Element>(s: string) => T[];
+      const len = path.getTotalLength();
+      const markers = q<SVGCircleElement>(".fr-marker");
+      const stages = q<HTMLElement>(".fr-stage");
+      const recurItems = q<HTMLElement>(".fr-recur-item");
+      const recurHead = q<HTMLElement>(".fr-recur-head");
+      const heading = q<HTMLElement>(".fr-route-heading");
+      const freeLine = q<HTMLElement>(".fr-free-line");
+      const loopPath = q<SVGPathElement>(".fr-recur-loop")[0];
+
+      // Place markers exactly on the path (resolution-independent user units).
+      markers.forEach((marker, i) => {
+        const pt = path.getPointAtLength(len * (MARKER_FRACTIONS[i] ?? 0));
+        gsap.set(marker, { attr: { cx: pt.x, cy: pt.y } });
+      });
+
+      const routeProgress = { value: 0 };
+      const updateTravelNode = () => {
+        const pt = path.getPointAtLength(len * routeProgress.value);
+        gsap.set(node, { attr: { cx: pt.x, cy: pt.y } });
+      };
+      updateTravelNode();
+      const offsetAt = (progress: number) => len * (1 - progress);
+
+      const mm = gsap.matchMedia();
+      mm.add(
+        {
+          reduce: "(prefers-reduced-motion: reduce)",
+          motion: "(prefers-reduced-motion: no-preference)",
+        },
+        (mctx) => {
+          // Reduced motion (and the static default) is already the complete
+          // final state — fully-drawn route, visible markers/copy, hidden node.
+          if (mctx.conditions?.reduce) {
+            gsap.set(node, { opacity: 0 });
+            return;
+          }
+
+          // Motion: apply start-states now (init succeeded), then play once.
+          gsap.set(path, { strokeDasharray: len, strokeDashoffset: len });
+          gsap.set(node, { opacity: 0 });
+          gsap.set(markers, { opacity: 0.45, attr: { r: 3.5 } });
+          gsap.set([...heading, ...stages, ...recurHead, ...recurItems, ...freeLine], {
+            opacity: 0,
+            y: 10,
+            willChange: "transform, opacity",
+          });
+          if (loopPath) {
+            const loopLen = loopPath.getTotalLength();
+            gsap.set(loopPath, { strokeDasharray: loopLen, strokeDashoffset: loopLen });
+          }
+
+          const tl = gsap.timeline({
+            scrollTrigger: {
+              trigger: root,
+              start: "top 82%",
+              once: true,
+              toggleActions: "play none none none",
+            },
+            onComplete: () => {
+              gsap.set([...heading, ...stages, ...recurHead, ...recurItems, ...freeLine], {
+                willChange: "auto",
+              });
+            },
+          });
+
+          tl.to(heading, { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" }, 0)
+            .to(node, { opacity: 1, duration: 0.2 }, 0.08);
+
+          // Three stages: draw path → travel node → activate marker → reveal copy.
+          MARKER_FRACTIONS.forEach((frac, i) => {
+            const at = 0.1 + i * 0.42;
+            tl.to(path, { strokeDashoffset: offsetAt(frac), duration: 0.34, ease: "power2.inOut" }, at)
+              .to(routeProgress, { value: frac, duration: 0.34, ease: "power2.inOut", onUpdate: updateTravelNode }, at)
+              .to(markers[i], { opacity: 1, attr: { r: 5 }, duration: 0.25, ease: "back.out(1.5)" }, at + 0.1)
+              .to(stages[i], { y: 0, opacity: 1, duration: 0.32, ease: "power2.out" }, at + 0.16);
+          });
+
+          // Continue into the recurring loop; finish the path and retire the node.
+          tl.to(path, { strokeDashoffset: offsetAt(1), duration: 0.3, ease: "power2.inOut" }, 1.4)
+            .to(routeProgress, { value: 1, duration: 0.3, ease: "power2.inOut", onUpdate: updateTravelNode }, 1.4)
+            .to(node, { opacity: 0, duration: 0.25 }, 1.55)
+            .to(recurHead, { y: 0, opacity: 1, duration: 0.3, ease: "power2.out" }, 1.5);
+          if (loopPath) {
+            tl.to(loopPath, { strokeDashoffset: 0, duration: 0.5, ease: "power2.inOut" }, 1.55);
+          }
+          tl.to(recurItems, { y: 0, opacity: 1, duration: 0.24, stagger: 0.07, ease: "power2.out" }, 1.62)
+            .to(freeLine, { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" }, 1.85);
+        },
+      );
+    }, rootRef);
+
+    // Re-measure once webfonts settle, but never after unmount.
+    if (typeof document !== "undefined" && document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        if (!cancelled) ScrollTrigger.refresh();
+      });
+    }
+
+    return () => {
+      cancelled = true;
+      ctx.revert();
+    };
+  }, []);
+
   return (
-    <m.div
-      variants={VALUE_CONTAINER_VARIANTS}
-      initial="hidden"
-      animate="show"
+    <div
+      ref={rootRef}
       style={{
         padding: "16px 16px",
         borderRadius: 16,
@@ -620,113 +747,141 @@ function ValueModule() {
         gap: 14,
       }}
     >
-      {/* Phase 1 — immediate value */}
-      <m.div variants={VALUE_ITEM_VARIANTS}>
-        <HudLabel tone="signal" style={{ fontSize: 9.5 }}>
-          What you can use right away
-        </HudLabel>
-      </m.div>
+      <HudLabel className="fr-route-heading" tone="signal" style={{ fontSize: 10 }}>
+        What you unlock
+      </HudLabel>
 
-      <m.ul variants={VALUE_CONTAINER_VARIANTS} style={{ listStyle: "none", margin: 0, padding: 0 }}>
-        {IMMEDIATE_VALUE.map((step, i) => {
-          const Icon = step.icon;
-          const last = i === IMMEDIATE_VALUE.length - 1;
+      {/* Decorative route — the visible benefit text is real HTML below. */}
+      <svg
+        viewBox="0 0 320 64"
+        width="100%"
+        style={{ display: "block", height: "auto" }}
+        aria-hidden="true"
+        focusable="false"
+      >
+        <defs>
+          <linearGradient id="fr-route-grad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" style={{ stopColor: "rgb(var(--v2-signal-rgb))" }} />
+            <stop offset="55%" style={{ stopColor: "rgb(var(--v2-cyan-rgb))" }} />
+            <stop offset="100%" style={{ stopColor: "rgb(var(--v2-gold-rgb))" }} />
+          </linearGradient>
+        </defs>
+        <path d={ROUTE_PATH_D} fill="none" stroke="var(--v2-line-bright)" strokeWidth={2} strokeLinecap="round" />
+        <path
+          ref={routePathRef}
+          d={ROUTE_PATH_D}
+          fill="none"
+          stroke="url(#fr-route-grad)"
+          strokeWidth={2.5}
+          strokeLinecap="round"
+        />
+        {ROUTE_STAGES.map((s, i) => (
+          <circle
+            key={s.key}
+            className="fr-marker"
+            cx={MARKER_FALLBACK[i].cx}
+            cy={MARKER_FALLBACK[i].cy}
+            r={5}
+            fill={`rgb(var(${s.rgb}))`}
+            style={{ filter: `drop-shadow(0 0 5px rgb(var(${s.rgb})))` }}
+          />
+        ))}
+        <circle
+          ref={travelNodeRef}
+          cx={MARKER_FALLBACK[0].cx}
+          cy={MARKER_FALLBACK[0].cy}
+          r={3}
+          fill="var(--v2-ink)"
+          style={{ opacity: 0, filter: "drop-shadow(0 0 5px rgb(var(--v2-cyan-rgb)))" }}
+        />
+      </svg>
+
+      {/* Three immediate-use stages */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {ROUTE_STAGES.map((s) => {
+          const Icon = s.icon;
           return (
-            <m.li
-              variants={VALUE_ITEM_VARIANTS}
-              key={step.title}
-              style={{ display: "grid", gridTemplateColumns: "auto 1fr", columnGap: 12 }}
+            <div
+              key={s.key}
+              className="fr-stage"
+              data-stage={s.key}
+              style={{ display: "grid", gridTemplateColumns: "auto 1fr", columnGap: 12, alignItems: "start" }}
             >
-              {/* Node + connector — the route thread. */}
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <div
-                  style={{
-                    width: 30,
-                    height: 30,
-                    borderRadius: "50%",
-                    flexShrink: 0,
-                    background: "rgba(var(--v2-signal-rgb),0.12)",
-                    border: "1px solid rgba(var(--v2-signal-rgb),0.35)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
+              <span
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 11,
+                  flexShrink: 0,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: `rgba(var(${s.rgb}),0.12)`,
+                  border: `1px solid rgba(var(${s.rgb}),0.32)`,
+                }}
+              >
+                <Icon size={16} color={`rgb(var(${s.rgb}))`} strokeWidth={2.2} />
+              </span>
+              <div>
+                <span
+                  className="v2-hud"
+                  style={{ display: "block", fontSize: 9.5, color: `rgb(var(${s.rgb}))`, marginBottom: 3 }}
                 >
-                  <Icon size={14} color="var(--v2-signal-2)" strokeWidth={2.2} />
-                </div>
-                {!last && (
-                  <div
-                    style={{
-                      width: 2,
-                      flex: 1,
-                      minHeight: 14,
-                      marginTop: 2,
-                      background:
-                        "linear-gradient(rgba(var(--v2-signal-rgb),0.45), rgba(var(--v2-signal-rgb),0.12))",
-                    }}
-                  />
-                )}
-              </div>
-              {/* Stop copy — benefit first, product label second. */}
-              <div style={{ paddingBottom: last ? 0 : 16 }}>
-                <p style={{ fontSize: 13.5, fontWeight: 700, color: "var(--v2-ink)", lineHeight: 1.3 }}>
-                  {step.title}
+                  {s.eyebrow}
+                </span>
+                <p style={{ fontSize: 18, fontWeight: 700, color: "var(--v2-ink)", lineHeight: 1.25 }}>
+                  {s.title}
                 </p>
-                <p style={{ fontSize: 12.5, color: "var(--v2-ink-dim)", lineHeight: 1.5, marginTop: 3 }}>
-                  {step.meaning}
+                <p style={{ fontSize: 15, color: "var(--v2-ink-dim)", lineHeight: 1.5, marginTop: 4 }}>
+                  {s.desc}
                 </p>
                 <span
                   style={{
                     display: "inline-block",
-                    marginTop: 7,
-                    padding: "2px 8px",
+                    marginTop: 8,
+                    padding: "2px 9px",
                     borderRadius: 999,
                     fontFamily: "var(--v2-font-mono)",
-                    fontSize: 9.5,
-                    letterSpacing: "0.05em",
-                    color: "var(--v2-signal-2)",
-                    background: "rgba(var(--v2-signal-rgb),0.08)",
-                    border: "1px solid rgba(var(--v2-signal-rgb),0.22)",
+                    fontSize: 10,
+                    letterSpacing: "0.04em",
+                    color: `rgb(var(${s.rgb}))`,
+                    background: `rgba(var(${s.rgb}),0.1)`,
+                    border: `1px solid rgba(var(${s.rgb}),0.24)`,
                   }}
                 >
-                  {step.label}
+                  {s.label}
                 </span>
               </div>
-            </m.li>
+            </div>
           );
         })}
-      </m.ul>
+      </div>
 
-      {/* The route continues instead of ending — dashed link into the cycle. */}
-      <m.div variants={VALUE_ITEM_VARIANTS} aria-hidden="true" style={{ display: "flex", justifyContent: "flex-start", paddingLeft: 14 }}>
-        <div
-          style={{
-            width: 2,
-            height: 14,
-            borderRadius: 2,
-            backgroundImage:
-              "repeating-linear-gradient(rgba(var(--v2-signal-rgb),0.5) 0 3px, transparent 3px 6px)",
-          }}
-        />
-      </m.div>
-
-      {/* Phase 2 — ongoing value cycle (compact, not a card wall) */}
-      <m.div variants={VALUE_ITEM_VARIANTS}>
-        <HudLabel tone="signal" style={{ fontSize: 9.5, marginBottom: 10 }}>
-          Why it keeps helping
-        </HudLabel>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-            gap: 8,
-          }}
-        >
-          {ONGOING_VALUE.map((step) => {
+      {/* Recurring value — the route loops back, kept compact (not a card wall) */}
+      <div>
+        <div className="fr-recur-head" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+          <svg viewBox="0 0 24 24" width={18} height={18} aria-hidden="true" focusable="false" style={{ flexShrink: 0 }}>
+            <path
+              className="fr-recur-loop"
+              d="M 20 12 A 8 8 0 1 1 12 4"
+              fill="none"
+              stroke="rgb(var(--v2-signal-rgb))"
+              strokeWidth={2}
+              strokeLinecap="round"
+            />
+            <path d="M 12 1.5 L 12 6.5 L 16 4" fill="none" stroke="rgb(var(--v2-signal-rgb))" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <HudLabel tone="signal" style={{ fontSize: 9.5 }}>
+            Why it keeps helping
+          </HudLabel>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 }}>
+          {ROUTE_RECURRING.map((step) => {
             const Icon = step.icon;
             return (
               <div
                 key={step.title}
+                className="fr-recur-item"
                 style={{
                   display: "flex",
                   alignItems: "flex-start",
@@ -737,38 +892,46 @@ function ValueModule() {
                   border: "1px solid var(--v2-line)",
                 }}
               >
-                <Icon
-                  size={14}
-                  color="var(--v2-signal-2)"
-                  strokeWidth={2.2}
-                  style={{ flexShrink: 0, marginTop: 1 }}
-                />
+                <Icon size={14} color="var(--v2-signal-2)" strokeWidth={2.2} style={{ flexShrink: 0, marginTop: 1 }} />
                 <p style={{ fontSize: 11.5, color: "var(--v2-ink-dim)", lineHeight: 1.4 }}>
-                  <span style={{ fontWeight: 700, color: "var(--v2-ink)" }}>{step.title}</span>{" "}
+                  <span
+                    style={{
+                      display: "block",
+                      fontFamily: "var(--v2-font-mono)",
+                      fontSize: 10,
+                      letterSpacing: "0.06em",
+                      fontWeight: 700,
+                      color: "var(--v2-ink)",
+                      marginBottom: 1,
+                    }}
+                  >
+                    {step.title}
+                  </span>
                   {step.meaning}
                 </p>
               </div>
             );
           })}
         </div>
-      </m.div>
+      </div>
 
-      {/* Free result vs subscription — two short lines, no attack on the free result. */}
-      <m.p
-        variants={VALUE_ITEM_VARIANTS}
+      {/* Free result vs subscription — one concise, honest distinction. */}
+      <p
+        className="fr-free-line"
         style={{
           margin: 0,
           paddingLeft: 12,
           borderLeft: "2px solid rgba(var(--v2-signal-rgb),0.5)",
-          fontSize: 12.5,
+          fontSize: 13,
           color: "var(--v2-ink-dim)",
           lineHeight: 1.55,
         }}
       >
-        Your free result shows where focus breaks. Your plan helps you act on it —
-        and gives you tools to come back to when it shows up again.
-      </m.p>
-    </m.div>
+        Your free result shows what may be getting in the way. FocusRoute unlocks
+        the full breakdown, a 28-day action path, and practical tools you can
+        return to.
+      </p>
+    </div>
   );
 }
 
@@ -781,11 +944,49 @@ export function SubscriptionPlansScreen() {
   const [showPayment, setShowPayment] = useState(false);
   const plan = PLANS[selected];
 
+  const cardsRef = useRef<HTMLDivElement>(null);
+
   const viewTracked = useRef(false);
   useEffect(() => {
     if (viewTracked.current) return;
     viewTracked.current = true;
     trackEvent(FIRST_PARTY_EVENTS.subscriptionViewed, { meta: false });
+  }, []);
+
+  // Plan-card entrance — its own one-shot ScrollTrigger so the plans never
+  // depend on the value-route timeline. Cards start 82% visible (not hidden),
+  // and stay fully visible if GSAP/ScrollTrigger never run or motion is reduced.
+  useLayoutEffect(() => {
+    const el = cardsRef.current;
+    if (!el) return;
+    gsap.registerPlugin(ScrollTrigger);
+    let cancelled = false;
+    const ctx = gsap.context(() => {
+      const mm = gsap.matchMedia();
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        gsap.fromTo(
+          el.children,
+          { y: 18, opacity: 0.82 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.42,
+            stagger: 0.08,
+            ease: "power2.out",
+            scrollTrigger: { trigger: el, start: "top 88%", once: true },
+          },
+        );
+      });
+    }, cardsRef);
+    if (typeof document !== "undefined" && document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        if (!cancelled) ScrollTrigger.refresh();
+      });
+    }
+    return () => {
+      cancelled = true;
+      ctx.revert();
+    };
   }, []);
 
   const handleSuccess = () => setStep("success");
@@ -830,30 +1031,44 @@ export function SubscriptionPlansScreen() {
       }}
     >
       <div style={{ maxWidth: 500, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
-        {/* Header — approved opening (headline + one supporting line, no eyebrow) */}
-        <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+        {/* Header — eyebrow + benefit headline (the first visual focus) */}
+        <m.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          style={{ paddingTop: 10 }}
+        >
+          <HudLabel tone="signal" style={{ marginBottom: 12, fontSize: 11 }}>
+            MAKE FOCUS EASIER
+          </HudLabel>
           <h1
             className="v2-display"
-            style={{ fontSize: "clamp(25px, 6.4vw, 31px)", fontWeight: 550, lineHeight: 1.2, marginBottom: 9 }}
+            style={{
+              fontSize: "clamp(31px, 8.6vw, 40px)",
+              fontWeight: 560,
+              lineHeight: 1.14,
+              letterSpacing: "-0.01em",
+              marginBottom: 12,
+              color: "var(--v2-ink)",
+            }}
           >
-            Stop starting over.
+            Get the guidance and tools to start, stay on track, and get back to
+            what matters.
           </h1>
-          <p style={{ fontSize: 14, color: "var(--v2-ink-dim)", lineHeight: 1.65 }}>
-            Your answers showed where focus breaks. Choose the plan that helps you
-            start, recover, and follow through.
+          <p style={{ fontSize: 17, color: "var(--v2-ink-dim)", lineHeight: 1.6 }}>
+            Unlock your full breakdown, a 28-day action path, and practical tools
+            for difficult moments.
           </p>
         </m.div>
 
-        {/* Product-value module — immediate use + ongoing value */}
-        <ValueModule />
+        {/* Animated value route — immediate use + ongoing value */}
+        <CheckoutValueRoute />
 
-        {/* Plan cards — accessible radio group */}
-        <m.div
+        {/* Plan cards — accessible radio group (GSAP one-shot entrance) */}
+        <div
+          ref={cardsRef}
           role="radiogroup"
           aria-label="Membership plan"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
           style={{ display: "flex", flexDirection: "column", gap: 12 }}
         >
           {PLAN_LIST.map((p) => (
@@ -864,7 +1079,7 @@ export function SubscriptionPlansScreen() {
               onSelect={() => handlePlanSelect(p.key)}
             />
           ))}
-        </m.div>
+        </div>
 
         {/* Order summary → social proof → CTA / payment */}
         <m.div

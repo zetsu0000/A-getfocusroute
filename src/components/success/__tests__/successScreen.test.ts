@@ -32,7 +32,8 @@ describe("success screen — confirmation", () => {
 
 describe("success screen — first action and access list", () => {
   it("gives one obvious first action in plain language", () => {
-    expect(src).toContain("Start by seeing where focus breaks most for you");
+    expect(src).toContain("Open your full breakdown and see what to work on first");
+    expect(src).not.toContain("Start by seeing where focus breaks most for you");
   });
 
   it("lists what is now available in the account, concisely", () => {

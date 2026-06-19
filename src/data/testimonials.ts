@@ -145,12 +145,8 @@ export const APPROVED_TESTIMONIALS: readonly ApprovedTestimonial[] = [
       "I am very happy with FocusRoute so far. It has greatly helped me come up with new and creative ideas; it has greatly improved how much value my focus has. Each time I had a problem, the support team has done everything they could to give me help and to fix my problem! It has been an overall good experience!",
     attribution: "Amy R.",
     image: "/testimonials/amy-reyes.png",
-    // The strongest product-experience review in the pool — it talks about
-    // actually using FocusRoute and getting value, not support handling. It is
-    // dedicated to the checkout (paywall) as the lead proof so the buyer sees a
-    // product-value story exactly where the purchase decision is made.
-    category: "product_trust",
-    eligiblePlacement: [PAYWALL],
+    category: "practical_value",
+    eligiblePlacement: [RESULT, PAYWALL],
     approved: true,
   },
   {
@@ -171,7 +167,10 @@ export const APPROVED_TESTIMONIALS: readonly ApprovedTestimonial[] = [
     fullQuote: "It really is helping me re-define myself.",
     attribution: "Benjamin L.",
     image: "/testimonials/benjamin-lee.png",
-    category: "post_purchase_reassurance",
+    // A product-experience review (using FocusRoute, not support handling). It
+    // leads the checkout proof via the product_trust slot preference, while the
+    // result journey still picks proof-008 — so the result screen is unchanged.
+    category: "product_trust",
     eligiblePlacement: [RESULT, PAYWALL],
     approved: true,
   },

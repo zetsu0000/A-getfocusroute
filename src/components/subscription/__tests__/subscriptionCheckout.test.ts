@@ -16,86 +16,132 @@ const src = readFileSync(
   "utf8",
 );
 
-describe("subscription checkout — approved opening copy", () => {
-  it("uses the approved headline and supporting line", () => {
-    expect(src).toContain("Stop starting over.");
-    expect(src).toContain("Your answers showed where focus breaks.");
-    expect(src).toContain("start, recover, and follow through.");
+describe("subscription checkout — opening copy", () => {
+  it("uses the new eyebrow, benefit headline, and supporting line", () => {
+    expect(src).toContain("MAKE FOCUS EASIER");
+    expect(src).toContain(
+      "Get the guidance and tools to start, stay on track, and get back to",
+    );
+    expect(src).toContain("what matters.");
+    expect(src).toContain(
+      "Unlock your full breakdown, a 28-day action path, and practical tools",
+    );
+    expect(src).toContain("for difficult moments.");
   });
 
-  it("does not add an eyebrow or the old explanatory header above the plans", () => {
+  it("removes the old headline and supporting line", () => {
+    expect(src).not.toContain("Stop starting over.");
+    expect(src).not.toContain("Your answers showed where focus breaks.");
+    expect(src).not.toContain("start, recover, and follow through.");
     expect(src).not.toContain("Choose your plan");
-    expect(src).not.toContain("Start your FocusRoute system");
-    // the old multi-line "Pick an intro window…" paragraph is gone
     expect(src).not.toContain("Pick an intro window");
   });
 });
 
-describe("subscription checkout — product-value module (benefit-first)", () => {
-  it("renders the two-phase ValueModule and drops the old generic route", () => {
-    expect(src).toContain("<ValueModule />");
+describe("subscription checkout — animated value route", () => {
+  it("renders the GSAP CheckoutValueRoute and drops the old modules", () => {
+    expect(src).toContain("<CheckoutValueRoute />");
+    expect(src).not.toContain("<ValueModule />");
     expect(src).not.toContain("<ValueRoute />");
-    // the old directional-but-vague outcomes are gone
-    expect(src).not.toContain("Know where to start");
-    expect(src).not.toContain("Know how to recover");
-    expect(src).not.toContain("Keep moving forward");
   });
 
-  it("leads each immediate-value stop with a plain-English benefit", () => {
-    expect(src).toContain("What you can use right away");
-    expect(src).toContain("See where focus breaks");
-    expect(src).toContain("Know what to work on first");
+  it("uses three numbered route stages with benefit-first headlines", () => {
+    expect(src).toContain("01 — UNDERSTAND");
+    expect(src).toContain("02 — ACT");
+    expect(src).toContain("03 — GET BACK ON TRACK");
+    expect(src).toContain("Understand what's getting in your way");
+    expect(src).toContain("Know what to do next");
     expect(src).toContain("Have help when the day goes off track");
-    // the benefit is explained before any product term
     expect(src).toContain(
-      "A clear view of what's behind starting, staying focused, prioritizing, and getting back on track.",
+      "See the full breakdown behind starting, staying focused, prioritizing, planning, remembering, and getting back on track.",
     );
     expect(src).toContain(
-      "A 28-day path of small actions, organized from your assessment result.",
+      "Follow a 28-day path of small actions built from your answers.",
     );
     expect(src).toContain(
-      "Scripts, planners, and practical guides for starting, prioritizing, and getting back into the task.",
+      "Use scripts, planners, and practical guides when focus breaks again.",
     );
   });
 
-  it("keeps product names as secondary labels, not jargon-led headlines", () => {
-    expect(src).toContain("Your detailed Focus Profile");
+  it("keeps product names as secondary labels and avoids banned framings", () => {
+    expect(src).toContain("Your detailed focus breakdown");
     expect(src).toContain("Your 28-day action path");
     expect(src).toContain("Your member tools");
-    // banned primary framings / instrumentation language
+    // 'See where focus breaks' must not be the primary paid benefit
+    expect(src).not.toContain("See where focus breaks");
     expect(src).not.toContain("Full Brain Profile");
     expect(src).not.toContain("Brain OS");
-    expect(src).not.toContain("first practical reset");
     expect(src).not.toContain("scan complete");
     expect(src).not.toContain("signal detected");
   });
 
   it("explains recurring value with real member capabilities only", () => {
     expect(src).toContain("Why it keeps helping");
-    expect(src).toContain("Retake");
-    expect(src).toContain("when your work or life changes");
-    expect(src).toContain("Refresh");
-    expect(src).toContain("your results and next steps");
-    expect(src).toContain("your member tools and guides");
-    // no self-updating / automatic-personalization claim
+    expect(src).toContain("RETAKE");
+    expect(src).toContain("When work or life changes");
+    expect(src).toContain("REFRESH");
+    expect(src).toContain("Update your results and next steps");
+    expect(src).toContain("REVIEW");
+    expect(src).toContain("See what's working and adjust a step");
+    expect(src).toContain("KEEP USING");
+    expect(src).toContain("Return to your member tools and guides");
     expect(src.toLowerCase()).not.toContain("updates itself");
     expect(src.toLowerCase()).not.toContain("automatically personal");
   });
 
-  it("distinguishes the free result from the subscription without devaluing it", () => {
-    expect(src).toContain("Your free result shows where focus breaks.");
-    expect(src).toContain("Your plan helps you act on it");
-    expect(src.toLowerCase()).not.toContain("fake");
-    // no fake scarcity in the value module
-    expect(src).not.toContain("limited time");
-    expect(src).not.toContain("spots left");
+  it("distinguishes the free result without 'your plan' or fake scarcity", () => {
+    expect(src).toContain(
+      "Your free result shows what may be getting in the way. FocusRoute unlocks",
+    );
+    expect(src).toContain("a 28-day action path, and practical tools you can");
+    // the older ambiguous phrasing is gone
+    expect(src).not.toContain("Your plan helps you act on it");
+    expect(src.toLowerCase()).not.toContain("limited time");
+    expect(src.toLowerCase()).not.toContain("spots left");
+  });
+});
+
+describe("subscription checkout — GSAP route is safe progressive enhancement", () => {
+  it("scopes GSAP to a context and reverts it on cleanup", () => {
+    expect(src).toContain("gsap.context(");
+    expect(src).toContain("ctx.revert()");
+    expect(src).toContain("self.selector");
+    expect(src).not.toContain("document.querySelectorAll");
+  });
+
+  it("registers ScrollTrigger and plays once with no pin / scrub / snap", () => {
+    expect(src).toContain("gsap.registerPlugin(ScrollTrigger)");
+    expect(src).toContain("once: true");
+    expect(src).not.toContain("pin:");
+    expect(src).not.toContain("scrub");
+    expect(src).not.toContain("snap:");
+    expect(src).not.toContain("anticipatePin");
+  });
+
+  it("treats reduced motion as a complete final state via matchMedia", () => {
+    expect(src).toContain("gsap.matchMedia()");
+    expect(src).toContain("(prefers-reduced-motion: reduce)");
+  });
+
+  it("draws from the real path length and travels a single, non-looping node", () => {
+    expect(src).toContain("getTotalLength()");
+    expect(src).toContain("getPointAtLength(");
+    expect(src).toContain("strokeDashoffset");
+    expect(src).not.toContain("repeat: -1");
+    expect(src).not.toContain("repeat:-1");
+  });
+
+  it("gives the plan cards a separate one-shot entrance, independent of the route", () => {
+    expect(src).toContain("cardsRef");
+    expect(src).toMatch(/gsap\.fromTo\(\s*el\.children/);
+    expect(src).toContain('start: "top 88%"');
   });
 });
 
 describe("subscription checkout — 4-Week recommendation", () => {
   it("adds a small recommendation note tied to the popular plan only", () => {
     expect(src).toContain(
-      "Recommended — enough time to use the plan, adjust it, and repeat",
+      "Recommended: enough time to use it, adjust it, and repeat what",
     );
     // rendered conditionally on the default/popular plan, as small <p> copy
     expect(src).toMatch(/plan\.popular && \(\s*<p/);
