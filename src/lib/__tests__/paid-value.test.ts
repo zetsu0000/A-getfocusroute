@@ -131,30 +131,37 @@ describe("ChartScreen renders the centralized rows and profile terminology", () 
     expect(chartSrc).not.toContain("firstStepTeaserFor");
   });
 
-  it("names the purchased product 'profile' in the locked header and the CTA", () => {
-    expect((chartSrc.match(/full focus profile/g) || []).length).toBe(1);
-    expect(chartSrc).toContain("Unlock My Full Profile");
-    // The earlier "plan" product labels are gone from the result screen.
+  it("names the unlock as the full breakdown in the locked header and the CTA", () => {
+    expect((chartSrc.match(/your full breakdown/g) || []).length).toBe(1);
+    expect(chartSrc).toContain("Unlock My Full Breakdown");
+    // The earlier "plan"/"profile" product labels are gone from the result CTA.
     expect(chartSrc).not.toContain("full focus plan");
     expect(chartSrc).not.toContain("Unlock My Full Plan");
+    expect(chartSrc).not.toContain("Unlock My Full Profile");
   });
 });
 
-describe("named / unnamed result bridge (short benefit copy)", () => {
-  it("keeps the explicit conditional with the exact approved short copy", () => {
+describe("named / unnamed result → subscription bridge", () => {
+  it("keeps the explicit conditional with the approved bridge lead-in", () => {
     expect(chartSrc).toContain("{personalName ? (");
     expect(chartSrc).toContain("{personalName},</em>");
     // Named branch (lowercase lead-in after the italic name).
-    expect(chartSrc).toContain(
-      "your full profile shows where momentum breaks — and how to get it back.",
-    );
+    expect(chartSrc).toContain("your result identifies the pattern.");
     // Unnamed branch (capitalized).
-    expect(chartSrc).toContain(
-      "Your full profile shows where momentum breaks — and how to get it back.",
-    );
+    expect(chartSrc).toContain("Your result identifies the pattern.");
   });
 
-  it("drops the earlier long bridge and the abstract plan-focus sentence", () => {
+  it("states what the subscription adds (full breakdown, 28-day path, tools)", () => {
+    expect(chartSrc).toContain(
+      "FocusRoute unlocks the full breakdown, a 28-day action path, and",
+    );
+    expect(chartSrc).toContain("practical tools to help you work with it.");
+  });
+
+  it("drops the earlier bridge copy and the abstract plan-focus sentence", () => {
+    expect(chartSrc).not.toContain(
+      "your full profile shows where momentum breaks — and how to get it back.",
+    );
     expect(chartSrc).not.toContain(
       "what helps it return, and the conditions that make focus easier to hold",
     );

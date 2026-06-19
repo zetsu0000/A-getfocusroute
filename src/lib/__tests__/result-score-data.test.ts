@@ -356,17 +356,54 @@ describe("algorithm preservation", () => {
   });
 });
 
-describe("result screen UI guard", () => {
+describe("result screen renders the canonical score", () => {
   const chartSrc = readFileSync(
     fileURLToPath(new URL("../../components/chart/ChartScreen.tsx", import.meta.url)),
     "utf8",
   );
+  const moduleSrc = readFileSync(
+    fileURLToPath(new URL("../../components/chart/ResultScoreModule.tsx", import.meta.url)),
+    "utf8",
+  );
 
-  it("does not render the focus-friction score yet", () => {
+  it("resolves the score via resolveResultScoreData (the PR #50 canonical resolver)", () => {
+    expect(chartSrc).toContain("resolveResultScoreData({ answers })");
+    expect(chartSrc).toContain("<ResultScoreModule");
+  });
+
+  it("does not use deriveBrainProfile().overallScore as the result score", () => {
+    expect(chartSrc).not.toContain("deriveBrainProfile");
+    expect(chartSrc).not.toContain("overallScore");
+    expect(moduleSrc).not.toContain("deriveBrainProfile");
+    expect(moduleSrc).not.toContain("overallScore");
+  });
+
+  it("never runs a second score formula on the result surface", () => {
     expect(chartSrc).not.toContain("scoreFromAnswers");
-    expect(chartSrc).not.toContain("resolveResultScoreData");
-    expect(chartSrc).not.toContain("score.toFixed");
-    expect(chartSrc).not.toMatch(/Friction snapshot.*\{\s*score/i);
+    expect(moduleSrc).not.toContain("scoreFromAnswers");
+  });
+
+  it("never fabricates a 0 / 57 fallback when the score is unavailable", () => {
+    // The module renders only behind a truthy guard; no placeholder substitution.
+    expect(chartSrc).toContain("scoreData && (");
+    expect(chartSrc).not.toMatch(/scoreData[^\n]*\?\?\s*\d/);
+    expect(moduleSrc).not.toContain("?? 57");
+    expect(moduleSrc).not.toContain("?? 0");
+    expect(moduleSrc).not.toContain("|| 57");
+    expect(moduleSrc).not.toContain("|| 0");
+  });
+
+  it("shows the explicit 0–100 range and a non-clinical disclaimer", () => {
+    expect(moduleSrc).toContain("score.minimum");
+    expect(moduleSrc).toContain("score.maximum");
+    expect(moduleSrc).toContain("This reflects your answers. It is not a diagnosis.");
+  });
+
+  it("frames the score as reported friction, not severity or a focus percentage", () => {
+    expect(moduleSrc).toContain("more reported friction");
+    expect(moduleSrc.toLowerCase()).not.toContain("% focus");
+    expect(moduleSrc.toLowerCase()).not.toContain("percent of focus");
+    expect(moduleSrc.toLowerCase()).not.toContain("severity");
   });
 });
 

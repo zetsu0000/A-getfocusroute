@@ -8,15 +8,15 @@ const src = readFileSync(
 );
 
 describe("ChartScreen trust progression", () => {
-  it("keeps the locked full-profile preview on the result screen", () => {
+  it("keeps the locked full-breakdown preview on the result screen", () => {
     expect(src).toContain("Locked");
-    expect(src).toContain("full focus profile");
+    expect(src).toContain("your full breakdown");
     expect(src).toContain("lockedRows.map");
   });
 
   it("renders the three-proof result social proof block before the CTA", () => {
     const proof = src.indexOf("<ResultSocialProof />");
-    const cta = src.indexOf("Unlock My Full Profile", proof);
+    const cta = src.indexOf("Unlock My Full Breakdown", proof);
 
     expect(proof).toBeGreaterThan(-1);
     expect(cta).toBeGreaterThan(proof);

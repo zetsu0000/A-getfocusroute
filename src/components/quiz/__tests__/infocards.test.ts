@@ -64,21 +64,94 @@ describe("infocard router", () => {
   });
 });
 
-// ── Card 5 must NOT spend the result reveal ───────────────────────────────────
+// ── Card 5 rebuilt as a visual teaser that withholds the result ───────────────
 
-describe("Card 5 withholds the result", () => {
-  it("never renders the exact score or the pattern name/descriptor", () => {
-    expect(infocards).not.toContain("score.toFixed");
-    expect(infocards).not.toContain("PATTERN_HINT");
-    expect(infocards).not.toContain("getSignatureFromAnswers");
-    expect(infocards).not.toContain("scoreFromAnswers");
-    // The descriptor strings that used to leak must be gone.
-    expect(infocards).not.toContain("pressure-powered");
+describe("Card 5 rebuilt teaser", () => {
+  const card5 = infocards.slice(
+    infocards.indexOf("function Card5Unlock"),
+    infocards.indexOf("function SafeContinueCard"),
+  );
+
+  it("never reveals the score or the final pattern name/descriptor", () => {
+    expect(card5).not.toContain("score.toFixed");
+    expect(card5).not.toContain("PATTERN_HINT");
+    expect(card5).not.toContain("getSignatureFromAnswers");
+    expect(card5).not.toContain("scoreFromAnswers");
+    expect(card5).not.toContain("resolveResultScoreData");
+    expect(card5).not.toContain("pressure-powered");
+    // None of the five pattern keys may surface on the teaser.
+    for (const name of ["Drifter", "Sprinter", "Archivist", "Spark", "Reactor"]) {
+      expect(card5).not.toContain(name);
+    }
   });
 
-  it("keeps a withholding teaser instead", () => {
-    expect(infocards).toContain("We picked up your focus pattern signal");
-    expect(infocards).toContain("Your strongest friction area is mapped");
+  it("removes scanner / instrumentation wording (whole module)", () => {
+    expect(infocards).not.toContain("Signal detected");
+    expect(infocards).not.toContain("Scan complete");
+    expect(infocards).not.toContain("Pattern acquired");
+    // The old withholding-teaser strings are gone.
+    expect(infocards).not.toContain("We picked up your focus pattern signal");
+    expect(infocards).not.toContain("Your strongest friction area is mapped");
+  });
+
+  it("uses the new plain-language teaser copy + CTA", () => {
+    expect(card5).toContain("Based on what you shared");
+    expect(card5).toContain("Your answers are starting to show a clear pattern.");
+    expect(card5).toContain("Your pattern is ready");
+    expect(card5).toContain("See My Result");
+  });
+
+  it("maps three clear groups with their captions", () => {
+    for (const label of ["Starting", "Staying on track", "Getting back into the task"]) {
+      expect(card5).toContain(label);
+    }
+    for (const cap of [
+      "where starting becomes harder",
+      "what tends to interrupt follow-through",
+      "where your next step should begin",
+    ]) {
+      expect(card5).toContain(cap);
+    }
+  });
+
+  it("drives a scattered-fragments → groups → route grammar distinct from Card 1", () => {
+    expect(card5).toContain(".ic5-dot");
+    expect(card5).toContain(".ic5-route");
+    expect(card5).toContain("strokeDashoffset");
+    expect(card5).toContain("gsap.utils.random"); // loosely scattered fragments
+    // Distinct grammar: no IC1 scan / vertical-route classes reused.
+    expect(card5).not.toContain("fr1-vscan");
+    expect(card5).not.toContain("fr1-route");
+    expect(card5).not.toContain("fr1-hscan");
+  });
+
+  it("plays once, scoped + cleaned up, with a visible reduced-motion final state", () => {
+    expect(card5).toContain("prefers-reduced-motion");
+    expect(card5).toContain("tl.progress(1)");
+    expect(card5).toContain("gsap.context");
+    expect(card5).toContain("ctx.revert()");
+    expect(card5).toContain("paused: true");
+    // No infinite loop, no pinning, no scroll trap.
+    expect(card5).not.toContain("repeat: -1");
+    expect(card5).not.toContain("ScrollTrigger");
+    expect(card5).not.toContain("pin:");
+  });
+
+  it("frames the CTA for mobile: safe-area bottom, no internal scroll, no clipping height", () => {
+    expect(card5).toContain("env(safe-area-inset-bottom");
+    expect(card5).toContain('minHeight: "100%"');
+    expect(card5).not.toContain('overflowY: "auto"');
+    expect(card5).not.toContain('overflow: "auto"');
+    expect(card5).not.toContain('overflowY: "scroll"');
+    // The scaffold must not pin a fixed viewport height that could crop the CTA.
+    expect(card5).not.toMatch(/height:\s*"100vh"/);
+    expect(card5).not.toMatch(/height:\s*"100dvh"/);
+  });
+
+  it("does not reach into checkout/subscription/stripe from the funnel teaser", () => {
+    expect(infocards.toLowerCase()).not.toContain("subscription");
+    expect(infocards.toLowerCase()).not.toContain("stripe");
+    expect(infocards.toLowerCase()).not.toContain("checkout");
   });
 });
 

@@ -9,6 +9,8 @@ import { safeName } from "@/lib/personalization";
 import { getSignatureFromAnswers, echoSentence } from "@/lib/signature";
 import { getSignatureIdentity } from "@/lib/signature-identity";
 import { resultLockedRows } from "@/lib/paid-value";
+import { resolveResultScoreData } from "@/lib/result-score-data";
+import { ResultScoreModule } from "@/components/chart/ResultScoreModule";
 import { SigilArtifact } from "@/components/v2/SigilArtifact";
 import { FocusField } from "@/components/v2/FocusField";
 import { ResultSocialProof } from "@/components/signature/SocialProof";
@@ -36,6 +38,13 @@ export function ChartScreen() {
   const signature = getSignatureFromAnswers(answers);
   const identity = getSignatureIdentity(signature.signature);
   const echo = echoSentence(answers);
+
+  /* Canonical focus-friction score (PR #50). resolveResultScoreData wraps the
+     existing score algorithm — never a second formula — and returns null when
+     the answers carry no usable signal. We never substitute a placeholder
+     number: a null score simply means the score module is not rendered, and the
+     rest of the result stays intact. */
+  const scoreData = resolveResultScoreData({ answers });
 
   /* The locked preview teases the paid value as practical outcomes (audit PR4):
      a 6-point focus map, the conditions that help you start/stay/recover, and one
@@ -218,7 +227,7 @@ export function ChartScreen() {
         }}
       >
         <div style={{ textAlign: "center" }}>
-          <HudLabel tone="signal">Route located — preview unlocked</HudLabel>
+          <HudLabel tone="signal">Based on what you shared</HudLabel>
         </div>
 
         <SigilArtifact
@@ -228,6 +237,18 @@ export function ChartScreen() {
           summary={signature.preview}
           variant="reveal"
         />
+
+        {/* Canonical focus-friction score — only when a real score is available
+            (resolveResultScoreData returns null otherwise; no fabricated value). */}
+        {scoreData && (
+          <m.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <ResultScoreModule score={scoreData} accent={identity.accent} />
+          </m.div>
+        )}
 
         {/* What the answers point to */}
         <m.div
@@ -313,7 +334,7 @@ export function ChartScreen() {
         >
           <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 12 }}>
             <Lock size={13} color="var(--v2-gold)" />
-            <HudLabel tone="gold">Locked — full focus profile</HudLabel>
+            <HudLabel tone="gold">Locked — your full breakdown</HudLabel>
           </div>
           <div
             style={{
@@ -356,28 +377,44 @@ export function ChartScreen() {
           </p>
         </m.div>
 
+        {/* Result → subscription bridge. The free result names the pattern; this
+            states plainly what the subscription adds, without repeating the
+            paywall or introducing pricing. */}
         <m.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9 }}
+          className="v2-panel"
+          style={{ padding: "18px 20px" }}
         >
           <p
             className="v2-display"
             style={{
-              fontSize: 19,
-              fontWeight: 550,
+              fontSize: 18,
+              fontWeight: 560,
               color: "var(--v2-ink)",
-              lineHeight: 1.45,
+              lineHeight: 1.4,
             }}
           >
             {personalName ? (
               <>
                 <em style={{ fontStyle: "italic", color: identity.accent }}>{personalName},</em>{" "}
-                your full profile shows where momentum breaks — and how to get it back.
+                your result identifies the pattern.
               </>
             ) : (
-              <>Your full profile shows where momentum breaks — and how to get it back.</>
+              <>Your result identifies the pattern.</>
             )}
+          </p>
+          <p
+            style={{
+              marginTop: 8,
+              fontSize: 14,
+              color: "var(--v2-ink-dim)",
+              lineHeight: 1.55,
+            }}
+          >
+            FocusRoute unlocks the full breakdown, a 28-day action path, and
+            practical tools to help you work with it.
           </p>
         </m.div>
 
@@ -405,25 +442,42 @@ export function ChartScreen() {
             Save New Profile Preview
           </m.button>
         ) : (
-          <m.button
+          <m.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.0 }}
-            onClick={() => {
-              trackEvent(FIRST_PARTY_EVENTS.resultUnlockClicked, {
-                meta: false,
-                metadata: { signature_key: signature.signature },
-              });
-              // Subscription-first funnel: the 3-plan subscription is the
-              // primary paywall and unlocks the full profile + everything.
-              setStep("subscription");
-            }}
-            className="v2-cta v2-cta-gold"
-            style={{ width: "100%", minHeight: 58, fontSize: 16 }}
+            style={{ display: "flex", flexDirection: "column", gap: 12 }}
           >
-            <Lock size={15} strokeWidth={2.4} />
-            Unlock My Full Profile
-          </m.button>
+            {/* One pattern-specific teaser, built from existing signature data
+                (planFocus) — no change to personalization logic. */}
+            <p
+              style={{
+                textAlign: "center",
+                fontSize: 13,
+                color: "var(--v2-ink-dim)",
+                lineHeight: 1.5,
+              }}
+            >
+              Your FocusRoute centers on {signature.planFocus} — see where to
+              start first.
+            </p>
+            <button
+              onClick={() => {
+                trackEvent(FIRST_PARTY_EVENTS.resultUnlockClicked, {
+                  meta: false,
+                  metadata: { signature_key: signature.signature },
+                });
+                // Subscription-first funnel: the 3-plan subscription is the
+                // primary paywall and unlocks the full breakdown + everything.
+                setStep("subscription");
+              }}
+              className="v2-cta v2-cta-gold"
+              style={{ width: "100%", minHeight: 58, fontSize: 16 }}
+            >
+              <Lock size={15} strokeWidth={2.4} />
+              Unlock My Full Breakdown
+            </button>
+          </m.div>
         )}
       </div>
     </m.div>

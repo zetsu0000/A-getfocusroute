@@ -769,116 +769,278 @@ function Card4Mechanism({ onContinue }: CardProps) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────
-   CARD 5 — Unlock: a confident teaser, then the locked layers. The exact
-   score and the pattern's name/descriptor are intentionally WITHHELD here so
-   they land for the first time on the result reveal — this card builds the
-   curiosity, it does not spend it.
+   CARD 5 — Teaser before the result. A visual grammar deliberately distinct
+   from Card 1 (no IC1 scan, no vertical route, no four-node column): scattered
+   answer fragments converge into THREE clear groups (starting / staying on
+   track / getting back), a single route forms beneath them, and "Your pattern
+   is ready" lands before the CTA. The exact score and the pattern's name are
+   intentionally WITHHELD — they appear for the first time on the result. One
+   GSAP timeline (~1.9s) plays once; reduced motion snaps to the final state and
+   the CTA is in the DOM and clickable throughout (never delayed for usability).
 ───────────────────────────────────────────────────────────────────── */
 function Card5Unlock({ onContinue }: CardProps) {
   const { theme } = useFunnelTheme();
   const dark = theme === "dark";
-  const role = useRole(dark).unlock;
 
-  const ref = useGsapReveal((tl) => {
-    tl.from(".fr-rv", { y: 14, opacity: 0, stagger: 0.07 })
-      .from(".fr-free", { opacity: 0, y: 10 }, "-=0.1")
-      .from(".fr-locked", { opacity: 0, y: 12, stagger: 0.09 }, "-=0.1");
-  });
-
-  const locked = [
-    "Full focus pattern + what it means",
-    "Where your friction is strongest",
-    "Your personalized starting route",
-    "Daily focus actions that fit you",
-    "Recovery guidance when focus breaks",
+  // Three intentional, controlled group colors (light + dark). Color carries
+  // the "three distinct areas" meaning; the labels carry it on their own too.
+  const groups = [
+    {
+      label: "Starting",
+      caption: "where starting becomes harder",
+      color: dark ? "#B39BFF" : "#7A4FD0",
+    },
+    {
+      label: "Staying on track",
+      caption: "what tends to interrupt follow-through",
+      color: dark ? "#6FE0C2" : "#1C8A5A",
+    },
+    {
+      label: "Getting back into the task",
+      caption: "where your next step should begin",
+      color: dark ? "#F0DCAE" : "#9A7A2E",
+    },
   ];
+  const routeColor = dark ? "#9BE8FF" : "#1487B5";
+  const eyebrowColor = dark ? "#B39BFF" : "#7A4FD0";
+
+  const ref = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const root = ref.current;
+    if (!root) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const ctx = gsap.context(() => {
+      // Route hidden behind a fixed dash, then draws clean (codebase pattern).
+      gsap.set(".ic5-route", { strokeDasharray: 340, strokeDashoffset: 340 });
+
+      const tl = gsap.timeline({ paused: true, defaults: { ease: "power2.out" } });
+
+      // 1 · Eyebrow + headline
+      tl.fromTo(".ic5-rv", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, stagger: 0.08 }, 0);
+
+      // 2 · Fragments appear loosely scattered across the stage…
+      tl.fromTo(
+        ".ic5-dot",
+        {
+          opacity: 0,
+          scale: 0.5,
+          x: () => gsap.utils.random(-80, 80),
+          y: () => gsap.utils.random(-54, 54),
+        },
+        { opacity: 0.95, scale: 1, duration: 0.35, stagger: 0.015 },
+        0.2,
+      );
+      // …then settle home into their three groups (x/y → 0 = final DOM slot).
+      tl.to(".ic5-dot", { x: 0, y: 0, duration: 0.5, stagger: 0.015, ease: "power3.inOut" }, 0.65);
+
+      // 3 · Group labels + captions resolve as the clusters tighten
+      tl.fromTo(".ic5-group-label", { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.3, stagger: 0.08 }, 1.0);
+      tl.fromTo(".ic5-group-cap", { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.3, stagger: 0.08 }, 1.1);
+
+      // 4 · A single route forms beneath the groups + its three stops ignite
+      tl.fromTo(".ic5-route", { strokeDashoffset: 340 }, { strokeDashoffset: 0, duration: 0.55, ease: "power2.inOut" }, 1.15);
+      tl.fromTo(".ic5-route-node", { scale: 0 }, { scale: 1, duration: 0.26, stagger: 0.1, ease: "back.out(2)" }, 1.3);
+
+      // 5 · "Your pattern is ready"
+      tl.fromTo(".ic5-ready", { opacity: 0, y: 8, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.35, ease: "back.out(1.6)" }, 1.5);
+
+      // 6 · CTA reveals immediately afterward (already clickable in the DOM)
+      tl.fromTo(".ic5-cta", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.33 }, 1.62);
+
+      if (reduce) {
+        tl.progress(1).pause(); // complete final state, no motion, nothing hidden
+        return;
+      }
+      tl.play();
+      // One-shot: no repeat, no infinite ambient, no pinning, no scroll trap.
+    }, root);
+
+    return () => ctx.revert();
+    // Runs once on mount; reduced motion + ctx.revert keep it safe.
+  }, []);
 
   return (
-    <CardShell
-      rootRef={ref}
-      eyebrow={role.eyebrow}
-      eyebrowColor={role.accent}
-      title="Your FocusRoute is taking shape."
-      cta="Reveal my FocusRoute"
-      onContinue={onContinue}
+    // Single scroller (the quiz stage) — no own overflow, no fixed height.
+    // Safe-area bottom pad keeps "See My Result" clear of the iOS/Safari bar.
+    <div
+      ref={ref}
+      style={{
+        minHeight: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        padding: "20px 18px calc(24px + env(safe-area-inset-bottom, 0px))",
+      }}
     >
-      {/* Signal teaser — what we found, without spending the reveal. No score,
-          no pattern name; those appear for the first time on the result. */}
-      <div
-        className="fr-free"
-        style={{
-          padding: "15px 16px",
-          borderRadius: 16,
-          border: `1px solid color-mix(in srgb, ${role.accent2} 30%, transparent)`,
-          background: "var(--v2-bg-raise)",
-        }}
-      >
-        <Pill color={role.accent2}>Signal detected · from your answers</Pill>
-        <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
-          {[
-            "We picked up your focus pattern signal",
-            "Your strongest friction area is mapped",
-            "Your personalized route is ready to draw",
-          ].map((t) => (
-            <div key={t} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ width: "100%", maxWidth: 460, display: "flex", flexDirection: "column", flex: 1 }}>
+        {/* Eyebrow — plain language, no instrumentation */}
+        <p className="ic5-rv v2-hud" style={{ color: eyebrowColor, marginBottom: 10, letterSpacing: "0.16em" }}>
+          Based on what you shared
+        </p>
+
+        {/* Headline */}
+        <h2
+          className="ic5-rv v2-display"
+          style={{
+            fontSize: "clamp(22px, 6vw, 27px)",
+            fontWeight: 560,
+            lineHeight: 1.16,
+            letterSpacing: "-0.01em",
+            marginBottom: 16,
+            color: "var(--v2-ink)",
+          }}
+        >
+          Your answers are starting to show a clear pattern.
+        </h2>
+
+        {/* Stage — scattered fragments → three groups → one route */}
+        <div
+          className="ic5-rv"
+          style={{
+            padding: "16px 14px 14px",
+            borderRadius: 18,
+            border: `1px solid color-mix(in srgb, ${routeColor} 26%, transparent)`,
+            background: `linear-gradient(165deg, color-mix(in srgb, ${routeColor} 9%, transparent), transparent)`,
+          }}
+        >
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+            {groups.map((g) => (
+              <div key={g.label} style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
+                {/* Dot cluster — 4 fragments in a tight 2×2; GSAP scatters then settles them */}
+                <div
+                  style={{
+                    width: 34,
+                    height: 34,
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 6,
+                    justifyContent: "center",
+                    alignContent: "center",
+                  }}
+                >
+                  {[0, 1, 2, 3].map((d) => (
+                    <span
+                      key={d}
+                      className="ic5-dot"
+                      aria-hidden="true"
+                      style={{
+                        width: 9,
+                        height: 9,
+                        borderRadius: "50%",
+                        background: g.color,
+                        boxShadow: `0 0 8px ${g.color}`,
+                      }}
+                    />
+                  ))}
+                </div>
+                <p
+                  className="ic5-group-label"
+                  style={{ marginTop: 9, fontSize: 12.5, fontWeight: 700, color: "var(--v2-ink)", lineHeight: 1.2 }}
+                >
+                  {g.label}
+                </p>
+                <p
+                  className="ic5-group-cap"
+                  style={{ marginTop: 4, fontSize: 10.5, color: "var(--v2-ink-faint)", lineHeight: 1.3 }}
+                >
+                  {g.caption}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* The single route that forms beneath the three groups */}
+          <div style={{ position: "relative", marginTop: 12, height: 30 }}>
+            <svg
+              width="100%"
+              height="30"
+              viewBox="0 0 300 30"
+              preserveAspectRatio="none"
+              fill="none"
+              aria-hidden="true"
+              style={{ position: "absolute", inset: 0 }}
+            >
+              <path
+                className="ic5-route"
+                d="M22 18 C 70 4, 90 4, 150 16 C 210 28, 230 28, 278 14"
+                stroke={routeColor}
+                strokeWidth="2"
+                strokeLinecap="round"
+                style={{ filter: `drop-shadow(0 0 4px ${routeColor})` }}
+              />
+            </svg>
+            {/* Three route stops, aligned to the three groups */}
+            {[16, 50, 84].map((leftPct) => (
               <span
+                key={leftPct}
+                className="ic5-route-node"
                 aria-hidden="true"
                 style={{
-                  width: 7,
-                  height: 7,
+                  position: "absolute",
+                  top: "50%",
+                  left: `${leftPct}%`,
+                  width: 10,
+                  height: 10,
+                  marginTop: -5,
+                  marginLeft: -5,
                   borderRadius: "50%",
-                  flexShrink: 0,
-                  background: role.accent2,
-                  boxShadow: `0 0 8px ${role.accent2}`,
+                  background: routeColor,
+                  boxShadow: `0 0 9px ${routeColor}`,
                 }}
               />
-              <span style={{ fontSize: 13.5, fontWeight: 620, color: "var(--v2-ink)" }}>{t}</span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Locked layers — taking shape, gold */}
-      <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-        {locked.map((l) => (
-          <div
-            key={l}
-            className="fr-locked"
+        {/* Your pattern is ready */}
+        <div
+          className="ic5-ready"
+          style={{
+            marginTop: 16,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 9,
+          }}
+        >
+          <span
+            aria-hidden="true"
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 11,
-              padding: "11px 14px",
-              borderRadius: 13,
-              border: `1px solid color-mix(in srgb, ${role.accent} 28%, transparent)`,
-              background: `color-mix(in srgb, ${role.accent} 7%, transparent)`,
+              width: 20,
+              height: 20,
+              borderRadius: "50%",
+              display: "grid",
+              placeItems: "center",
+              flexShrink: 0,
+              color: dark ? "#06070D" : "#FFFFFF",
+              background: routeColor,
+              boxShadow: `0 0 10px ${routeColor}`,
+              fontSize: 12,
+              fontWeight: 800,
             }}
           >
-            <span
-              aria-hidden="true"
-              style={{
-                width: 22,
-                height: 22,
-                borderRadius: 7,
-                flexShrink: 0,
-                display: "grid",
-                placeItems: "center",
-                color: role.accent,
-                border: `1px solid color-mix(in srgb, ${role.accent} 40%, transparent)`,
-                fontSize: 12,
-              }}
-            >
-              ◗
-            </span>
-            <span style={{ fontSize: 13, fontWeight: 640, color: "var(--v2-ink)" }}>{l}</span>
-          </div>
-        ))}
-      </div>
+            ✓
+          </span>
+          <span style={{ fontSize: 15, fontWeight: 700, color: "var(--v2-ink)" }}>
+            Your pattern is ready
+          </span>
+        </div>
 
-      <p className="fr-rv" style={{ marginTop: 12, fontSize: 12.5, color: "var(--v2-ink-dim)", lineHeight: 1.5 }}>
-        The preview is yours free. The full personalized system — profile, route, daily actions, recovery and ongoing plan — unlocks with your subscription.
-      </p>
-    </CardShell>
+        {/* Spacer pushes the CTA toward the bottom on tall screens */}
+        <div style={{ flex: 1, minHeight: 14 }} />
+
+        {/* CTA — present and clickable from mount; the timeline only fades it in */}
+        <button
+          onClick={onContinue}
+          className="ic5-cta v2-cta"
+          style={{ width: "100%", minHeight: 54, fontSize: 15, marginTop: 4 }}
+        >
+          See My Result
+        </button>
+      </div>
+    </div>
   );
 }
 
