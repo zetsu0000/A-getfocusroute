@@ -33,12 +33,18 @@ export function ResultScoreModule({
     Math.min(100, ((score.value - score.minimum) / span) * 100),
   );
 
+  /* The per-pattern accent is tuned AA on white. On the dark score card it is
+     mixed toward white via the theme-aware --v2-score-accent-lift token (42% in
+     dark, 0% in light) so the number, track and marker stay legible without any
+     hardcoded theme check or extra glow. */
+  const scoreAccent = `color-mix(in srgb, ${accent}, #FFFFFF var(--v2-score-accent-lift, 0%))`;
+
   return (
     <div
       className="v2-panel"
       style={{ padding: "20px 20px 18px", position: "relative", overflow: "hidden" }}
     >
-      <p className="v2-hud" style={{ color: "var(--v2-ink-faint)", letterSpacing: "0.18em" }}>
+      <p className="v2-hud" style={{ color: "var(--v2-ink-dim)", letterSpacing: "0.18em" }}>
         Your focus-friction score
       </p>
 
@@ -50,7 +56,7 @@ export function ResultScoreModule({
             fontSize: "clamp(48px, 16vw, 64px)",
             fontWeight: 600,
             lineHeight: 1,
-            color: accent,
+            color: scoreAccent,
             letterSpacing: "-0.03em",
           }}
         >
@@ -60,7 +66,7 @@ export function ResultScoreModule({
           style={{
             fontSize: 18,
             fontWeight: 600,
-            color: "var(--v2-ink-faint)",
+            color: "var(--v2-ink-dim)",
             letterSpacing: "-0.01em",
           }}
         >
@@ -89,7 +95,7 @@ export function ResultScoreModule({
               bottom: 0,
               width: `${pct}%`,
               borderRadius: 999,
-              background: `linear-gradient(90deg, color-mix(in srgb, ${accent} 55%, transparent), ${accent})`,
+              background: `linear-gradient(90deg, color-mix(in srgb, ${accent} 62%, transparent), ${scoreAccent})`,
             }}
           />
           <span
@@ -97,13 +103,13 @@ export function ResultScoreModule({
               position: "absolute",
               top: "50%",
               left: `${pct}%`,
-              width: 12,
-              height: 12,
-              marginTop: -6,
-              marginLeft: -6,
+              width: 13,
+              height: 13,
+              marginTop: -6.5,
+              marginLeft: -6.5,
               borderRadius: "50%",
-              background: accent,
-              boxShadow: `0 0 10px ${accent}`,
+              background: scoreAccent,
+              boxShadow: `0 0 7px color-mix(in srgb, ${accent} 55%, transparent)`,
               border: "2px solid var(--v2-bg-raise)",
             }}
           />
@@ -112,54 +118,59 @@ export function ResultScoreModule({
           style={{
             display: "flex",
             justifyContent: "space-between",
-            marginTop: 6,
+            marginTop: 7,
           }}
         >
-          <span className="v2-hud" style={{ fontSize: 9 }}>
+          <span
+            className="v2-hud"
+            style={{ fontSize: 11, letterSpacing: "0.04em", color: "var(--v2-ink-dim)", whiteSpace: "nowrap" }}
+          >
             {score.minimum} · less friction
           </span>
-          <span className="v2-hud" style={{ fontSize: 9 }}>
+          <span
+            className="v2-hud"
+            style={{ fontSize: 11, letterSpacing: "0.04em", color: "var(--v2-ink-dim)", whiteSpace: "nowrap" }}
+          >
             more friction · {score.maximum}
           </span>
         </div>
       </div>
 
-      {/* Universal, factual explanation — no interpretation bands or inferred areas */}
+      {/* Compact, universal explanation — no interpretation bands or inferred areas.
+          Three short lines with a clear hierarchy, not one dense paragraph. */}
       <p
         style={{
           marginTop: 14,
-          fontSize: 14,
-          color: "var(--v2-ink-dim)",
-          lineHeight: 1.55,
+          fontSize: 14.5,
+          color: "var(--v2-ink)",
+          lineHeight: 1.45,
         }}
       >
-        This score summarizes the friction you reported across the focus
-        situations covered in this assessment.
+        This score summarizes the focus friction you reported in this assessment.
       </p>
 
-      {/* Direction note — essential to reading the score, so it stays legible (≥13px) */}
+      {/* Direction note — essential to reading the score, so it stays legible */}
       <p
         style={{
-          marginTop: 8,
-          fontSize: 13,
+          marginTop: 7,
+          fontSize: 13.5,
           color: "var(--v2-ink-dim)",
-          lineHeight: 1.5,
+          lineHeight: 1.45,
         }}
       >
-        A higher number means you reported more frequent or stronger friction —
-        not less ability.
+        Higher means more frequent or stronger friction — not less ability.
       </p>
 
-      {/* Non-clinical disclaimer */}
+      {/* Non-clinical disclaimer — may remain smaller */}
       <p
         style={{
-          marginTop: 10,
-          fontSize: 11,
-          color: "var(--v2-ink-ghost)",
-          lineHeight: 1.5,
+          marginTop: 9,
+          fontSize: 11.5,
+          color: "var(--v2-ink-faint)",
+          lineHeight: 1.45,
         }}
       >
-        This reflects your answers. It is not a diagnosis.
+        Based on your answers. Not a diagnosis.
       </p>
     </div>
   );

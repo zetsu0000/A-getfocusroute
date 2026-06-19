@@ -393,10 +393,12 @@ describe("result screen renders the canonical score", () => {
     expect(moduleSrc).not.toContain("|| 0");
   });
 
-  it("shows the explicit 0–100 range and a non-clinical disclaimer", () => {
+  it("shows the explicit 0–100 range and the compact non-clinical disclaimer", () => {
     expect(moduleSrc).toContain("score.minimum");
     expect(moduleSrc).toContain("score.maximum");
-    expect(moduleSrc).toContain("This reflects your answers. It is not a diagnosis.");
+    expect(moduleSrc).toContain("Based on your answers. Not a diagnosis.");
+    // The earlier longer disclaimer is gone.
+    expect(moduleSrc).not.toContain("This reflects your answers. It is not a diagnosis.");
   });
 
   it("frames the score as reported friction, not severity or a focus percentage", () => {
@@ -418,11 +420,13 @@ describe("result screen renders the canonical score", () => {
     expect(moduleSrc).not.toContain("relatively light friction");
   });
 
-  it("uses one universal, factual explanation + direction note (no 'brain' wording)", () => {
+  it("uses the compact universal explanation + direction note (no 'brain' wording)", () => {
     expect(moduleSrc).toContain(
-      "This score summarizes the friction you reported across the focus",
+      "This score summarizes the focus friction you reported in this assessment.",
     );
-    expect(moduleSrc).toContain("situations covered in this assessment.");
+    expect(moduleSrc).toContain(
+      "Higher means more frequent or stronger friction — not less ability.",
+    );
     expect(moduleSrc).toContain("not less ability");
     // The earlier "worse brain" phrasing — and any 'brain' wording — is gone.
     expect(moduleSrc).not.toContain("not a worse brain");
@@ -430,11 +434,40 @@ describe("result screen renders the canonical score", () => {
   });
 
   it("keeps the direction note legible at >= 13px (essential to reading the score)", () => {
-    const noteIdx = moduleSrc.indexOf("more frequent or stronger friction");
+    const noteIdx = moduleSrc.indexOf("Higher means more frequent or stronger friction");
     expect(noteIdx).toBeGreaterThan(-1);
     // The <p> wrapping the direction note carries a >= 13px font size.
     const before = moduleSrc.slice(Math.max(0, noteIdx - 320), noteIdx);
     expect(before).toMatch(/fontSize:\s*1[3-9]/);
+  });
+
+  it("improves dark-mode contrast via a theme-aware accent-lift token (no theme branch)", () => {
+    // The per-pattern accent is lifted toward white on the dark card through a
+    // CSS variable, not a hardcoded theme check inside the component.
+    expect(moduleSrc).toContain("--v2-score-accent-lift");
+    expect(moduleSrc).toContain("scoreAccent");
+    expect(moduleSrc).not.toContain('theme === "dark"');
+    expect(moduleSrc).not.toContain("dark ?");
+    // Stronger ink tiers than the previous faint/ghost on the supporting text.
+    expect(moduleSrc).not.toContain('color: "var(--v2-ink-ghost)"');
+  });
+
+  it("defines the score accent-lift token for both themes in globals.css", () => {
+    const css = readFileSync(
+      fileURLToPath(new URL("../../app/globals.css", import.meta.url)),
+      "utf8",
+    );
+    expect(css).toContain("--v2-score-accent-lift: 42%"); // dark: lifted
+    expect(css).toContain("--v2-score-accent-lift: 0%"); // light: unchanged
+  });
+
+  it("sizes the score range labels at >= 11px so they read on a 390px screen", () => {
+    expect(moduleSrc).not.toContain("fontSize: 9");
+    // Both range labels are 11px with reduced tracking and no wrapping.
+    expect((moduleSrc.match(/fontSize: 11,/g) || []).length).toBeGreaterThanOrEqual(2);
+    expect(moduleSrc).toContain("less friction");
+    expect(moduleSrc).toContain("more friction");
+    expect(moduleSrc).toContain('whiteSpace: "nowrap"');
   });
 });
 
