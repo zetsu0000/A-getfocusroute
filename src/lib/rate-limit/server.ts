@@ -75,6 +75,10 @@ function identifierMaterial(
       return `session:${context.sessionId ?? "missing-session"}:${context.network}`;
     case "sessionEvent":
       return `session_event:${context.sessionId ?? "missing-session"}:${context.eventName ?? "missing-event"}:${context.network}`;
+    case "resultRequest":
+      return `result_request:${context.resultId ?? "missing-result"}:${context.network}`;
+    case "userAccount":
+      return `user_account:${context.userId ?? "missing-user"}:${context.network}`;
   }
 }
 

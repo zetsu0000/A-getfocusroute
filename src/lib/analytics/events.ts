@@ -50,6 +50,8 @@ export const FIRST_PARTY_EVENTS = {
   resultEmailRequested: "result_email_requested",
   resultEmailSent: "result_email_sent",
   resultEmailFailed: "result_email_failed",
+  resultEmailDelivered: "result_email_delivered",
+  resultEmailBounced: "result_email_bounced",
   // Social proof - first-party only. Fires only when approved customer proof
   // enters the viewport or when the user explicitly expands the paywall proof.
   // Distinct from full_result_viewed, paywall_viewed, and checkout_cta_clicked

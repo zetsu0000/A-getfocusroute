@@ -11,6 +11,8 @@ export type RateLimitIdentityInput = {
   subscriptionId?: string | null;
   sessionId?: string | null;
   eventName?: string | null;
+  resultId?: string | null;
+  userId?: string | null;
 };
 
 export type RateLimitIdentityContext = {
@@ -22,6 +24,8 @@ export type RateLimitIdentityContext = {
   subscriptionId?: string | null;
   sessionId?: string | null;
   eventName?: string | null;
+  resultId?: string | null;
+  userId?: string | null;
 };
 
 export function normalizeEmailForRateLimit(value: unknown): string | null {
@@ -69,6 +73,8 @@ export function identityContext(
     subscriptionId: input.subscriptionId?.trim() || null,
     sessionId: input.sessionId?.trim().slice(0, 128) || null,
     eventName: input.eventName?.trim().slice(0, 120) || null,
+    resultId: input.resultId?.trim().slice(0, 64) || null,
+    userId: input.userId?.trim().slice(0, 64) || null,
   };
 }
 

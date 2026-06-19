@@ -7,8 +7,9 @@ import {
   isResultEmailSendingEnabled,
   validateProductionEmailConfiguration,
 } from "@/lib/email/config";
+import { buildResultReadyEmail } from "@/lib/email/templates/result-ready";
 import type { EmailDeliveryLedger } from "@/lib/email/delivery-ledger";
-import { InMemoryEmailDeliveryLedger } from "@/lib/email/delivery-ledger";
+import { resolveEmailDeliveryLedger } from "@/lib/email/ledger-factory";
 import {
   MockResultEmailProvider,
   NoopResultEmailProvider,
@@ -97,15 +98,6 @@ export function createResultEmailProvider(): ResultEmailProvider {
   return new NoopResultEmailProvider();
 }
 
-let defaultLedger: EmailDeliveryLedger | null = null;
-
-function getDefaultLedger(): EmailDeliveryLedger {
-  if (!defaultLedger) {
-    defaultLedger = new InMemoryEmailDeliveryLedger();
-  }
-  return defaultLedger;
-}
-
 function resolveMessage(
   provider: ResultEmailProvider,
   payload: import("@/lib/email/types").ResultEmailPayload,
@@ -114,6 +106,9 @@ function resolveMessage(
   if (message) return message;
   if (provider.name === "mock") {
     return buildPlaceholderResultEmailMessage(payload);
+  }
+  if (isRealEmailProviderName(provider.name)) {
+    return buildResultReadyEmail(payload);
   }
   return { error: "message_not_configured" };
 }
@@ -169,7 +164,7 @@ export async function sendResultEmail(
     };
   }
 
-  const ledger = deps.ledger ?? getDefaultLedger();
+  const ledger = deps.ledger ?? resolveEmailDeliveryLedger();
   const provider = deps.provider ?? createResultEmailProvider();
   const trackAnalytics = deps.trackAnalytics ?? true;
   const userId =
@@ -203,6 +198,13 @@ export async function sendResultEmail(
     };
   }
 
+  const claimToken = claim.record.claimToken;
+  const ledgerUpdate = {
+    idempotencyKey: payload.idempotencyKey,
+    claimToken,
+    provider: provider.name,
+  };
+
   if (trackAnalytics) {
     await trackResultEmailAnalytics("requested", payload, {
       userId,
@@ -212,11 +214,19 @@ export async function sendResultEmail(
   }
 
   if (provider.name === "noop") {
-    await ledger.markFailed({
-      idempotencyKey: payload.idempotencyKey,
-      provider: provider.name,
-      lastErrorCode: "provider_not_configured",
-    });
+    try {
+      await ledger.markFailed({
+        ...ledgerUpdate,
+        lastErrorCode: "provider_not_configured",
+      });
+    } catch {
+      return {
+        status: "failed",
+        idempotencyKey: payload.idempotencyKey,
+        provider: provider.name,
+        safeErrorCode: "delivery_finalize_rejected",
+      };
+    }
     if (trackAnalytics) {
       await trackResultEmailAnalytics("failed", payload, {
         userId,
@@ -236,11 +246,19 @@ export async function sendResultEmail(
 
   const resolvedMessage = resolveMessage(provider, payload, message);
   if ("error" in resolvedMessage) {
-    await ledger.markFailed({
-      idempotencyKey: payload.idempotencyKey,
-      provider: provider.name,
-      lastErrorCode: resolvedMessage.error,
-    });
+    try {
+      await ledger.markFailed({
+        ...ledgerUpdate,
+        lastErrorCode: resolvedMessage.error,
+      });
+    } catch {
+      return {
+        status: "failed",
+        idempotencyKey: payload.idempotencyKey,
+        provider: provider.name,
+        safeErrorCode: "delivery_finalize_rejected",
+      };
+    }
     if (trackAnalytics) {
       await trackResultEmailAnalytics("failed", payload, {
         userId,
@@ -262,11 +280,19 @@ export async function sendResultEmail(
   try {
     sendResult = await provider.send(payload, resolvedMessage);
   } catch {
-    await ledger.markFailed({
-      idempotencyKey: payload.idempotencyKey,
-      provider: provider.name,
-      lastErrorCode: "provider_exception",
-    });
+    try {
+      await ledger.markFailed({
+        ...ledgerUpdate,
+        lastErrorCode: "provider_exception",
+      });
+    } catch {
+      return {
+        status: "failed",
+        idempotencyKey: payload.idempotencyKey,
+        provider: provider.name,
+        safeErrorCode: "delivery_finalize_rejected",
+      };
+    }
     if (trackAnalytics) {
       await trackResultEmailAnalytics("failed", payload, {
         userId,
@@ -285,11 +311,19 @@ export async function sendResultEmail(
   }
 
   if (!sendResult.ok) {
-    await ledger.markFailed({
-      idempotencyKey: payload.idempotencyKey,
-      provider: provider.name,
-      lastErrorCode: sendResult.safeErrorCode,
-    });
+    try {
+      await ledger.markFailed({
+        ...ledgerUpdate,
+        lastErrorCode: sendResult.safeErrorCode,
+      });
+    } catch {
+      return {
+        status: "failed",
+        idempotencyKey: payload.idempotencyKey,
+        provider: provider.name,
+        safeErrorCode: "delivery_finalize_rejected",
+      };
+    }
     if (trackAnalytics) {
       await trackResultEmailAnalytics("failed", payload, {
         userId,
@@ -308,11 +342,19 @@ export async function sendResultEmail(
   }
 
   if (provider.name === "mock") {
-    await ledger.markPreviewed({
-      idempotencyKey: payload.idempotencyKey,
-      provider: provider.name,
-      providerMessageId: sendResult.providerMessageId,
-    });
+    try {
+      await ledger.markPreviewed({
+        ...ledgerUpdate,
+        providerMessageId: sendResult.providerMessageId,
+      });
+    } catch {
+      return {
+        status: "failed",
+        idempotencyKey: payload.idempotencyKey,
+        provider: provider.name,
+        safeErrorCode: "delivery_finalize_rejected",
+      };
+    }
     return {
       status: "previewed",
       idempotencyKey: payload.idempotencyKey,
@@ -322,11 +364,19 @@ export async function sendResultEmail(
   }
 
   if (!isRealEmailProviderName(provider.name)) {
-    await ledger.markFailed({
-      idempotencyKey: payload.idempotencyKey,
-      provider: provider.name,
-      lastErrorCode: "provider_not_configured",
-    });
+    try {
+      await ledger.markFailed({
+        ...ledgerUpdate,
+        lastErrorCode: "provider_not_configured",
+      });
+    } catch {
+      return {
+        status: "failed",
+        idempotencyKey: payload.idempotencyKey,
+        provider: provider.name,
+        safeErrorCode: "delivery_finalize_rejected",
+      };
+    }
     return {
       status: "failed",
       idempotencyKey: payload.idempotencyKey,
@@ -335,11 +385,19 @@ export async function sendResultEmail(
     };
   }
 
-  await ledger.markSent({
-    idempotencyKey: payload.idempotencyKey,
-    provider: provider.name,
-    providerMessageId: sendResult.providerMessageId,
-  });
+  try {
+    await ledger.markSent({
+      ...ledgerUpdate,
+      providerMessageId: sendResult.providerMessageId,
+    });
+  } catch {
+    return {
+      status: "failed",
+      idempotencyKey: payload.idempotencyKey,
+      provider: provider.name,
+      safeErrorCode: "delivery_finalize_rejected",
+    };
+  }
 
   if (trackAnalytics) {
     await trackResultEmailAnalytics("sent", payload, {
