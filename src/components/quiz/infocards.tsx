@@ -775,8 +775,9 @@ function Card4Mechanism({ onContinue }: CardProps) {
    track / getting back), a single route forms beneath them, and "Your pattern
    is ready" lands before the CTA. The exact score and the pattern's name are
    intentionally WITHHELD — they appear for the first time on the result. One
-   GSAP timeline (~1.9s) plays once; reduced motion snaps to the final state and
-   the CTA is in the DOM and clickable throughout (never delayed for usability).
+   GSAP timeline (~1.9s) plays once; reduced motion snaps to the final state. The
+   CTA is visibly present (it never animates below 0.88 opacity) and clickable +
+   keyboard-focusable from the first render — never invisible while interactive.
 ───────────────────────────────────────────────────────────────────── */
 function Card5Unlock({ onContinue }: CardProps) {
   const { theme } = useFunnelTheme();
@@ -796,7 +797,7 @@ function Card5Unlock({ onContinue }: CardProps) {
       color: dark ? "#6FE0C2" : "#1C8A5A",
     },
     {
-      label: "Getting back into the task",
+      label: "Getting back",
       caption: "where your next step should begin",
       color: dark ? "#F0DCAE" : "#9A7A2E",
     },
@@ -846,8 +847,10 @@ function Card5Unlock({ onContinue }: CardProps) {
       // 5 · "Your pattern is ready"
       tl.fromTo(".ic5-ready", { opacity: 0, y: 8, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.35, ease: "back.out(1.6)" }, 1.5);
 
-      // 6 · CTA reveals immediately afterward (already clickable in the DOM)
-      tl.fromTo(".ic5-cta", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.33 }, 1.62);
+      // 6 · CTA gets a subtle settle only — it is already visible (≥0.88
+      // opacity) and focusable from mount, so it is never invisible while
+      // interactive. Reduced motion lands it fully opaque via progress(1).
+      tl.fromTo(".ic5-cta", { opacity: 0.88, y: 6 }, { opacity: 1, y: 0, duration: 0.33 }, 1.62);
 
       if (reduce) {
         tl.progress(1).pause(); // complete final state, no motion, nothing hidden
@@ -875,6 +878,17 @@ function Card5Unlock({ onContinue }: CardProps) {
       }}
     >
       <div style={{ width: "100%", maxWidth: 460, display: "flex", flexDirection: "column", flex: 1 }}>
+        {/* Responsive group layout: three across normally; on very narrow
+            screens the first two sit side by side and the third spans full
+            width below — one visual system, no font reduction, pure CSS. */}
+        <style>{`
+          .ic5-groups { grid-template-columns: repeat(3, 1fr); }
+          @media (max-width: 359px) {
+            .ic5-groups { grid-template-columns: 1fr 1fr; }
+            .ic5-group--wide { grid-column: 1 / -1; }
+          }
+        `}</style>
+
         {/* Eyebrow — plain language, no instrumentation */}
         <p className="ic5-rv v2-hud" style={{ color: eyebrowColor, marginBottom: 10, letterSpacing: "0.16em" }}>
           Based on what you shared
@@ -905,9 +919,13 @@ function Card5Unlock({ onContinue }: CardProps) {
             background: `linear-gradient(165deg, color-mix(in srgb, ${routeColor} 9%, transparent), transparent)`,
           }}
         >
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
-            {groups.map((g) => (
-              <div key={g.label} style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
+          <div className="ic5-groups" style={{ display: "grid", gap: 8 }}>
+            {groups.map((g, gi) => (
+              <div
+                key={g.label}
+                className={gi === 2 ? "ic5-group ic5-group--wide" : "ic5-group"}
+                style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", minWidth: 0 }}
+              >
                 {/* Dot cluster — 4 fragments in a tight 2×2; GSAP scatters then settles them */}
                 <div
                   style={{
@@ -937,13 +955,13 @@ function Card5Unlock({ onContinue }: CardProps) {
                 </div>
                 <p
                   className="ic5-group-label"
-                  style={{ marginTop: 9, fontSize: 12.5, fontWeight: 700, color: "var(--v2-ink)", lineHeight: 1.2 }}
+                  style={{ marginTop: 9, fontSize: 13.5, fontWeight: 700, color: "var(--v2-ink)", lineHeight: 1.25 }}
                 >
                   {g.label}
                 </p>
                 <p
                   className="ic5-group-cap"
-                  style={{ marginTop: 4, fontSize: 10.5, color: "var(--v2-ink-faint)", lineHeight: 1.3 }}
+                  style={{ marginTop: 4, fontSize: 12, color: "var(--v2-ink-dim)", lineHeight: 1.35 }}
                 >
                   {g.caption}
                 </p>
@@ -1031,7 +1049,8 @@ function Card5Unlock({ onContinue }: CardProps) {
         {/* Spacer pushes the CTA toward the bottom on tall screens */}
         <div style={{ flex: 1, minHeight: 14 }} />
 
-        {/* CTA — present and clickable from mount; the timeline only fades it in */}
+        {/* CTA — visibly present, clickable and keyboard-focusable from mount;
+            the timeline only nudges it from 0.88 → 1 opacity, never from 0. */}
         <button
           onClick={onContinue}
           className="ic5-cta v2-cta"

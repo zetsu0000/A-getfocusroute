@@ -400,10 +400,41 @@ describe("result screen renders the canonical score", () => {
   });
 
   it("frames the score as reported friction, not severity or a focus percentage", () => {
-    expect(moduleSrc).toContain("more reported friction");
     expect(moduleSrc.toLowerCase()).not.toContain("% focus");
     expect(moduleSrc.toLowerCase()).not.toContain("percent of focus");
     expect(moduleSrc.toLowerCase()).not.toContain("severity");
+    expect(moduleSrc.toLowerCase()).not.toContain("compared to other");
+  });
+
+  it("carries no interpretation bands or inferred problem areas", () => {
+    // The aggregate score does not prove which situation a value came from, so
+    // the custom band thresholds and per-band explanation are gone.
+    expect(moduleSrc).not.toContain("explanationFor");
+    expect(moduleSrc).not.toContain(">= 67");
+    expect(moduleSrc).not.toContain(">= 34");
+    expect(moduleSrc).not.toContain("value >=");
+    // No leftover band copy that attributed the score to specific situations.
+    expect(moduleSrc).not.toContain("pointed to more friction when starting");
+    expect(moduleSrc).not.toContain("relatively light friction");
+  });
+
+  it("uses one universal, factual explanation + direction note (no 'brain' wording)", () => {
+    expect(moduleSrc).toContain(
+      "This score summarizes the friction you reported across the focus",
+    );
+    expect(moduleSrc).toContain("situations covered in this assessment.");
+    expect(moduleSrc).toContain("not less ability");
+    // The earlier "worse brain" phrasing — and any 'brain' wording — is gone.
+    expect(moduleSrc).not.toContain("not a worse brain");
+    expect(moduleSrc.toLowerCase()).not.toContain("brain");
+  });
+
+  it("keeps the direction note legible at >= 13px (essential to reading the score)", () => {
+    const noteIdx = moduleSrc.indexOf("more frequent or stronger friction");
+    expect(noteIdx).toBeGreaterThan(-1);
+    // The <p> wrapping the direction note carries a >= 13px font size.
+    const before = moduleSrc.slice(Math.max(0, noteIdx - 320), noteIdx);
+    expect(before).toMatch(/fontSize:\s*1[3-9]/);
   });
 });
 

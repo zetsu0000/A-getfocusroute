@@ -11,23 +11,14 @@ import type { ResultScoreData } from "@/lib/result-score-data";
  * the data and only renders this module when a real score is available, so an
  * unavailable score simply means the module is absent — no 0/57 placeholder.
  *
- * Framing is deliberately non-clinical: the number is reported FRICTION on a
- * 0–100 range (higher = more reported friction), never a focus percentage,
- * intelligence, productivity potential, medical probability, a clinical grade,
- * or a comparison against other people.
+ * Framing is deliberately non-clinical: the number is an aggregate of the
+ * focus-friction signals the user reported, on a 0–100 orientation (higher =
+ * more reported friction). It is never a focus percentage, an intelligence or
+ * productivity measure, a medical or clinical reading, or a comparison against
+ * other people. The explanation is intentionally universal — the aggregate
+ * score does NOT prove which situation a given value came from, so we add no
+ * interpretation bands, thresholds, or inferred problem areas.
  */
-
-/** Plain-language, band-aware reading of the score. Describes the user's OWN
- *  reported friction — never a clinical grade or a comparison to others. */
-function explanationFor(value: number): string {
-  if (value >= 67) {
-    return "Your answers pointed to more friction when starting, staying on track, and getting back into a task.";
-  }
-  if (value >= 34) {
-    return "Your answers pointed to a mix — some areas feel steady, while starting, staying on track, or getting back in take more effort.";
-  }
-  return "Your answers pointed to relatively light friction overall, with a few specific moments that get harder.";
-}
 
 export function ResultScoreModule({
   score,
@@ -133,7 +124,7 @@ export function ResultScoreModule({
         </div>
       </div>
 
-      {/* Plain-language explanation tied to what they answered */}
+      {/* Universal, factual explanation — no interpretation bands or inferred areas */}
       <p
         style={{
           marginTop: 14,
@@ -142,19 +133,21 @@ export function ResultScoreModule({
           lineHeight: 1.55,
         }}
       >
-        {explanationFor(score.value)}
+        This score summarizes the friction you reported across the focus
+        situations covered in this assessment.
       </p>
 
-      {/* Direction note — a higher number is more reported friction, not a worse brain */}
+      {/* Direction note — essential to reading the score, so it stays legible (≥13px) */}
       <p
         style={{
           marginTop: 8,
-          fontSize: 12,
-          color: "var(--v2-ink-faint)",
+          fontSize: 13,
+          color: "var(--v2-ink-dim)",
           lineHeight: 1.5,
         }}
       >
-        A higher number means more reported friction — not a worse brain.
+        A higher number means you reported more frequent or stronger friction —
+        not less ability.
       </p>
 
       {/* Non-clinical disclaimer */}

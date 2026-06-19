@@ -101,10 +101,12 @@ describe("Card 5 rebuilt teaser", () => {
     expect(card5).toContain("See My Result");
   });
 
-  it("maps three clear groups with their captions", () => {
-    for (const label of ["Starting", "Staying on track", "Getting back into the task"]) {
+  it("maps three clear groups with their captions (third label shortened)", () => {
+    for (const label of ["Starting", "Staying on track", "Getting back"]) {
       expect(card5).toContain(label);
     }
+    // The long third label is shortened for 390px readability.
+    expect(card5).not.toContain("Getting back into the task");
     for (const cap of [
       "where starting becomes harder",
       "what tends to interrupt follow-through",
@@ -112,6 +114,32 @@ describe("Card 5 rebuilt teaser", () => {
     ]) {
       expect(card5).toContain(cap);
     }
+  });
+
+  it("keeps meaningful group typography at or above 12px (no sub-12 captions)", () => {
+    // Labels ~13.5px, captions 12px — no font reduction below 12 for content.
+    expect(card5).toContain("fontSize: 13.5"); // group label
+    expect(card5).not.toContain("fontSize: 10.5");
+    expect(card5).not.toContain("fontSize: 11,");
+    expect(card5).not.toContain("fontSize: 9,");
+    expect(card5).not.toContain("fontSize: 8,");
+  });
+
+  it("uses a responsive group layout instead of shrinking fonts on narrow screens", () => {
+    expect(card5).toContain(".ic5-groups");
+    expect(card5).toContain("grid-template-columns: 1fr 1fr"); // narrow fallback
+    expect(card5).toContain("ic5-group--wide"); // third group spans full width
+    expect(card5).toContain("@media (max-width: 359px)");
+  });
+
+  it("renders the CTA visibly from the start — never animated from opacity 0", () => {
+    // The CTA settles from a visible 0.88 → 1; it is never invisible.
+    expect(card5).toContain('".ic5-cta", { opacity: 0.88');
+    expect(card5).not.toMatch(/\.ic5-cta",\s*\{\s*opacity:\s*0\s*,/);
+    // Real focusable button, no pointer-events tricks or focus removal.
+    expect(card5).toContain('onClick={onContinue}');
+    expect(card5).not.toContain('pointerEvents: "none"');
+    expect(card5).not.toContain("tabIndex={-1}");
   });
 
   it("drives a scattered-fragments → groups → route grammar distinct from Card 1", () => {
