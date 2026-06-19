@@ -371,11 +371,27 @@ describe("Card 2 rebuilt as a Priority Lens", () => {
     expect(card2).not.toContain("scrub");
   });
 
-  it("paces a ~2.8–3.2s sequence with a visible recognition pause before selection", () => {
-    expect(card2).toContain(", 0.62)"); // competition begins (after recognition)
-    expect(card2).toContain(", 1.3)"); // selection + travel begin only later
-    expect(card2).toContain(", 2.75)"); // payoff reveal
-    expect(card2).toContain(", 2.85)"); // CTA settle → final reach ~3.05s
+  it("phases recognition → competition → selection → pause → travel with real gaps", () => {
+    // Phase 1 — the field enters (and settles ~0.72s) BEFORE competition.
+    expect(card2).toContain("stagger: 0.035 }, 0.28)"); // secondary tasks begin entering
+    expect(card2).toContain("{ opacity: 1, duration: 0.3 }, 0.36)"); // Finish enters
+    // Phase 2 — competition starts only at 0.8s (after entry settles).
+    expect(card2).toContain('ease: "sine.inOut" }, 0.8)');
+    // Phase 3 — selection ring fades in at 1.4s, BEFORE any travel.
+    expect(card2).toContain('".ic2-sel-ring", { opacity: 1, duration: 0.3 }, 1.4)');
+    // Phase 4 — travel begins only at 1.7s (≥0.25s after selection at 1.4s).
+    expect(card2).toContain('x: 0, y: 0, scale: 1, duration: 0.65, ease: "power3.inOut" }, 1.7)');
+    // Selected-state copy resolves near the END of the travel, not before.
+    expect(card2).toContain("}, 2.15)"); // DO THIS NEXT
+    expect(card2).toContain("}, 2.25)"); // A clear place to begin
+    // Final beats → total ≈ 3.2s (CTA settle 2.9 + 0.3).
+    expect(card2).toContain("}, 2.45)"); // return anchor
+    expect(card2).toContain("}, 2.75)"); // payoff
+    expect(card2).toContain("}, 2.9)"); // CTA settle
+    // The old compressed timing is gone (competition no longer at 0.62s; travel
+    // no longer fires at the same 1.3s timestamp as selection).
+    expect(card2).not.toContain('}, 0.62)');
+    expect(card2).not.toContain('"power3.inOut" }, 1.3)');
   });
 
   it("renders the CTA visibly from the start — only a subtle settle, never from 0", () => {

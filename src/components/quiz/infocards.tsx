@@ -589,45 +589,50 @@ function Card2PriorityLens({ onContinue }: CardProps) {
 
       const tl = gsap.timeline({ paused: true, defaults: { ease: "power2.out" } });
 
-      // ── Phase 1 (0.0–0.55s) · Recognition — the field fills with competing
-      //    tasks; nothing is selected yet.
+      // ── Phase 1 (0.0–~0.7s) · Recognition — the WHOLE field enters and settles
+      //    before anything competes, so the user sees the complete initial set.
       tl.fromTo(".ic2-eyebrow", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.3 }, 0);
-      tl.fromTo(".ic2-headline", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.32 }, 0.08);
+      tl.fromTo(".ic2-headline", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.3 }, 0.08);
       tl.fromTo(".ic2-support", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.3 }, 0.18);
-      tl.fromTo(".ic2-frag", { opacity: 0, scale: 0.9, y: 8 }, { opacity: 1, scale: 1, y: 0, duration: 0.34, stagger: 0.05 }, 0.26);
-      // Finish enters as one more chip among the others (still small + quiet).
-      tl.fromTo(panel, { opacity: 0 }, { opacity: 1, duration: 0.34 }, 0.34);
+      tl.fromTo(".ic2-frag", { opacity: 0, scale: 0.9, y: 8 }, { opacity: 1, scale: 1, y: 0, duration: 0.3, stagger: 0.035 }, 0.28);
+      // Finish enters as one more normal task (still small + quiet). All chips
+      // are fully settled by ~0.72s — before competition starts at 0.8s.
+      tl.fromTo(panel, { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.36);
 
-      // ── Phase 2 (0.55–1.25s) · Competing priorities — a few drift toward the
-      //    centre; Reply / Fix / Finish briefly compete. Controlled (≤12–18px).
-      tl.to(".ic2-frag", { x: ds("cx"), y: ds("cy"), scale: ds("cs"), duration: 0.55, ease: "sine.inOut" }, 0.62);
-      tl.to(panel, { x: dx * 0.84, y: dy * 0.84, scale: CHIP_SCALE + 0.04, duration: 0.55, ease: "sine.inOut" }, 0.62);
-      // (a short hold ~1.17–1.3s lets the competition register before selection)
+      // ── Phase 2 (0.80–1.30s) · Competing priorities — Reply / Fix / Finish
+      //    drift toward the centre. Controlled (≤12–18px). A brief hold (1.30–
+      //    1.40s) keeps the competing state readable before anything is chosen.
+      tl.to(".ic2-frag", { x: ds("cx"), y: ds("cy"), scale: ds("cs"), duration: 0.5, ease: "sine.inOut" }, 0.8);
+      tl.to(panel, { x: dx * 0.84, y: dy * 0.84, scale: CHIP_SCALE + 0.04, duration: 0.5, ease: "sine.inOut" }, 0.8);
 
-      // ── Phase 3 (1.25–1.7s) · Selection begins — Finish is chosen: a strong
-      //    selected-blue ring fades in (the border strengthens) while secondary
-      //    tasks lose contrast and ease outward a few px. DO THIS NEXT not yet.
-      //    Only the ring's OPACITY animates (GSAP-owned), so a theme switch can
-      //    recolour it without replaying the timeline or resetting selection.
-      tl.to(".ic2-sel-ring", { opacity: 1, duration: 0.5 }, 1.3);
-      tl.to(".ic2-frag", { x: ds("ox"), y: ds("oy"), scale: 0.9, opacity: 0.5, duration: 0.5, ease: "power2.out" }, 1.3);
+      // ── Phase 3 (1.40–1.70s) · Selection — Finish is VISIBLY chosen while it
+      //    stays near its original position: the selected-blue ring fades in,
+      //    Finish firms up a touch, and the secondary tasks lose contrast + ease
+      //    outward. This state holds ~0.3s BEFORE any travel, so the selection
+      //    reads on its own. Only the ring's OPACITY animates (GSAP-owned), so a
+      //    theme switch can recolour it without replaying or resetting selection.
+      tl.to(".ic2-sel-ring", { opacity: 1, duration: 0.3 }, 1.4);
+      tl.to(panel, { scale: CHIP_SCALE + 0.1, duration: 0.3, ease: "power2.out" }, 1.4);
+      tl.to(".ic2-frag", { x: ds("ox"), y: ds("oy"), scale: 0.9, opacity: 0.5, duration: 0.4, ease: "power2.out" }, 1.4);
 
-      // ── Phase 4 (1.7–2.35s) · Transform the SAME task — one confident travel
-      //    from the chip slot to the exact centre while it grows to full size;
-      //    the selected-state copy resolves as it lands. No bounce, no crossfade.
-      tl.to(panel, { x: 0, y: 0, scale: 1, duration: 0.95, ease: "power3.inOut" }, 1.3);
-      tl.fromTo(".ic2-do", { opacity: 0, y: 4 }, { opacity: 1, y: 0, duration: 0.3 }, 1.95);
-      tl.fromTo(".ic2-place", { opacity: 0, y: 4 }, { opacity: 1, y: 0, duration: 0.3 }, 2.05);
+      // ── Phase 4 (1.70–2.35s) · Transform the SAME task — only AFTER the
+      //    selection pause does Finish travel from its slot to the exact centre,
+      //    growing to full size. One confident move, no bounce, no crossfade.
+      tl.to(panel, { x: 0, y: 0, scale: 1, duration: 0.65, ease: "power3.inOut" }, 1.7);
+      // Selected-state copy resolves near the END of the travel, once Finish has
+      // visibly reached the centre.
+      tl.fromTo(".ic2-do", { opacity: 0, y: 4 }, { opacity: 1, y: 0, duration: 0.3 }, 2.15);
+      tl.fromTo(".ic2-place", { opacity: 0, y: 4 }, { opacity: 1, y: 0, duration: 0.3 }, 2.25);
 
-      // ── Phase 5 (2.35–2.7s) · Return anchor — tied to the selected panel.
-      tl.fromTo(".ic2-anchor", { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.3 }, 2.4);
+      // ── Phase 5 (2.45s) · Return anchor — tied to the selected panel.
+      tl.fromTo(".ic2-anchor", { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.3 }, 2.45);
 
-      // ── Phase 6 (2.7–3.05s) · Payoff — quieter than the panel + CTA.
+      // ── Phase 6 (2.75s) · Payoff — quieter than the panel + CTA.
       tl.fromTo(".ic2-payoff", { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.3 }, 2.75);
 
-      // CTA — visible + focusable from mount; only a subtle final settle, never
-      // animated from opacity 0, never pulsed.
-      tl.fromTo(".ic2-cta", { opacity: 0.94, scale: 0.99 }, { opacity: 1, scale: 1, duration: 0.3 }, 2.85);
+      // CTA — visible + focusable from mount; only a subtle final settle (~2.9s,
+      // ending ~3.2s), never animated from opacity 0, never pulsed.
+      tl.fromTo(".ic2-cta", { opacity: 0.94, scale: 0.99 }, { opacity: 1, scale: 1, duration: 0.3 }, 2.9);
 
       if (reduce) {
         tl.progress(1).pause(); // complete final state, no motion, nothing hidden
