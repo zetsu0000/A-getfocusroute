@@ -70,7 +70,7 @@ Two explicit policies replace the former single policy that ran twice:
 | Policy | When | Buckets |
 |--------|------|---------|
 | `resultEmailRequestPreAuth` | Before authentication | `network` (10 / 10 min), `resultRequest` (3 / hour) |
-| `resultEmailRequestAuthenticated` | After authenticated user exists | `userAccount` (5 / 24 h) |
+| `resultEmailRequestAuthenticated` | After authenticated user exists | `userAccount` (5 / 24 h per account, not per IP) |
 
 Sequence:
 
@@ -81,18 +81,19 @@ Sequence:
 5. Authenticated user rate limit (once; user bucket only)
 6. Load result, verify ownership, feature flags, request email
 
-Buckets requiring real identifiers are skipped when absent — no `missing-user` or `missing-result` synthetic identities. Unauthenticated requests never execute a user bucket. Network/result buckets are not consumed twice.
+Buckets requiring real identifiers are skipped when absent — no `missing-user` or `missing-result` synthetic identities. Unauthenticated requests never execute a user bucket. Network/result buckets are not consumed twice. The authenticated `userAccount` bucket keys only on `userId` (HMAC-protected); IP/network are not part of the identity.
 
 ## Persistent ledger
 
 Migration `0004_email_delivery_foundation.sql` adds:
 
 - `email_deliveries` with unique `idempotency_key`, lease timestamps, `claim_token`, attempt count, sanitized failure codes;
-- `email_preferences` keyed by canonical `email_hash` (unique index);
+- `email_preferences` keyed by canonical `email_hash` (unique index); optional `user_id`/`result_id` linkage uses `ON DELETE SET NULL` so global suppression survives user/result deletion;
+- explicit table privileges: `revoke all` from `public`, `anon`, `authenticated`; `grant select, insert, update` to `service_role` only;
 - `claim_email_delivery()` RPC returning `claimed | reclaimed | duplicate | in_progress`;
 - `finalize_email_delivery()` RPC requiring matching `claim_token` and `status = pending`;
 - RLS enabled with no anon/authenticated policies (service role only);
-- public execute revoked; `service_role` granted.
+- RPC execute revoked from `public`, `anon`, `authenticated`; granted to `service_role` only;
 
 Do **not** apply this migration remotely from PR 7B.
 
@@ -107,15 +108,20 @@ powershell -ExecutionPolicy Bypass -File scripts/validate-email-migration.ps1
 The script:
 
 1. Starts ephemeral Postgres 16 (`focusroute-email-migration-test`)
-2. Bootstraps minimal `auth.users` / `quiz_results` prerequisites
+2. Bootstraps minimal `auth` schema and Supabase-like roles (`anon`, `authenticated`, `service_role`) with schema usage only — table/RPC privileges come from migration `0004`
 3. Applies migrations `0001`–`0004`
-4. Executes `scripts/validate-email-migration.sql` (claim/reclaim, fencing, RLS grants, email-hash uniqueness, consent/unsubscribe upserts)
+4. Executes `scripts/validate-email-migration.sql` including:
+   - FK `ON DELETE SET NULL` catalog checks and live user/result deletion survival for unsubscribed rows
+   - `SET ROLE anon` / `authenticated` / `service_role` permission probes (denied vs allowed operations)
+   - claim/reclaim, stale-token fencing, consent/unsubscribe upserts
+
+This is **disposable local Postgres role validation**, not a claim of hosted Supabase parity. Remote Supabase was not inspected or modified.
 
 Document the script output in PR notes after each validation run. `psql` is not required locally — validation SQL runs via `docker exec`.
 
 ## Email preferences (canonical recipient identity)
 
-`email_hash` is the single canonical consent/suppression identity. At most one `email_preferences` row exists per hash. `user_id` and `result_id` are optional linkage/context fields only — not competing consent keys.
+`email_hash` is the single canonical consent/suppression identity. At most one `email_preferences` row exists per hash. `user_id` and `result_id` are optional linkage/context fields only — not competing consent keys. Both FKs use `ON DELETE SET NULL`; deleting a linked user or quiz result clears the linkage but preserves the row and `marketing_status` (including global unsubscribe).
 
 Marketing send decisions use:
 

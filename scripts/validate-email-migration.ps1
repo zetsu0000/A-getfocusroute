@@ -44,6 +44,7 @@ DO `$`$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END `$`$;
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+-- Table/RPC privileges come from migration 0004, not bootstrap grants.
 CREATE OR REPLACE FUNCTION auth.uid()
 RETURNS uuid
 LANGUAGE sql

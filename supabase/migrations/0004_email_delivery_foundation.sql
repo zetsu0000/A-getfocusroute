@@ -59,8 +59,8 @@ comment on table public.email_deliveries is
 -- ─── email_preferences (marketing consent foundation) ────────────────────────
 create table if not exists public.email_preferences (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users (id) on delete cascade,
-  result_id uuid references public.quiz_results (id) on delete cascade,
+  user_id uuid references auth.users (id) on delete set null,
+  result_id uuid references public.quiz_results (id) on delete set null,
   email_hash text not null,
   marketing_status text not null default 'unknown',
   consent_source text,
@@ -98,6 +98,12 @@ alter table public.email_deliveries enable row level security;
 alter table public.email_preferences enable row level security;
 
 -- Service-role-only: no policies for anon/authenticated.
+
+revoke all on table public.email_deliveries from public, anon, authenticated;
+revoke all on table public.email_preferences from public, anon, authenticated;
+
+grant select, insert, update on table public.email_deliveries to service_role;
+grant select, insert, update on table public.email_preferences to service_role;
 
 -- ─── Atomic claim / reclaim ──────────────────────────────────────────────────
 create or replace function public.claim_email_delivery(
@@ -367,8 +373,8 @@ begin
 end;
 $$;
 
-revoke all on function public.claim_email_delivery(text, text, uuid, uuid, text, integer) from public;
-revoke all on function public.finalize_email_delivery(text, uuid, text, text, text, text) from public;
+revoke all on function public.claim_email_delivery(text, text, uuid, uuid, text, integer) from public, anon, authenticated;
+revoke all on function public.finalize_email_delivery(text, uuid, text, text, text, text) from public, anon, authenticated;
 
 grant execute on function public.claim_email_delivery(text, text, uuid, uuid, text, integer) to service_role;
 grant execute on function public.finalize_email_delivery(text, uuid, text, text, text, text) to service_role;

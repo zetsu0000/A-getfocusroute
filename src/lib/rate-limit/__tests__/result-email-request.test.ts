@@ -108,6 +108,56 @@ describe("result email request rate limits", () => {
     expect(store.keys.join(" ")).not.toContain("result_request");
   });
 
+  it("uses the same authenticated rate-limit key for the same user across different IPs", async () => {
+    const storeIpA = new CountingStore();
+    const storeIpB = new CountingStore();
+
+    await enforceRateLimit(
+      "resultEmailRequestAuthenticated",
+      {
+        request: request({ "x-forwarded-for": "203.0.113.10" }),
+        userId: "user-1",
+      },
+      { store: storeIpA, env },
+    );
+    await enforceRateLimit(
+      "resultEmailRequestAuthenticated",
+      {
+        request: request({ "x-forwarded-for": "198.51.100.20" }),
+        userId: "user-1",
+      },
+      { store: storeIpB, env },
+    );
+
+    expect(storeIpA.keys[0]).toEqual(storeIpB.keys[0]);
+    expect(storeIpA.keys[0]).not.toContain("203.0.113.10");
+    expect(storeIpA.keys[0]).not.toContain("198.51.100.20");
+  });
+
+  it("uses different authenticated rate-limit keys for different users on the same IP", async () => {
+    const storeA = new CountingStore();
+    const storeB = new CountingStore();
+
+    await enforceRateLimit(
+      "resultEmailRequestAuthenticated",
+      {
+        request: request({ "x-forwarded-for": "203.0.113.10" }),
+        userId: "user-a",
+      },
+      { store: storeA, env },
+    );
+    await enforceRateLimit(
+      "resultEmailRequestAuthenticated",
+      {
+        request: request({ "x-forwarded-for": "203.0.113.10" }),
+        userId: "user-b",
+      },
+      { store: storeB, env },
+    );
+
+    expect(storeA.keys[0]).not.toEqual(storeB.keys[0]);
+  });
+
   it("keeps authenticated user buckets distinct", async () => {
     const storeA = new CountingStore();
     const storeB = new CountingStore();

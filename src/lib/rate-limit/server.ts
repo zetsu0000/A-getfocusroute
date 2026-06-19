@@ -92,7 +92,7 @@ function identifierMaterial(
     case "resultRequest":
       return `result_request:${context.resultId}:${context.network}`;
     case "userAccount":
-      return `user_account:${context.userId}:${context.network}`;
+      return `user_account:${context.userId}`;
   }
 }
 

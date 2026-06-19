@@ -76,6 +76,12 @@ describe("email delivery migration", () => {
     expect(migration).toContain("email_preferences_email_hash_unique_idx");
     expect(migration).not.toContain("email_preferences_user_id_unique_idx");
     expect(migration).not.toContain("email_preferences_result_id_unique_idx");
+    expect(migration).toContain("on delete set null");
+    expect(migration).toContain("revoke all on table public.email_deliveries");
+    expect(migration).toContain("revoke all on table public.email_preferences");
+    expect(migration).toContain("grant select, insert, update on table public.email_deliveries to service_role");
+    expect(migration).toContain("grant select, insert, update on table public.email_preferences to service_role");
+    expect(migration).toContain("from public, anon, authenticated");
     expect(migration).toContain("claim_token = p_claim_token");
     expect(migration).toContain("status = 'pending'");
   });
