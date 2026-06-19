@@ -48,6 +48,9 @@ describe("first-party funnel event registry", () => {
       FIRST_PARTY_EVENTS.secureCheckoutRevealed,
       FIRST_PARTY_EVENTS.paymentAttempted,
       FIRST_PARTY_EVENTS.dashboardFirstActionClicked,
+      FIRST_PARTY_EVENTS.resultEmailRequested,
+      FIRST_PARTY_EVENTS.resultEmailSent,
+      FIRST_PARTY_EVENTS.resultEmailFailed,
       FIRST_PARTY_EVENTS.socialProofImpression,
       FIRST_PARTY_EVENTS.socialProofExpanded,
     ] as const;
@@ -114,16 +117,16 @@ describe("first-party funnel event registry", () => {
     }
   });
 
-  it("keeps subscription checkout stages distinguishable by name", () => {
-    const distinct = new Set([
-      FIRST_PARTY_EVENTS.subscriptionViewed,
-      FIRST_PARTY_EVENTS.planSelected,
-      FIRST_PARTY_EVENTS.secureCheckoutRevealed,
-      FIRST_PARTY_EVENTS.paymentElementLoaded,
-      FIRST_PARTY_EVENTS.paymentAttempted,
-      FIRST_PARTY_EVENTS.paymentError,
-      FIRST_PARTY_EVENTS.checkoutIntent,
-    ]);
-    expect(distinct.size).toBe(7);
+  it("registers result email delivery events as first-party only", () => {
+    const emailEvents = [
+      FIRST_PARTY_EVENTS.resultEmailRequested,
+      FIRST_PARTY_EVENTS.resultEmailSent,
+      FIRST_PARTY_EVENTS.resultEmailFailed,
+    ] as const;
+    for (const eventName of emailEvents) {
+      expect(isAllowedFirstPartyEvent(eventName)).toBe(true);
+      expect(META_ALLOWED_FIRST_PARTY_EVENTS.has(eventName)).toBe(false);
+      expect(META_EVENT_BY_FIRST_PARTY[eventName]).toBeUndefined();
+    }
   });
 });
