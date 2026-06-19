@@ -1,33 +1,55 @@
 import { recordMarketingUnsubscribe } from "@/lib/email/email-preferences";
+import {
+  renderInvalidUnsubscribePage,
+  renderUnsubscribeConfirmPage,
+  renderUnsubscribeSuccessPage,
+} from "@/lib/email/unsubscribe-page";
 import { verifyUnsubscribeToken } from "@/lib/email/unsubscribe-token";
 
-const GENERIC_MESSAGE = "Your preferences have been updated.";
+const HTML_HEADERS = {
+  "Content-Type": "text/html; charset=utf-8",
+  "Cache-Control": "no-store",
+};
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const token = url.searchParams.get("token")?.trim();
-  if (!token) {
-    return Response.json({ ok: true, message: "Your preferences have been updated." });
+  if (!token || !verifyUnsubscribeToken(token)) {
+    return new Response(renderInvalidUnsubscribePage(), {
+      status: 400,
+      headers: HTML_HEADERS,
+    });
   }
 
+  return new Response(renderUnsubscribeConfirmPage(token), {
+    status: 200,
+    headers: HTML_HEADERS,
+  });
+}
+
+export async function POST(request: Request) {
+  const form = await request.formData();
+  const token = String(form.get("token") ?? "").trim();
   const payload = verifyUnsubscribeToken(token);
+
   if (!payload) {
-    return Response.json({ ok: true, message: "Your preferences have been updated." });
+    return new Response(renderInvalidUnsubscribePage(), {
+      status: 400,
+      headers: HTML_HEADERS,
+    });
   }
 
   try {
-    await recordMarketingUnsubscribe({
-      emailHash: payload.emailHash,
-      userId: payload.userId,
-      resultId: payload.resultId,
-    });
+    await recordMarketingUnsubscribe(payload.emailHash);
   } catch {
-    return Response.json({ ok: true, message: "Your preferences have been updated." });
+    return new Response(renderInvalidUnsubscribePage(), {
+      status: 400,
+      headers: HTML_HEADERS,
+    });
   }
 
-  return Response.json({ ok: true, message: GENERIC_MESSAGE });
-}
-
-export async function POST() {
-  return Response.json({ ok: false, error: "method_not_allowed" }, { status: 405 });
+  return new Response(renderUnsubscribeSuccessPage(), {
+    status: 200,
+    headers: HTML_HEADERS,
+  });
 }

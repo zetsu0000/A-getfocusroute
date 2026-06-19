@@ -74,16 +74,16 @@ create table if not exists public.email_preferences (
   )
 );
 
-create unique index if not exists email_preferences_user_id_unique_idx
+create unique index if not exists email_preferences_email_hash_unique_idx
+  on public.email_preferences (email_hash);
+
+create index if not exists email_preferences_user_id_idx
   on public.email_preferences (user_id)
   where user_id is not null;
 
-create unique index if not exists email_preferences_result_id_unique_idx
+create index if not exists email_preferences_result_id_idx
   on public.email_preferences (result_id)
   where result_id is not null;
-
-create index if not exists email_preferences_email_hash_idx
-  on public.email_preferences (email_hash);
 
 drop trigger if exists set_email_preferences_updated_at on public.email_preferences;
 create trigger set_email_preferences_updated_at
@@ -91,7 +91,7 @@ create trigger set_email_preferences_updated_at
   for each row execute function public.set_updated_at();
 
 comment on table public.email_preferences is
-  'Marketing consent and unsubscribe state. Transactional delivery does not imply consent.';
+  'Marketing consent and unsubscribe state keyed by email_hash. Transactional delivery does not imply consent.';
 
 -- ─── Row level security ───────────────────────────────────────────────────────
 alter table public.email_deliveries enable row level security;

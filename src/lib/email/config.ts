@@ -52,8 +52,13 @@ export function getResultEmailReplyToAddress(): string | null {
   return raw || null;
 }
 
-export function getEmailUnsubscribeSecret(): string | null {
-  const raw = process.env.EMAIL_UNSUBSCRIBE_SECRET?.trim();
+export function getEmailPreferenceHashSecret(): string | null {
+  const raw = process.env.EMAIL_PREFERENCE_HASH_SECRET?.trim();
+  return raw || null;
+}
+
+export function getEmailUnsubscribeTokenSecret(): string | null {
+  const raw = process.env.EMAIL_UNSUBSCRIBE_TOKEN_SECRET?.trim();
   return raw || null;
 }
 

@@ -33,18 +33,19 @@ export async function POST(request: Request) {
 
     const resultId =
       typeof parsed.body.resultId === "string" ? parsed.body.resultId.trim() : "";
-    if (!isUuid(resultId)) {
-      return Response.json(GENERIC_RESPONSE, { status: 202 });
+    const validResultId = isUuid(resultId);
+
+    const preAuthLimit = await enforceRateLimit("resultEmailRequestPreAuth", {
+      request,
+      resultId: validResultId ? resultId : null,
+    });
+    if (!preAuthLimit.ok) {
+      if (preAuthLimit.kind === "limited") return rateLimitResponse(preAuthLimit);
+      return temporaryUnavailableResponse();
     }
 
-    const limit = await enforceRateLimit("resultEmailRequest", {
-      request,
-      resultId,
-      userId: null,
-    });
-    if (!limit.ok) {
-      if (limit.kind === "limited") return rateLimitResponse(limit);
-      return temporaryUnavailableResponse();
+    if (!validResultId) {
+      return Response.json(GENERIC_RESPONSE, { status: 202 });
     }
 
     const supabase = await createClient();
@@ -56,13 +57,12 @@ export async function POST(request: Request) {
       return Response.json(GENERIC_RESPONSE, { status: 202 });
     }
 
-    const userLimit = await enforceRateLimit("resultEmailRequest", {
+    const authenticatedLimit = await enforceRateLimit("resultEmailRequestAuthenticated", {
       request,
-      resultId,
       userId: user.id,
     });
-    if (!userLimit.ok) {
-      if (userLimit.kind === "limited") return rateLimitResponse(userLimit);
+    if (!authenticatedLimit.ok) {
+      if (authenticatedLimit.kind === "limited") return rateLimitResponse(authenticatedLimit);
       return temporaryUnavailableResponse();
     }
 

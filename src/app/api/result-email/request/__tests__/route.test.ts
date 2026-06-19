@@ -75,6 +75,16 @@ describe("POST /api/result-email/request", () => {
     });
   });
 
+  it("uses split pre-auth and authenticated rate-limit policies once each", async () => {
+    await POST(jsonRequest({ resultId: "11111111-1111-4111-8111-111111111111" }));
+
+    expect(rateLimitMocks.enforceRateLimit).toHaveBeenCalledTimes(2);
+    expect(rateLimitMocks.enforceRateLimit.mock.calls[0]?.[0]).toBe("resultEmailRequestPreAuth");
+    expect(rateLimitMocks.enforceRateLimit.mock.calls[1]?.[0]).toBe(
+      "resultEmailRequestAuthenticated",
+    );
+  });
+
   it("returns a generic response without exposing stored email", async () => {
     const response = await POST(
       jsonRequest({ resultId: "11111111-1111-4111-8111-111111111111" }),

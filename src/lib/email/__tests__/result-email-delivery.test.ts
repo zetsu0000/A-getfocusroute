@@ -61,7 +61,7 @@ describe("lifecycle templates", () => {
 });
 
 describe("email delivery migration", () => {
-  it("defines atomic claim, finalize, RLS and claim_token fencing", () => {
+  it("defines atomic claim, finalize, RLS, claim_token fencing and canonical email_hash uniqueness", () => {
     const migration = readFileSync(
       fileURLToPath(new URL("../../../../supabase/migrations/0004_email_delivery_foundation.sql", import.meta.url)),
       "utf8",
@@ -73,5 +73,20 @@ describe("email delivery migration", () => {
     expect(migration).toContain("enable row level security");
     expect(migration).toContain("grant execute");
     expect(migration).toContain("revoke all");
+    expect(migration).toContain("email_preferences_email_hash_unique_idx");
+    expect(migration).not.toContain("email_preferences_user_id_unique_idx");
+    expect(migration).not.toContain("email_preferences_result_id_unique_idx");
+    expect(migration).toContain("claim_token = p_claim_token");
+    expect(migration).toContain("status = 'pending'");
+  });
+
+  it("keeps GET unsubscribe as read-only in route source", () => {
+    const source = readFileSync(
+      fileURLToPath(new URL("../../../app/api/email/unsubscribe/route.ts", import.meta.url)),
+      "utf8",
+    );
+    const getSection = source.split("export async function POST")[0] ?? "";
+    expect(getSection).not.toContain("recordMarketingUnsubscribe(");
+    expect(source).toContain("recordMarketingUnsubscribe(");
   });
 });
