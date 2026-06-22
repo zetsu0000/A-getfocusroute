@@ -58,6 +58,20 @@ function safeLog(
   console.warn("[rate-limit]", payload);
 }
 
+function bucketApplies(
+  bucket: RateLimitBucket,
+  context: RateLimitIdentityContext,
+): boolean {
+  switch (bucket.identifier) {
+    case "resultRequest":
+      return Boolean(context.resultId);
+    case "userAccount":
+      return Boolean(context.userId);
+    default:
+      return true;
+  }
+}
+
 function identifierMaterial(
   bucket: RateLimitBucket,
   context: RateLimitIdentityContext,
@@ -75,6 +89,10 @@ function identifierMaterial(
       return `session:${context.sessionId ?? "missing-session"}:${context.network}`;
     case "sessionEvent":
       return `session_event:${context.sessionId ?? "missing-session"}:${context.eventName ?? "missing-event"}:${context.network}`;
+    case "resultRequest":
+      return `result_request:${context.resultId}:${context.network}`;
+    case "userAccount":
+      return `user_account:${context.userId}`;
   }
 }
 
@@ -136,6 +154,7 @@ export async function enforceRateLimit(
 
   const context = identityContext({ ...identityInput, route: policy.route });
   for (const bucket of policy.buckets) {
+    if (!bucketApplies(bucket, context)) continue;
     const { key, hash } = keyForBucket({ policy, bucket, context, secret });
     try {
       const result = await store.increment({

@@ -1,3 +1,5 @@
+import { randomUUID } from "crypto";
+
 import type { EmailCategory, EmailDeliveryStatus } from "@/lib/email/types";
 
 /** Default pending-claim lease — future Supabase must enforce the same window atomically. */
@@ -27,6 +29,7 @@ export type DeliveryLedgerRecord = {
   sentAt: string | null;
   claimedAt: string;
   leaseExpiresAt: string;
+  claimToken: string;
 };
 
 export type DeliveryClaimInput = {
@@ -45,6 +48,7 @@ export type DeliveryClaimResult =
 
 export type DeliveryStatusUpdateInput = {
   idempotencyKey: string;
+  claimToken: string;
   provider: string;
   providerMessageId?: string | null;
   lastErrorCode?: string | null;
@@ -122,6 +126,7 @@ export class InMemoryEmailDeliveryLedger implements EmailDeliveryLedger {
       sentAt: null,
       claimedAt,
       leaseExpiresAt: this.leaseExpiresIso(nowDate),
+      claimToken: randomUUID(),
     };
   }
 
@@ -179,6 +184,9 @@ export class InMemoryEmailDeliveryLedger implements EmailDeliveryLedger {
     const existing = this.records.get(input.idempotencyKey);
     if (!existing) {
       throw new Error("delivery_ledger_record_missing");
+    }
+    if (existing.claimToken !== input.claimToken || existing.status !== "pending") {
+      throw new Error("delivery_ledger_claim_token_mismatch");
     }
     const now = this.nowIso();
     const next: DeliveryLedgerRecord = {

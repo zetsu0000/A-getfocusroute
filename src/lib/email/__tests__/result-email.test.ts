@@ -388,7 +388,7 @@ describe("sendResultEmail orchestration", () => {
     expect(ledger.getRecord(second.idempotencyKey)?.status).toBe("sent");
   });
 
-  it("reclaims after provider_exception and message_not_configured failures", async () => {
+  it("reclaims after provider_exception and provider_not_configured failures", async () => {
     const ledger = new InMemoryEmailDeliveryLedger();
     const throwingProvider = {
       name: "resend",
@@ -420,29 +420,30 @@ describe("sendResultEmail orchestration", () => {
     expect(retryProvider.send).toHaveBeenCalledTimes(1);
     expect(ledger.getRecord(retryResult.idempotencyKey)?.attemptCount).toBe(2);
 
-    const messageLedger = new InMemoryEmailDeliveryLedger();
+    const noopLedger = new InMemoryEmailDeliveryLedger();
+    const noopProvider = { name: "noop", send: vi.fn() };
+    const missingProvider = await sendResultEmail(guestInput, messageFixture, {}, {
+      ledger: noopLedger,
+      provider: noopProvider,
+      sendingEnabled: () => true,
+      trackAnalytics: false,
+    });
+    expect(missingProvider.safeErrorCode).toBe("provider_not_configured");
+    expect(noopProvider.send).not.toHaveBeenCalled();
+
     const realProvider = {
       name: "resend",
       send: vi.fn(async () => ({ ok: true, providerMessageId: "msg_1" })),
     };
-    const missingMessage = await sendResultEmail(guestInput, undefined, {}, {
-      ledger: messageLedger,
+    const withProvider = await sendResultEmail(guestInput, undefined, {}, {
+      ledger: noopLedger,
       provider: realProvider,
       sendingEnabled: () => true,
       trackAnalytics: false,
     });
-    expect(missingMessage.safeErrorCode).toBe("message_not_configured");
-    expect(realProvider.send).not.toHaveBeenCalled();
-
-    const withMessage = await sendResultEmail(guestInput, messageFixture, {}, {
-      ledger: messageLedger,
-      provider: realProvider,
-      sendingEnabled: () => true,
-      trackAnalytics: false,
-    });
-    expect(withMessage.status).toBe("sent");
+    expect(withProvider.status).toBe("sent");
     expect(realProvider.send).toHaveBeenCalledTimes(1);
-    expect(messageLedger.getRecord(withMessage.idempotencyKey)?.attemptCount).toBe(2);
+    expect(noopLedger.getRecord(withProvider.idempotencyKey)?.attemptCount).toBe(2);
   });
 
   it("reclaims after provider_not_configured without blocking later attempts", async () => {
@@ -509,7 +510,7 @@ describe("sendResultEmail orchestration", () => {
     expect(provider.calls).toHaveLength(1);
   });
 
-  it("requires an explicit message for real providers", async () => {
+  it("uses the production template when message is omitted for real providers", async () => {
     const realProvider = {
       name: "resend",
       send: vi.fn(async () => ({ ok: true, providerMessageId: "msg_1" })),
@@ -526,9 +527,11 @@ describe("sendResultEmail orchestration", () => {
       },
     );
 
-    expect(result.status).toBe("failed");
-    expect(result.safeErrorCode).toBe("message_not_configured");
-    expect(realProvider.send).not.toHaveBeenCalled();
+    expect(result.status).toBe("sent");
+    expect(realProvider.send).toHaveBeenCalledTimes(1);
+    expect(realProvider.send.mock.calls[0]?.[1]?.subject).toBe(
+      "Your FocusRoute result is ready",
+    );
   });
 
   it("sends through a real provider when message is supplied", async () => {
@@ -613,20 +616,48 @@ describe("delivery ledger claim semantics", () => {
       provider: "mock",
     };
 
-    await ledger.claim(input);
+    const claim = await ledger.claim(input);
     await ledger.markFailed({
       idempotencyKey: input.idempotencyKey,
+      claimToken: claim.record.claimToken,
       provider: "mock",
       lastErrorCode: "provider_rejected",
     });
     expect(ledger.getRecord(input.idempotencyKey)?.attemptCount).toBe(1);
+  });
+
+  it("rejects stale claim token finalization after reclaim", async () => {
+    let nowMs = Date.parse("2026-01-01T00:00:00.000Z");
+    const clock = { now: () => new Date(nowMs) };
+    const ledger = new InMemoryEmailDeliveryLedger({ clock, leaseMs: 1_000 });
+    const input = {
+      idempotencyKey: "key-3",
+      emailType: "transactional" as const,
+      resultId: "result-123",
+      provider: "mock",
+    };
+
+    const first = await ledger.claim(input);
+    nowMs += 2_000;
+    const second = await ledger.claim(input);
+    expect(second.status).toBe("reclaimed");
+
+    await expect(
+      ledger.markSent({
+        idempotencyKey: input.idempotencyKey,
+        claimToken: first.record.claimToken,
+        provider: "mock",
+        providerMessageId: "stale",
+      }),
+    ).rejects.toThrow("delivery_ledger_claim_token_mismatch");
 
     await ledger.markSent({
       idempotencyKey: input.idempotencyKey,
+      claimToken: second.record.claimToken,
       provider: "mock",
-      providerMessageId: "msg_1",
+      providerMessageId: "current",
     });
-    expect(ledger.getRecord(input.idempotencyKey)?.attemptCount).toBe(1);
+    expect(ledger.getRecord(input.idempotencyKey)?.status).toBe("sent");
   });
 });
 

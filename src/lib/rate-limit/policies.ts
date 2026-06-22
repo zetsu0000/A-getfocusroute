@@ -4,7 +4,9 @@ export type RateLimitPolicyName =
   | "verifyPaymentMalformed"
   | "verifyPayment"
   | "quizResult"
-  | "analytics";
+  | "analytics"
+  | "resultEmailRequestPreAuth"
+  | "resultEmailRequestAuthenticated";
 
 export type RateLimitIdentifier =
   | "network"
@@ -12,7 +14,9 @@ export type RateLimitIdentifier =
   | "paymentObject"
   | "email"
   | "session"
-  | "sessionEvent";
+  | "sessionEvent"
+  | "resultRequest"
+  | "userAccount";
 
 export type RateLimitFailureMode = "deny" | "drop";
 
@@ -90,6 +94,25 @@ export const RATE_LIMIT_POLICIES = {
       { name: "network_events", identifier: "network", limit: 300, windowSeconds: 10 * 60 },
       { name: "session_events", identifier: "session", limit: 180, windowSeconds: 10 * 60 },
       { name: "session_event_name", identifier: "sessionEvent", limit: 80, windowSeconds: 10 * 60 },
+    ],
+  },
+  resultEmailRequestPreAuth: {
+    name: "resultEmailRequestPreAuth",
+    route: "/api/result-email/request",
+    method: "POST",
+    backendFailure: "deny",
+    buckets: [
+      { name: "network_burst", identifier: "network", limit: 10, windowSeconds: 10 * 60 },
+      { name: "result_request", identifier: "resultRequest", limit: 3, windowSeconds: 60 * 60 },
+    ],
+  },
+  resultEmailRequestAuthenticated: {
+    name: "resultEmailRequestAuthenticated",
+    route: "/api/result-email/request",
+    method: "POST",
+    backendFailure: "deny",
+    buckets: [
+      { name: "user_request", identifier: "userAccount", limit: 5, windowSeconds: 24 * 60 * 60 },
     ],
   },
 } satisfies Record<RateLimitPolicyName, RateLimitPolicy>;
