@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { questions, progressQuestions } from "../questions";
+import { scoreFromAnswers } from "@/lib/symptom-level";
 
 /*
  * Structural contract for the 15-question assessment (funnel audit cut).
@@ -186,5 +187,61 @@ describe("funnel copy refinement", () => {
       "support",
       "obstacles",
     ]);
+  });
+});
+
+/*
+ * Question-4 reduction: the "How often does time vanish?" frequency question
+ * (id "distraction") was cut from 5 options to exactly 3 — Rarely / Sometimes /
+ * Often — to reduce cognitive load. The kept option ids (rarely/sometimes/often)
+ * map to the existing low/mid/high score values, so scoring stays compatible.
+ */
+describe("distraction question reduced to 3 frequency options", () => {
+  const distraction = questions.find((q) => q.id === "distraction");
+  const distractionScore = (optionId: string) =>
+    scoreFromAnswers([{ questionId: "distraction", selectedOptions: [optionId] }]);
+
+  it("has exactly 3 answer options", () => {
+    expect(distraction?.options).toHaveLength(3);
+  });
+
+  it("uses Rarely / Sometimes / Often labels", () => {
+    expect(distraction?.options.map((o) => o.label)).toEqual([
+      "Rarely",
+      "Sometimes",
+      "Often",
+    ]);
+  });
+
+  it("keeps the low/mid/high option ids so scoring stays compatible", () => {
+    expect(distraction?.options.map((o) => o.id)).toEqual([
+      "rarely",
+      "sometimes",
+      "often",
+    ]);
+  });
+
+  it("no longer renders the removed never/always extremes", () => {
+    const ids = distraction?.options.map((o) => o.id) ?? [];
+    expect(ids).not.toContain("never");
+    expect(ids).not.toContain("always");
+    const labels = distraction?.options.map((o) => o.label) ?? [];
+    expect(labels).not.toContain("Almost never.");
+    expect(labels).not.toContain("All day, every day.");
+  });
+
+  it("keeps the question id, single-select input and funnel position", () => {
+    expect(distraction?.inputType).toBe("single");
+    expect(distraction?.question).toBe("How often does time vanish?");
+    expect(progressQuestions[2]?.id).toBe("distraction");
+  });
+
+  it("preserves low < mid < high score mapping for the 3 options", () => {
+    expect(distractionScore("rarely")).toBeLessThan(distractionScore("sometimes"));
+    expect(distractionScore("sometimes")).toBeLessThan(distractionScore("often"));
+  });
+
+  it("does not change the total quiz question count", () => {
+    expect(progressQuestions).toHaveLength(15);
   });
 });

@@ -68,17 +68,20 @@ export const questions: QuizQuestion[] = [
     ],
   },
 
-  /* Q3 — distraction (SCORED: symptom score + recovery copy) */
+  /* Q3 — distraction (SCORED: symptom score + recovery copy).
+     Reduced to 3 frequency options (low/mid/high) to cut cognitive load and
+     make this faster to answer. Option ids rarely/sometimes/often are kept, so
+     SCORE_MAP (34/57/74 = low/mid/high) and the Drifter signature rule are
+     unchanged; never/always stay valid stored values so older results still
+     score and the scoring code needs no edit. */
   {
     id: "distraction",
     question: "How often does time vanish?",
     inputType: "single",
     options: [
-      { id: "never",     label: "Almost never." },
-      { id: "rarely",    label: "Once in a while." },
-      { id: "sometimes", label: "A few times a week." },
-      { id: "often",     label: "Most days." },
-      { id: "always",    label: "All day, every day." },
+      { id: "rarely",    label: "Rarely" },
+      { id: "sometimes", label: "Sometimes" },
+      { id: "often",     label: "Often" },
     ],
   },
 
