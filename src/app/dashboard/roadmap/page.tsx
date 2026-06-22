@@ -5,7 +5,7 @@ import { requireDashboardLogin } from "@/lib/dashboard/require-dashboard";
 import { hasRoadmapAccess } from "@/lib/dashboard/unlock";
 
 export const metadata = {
-  title: "28-Day Protocol · FocusRoute",
+  title: "28-Day FocusRoute · FocusRoute",
 };
 
 export default async function DashboardRoadmapPage() {

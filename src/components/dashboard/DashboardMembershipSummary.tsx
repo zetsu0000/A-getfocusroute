@@ -149,7 +149,7 @@ export function DashboardMembershipSummary({
           <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
             {[
               "Retake the assessment anytime",
-              "Access to your Brain Profile and protocol library",
+              "Access to your Focus Pattern and Focus Tools library",
               "Billing portal access",
             ].map((feat) => (
               <div key={feat} style={{ display: "flex", alignItems: "center", gap: 9 }}>

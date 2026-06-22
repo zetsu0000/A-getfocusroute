@@ -3,7 +3,7 @@ import { requireDashboardLogin } from "@/lib/dashboard/require-dashboard";
 
 export const metadata = {
   title: "Dashboard · FocusRoute",
-  description: "Your Brain Profile, protocol, bonuses, and membership — tied to your account.",
+  description: "Your Focus Pattern, 28-day route, focus tools, and membership — tied to your account.",
 };
 
 export default async function DashboardPage() {

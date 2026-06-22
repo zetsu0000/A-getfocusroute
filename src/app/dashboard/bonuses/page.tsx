@@ -4,7 +4,7 @@ import { requireDashboardEntitlement } from "@/lib/dashboard/require-dashboard";
 import { hasBonusesAccess } from "@/lib/dashboard/unlock";
 
 export const metadata = {
-  title: "Bonuses · FocusRoute",
+  title: "Focus Tools · FocusRoute",
 };
 
 export default async function DashboardBonusesPage() {

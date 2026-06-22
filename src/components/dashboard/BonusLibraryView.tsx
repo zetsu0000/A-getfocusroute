@@ -54,7 +54,7 @@ function LockedCard({
   includedWith: string;
   upgradeNeed: string;
 }) {
-  const ctaLabel = upgradeNeed === "roadmap_28_day" ? "Explore the 28-Day Protocol" : "Unlock Brain Profile";
+  const ctaLabel = upgradeNeed === "roadmap_28_day" ? "Explore the 28-Day FocusRoute" : "Unlock Focus Pattern";
   const ctaHref = upgradeNeed === "roadmap_28_day"
     ? "/roadmap"
     : `/dashboard/upgrade?need=${encodeURIComponent(upgradeNeed)}`;
@@ -243,7 +243,7 @@ function UnlockedCard({
   );
 }
 
-// ── Explain-It Script content ─────────────────────────────────────────────────
+// ── Explain My Focus Pattern content ───────────────────────────────────────────
 
 function buildFullScriptText(bundle: ExplainScriptBundle): string {
   const body = bundle.blocks
@@ -262,8 +262,8 @@ function ExplainScriptContent({ bundle }: { bundle: ExplainScriptBundle }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <p style={{ ...bodyText, color: "var(--color-text-muted)", fontSize: 12 }}>
-        Your Cognitive Signature™ appears when your latest saved assessment includes a named pattern. It&apos;s
-        a shorthand for your self-reported style — not a clinical label.
+        Your focus pattern label appears when your latest saved quiz includes a named pattern. It&apos;s
+        a shorthand for your self-reported style — not a medical label.
       </p>
 
       <div
@@ -324,7 +324,7 @@ function ExplainScriptContent({ bundle }: { bundle: ExplainScriptBundle }) {
         ))}
       </div>
 
-      <CopyableTemplateBlock label="Copy full script" text={buildFullScriptText(bundle)} />
+      <CopyableTemplateBlock label="Copy full note" text={buildFullScriptText(bundle)} />
 
       <p style={{ fontSize: 11, color: "var(--color-text-muted)", lineHeight: 1.55, fontStyle: "italic" }}>
         {bundle.footerNote}
@@ -374,7 +374,7 @@ function AudioSection() {
             marginBottom: 4,
           }}
         >
-          Bonus · Session Guides
+          Focus Tools · Session Guides
         </p>
         <h3
           style={{
@@ -388,7 +388,7 @@ function AudioSection() {
           Focus Session Guides
         </h3>
         <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.6 }}>
-          Pair with your own sound or silence. Session guides — not therapy or treatment.
+          Pair with your own sound or silence. Session guides — not therapy or medical care.
         </p>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -515,7 +515,7 @@ export function BonusLibraryView({
             marginBottom: 8,
           }}
         >
-          Bonus Library · FocusRoute Brain OS™
+          Focus Tools · FocusRoute
         </p>
         <h2
           style={{
@@ -526,7 +526,7 @@ export function BonusLibraryView({
             letterSpacing: "-0.01em",
           }}
         >
-          Bonuses
+          Focus Tools
         </h2>
         <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.65, maxWidth: 580 }}>
           Structured guides and templates you can use immediately. Each stands alone — pick the one
@@ -534,7 +534,7 @@ export function BonusLibraryView({
         </p>
       </header>
 
-      {/* 1 — Explain-It-To-Someone Script */}
+      {/* 1 — Explain My Focus Pattern */}
       {hasExplainScript ? (
         <UnlockedCard
           category="Communication"
@@ -548,9 +548,9 @@ export function BonusLibraryView({
         <LockedCard
           category="Communication"
           categoryColor="var(--color-primary)"
-          title="Explain-It-To-Someone Script"
-          tagline="A calm template for describing how your brain handles focus and follow-through — without over-explaining."
-          includedWith="Brain Profile purchase"
+          title="Explain My Focus Pattern"
+          tagline="A calm template for describing how you handle focus and follow-through — without over-explaining."
+          includedWith="Focus Pattern purchase"
           upgradeNeed="brain_profile"
         />
       )}
@@ -574,7 +574,7 @@ export function BonusLibraryView({
             categoryColor="var(--color-cognitive)"
             title={item.title}
             tagline={item.tagline}
-            includedWith="28-Day Protocol purchase"
+            includedWith="28-Day FocusRoute purchase"
             upgradeNeed="roadmap_28_day"
           />
         ),
@@ -589,7 +589,7 @@ export function BonusLibraryView({
           categoryColor="var(--color-signal)"
           title="Focus Session Guides"
           tagline="Four structured session formats — 8 to 25 minutes — for starting, sprinting, resetting, and shutting down."
-          includedWith="28-Day Protocol purchase"
+          includedWith="28-Day FocusRoute purchase"
           upgradeNeed="roadmap_28_day"
         />
       )}

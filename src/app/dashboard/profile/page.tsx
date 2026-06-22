@@ -8,7 +8,7 @@ import { requireDashboardEntitlement } from "@/lib/dashboard/require-dashboard";
 import { hasBrainProfileAccess } from "@/lib/dashboard/unlock";
 
 export const metadata = {
-  title: "Brain Profile · FocusRoute",
+  title: "Focus Pattern · FocusRoute",
 };
 
 export default async function DashboardProfilePage() {
@@ -33,10 +33,10 @@ export default async function DashboardProfilePage() {
           <h2
             style={{ fontSize: 20, fontWeight: 800, color: "var(--color-text)", marginBottom: 6 }}
           >
-            Brain Profile
+            Your Focus Pattern
           </h2>
           <p style={{ fontSize: 13, color: "var(--color-text-muted)", lineHeight: 1.55 }}>
-            Your FocusRoute Brain Profile™ will appear here once your quiz results are on file.
+            Your FocusRoute focus pattern will appear here once your quiz results are on file.
           </p>
         </div>
         <div
@@ -60,8 +60,8 @@ export default async function DashboardProfilePage() {
               marginBottom: 18,
             }}
           >
-            Complete the assessment while signed in so we can build your full Brain Profile, Executive
-            Function Radar™, and personalised protocol here.
+            Complete the assessment while signed in so we can build your full focus pattern, focus map,
+            and personalised 28-day route here.
           </p>
           <Link
             href="/assessment"

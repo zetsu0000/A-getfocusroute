@@ -117,7 +117,7 @@ function ScoreBar({ score }: { score: number }) {
   );
 }
 
-// ── Executive Function Radar™ ─────────────────────────────────────────────────
+// ── Focus map (radar) ─────────────────────────────────────────────────────────
 
 function RadarChart({ dimensions }: { dimensions: RadarDimension[] }) {
   const cx = 170, cy = 150, R = 95, LR = 122;
@@ -146,7 +146,7 @@ function RadarChart({ dimensions }: { dimensions: RadarDimension[] }) {
     <svg
       viewBox="0 0 340 300"
       style={{ width: "100%", maxWidth: 360, display: "block", margin: "0 auto" }}
-      aria-label="Executive Function Radar showing six cognitive dimensions"
+      aria-label="Focus map showing six focus dimensions"
     >
       {/* Grid rings */}
       {rings.map(pct => (
@@ -253,6 +253,26 @@ export function BrainProfileView({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
 
+      {/* 0 ── Page headline */}
+      <header>
+        <h1
+          style={{
+            fontSize: 24,
+            fontWeight: 900,
+            color: "var(--color-text)",
+            lineHeight: 1.2,
+            letterSpacing: "-0.01em",
+            marginBottom: 8,
+          }}
+        >
+          Your Focus Pattern
+        </h1>
+        <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.6, maxWidth: 560 }}>
+          Your answers point to the conditions that make focus easier — and the moments where starting
+          or returning can take more effort.
+        </p>
+      </header>
+
       {/* 1 ── Signature Hero */}
       <SignatureHeroBadge
         signatureKey={profile.signatureName}
@@ -263,9 +283,9 @@ export function BrainProfileView({
         scoreLabel={levelLabel}
       />
 
-      {/* 2 ── Executive Function Radar™ */}
+      {/* 2 ── Focus map (radar) */}
       <Card>
-        <SectionLabel>Executive Function Radar™</SectionLabel>
+        <SectionLabel>Your focus map</SectionLabel>
         <RadarChart dimensions={profile.radarDimensions} />
         <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 9 }}>
           {profile.radarDimensions.map(dim => (
@@ -287,14 +307,14 @@ export function BrainProfileView({
             lineHeight: 1.5,
           }}
         >
-          Higher = more available capacity. Derived from self-reported pattern answers, not a clinical
-          assessment.
+          Higher = focus tends to come more easily here. Based on your self-reported answers, not a
+          formal assessment.
         </p>
       </Card>
 
       {/* 3 ── Profile Explanation */}
       <Card>
-        <SectionLabel>Cognitive Signature</SectionLabel>
+        <SectionLabel>What your pattern means</SectionLabel>
         <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.72 }}>
           {profile.profileExplanation}
         </p>
@@ -303,7 +323,7 @@ export function BrainProfileView({
       {/* 4 ── Strengths & Friction */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
         <Card>
-          <SectionLabel>Strengths</SectionLabel>
+          <SectionLabel>What helps you start</SectionLabel>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {profile.strengths.map(s => (
               <div key={s.label}>
@@ -315,7 +335,7 @@ export function BrainProfileView({
                     marginBottom: 4,
                   }}
                 >
-                  Strength: {s.label}
+                  {s.label}
                 </p>
                 <p style={{ fontSize: 12, color: "var(--color-text-body)", lineHeight: 1.55 }}>
                   {s.detail}
@@ -325,7 +345,7 @@ export function BrainProfileView({
           </div>
         </Card>
         <Card>
-          <SectionLabel>Friction Points</SectionLabel>
+          <SectionLabel>Where focus gets harder</SectionLabel>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {profile.frictionPoints.map(f => (
               <div key={f.label}>
@@ -337,7 +357,7 @@ export function BrainProfileView({
                     marginBottom: 4,
                   }}
                 >
-                  Friction: {f.label}
+                  {f.label}
                 </p>
                 <p style={{ fontSize: 12, color: "var(--color-text-body)", lineHeight: 1.55 }}>
                   {f.detail}
@@ -350,7 +370,7 @@ export function BrainProfileView({
 
       {/* 5 ── Best Focus Conditions */}
       <Card>
-        <SectionLabel>Best Focus Conditions</SectionLabel>
+        <SectionLabel>Best focus conditions</SectionLabel>
         <ul
           style={{
             margin: 0,
@@ -392,13 +412,13 @@ export function BrainProfileView({
       {/* 6 ── Working Style */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
         <Card>
-          <SectionLabel>Task Initiation Style</SectionLabel>
+          <SectionLabel>How you get started</SectionLabel>
           <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.68 }}>
             {profile.initiationStyle}
           </p>
         </Card>
         <Card>
-          <SectionLabel>Recovery Style</SectionLabel>
+          <SectionLabel>How to get back on track</SectionLabel>
           <p style={{ fontSize: 13, color: "var(--color-text-body)", lineHeight: 1.68 }}>
             {profile.distractionRecovery}
           </p>
@@ -444,10 +464,10 @@ export function BrainProfileView({
         </div>
       </Card>
 
-      {/* 8 ── Explain-It-To-Someone Script (conditional) */}
+      {/* 8 ── Explain My Focus Pattern (conditional) */}
       {hasExplainScript && (
         <Card>
-          <SectionLabel>Explain-It-To-Someone Script™</SectionLabel>
+          <SectionLabel>Explain My Focus Pattern</SectionLabel>
           <p
             style={{
               fontSize: 14,
@@ -544,7 +564,7 @@ export function BrainProfileView({
           </div>
 
           <div style={{ marginTop: 16 }}>
-            <CopyableTemplateBlock label="Copy full script" text={buildExplainScriptText(explainScriptBundle)} />
+            <CopyableTemplateBlock label="Copy full note" text={buildExplainScriptText(explainScriptBundle)} />
           </div>
 
           <p

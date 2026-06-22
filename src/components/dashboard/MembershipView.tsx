@@ -125,7 +125,7 @@ export function LockedMembership() {
           Keep your FocusRoute system current with retakes, billing access, and future profile updates.
         </p>
         <p style={{ ...bodyText, marginBottom: 20 }}>
-          Membership is optional. Your purchased Brain Profile remains yours.
+          Membership is optional. Your purchased Focus Pattern remains yours.
         </p>
 
         <Link
@@ -173,19 +173,19 @@ const MONTHLY_RESET_PROMPTS = [
 
 const SYSTEM_UPDATES = [
   {
-    label: "Brain Profile",
+    label: "Focus Pattern",
     update:
-      "Executive Function Radar™ added — six dimensions (initiation, focus, memory, planning, priority, regulation) visualised from your assessment answers.",
+      "Focus map added — six dimensions (initiation, focus, memory, planning, priority, regulation) visualised from your quiz answers.",
   },
   {
-    label: "28-Day Protocol",
+    label: "28-Day FocusRoute",
     update:
-      "Phase structure introduced — protocol now organised into Map, Stabilize, Build, and Practice phases with colour-coded day cards.",
+      "Week structure introduced — the route is now organised into four weeks with colour-coded day cards.",
   },
   {
-    label: "Bonus Library",
+    label: "Focus Tools",
     update:
-      "Individual card layout — each bonus now has its own locked/unlocked card with per-entitlement access display.",
+      "Individual card layout — each tool now has its own locked/unlocked card with per-entitlement access display.",
   },
 ];
 
@@ -235,12 +235,12 @@ function RetakeAssessment({ hasRetakeQuiz }: { hasRetakeQuiz: boolean }) {
   return (
     <SectionCard eyebrow="Member · Retake" title="Retake Assessment">
       <p style={{ ...bodyText, marginBottom: 14 }}>
-        Your Brain Profile reflects where you were when you took the assessment. Retake it when
+        Your Focus Pattern reflects where you were when you took the quiz. Retake it when
         your life context shifts significantly — new role, new season, new support system.
       </p>
       <p style={{ fontSize: 12, color: "var(--color-text-muted)", lineHeight: 1.55, marginBottom: 16 }}>
-        The assessment takes about 3 minutes. Your new results will update your Brain Profile and
-        generate a fresh Cognitive Signature™.
+        The quiz takes about 3 minutes. Your new results will update your Focus Pattern and
+        generate a fresh focus pattern label.
       </p>
       {hasRetakeQuiz ? (
         <Link
@@ -274,8 +274,8 @@ function FocusSystemUpdates() {
   return (
     <SectionCard eyebrow="Member · Updates" title="Focus System Updates">
       <p style={{ ...bodyText, marginBottom: 16 }}>
-        What has changed in the FocusRoute Brain OS™ — protocol improvements, library additions, and
-        profile refinements.
+        What has changed in FocusRoute — route improvements, library additions, and
+        focus-pattern refinements.
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {SYSTEM_UPDATES.map(item => (
@@ -321,9 +321,9 @@ function FocusSystemUpdates() {
 
 function MemberResources() {
   const links = [
-    { label: "Brain Profile", desc: "Your Cognitive Signature™ and Executive Function Radar™", href: "/dashboard/profile" },
-    { label: "28-Day Protocol", desc: "Four phases of daily micro-actions", href: "/dashboard/roadmap" },
-    { label: "Bonus Library", desc: "Scripts, planners, and session guides", href: "/dashboard/bonuses" },
+    { label: "Focus Pattern", desc: "Your focus pattern and focus map", href: "/dashboard/profile" },
+    { label: "28-Day FocusRoute", desc: "Four weeks of daily micro-actions", href: "/dashboard/roadmap" },
+    { label: "Focus Tools", desc: "Notes, planners, and session guides", href: "/dashboard/bonuses" },
   ];
 
   return (
