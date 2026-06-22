@@ -17,24 +17,36 @@ const payload: ResultEmailPayload = {
   focusFrictionScore: { value: 72, minimum: 0, maximum: 100 },
   resultUrl: "https://getfocusroute.com/dashboard/profile",
   dashboardUrl: "https://getfocusroute.com/dashboard",
+  planUrl: "https://getfocusroute.com/assessment",
   locale: "en-US",
   emailType: "transactional",
   idempotencyKey: "result:result-123:1",
 };
 
 describe("result-ready template", () => {
-  it("uses the approved subject, CTA and score interpretation", () => {
+  it("uses the approved subject, heading, return CTA and score interpretation", () => {
     const template = buildResultReadyEmail(payload);
     expect(template.subject).toBe("Your FocusRoute result is ready");
     expect(template.previewText).toBe("See your focus pattern, score, and what to do next.");
-    expect(template.textBody).toContain("View My Result:");
-    expect(template.textBody).toContain(payload.resultUrl);
-    expect(template.htmlBody).toContain("View My Result");
+    expect(template.htmlBody).toContain("Your FocusRoute result is ready.");
+    expect(template.textBody).toContain("Return to my FocusRoute plan:");
+    expect(template.textBody).toContain(payload.planUrl);
+    expect(template.htmlBody).toContain("Return to my FocusRoute plan");
+    expect(template.htmlBody).toContain(payload.planUrl);
+    // Safe return / saved-answers copy encouraging a return to checkout/plan.
+    expect(template.textBody).toContain("Your answers are saved");
+    expect(template.htmlBody).toContain("Your answers are saved");
     expect(template.htmlBody).toContain("72 / 100");
     expect(template.htmlBody).toContain("Not a diagnosis");
     expect(template.htmlBody).not.toContain("Cognitive Signature");
     expect(template.htmlBody).not.toContain("<script");
     expect(template.htmlBody).not.toContain("tracking pixel");
+    // No ADHD / diagnostic / treatment claims (the safe "Not a diagnosis"
+    // disclaimer is allowed), no fake urgency/scarcity, no abandonment wording.
+    expect(template.htmlBody).not.toMatch(/ADHD/i);
+    expect(template.htmlBody).not.toMatch(/\bcure\b|\btreatment\b|diagnose (you|your)|guarantee/i);
+    expect(template.htmlBody).not.toMatch(/hurry|expires|act now|limited time|only \d+ left/i);
+    expect(template.htmlBody).not.toMatch(/abandon/i);
   });
 
   it("HTML-escapes personalized fields and omits score when unavailable", () => {

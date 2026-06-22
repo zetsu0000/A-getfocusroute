@@ -240,6 +240,7 @@ describe("result email URLs", () => {
     const urls = buildResultEmailUrls();
     expect(urls.resultUrl).toBe("https://getfocusroute.com/dashboard/profile");
     expect(urls.dashboardUrl).toBe("https://getfocusroute.com/dashboard");
+    expect(urls.planUrl).toBe("https://getfocusroute.com/assessment");
   });
 
   it("rejects malicious configured origins in production", () => {

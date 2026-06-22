@@ -7,6 +7,7 @@ import {
   isResultEmailSendingEnabled,
   isResultEmailTransactionalTriggerEnabled,
 } from "@/lib/email/config";
+import { verifyGuestResultEmailToken } from "@/lib/email/guest-result-token";
 import { sendResultEmail } from "@/lib/email/result-email-service";
 import {
   enforceRateLimit,
@@ -19,8 +20,25 @@ const GENERIC_RESPONSE = {
   message: "If this request can be processed, you will receive an email shortly.",
 };
 
+function genericResponse(): Response {
+  // One generic body for every outcome (no recipient, forged token, disabled
+  // flag, or success) so the endpoint never confirms whether a resultId exists,
+  // has an email, or matches the caller.
+  return Response.json(GENERIC_RESPONSE, { status: 202 });
+}
+
 function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+function transactionalSendingReady(): boolean {
+  return (
+    isResultEmailTransactionalTriggerEnabled() && isResultEmailSendingEnabled()
+  );
+}
+
+function stringField(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
 }
 
 export async function POST(request: Request) {
@@ -31,8 +49,8 @@ export async function POST(request: Request) {
     });
     if (!parsed.ok) return jsonInputError(parsed);
 
-    const resultId =
-      typeof parsed.body.resultId === "string" ? parsed.body.resultId.trim() : "";
+    const resultId = stringField(parsed.body.resultId);
+    const token = stringField(parsed.body.token);
     const validResultId = isUuid(resultId);
 
     const preAuthLimit = await enforceRateLimit("resultEmailRequestPreAuth", {
@@ -45,16 +63,54 @@ export async function POST(request: Request) {
     }
 
     if (!validResultId) {
-      return Response.json(GENERIC_RESPONSE, { status: 202 });
+      return genericResponse();
     }
 
+    const admin = createAdminClient();
+    const { data: row, error } = await admin
+      .from("quiz_results")
+      .select("*")
+      .eq("id", resultId)
+      .maybeSingle();
+
+    if (error || !row) {
+      return genericResponse();
+    }
+
+    // ── Guest path ──────────────────────────────────────────────────────────
+    // No owning account + a signed proof token. The recipient is read from the
+    // stored row (never the request), and the token proves the caller created
+    // this result. No login required; resultId guessing yields no valid token.
+    if (!row.user_id && token) {
+      const rowEmail = stringField(row.email);
+      const proven = verifyGuestResultEmailToken(token, resultId, rowEmail);
+      if (proven && transactionalSendingReady()) {
+        await sendResultEmail(
+          {
+            quizRow: row,
+            recipientSource: {
+              kind: "submitted_quiz_result_email",
+              resultId,
+              email: rowEmail,
+              explicitDeliveryRequest: true,
+            },
+          },
+          undefined,
+          { category: "transactional" },
+        );
+      }
+      return genericResponse();
+    }
+
+    // ── Authenticated path ────────────────────────────────────────────────────
+    // Account-owned result: authorized by Supabase session + row ownership.
     const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
     if (!user?.id || !user.email) {
-      return Response.json(GENERIC_RESPONSE, { status: 202 });
+      return genericResponse();
     }
 
     const authenticatedLimit = await enforceRateLimit("resultEmailRequestAuthenticated", {
@@ -66,43 +122,27 @@ export async function POST(request: Request) {
       return temporaryUnavailableResponse();
     }
 
-    const admin = createAdminClient();
-    const { data: row, error } = await admin
-      .from("quiz_results")
-      .select("*")
-      .eq("id", resultId)
-      .maybeSingle();
-
-    if (error || !row) {
-      return Response.json(GENERIC_RESPONSE, { status: 202 });
-    }
-
     if (!row.user_id || row.user_id !== user.id) {
-      return Response.json(GENERIC_RESPONSE, { status: 202 });
+      return genericResponse();
     }
 
-    if (
-      !isResultEmailTransactionalTriggerEnabled() ||
-      !isResultEmailSendingEnabled()
-    ) {
-      return Response.json(GENERIC_RESPONSE, { status: 202 });
-    }
-
-    await sendResultEmail(
-      {
-        quizRow: row,
-        recipientSource: {
-          kind: "authenticated_user",
-          userId: user.id,
-          email: user.email,
+    if (transactionalSendingReady()) {
+      await sendResultEmail(
+        {
+          quizRow: row,
+          recipientSource: {
+            kind: "authenticated_user",
+            userId: user.id,
+            email: user.email,
+          },
         },
-      },
-      undefined,
-      { category: "transactional" },
-    );
+        undefined,
+        { category: "transactional" },
+      );
+    }
 
-    return Response.json(GENERIC_RESPONSE, { status: 202 });
+    return genericResponse();
   } catch {
-    return Response.json(GENERIC_RESPONSE, { status: 202 });
+    return genericResponse();
   }
 }

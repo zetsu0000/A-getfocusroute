@@ -4,11 +4,14 @@ import type { BuiltEmailTemplate } from "@/lib/email/templates/types";
 
 const SUBJECT = "Your FocusRoute result is ready";
 const PREVIEW_TEXT = "See your focus pattern, score, and what to do next.";
-const HEADING = "Your result is ready.";
+const HEADING = "Your FocusRoute result is ready.";
 const SCORE_INTERPRETATION =
   "This score summarizes the focus friction you reported in this assessment. Higher means more frequent or stronger friction — not less ability. Based on your answers. Not a diagnosis.";
 const VALUE_BRIDGE =
   "FocusRoute turns your result into a full breakdown, a 28-day action path, and practical tools you can return to.";
+const RETURN_COPY =
+  "You do not have to rethink everything from scratch. Your answers are saved so you can come back to the next step when you are ready.";
+const RETURN_CTA_LABEL = "Return to my FocusRoute plan";
 
 function buildScoreSection(payload: ResultEmailPayload): {
   html: string;
@@ -40,7 +43,7 @@ function buildScoreSection(payload: ResultEmailPayload): {
 /** Production-ready transactional result email template. */
 export function buildResultReadyEmail(payload: ResultEmailPayload): BuiltEmailTemplate {
   const patternName = escapeHtml(payload.patternName);
-  const resultUrl = escapeHtml(payload.resultUrl);
+  const planUrl = escapeHtml(payload.planUrl);
   const dashboardUrl = escapeHtml(payload.dashboardUrl);
   const scoreSection = buildScoreSection(payload);
 
@@ -72,13 +75,18 @@ export function buildResultReadyEmail(payload: ResultEmailPayload): BuiltEmailTe
             </tr>
             ${scoreSection.html}
             <tr>
-              <td style="padding:24px 24px 8px 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-                <a href="${resultUrl}" style="display:inline-block;background-color:#111111;color:#ffffff;text-decoration:none;font-size:16px;line-height:16px;font-weight:600;padding:14px 22px;border-radius:8px;">View My Result</a>
+              <td style="padding:24px 24px 0 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#333333;">
+                <p style="margin:0;font-size:15px;line-height:22px;">${escapeHtml(VALUE_BRIDGE)}</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:16px 24px 8px 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                <a href="${planUrl}" style="display:inline-block;background-color:#111111;color:#ffffff;text-decoration:none;font-size:16px;line-height:16px;font-weight:600;padding:14px 22px;border-radius:8px;">${escapeHtml(RETURN_CTA_LABEL)}</a>
               </td>
             </tr>
             <tr>
               <td style="padding:8px 24px 0 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#333333;">
-                <p style="margin:0;font-size:15px;line-height:22px;">${escapeHtml(VALUE_BRIDGE)}</p>
+                <p style="margin:0;font-size:14px;line-height:21px;color:#555555;">${escapeHtml(RETURN_COPY)}</p>
               </td>
             </tr>
             <tr>
@@ -100,10 +108,12 @@ export function buildResultReadyEmail(payload: ResultEmailPayload): BuiltEmailTe
     payload.patternName,
     "",
     scoreSection.text,
-    "View My Result:",
-    payload.resultUrl,
-    "",
     VALUE_BRIDGE,
+    "",
+    `${RETURN_CTA_LABEL}:`,
+    payload.planUrl,
+    "",
+    RETURN_COPY,
     "",
     "Open FocusRoute:",
     payload.dashboardUrl,

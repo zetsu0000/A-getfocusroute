@@ -62,6 +62,18 @@ export function getEmailUnsubscribeTokenSecret(): string | null {
   return raw || null;
 }
 
+/**
+ * Secret used to sign the guest result-email proof token (resultId + emailHash).
+ * Prefers a dedicated secret but falls back to the unsubscribe-token secret so the
+ * production funnel works with the already-provisioned envs. Fails closed (null)
+ * when neither is set — guest sends are then refused with a generic response.
+ */
+export function getGuestResultTokenSecret(): string | null {
+  const dedicated = process.env.RESULT_EMAIL_GUEST_TOKEN_SECRET?.trim();
+  if (dedicated) return dedicated;
+  return getEmailUnsubscribeTokenSecret();
+}
+
 export function getResultEmailTemplateVersion(): string {
   const raw = process.env.RESULT_EMAIL_TEMPLATE_VERSION?.trim();
   return raw && /^\d+$/.test(raw) ? raw : DEFAULT_TEMPLATE_VERSION;

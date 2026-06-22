@@ -7,6 +7,7 @@ import {
   temporaryUnavailableResponse,
 } from "@/lib/rate-limit/server";
 import { getSignatureFromAnswers } from "@/lib/signature";
+import { mintGuestResultEmailToken } from "@/lib/email/guest-result-token";
 import type { QuizAnswer } from "@/types/quiz";
 
 const isDev = process.env.NODE_ENV === "development";
@@ -189,7 +190,18 @@ export async function POST(request: Request) {
       });
     }
 
-    return Response.json({ quiz_result_id: data.id });
+    // Guest proof token: only minted for rows without an owning account, so the
+    // guest checkout/paywall trigger can authorize a result-email send without
+    // login and without trusting a client-supplied resultId/email. Authenticated
+    // rows use the account-ownership path instead and never need a token. A null
+    // token (no signing secret) is simply omitted — the guest send fails closed.
+    const resultEmailToken =
+      userId === null ? mintGuestResultEmailToken(data.id, email) : null;
+
+    return Response.json({
+      quiz_result_id: data.id,
+      ...(resultEmailToken ? { result_email_token: resultEmailToken } : {}),
+    });
   } catch (e) {
     console.error("[api/quiz-result]", e);
     const message = e instanceof Error ? e.message : "Invalid request";

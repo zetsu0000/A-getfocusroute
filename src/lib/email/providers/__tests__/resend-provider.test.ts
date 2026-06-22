@@ -14,6 +14,7 @@ const payload: ResultEmailPayload = {
   focusFrictionScore: { value: 72, minimum: 0, maximum: 100 },
   resultUrl: "https://www.getfocusroute.com/dashboard/profile",
   dashboardUrl: "https://www.getfocusroute.com/dashboard",
+  planUrl: "https://www.getfocusroute.com/assessment",
   locale: "en-US",
   emailType: "transactional",
   idempotencyKey: "result_email:result-123:1",
