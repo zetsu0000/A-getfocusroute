@@ -87,18 +87,22 @@ export async function POST(request: Request) {
     if (!row.user_id && token) {
       const rowEmail = stringField(row.email);
       const proven = verifyGuestResultEmailToken(token, resultId, rowEmail);
-      // TEMP DIAGNOSTIC (header-gated, secret-free): surfaces which production
+      // TEMP DIAGNOSTIC (header-gated, secret-free): returns which production
       // gate is closing the guest send. Remove after launch validation.
       if (request.headers.get("x-fr-debug") === "1") {
-        console.warn("[result-email-debug]", {
-          proven,
-          trigger_enabled: isResultEmailTransactionalTriggerEnabled(),
-          sending_enabled: isResultEmailSendingEnabled(),
-          provider: getConfiguredEmailProviderName(),
-          from_present: Boolean(getResultEmailFromAddress()),
-          config: validateProductionEmailConfiguration(),
-          node_env: process.env.NODE_ENV,
-        });
+        return Response.json(
+          {
+            debug: true,
+            proven,
+            trigger_enabled: isResultEmailTransactionalTriggerEnabled(),
+            sending_enabled: isResultEmailSendingEnabled(),
+            provider: getConfiguredEmailProviderName(),
+            from_present: Boolean(getResultEmailFromAddress()),
+            config: validateProductionEmailConfiguration(),
+            node_env: process.env.NODE_ENV,
+          },
+          { status: 200 },
+        );
       }
       if (proven && transactionalSendingReady()) {
         await sendResultEmail(
