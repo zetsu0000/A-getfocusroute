@@ -101,6 +101,10 @@ describe("email delivery migration", () => {
     expect(migration).toContain("revoke all on table public.email_webhook_events from public, anon, authenticated");
     expect(migration).toContain("grant select, insert on table public.email_webhook_events to service_role");
     expect(migration).toContain("on delete set null");
+    expect(migration).toContain("suppressed boolean not null default false");
+    expect(migration).toContain("email.bounced");
+    expect(migration).toContain("email.complained");
+    expect(migration).toContain("email.suppressed");
   });
 
   it("keeps GET unsubscribe as read-only in route source", () => {

@@ -6,7 +6,8 @@
 -- Provider lifecycle status is distinct from the internal claim status.
 alter table public.email_deliveries
   add column if not exists provider_status text,
-  add column if not exists provider_status_at timestamptz;
+  add column if not exists provider_status_at timestamptz,
+  add column if not exists suppressed boolean not null default false;
 
 create table if not exists public.email_webhook_events (
   id uuid primary key default gen_random_uuid(),
@@ -86,12 +87,27 @@ begin
     return 'applied_unmatched';
   end if;
 
-  update public.email_deliveries
+  -- Out-of-order defensiveness: only advance provider_status when this event is
+  -- at least as recent as the last recorded one. Suppression is monotonic and is
+  -- never cleared by a later non-suppression event (e.g. a delayed delivered).
+  update public.email_deliveries d
   set
-    provider_status = p_event_type,
-    provider_status_at = coalesce(p_occurred_at, now()),
+    provider_status = case
+      when d.provider_status_at is null then p_event_type
+      when p_occurred_at is null then d.provider_status
+      when p_occurred_at >= d.provider_status_at then p_event_type
+      else d.provider_status
+    end,
+    provider_status_at = case
+      when d.provider_status_at is null then coalesce(p_occurred_at, now())
+      when p_occurred_at is null then d.provider_status_at
+      when p_occurred_at >= d.provider_status_at then p_occurred_at
+      else d.provider_status_at
+    end,
+    suppressed = d.suppressed
+      or p_event_type in ('email.bounced', 'email.complained', 'email.suppressed'),
     updated_at = now()
-  where id = v_delivery_id;
+  where d.id = v_delivery_id;
 
   return 'applied';
 end;

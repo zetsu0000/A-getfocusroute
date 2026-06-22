@@ -90,8 +90,16 @@ describe("verifyResendWebhookSignature", () => {
 describe("parseResendWebhookEvent", () => {
   it("extracts allowed events and the provider message id", () => {
     expect(
-      parseResendWebhookEvent({ type: "email.bounced", data: { email_id: "resend_1" } }),
-    ).toEqual({ type: "email.bounced", providerMessageId: "resend_1" });
+      parseResendWebhookEvent({
+        type: "email.bounced",
+        created_at: "2026-06-22T13:00:00.000Z",
+        data: { email_id: "resend_1" },
+      }),
+    ).toEqual({
+      type: "email.bounced",
+      providerMessageId: "resend_1",
+      occurredAt: "2026-06-22T13:00:00.000Z",
+    });
   });
 
   it("ignores forbidden and unknown events", () => {

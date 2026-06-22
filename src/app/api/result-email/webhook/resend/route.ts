@@ -88,7 +88,7 @@ export async function processResendWebhook(
       svixId: verification.svixId,
       eventType: event.type,
       providerMessageId: event.providerMessageId,
-      occurredAt: new Date().toISOString(),
+      occurredAt: event.occurredAt,
     });
     return ok({ received: true, result });
   } catch {

@@ -195,4 +195,92 @@ Marketing templates include `{{unsubscribe_url}}` placeholder only. No marketing
 
 Security, consent, deliverability, copy, score explanation, subscription/pricing clarity, email rendering, unsubscribe, abuse controls, duplicate protection, webhook verification, monitoring, production enablement readiness. **PR 7C remains mandatory before merge/production enablement.**
 
+## PR 7C — production-ready Resend integration
+
+PR 7C completes the executable pieces. **All production flags still default `false`.**
+
+### Resend provider adapter
+
+`src/lib/email/providers/resend-provider.ts` (`ResendResultEmailProvider`)
+
+- Selected only when `RESULT_EMAIL_PROVIDER=resend` (via `createResultEmailProvider()`); never mock in production.
+- Uses `RESULT_EMAIL_PROVIDER_API_KEY`, `RESULT_EMAIL_FROM_ADDRESS`, `RESULT_EMAIL_REPLY_TO`.
+- Fails closed (`provider_config_missing`) when key or from-address is missing; omits `reply_to` when unset.
+- POSTs to `https://api.resend.com/emails` with an `Idempotency-Key` header (= ledger idempotency key) and a 10s abort timeout.
+- Maps the Resend response `id` to `providerMessageId`; missing id → `provider_missing_message_id`.
+- Truthful failures: HTTP non-2xx → `provider_http_<status>`, transport throw → `provider_request_failed`, bad JSON → `provider_invalid_response`. Never reports a failed send as success.
+- Logs nothing (no email address, payload, API key, or raw provider response).
+- Runs entirely behind the existing claim/finalize ledger flow — no atomic-claim bypass.
+- Implemented with `fetch`; no Resend SDK dependency added.
+
+### Webhook receiver
+
+`POST /api/result-email/webhook/resend` (`processResendWebhook` core is dependency-injectable for tests)
+
+- POST only; reads the raw body with `request.text()`; 256 KB cap.
+- Verifies the Svix signature (`svix-id`, `svix-timestamp`, `svix-signature`) over the raw body using `RESULT_EMAIL_WEBHOOK_SECRET` **before** parsing JSON, with a ±5 min replay window and constant-time comparison.
+- Missing/invalid signature → `400` (generic body, no detail leaked).
+- Valid signature with `RESULT_EMAIL_WEBHOOK_ENABLED=false` → `200`, **no mutation**.
+- When enabled: parses only allowed events; dedupes by `svix-id`; correlates by provider message id (`data.email_id`) — never by recipient email.
+- Allowed events only: `email.sent`, `email.delivered`, `email.delivery_delayed`, `email.bounced`, `email.complained`, `email.failed`, `email.suppressed`. All others (incl. `email.opened`/`email.clicked`/`contact.*`/`domain.*`) are acknowledged `200` and ignored.
+- `email.bounced` / `email.complained` / `email.suppressed` set a monotonic `suppressed` flag on the delivery row.
+- Out-of-order safe: provider status only advances when an event is at least as recent as the last; suppression is never cleared by a later non-suppression event.
+
+### Migration 0005 (repository only — not applied)
+
+`supabase/migrations/0005_email_webhook_events.sql`
+
+- `email_webhook_events` dedup table (unique `svix_id`), RLS, `service_role`-only `select, insert`.
+- Adds `provider_status`, `provider_status_at`, `suppressed` to `email_deliveries`.
+- `record_email_webhook_event()` RPC (`security definer`, explicit `search_path`, execute granted to `service_role` only) returns `applied | applied_unmatched | duplicate`.
+
+### Migration apply instructions (production — requires approval)
+
+`0004_email_delivery_foundation.sql` then `0005_email_webhook_events.sql`, in order:
+
+1. Local validation first (Docker required): `powershell -ExecutionPolicy Bypass -File scripts/validate-email-migration.ps1` → expect `migration_0004_local_validation_passed`.
+2. Apply remotely only after approval, e.g. `npx supabase@latest db push` against the linked project (or run each SQL file via the Supabase SQL editor in order).
+3. Validate remotely: tables `email_deliveries`, `email_preferences`, `email_webhook_events` exist; RPCs `claim_email_delivery`, `finalize_email_delivery`, `record_email_webhook_event` exist; `anon`/`authenticated` are denied; `service_role` works; deleting a linked user/result preserves `email_preferences.marketing_status`.
+
+> Docker was unavailable in the authoring environment, so `validate-email-migration.ps1` was **not executed**. Local migration validation remains a blocker before production activation.
+
+### First internal test path (do not run without explicit approval)
+
+Scope: one authenticated user, an owned result row, a single internal recipient, the `result_ready` transactional email only. No customer list, lifecycle, marketing, or checkout email.
+
+Preconditions (production env):
+
+```env
+RESULT_EMAIL_SENDING_ENABLED=true
+RESULT_EMAIL_TRANSACTIONAL_TRIGGER_ENABLED=true
+RESULT_EMAIL_WEBHOOK_ENABLED=false
+RESULT_EMAIL_MARKETING_ENABLED=false
+```
+
+Steps:
+
+1. Sign in as the internal test account that owns a real `quiz_results` row.
+2. `POST /api/result-email/request` with `{ "resultId": "<owned-uuid>" }` (always returns generic 202).
+3. Confirm receipt at the internal inbox; verify pattern, score copy, and that links use `https://www.getfocusroute.com`.
+4. Check Resend dashboard delivery status and the `email_deliveries` ledger row (`status=sent`, `provider_message_id` set).
+5. Webhook processing stays off until signature verification is confirmed live.
+
+### Staged production activation plan
+
+1. Merge PR #55 only after approval.
+2. Apply Supabase migrations `0004` then `0005` remotely.
+3. Validate remote tables/RPCs/RLS.
+4. Confirm Resend domain `mail.getfocusroute.com` verified.
+5. Confirm Resend webhook endpoint + exactly the 7 allowed events.
+6. Confirm Vercel Production envs exist.
+7. Keep all flags `false`.
+8. Set `RESULT_EMAIL_SENDING_ENABLED=true`.
+9. Set `RESULT_EMAIL_TRANSACTIONAL_TRIGGER_ENABLED=true`.
+10. Send one internal authenticated result email.
+11. Check Resend delivery status.
+12. Check ledger state.
+13. Enable the Resend webhook + set `RESULT_EMAIL_WEBHOOK_ENABLED=true`.
+14. Confirm a signed webhook updates the ledger.
+15. Keep `RESULT_EMAIL_MARKETING_ENABLED=false`.
+
 See also: [RESULT_EMAIL_INFRASTRUCTURE.md](./RESULT_EMAIL_INFRASTRUCTURE.md)

@@ -430,6 +430,70 @@ BEGIN
   END;
 END $$;
 
+-- ─── 0005 webhook event ledger (dedup, correlation, suppression, ordering) ────
+DO $$
+DECLARE
+  v_result text;
+  v_status text;
+  v_suppressed boolean;
+BEGIN
+  INSERT INTO public.email_deliveries (
+    idempotency_key, email_type, result_id, provider, provider_message_id,
+    lease_expires_at, claim_token
+  ) VALUES (
+    'webhook-key-1', 'transactional', gen_random_uuid(), 'resend', 'pm-1',
+    now() + interval '5 minutes', gen_random_uuid()
+  );
+
+  v_result := public.record_email_webhook_event('svix-1', 'email.delivered', 'pm-1', now());
+  IF v_result <> 'applied' THEN
+    RAISE EXCEPTION 'expected applied, got %', v_result;
+  END IF;
+
+  v_result := public.record_email_webhook_event('svix-1', 'email.delivered', 'pm-1', now());
+  IF v_result <> 'duplicate' THEN
+    RAISE EXCEPTION 'duplicate svix_id must be ignored, got %', v_result;
+  END IF;
+
+  v_result := public.record_email_webhook_event('svix-unmatched', 'email.delivered', 'pm-missing', now());
+  IF v_result <> 'applied_unmatched' THEN
+    RAISE EXCEPTION 'unmatched provider id expected applied_unmatched, got %', v_result;
+  END IF;
+
+  v_result := public.record_email_webhook_event('svix-2', 'email.bounced', 'pm-1', now());
+  SELECT provider_status, suppressed INTO v_status, v_suppressed
+  FROM public.email_deliveries WHERE provider_message_id = 'pm-1';
+  IF v_suppressed IS NOT TRUE OR v_status <> 'email.bounced' THEN
+    RAISE EXCEPTION 'bounce must suppress and set status, got %/%', v_status, v_suppressed;
+  END IF;
+
+  -- Out-of-order: an older delivered event must not clear suppression or regress status.
+  v_result := public.record_email_webhook_event('svix-3', 'email.delivered', 'pm-1', now() - interval '1 day');
+  SELECT provider_status, suppressed INTO v_status, v_suppressed
+  FROM public.email_deliveries WHERE provider_message_id = 'pm-1';
+  IF v_suppressed IS NOT TRUE OR v_status <> 'email.bounced' THEN
+    RAISE EXCEPTION 'out-of-order delivered regressed state, got %/%', v_status, v_suppressed;
+  END IF;
+END $$;
+
+-- anon/authenticated must not touch the webhook ledger or RPC.
+SET ROLE anon;
+DO $$
+BEGIN
+  BEGIN
+    PERFORM 1 FROM public.email_webhook_events LIMIT 1;
+    RAISE EXCEPTION 'anon must not select email_webhook_events';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    PERFORM public.record_email_webhook_event('x', 'email.sent', NULL, now());
+    RAISE EXCEPTION 'anon must not execute record_email_webhook_event';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+END $$;
+RESET ROLE;
+
 RESET ROLE;
 
 SELECT 'migration_0004_validation_passed' AS result;
+SELECT 'migration_0005_validation_passed' AS result;

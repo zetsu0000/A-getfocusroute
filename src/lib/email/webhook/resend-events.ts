@@ -15,14 +15,31 @@ export type AllowedResendWebhookEvent = (typeof ALLOWED_RESEND_WEBHOOK_EVENTS)[n
 
 const ALLOWED_SET = new Set<string>(ALLOWED_RESEND_WEBHOOK_EVENTS);
 
+/** Events that mean the address must be treated as suppressed going forward. */
+export const SUPPRESSION_RESEND_EVENTS = new Set<AllowedResendWebhookEvent>([
+  "email.bounced",
+  "email.complained",
+  "email.suppressed",
+]);
+
 export function isAllowedResendWebhookEvent(value: unknown): value is AllowedResendWebhookEvent {
   return typeof value === "string" && ALLOWED_SET.has(value);
+}
+
+export function isSuppressionEvent(event: AllowedResendWebhookEvent): boolean {
+  return SUPPRESSION_RESEND_EVENTS.has(event);
 }
 
 export type ParsedResendEvent = {
   type: AllowedResendWebhookEvent;
   providerMessageId: string | null;
+  /** Event time from the signed envelope; used for out-of-order defensiveness. */
+  occurredAt: string | null;
 };
+
+function readString(value: unknown): string | null {
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
 
 /**
  * Extracts only the operational fields we need from a Resend webhook envelope.
@@ -35,13 +52,16 @@ export function parseResendWebhookEvent(raw: unknown): ParsedResendEvent | null 
 
   const data = (raw as { data?: unknown }).data;
   let providerMessageId: string | null = null;
+  let dataCreatedAt: string | null = null;
   if (data && typeof data === "object") {
-    const candidate =
-      (data as { email_id?: unknown }).email_id ?? (data as { id?: unknown }).id;
-    if (typeof candidate === "string" && candidate.length > 0) {
-      providerMessageId = candidate;
-    }
+    providerMessageId =
+      readString((data as { email_id?: unknown }).email_id) ??
+      readString((data as { id?: unknown }).id);
+    dataCreatedAt = readString((data as { created_at?: unknown }).created_at);
   }
 
-  return { type, providerMessageId };
+  const occurredAt =
+    readString((raw as { created_at?: unknown }).created_at) ?? dataCreatedAt;
+
+  return { type, providerMessageId, occurredAt };
 }
