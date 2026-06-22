@@ -17,6 +17,7 @@ import { ResultSocialProof } from "@/components/signature/SocialProof";
 import { HudLabel } from "@/components/v2/primitives";
 import { useFunnelTheme } from "@/components/v2/FunnelThemeProvider";
 import { setPersistedQuizResultId } from "@/lib/quizResultId";
+import { setPersistedResultEmailToken } from "@/lib/resultEmailToken";
 import { createClient } from "@/lib/supabase/client";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
 import { trackEvent } from "@/lib/analytics/client";
@@ -31,6 +32,7 @@ export function ChartScreen() {
     answers,
     quizResultId,
     setQuizResultId,
+    setResultEmailToken,
   } = useQuizStore();
   const router = useRouter();
   const { theme } = useFunnelTheme();
@@ -157,6 +159,7 @@ export function ChartScreen() {
         });
         const data = (await res.json()) as {
           quiz_result_id?: string;
+          result_email_token?: string;
           error?: string;
         };
         if (!res.ok || !data.quiz_result_id) {
@@ -170,6 +173,13 @@ export function ChartScreen() {
         if (!cancelled) {
           setQuizResultId(data.quiz_result_id);
           setPersistedQuizResultId(data.quiz_result_id);
+          // Guest proof token: stored so the paywall/checkout step can authorize
+          // a single result-email send without login. Absent for authenticated
+          // rows (server returns none) — those use the account-ownership path.
+          if (data.result_email_token) {
+            setResultEmailToken(data.result_email_token);
+            setPersistedResultEmailToken(data.result_email_token);
+          }
         }
       } catch (e) {
         console.warn("[ChartScreen] quiz-result save error", e);
@@ -180,7 +190,7 @@ export function ChartScreen() {
     return () => {
       cancelled = true;
     };
-  }, [authChecked, saveEmail, name, answers, quizResultId, setQuizResultId]);
+  }, [authChecked, saveEmail, name, answers, quizResultId, setQuizResultId, setResultEmailToken]);
 
   const handleRetakeDone = () => {
     router.push("/dashboard");

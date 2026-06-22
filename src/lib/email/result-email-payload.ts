@@ -71,7 +71,7 @@ export function buildResultEmailPayload(
     : false;
 
   const scoreData = resolveResultScoreDataFromQuizRow(input.quizRow);
-  const { resultUrl, dashboardUrl } = buildResultEmailUrls();
+  const { resultUrl, dashboardUrl, planUrl } = buildResultEmailUrls();
   const templateVersion = input.templateVersion ?? getResultEmailTemplateVersion();
 
   return {
@@ -91,6 +91,7 @@ export function buildResultEmailPayload(
         : null,
       resultUrl,
       dashboardUrl,
+      planUrl,
       locale: input.locale?.trim() || "en-US",
       emailType: "transactional",
       idempotencyKey: buildResultEmailIdempotencyKey(resultId, templateVersion),

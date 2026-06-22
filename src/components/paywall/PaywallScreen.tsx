@@ -24,6 +24,7 @@ import {
   trackEvent,
 } from "@/lib/analytics/client";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
+import { useGuestResultEmailTrigger } from "@/lib/email/useGuestResultEmailTrigger";
 import {
   NON_DIAGNOSIS_LINE,
   PAYWALL_CHECKOUT_ID,
@@ -355,6 +356,11 @@ export function PaywallScreen() {
   const reduceMotion = useReducedMotion();
   const { theme } = useFunnelTheme();
   const dark = theme === "dark";
+
+  // Guest funnel: reaching the paywall/checkout triggers the one-time result
+  // email (server-authorized by the proof token, gated by production flags,
+  // idempotent, non-blocking). No-ops for non-guest sessions.
+  useGuestResultEmailTrigger();
 
   const handlePaywallSuccess = () => {
     setStep("upsell");

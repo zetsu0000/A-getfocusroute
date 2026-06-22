@@ -28,6 +28,8 @@ export type ResultEmailPayload = {
   focusFrictionScore: FocusFrictionScorePayload | null;
   resultUrl: string;
   dashboardUrl: string;
+  /** Public funnel return target (no auth, no PII) for the guest return CTA. */
+  planUrl: string;
   locale: string;
   emailType: TransactionalEmailType;
   idempotencyKey: string;

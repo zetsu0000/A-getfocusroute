@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { FunnelStep, QuizAnswer } from "@/types/quiz";
 import { questions } from "@/data/questions";
 import { clearPersistedQuizResultId } from "@/lib/quizResultId";
+import { clearPersistedResultEmailToken } from "@/lib/resultEmailToken";
 
 interface QuizState {
   currentStep: FunnelStep;
@@ -14,6 +15,8 @@ interface QuizState {
   retakeMode: boolean;
   /** Server row id from POST /api/quiz-result; also mirrored in sessionStorage for funnel recovery. */
   quizResultId: string | null;
+  /** Guest result-email proof token from POST /api/quiz-result; authorizes the one-time send at checkout. */
+  resultEmailToken: string | null;
 
   selectOption: (optionId: string, inputType: "single" | "multiple") => void;
   submitAnswer: () => void;
@@ -25,6 +28,7 @@ interface QuizState {
   resetQuiz: () => void;
   startRetake: (email: string, name: string) => void;
   setQuizResultId: (id: string | null) => void;
+  setResultEmailToken: (token: string | null) => void;
 }
 
 /* Step order after loading. Name capture is merged into the email step, so the
@@ -43,6 +47,7 @@ export const useQuizStore = create<QuizState>()(
       name: "",
       retakeMode: false,
       quizResultId: null,
+      resultEmailToken: null,
 
       selectOption: (optionId, inputType) => {
         const { selectedOptions } = get();
@@ -114,9 +119,11 @@ export const useQuizStore = create<QuizState>()(
       },
 
       setQuizResultId: (id) => set({ quizResultId: id }),
+      setResultEmailToken: (token) => set({ resultEmailToken: token }),
 
       resetQuiz: () => {
         clearPersistedQuizResultId();
+        clearPersistedResultEmailToken();
         set({
           currentStep: "quiz",
           currentQuestionIndex: 0,
@@ -126,11 +133,13 @@ export const useQuizStore = create<QuizState>()(
           name: "",
           retakeMode: false,
           quizResultId: null,
+          resultEmailToken: null,
         });
       },
 
       startRetake: (email, name) => {
         clearPersistedQuizResultId();
+        clearPersistedResultEmailToken();
         set({
           retakeMode: true,
           currentStep: "quiz",
@@ -140,6 +149,7 @@ export const useQuizStore = create<QuizState>()(
           email,
           name,
           quizResultId: null,
+          resultEmailToken: null,
         });
       },
     }),
@@ -158,6 +168,7 @@ export const useQuizStore = create<QuizState>()(
         name:                 state.name,
         retakeMode:           state.retakeMode,
         quizResultId:         state.quizResultId,
+        resultEmailToken:     state.resultEmailToken,
       }),
     }
   )

@@ -24,6 +24,7 @@ import {
   trackEvent,
 } from "@/lib/analytics/client";
 import { FIRST_PARTY_EVENTS } from "@/lib/analytics/events";
+import { useGuestResultEmailTrigger } from "@/lib/email/useGuestResultEmailTrigger";
 import {
   buildPaywallViewedMetadata,
   buildPaymentAttemptMetadata,
@@ -869,6 +870,11 @@ function CheckoutValueRoute() {
 export function SubscriptionPlansScreen() {
   const { name, email, setStep, quizResultId } = useQuizStore();
   const { theme } = useFunnelTheme();
+
+  // Guest funnel: the subscription screen is the primary paywall the result
+  // routes into, so trigger the one-time result email here too (server-
+  // authorized, flag-gated, idempotent, non-blocking). No-ops for non-guests.
+  useGuestResultEmailTrigger();
 
   const [selected, setSelected] = useState<PlanKey>(DEFAULT_PLAN_KEY);
   const [showPayment, setShowPayment] = useState(false);

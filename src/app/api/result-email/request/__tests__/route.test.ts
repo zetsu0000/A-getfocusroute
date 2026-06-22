@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
@@ -40,6 +40,7 @@ vi.mock("@/lib/email/result-email-service", () => ({
 
 import { POST } from "@/app/api/result-email/request/route";
 import { sendResultEmail } from "@/lib/email/result-email-service";
+import { mintGuestResultEmailToken } from "@/lib/email/guest-result-token";
 
 function jsonRequest(body: unknown): Request {
   return new Request("http://localhost/api/result-email/request", {
@@ -121,6 +122,111 @@ describe("POST /api/result-email/request", () => {
     const response = await POST(
       jsonRequest({ resultId: "11111111-1111-4111-8111-111111111111" }),
     );
+    expect(response.status).toBe(202);
+    expect(sendResultEmail).not.toHaveBeenCalled();
+  });
+});
+
+describe("POST /api/result-email/request (guest path)", () => {
+  const RESULT_ID = "11111111-1111-4111-8111-111111111111";
+  const GUEST_EMAIL = "guest@example.com";
+  const SECRET = "guest-token-secret-for-route-tests";
+
+  function guestRow(overrides: Record<string, unknown> = {}) {
+    adminMocks.from.mockReturnValue({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: async () => ({
+            data: {
+              id: RESULT_ID,
+              user_id: null,
+              email: GUEST_EMAIL,
+              answers: [{ questionId: "focus-feeling", selectedOptions: ["stall"] }],
+              ...overrides,
+            },
+            error: null,
+          }),
+        }),
+      }),
+    });
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    rateLimitMocks.enforceRateLimit.mockResolvedValue({ ok: true });
+    process.env.RESULT_EMAIL_GUEST_TOKEN_SECRET = SECRET;
+    process.env.RESULT_EMAIL_SENDING_ENABLED = "true";
+    process.env.RESULT_EMAIL_TRANSACTIONAL_TRIGGER_ENABLED = "true";
+    // Guest path must never require a session: getUser must not be consulted.
+    authMocks.getUser.mockRejectedValue(new Error("getUser must not be called"));
+    guestRow();
+  });
+
+  afterEach(() => {
+    delete process.env.RESULT_EMAIL_GUEST_TOKEN_SECRET;
+    delete process.env.RESULT_EMAIL_SENDING_ENABLED;
+    delete process.env.RESULT_EMAIL_TRANSACTIONAL_TRIGGER_ENABLED;
+  });
+
+  it("sends for a valid guest proof token without authentication", async () => {
+    const token = mintGuestResultEmailToken(RESULT_ID, GUEST_EMAIL, SECRET)!;
+    const response = await POST(jsonRequest({ resultId: RESULT_ID, token }));
+
+    expect(response.status).toBe(202);
+    expect(sendResultEmail).toHaveBeenCalledTimes(1);
+    const [input, , options] = (sendResultEmail as unknown as { mock: { calls: unknown[][] } })
+      .mock.calls[0]!;
+    expect((input as { recipientSource: { kind: string; email: string } }).recipientSource).toEqual({
+      kind: "submitted_quiz_result_email",
+      resultId: RESULT_ID,
+      email: GUEST_EMAIL,
+      explicitDeliveryRequest: true,
+    });
+    expect(options).toEqual({ category: "transactional" });
+    // Only the pre-auth limiter runs; the authenticated limiter never does.
+    expect(rateLimitMocks.enforceRateLimit).toHaveBeenCalledTimes(1);
+    expect(rateLimitMocks.enforceRateLimit.mock.calls[0]?.[0]).toBe("resultEmailRequestPreAuth");
+    expect(authMocks.getUser).not.toHaveBeenCalled();
+  });
+
+  it("does not send when the proof token is forged", async () => {
+    const response = await POST(
+      jsonRequest({ resultId: RESULT_ID, token: "1.deadbeef" }),
+    );
+    expect(response.status).toBe(202);
+    expect(sendResultEmail).not.toHaveBeenCalled();
+  });
+
+  it("does not send when the token belongs to a different email (no arbitrary recipient)", async () => {
+    const otherToken = mintGuestResultEmailToken(RESULT_ID, "attacker@example.com", SECRET)!;
+    const response = await POST(jsonRequest({ resultId: RESULT_ID, token: otherToken }));
+    expect(response.status).toBe(202);
+    expect(sendResultEmail).not.toHaveBeenCalled();
+  });
+
+  it("does not send when transactional flags are disabled", async () => {
+    process.env.RESULT_EMAIL_TRANSACTIONAL_TRIGGER_ENABLED = "false";
+    const token = mintGuestResultEmailToken(RESULT_ID, GUEST_EMAIL, SECRET)!;
+    const response = await POST(jsonRequest({ resultId: RESULT_ID, token }));
+    expect(response.status).toBe(202);
+    expect(sendResultEmail).not.toHaveBeenCalled();
+  });
+
+  it("does not leak the stored email in the response", async () => {
+    const token = mintGuestResultEmailToken(RESULT_ID, GUEST_EMAIL, SECRET)!;
+    const response = await POST(jsonRequest({ resultId: RESULT_ID, token }));
+    const body = await response.json();
+    expect(JSON.stringify(body)).not.toContain(GUEST_EMAIL);
+  });
+
+  it("returns generic 202 for an unknown result id (no enumeration signal)", async () => {
+    adminMocks.from.mockReturnValue({
+      select: () => ({
+        eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }),
+      }),
+    });
+    const token = mintGuestResultEmailToken(RESULT_ID, GUEST_EMAIL, SECRET)!;
+    const response = await POST(jsonRequest({ resultId: RESULT_ID, token }));
     expect(response.status).toBe(202);
     expect(sendResultEmail).not.toHaveBeenCalled();
   });
