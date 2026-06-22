@@ -14,6 +14,7 @@ import {
   MockResultEmailProvider,
   NoopResultEmailProvider,
 } from "@/lib/email/providers/mock-provider";
+import { ResendResultEmailProvider } from "@/lib/email/providers/resend-provider";
 import {
   buildPlaceholderResultEmailMessage,
   type ResultEmailProvider,
@@ -94,6 +95,9 @@ export function createResultEmailProvider(): ResultEmailProvider {
   const configured = getConfiguredEmailProviderName();
   if (configured === "mock" && isMockProviderAllowed()) {
     return new MockResultEmailProvider();
+  }
+  if (configured === "resend") {
+    return new ResendResultEmailProvider();
   }
   return new NoopResultEmailProvider();
 }

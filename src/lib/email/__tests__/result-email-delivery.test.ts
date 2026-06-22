@@ -86,6 +86,23 @@ describe("email delivery migration", () => {
     expect(migration).toContain("status = 'pending'");
   });
 
+  it("defines webhook dedup, RLS, and provider correlation in migration 0005", () => {
+    const migration = readFileSync(
+      fileURLToPath(new URL("../../../../supabase/migrations/0005_email_webhook_events.sql", import.meta.url)),
+      "utf8",
+    );
+    expect(migration).toContain("email_webhook_events");
+    expect(migration).toContain("email_webhook_events_svix_id_unique");
+    expect(migration).toContain("record_email_webhook_event");
+    expect(migration).toContain("enable row level security");
+    expect(migration).toContain("on conflict (svix_id) do nothing");
+    expect(migration).toContain("security definer");
+    expect(migration).toContain("set search_path = public");
+    expect(migration).toContain("revoke all on table public.email_webhook_events from public, anon, authenticated");
+    expect(migration).toContain("grant select, insert on table public.email_webhook_events to service_role");
+    expect(migration).toContain("on delete set null");
+  });
+
   it("keeps GET unsubscribe as read-only in route source", () => {
     const source = readFileSync(
       fileURLToPath(new URL("../../../app/api/email/unsubscribe/route.ts", import.meta.url)),

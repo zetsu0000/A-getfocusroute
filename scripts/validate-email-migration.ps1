@@ -63,7 +63,8 @@ $migrations = @(
   "0001_baseline_schema.sql",
   "0002_subscription_plan_key.sql",
   "0003_subscription_schedule_tracking.sql",
-  "0004_email_delivery_foundation.sql"
+  "0004_email_delivery_foundation.sql",
+  "0005_email_webhook_events.sql"
 )
 
 foreach ($file in $migrations) {
