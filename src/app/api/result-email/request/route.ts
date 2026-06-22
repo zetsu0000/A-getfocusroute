@@ -4,11 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { jsonInputError, readJsonObject } from "@/lib/api/request";
 import {
-  getConfiguredEmailProviderName,
-  getResultEmailFromAddress,
   isResultEmailSendingEnabled,
   isResultEmailTransactionalTriggerEnabled,
-  validateProductionEmailConfiguration,
 } from "@/lib/email/config";
 import { verifyGuestResultEmailToken } from "@/lib/email/guest-result-token";
 import { sendResultEmail } from "@/lib/email/result-email-service";
@@ -87,23 +84,6 @@ export async function POST(request: Request) {
     if (!row.user_id && token) {
       const rowEmail = stringField(row.email);
       const proven = verifyGuestResultEmailToken(token, resultId, rowEmail);
-      // TEMP DIAGNOSTIC (header-gated, secret-free): returns which production
-      // gate is closing the guest send. Remove after launch validation.
-      if (request.headers.get("x-fr-debug") === "1") {
-        return Response.json(
-          {
-            debug: true,
-            proven,
-            trigger_enabled: isResultEmailTransactionalTriggerEnabled(),
-            sending_enabled: isResultEmailSendingEnabled(),
-            provider: getConfiguredEmailProviderName(),
-            from_present: Boolean(getResultEmailFromAddress()),
-            config: validateProductionEmailConfiguration(),
-            node_env: process.env.NODE_ENV,
-          },
-          { status: 200 },
-        );
-      }
       if (proven && transactionalSendingReady()) {
         await sendResultEmail(
           {
