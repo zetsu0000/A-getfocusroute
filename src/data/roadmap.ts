@@ -93,7 +93,7 @@ const RAW: Omit<RoadmapDay, "day">[] = [
     microAction:
       "Sketch three time windows (morning / midday / evening). Place one check where focus felt easiest and one dot where it felt hardest—no reasons required yet.",
     whyItWorks:
-      "Self-mapping builds agency; shame-based tracking tends to backfire for many ADHD brains.",
+      "Self-mapping builds agency; shame-based tracking tends to backfire for many people.",
     estimatedTime: "10–15 min",
     reflectionPrompt:
       "If you respected your hardest window instead of fighting it, what would shift in how you schedule hard tasks?",
@@ -273,7 +273,7 @@ const RAW: Omit<RoadmapDay, "day">[] = [
     microAction:
       "List seven micro-wins from the last two weeks (even “showed up,” “asked for help,” “closed laptop on time”).",
     whyItWorks:
-      "ADHD narratives often overweight misses; intentional win collection restores proportion.",
+      "Self-critical narratives often overweight misses; intentional win collection restores proportion.",
     estimatedTime: "12–18 min",
     reflectionPrompt:
       "Which win surprised you? What does that reveal about what you actually value?",

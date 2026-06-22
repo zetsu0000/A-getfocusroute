@@ -8,9 +8,9 @@ import { ROADMAP_DAYS } from "@/data/roadmap";
 const PHASES = [
   {
     id: 1,
-    name: "Map",
-    theme: "Stabilize & reduce friction",
-    desc: "Discover your patterns. Choose one lane. Lower the activation cost of starting.",
+    name: "Week 1",
+    theme: "Start easier",
+    desc: "Make the first step smaller, clearer, and easier to begin.",
     color: "var(--color-signal)",
     tint: "var(--color-signal-tint)",
     border: "var(--color-signal)",
@@ -18,9 +18,9 @@ const PHASES = [
   },
   {
     id: 2,
-    name: "Stabilize",
-    theme: "Environment & attention anchors",
-    desc: "Anchor routines. Design your environment. Build resets that hold on hard days.",
+    name: "Week 2",
+    theme: "Stay with one task",
+    desc: "Reduce task switching and protect one focus lane at a time.",
     color: "var(--color-cognitive)",
     tint: "var(--color-cognitive-tint)",
     border: "var(--color-cognitive)",
@@ -28,9 +28,9 @@ const PHASES = [
   },
   {
     id: 3,
-    name: "Build",
-    theme: "Execution loops & recovery",
-    desc: "Strengthen execution habits. Practice returning after disruption. Reduce context-switching costs.",
+    name: "Week 3",
+    theme: "Recover from interruptions",
+    desc: "Use return points so you don't have to restart from zero after a disruption.",
     color: "var(--color-primary)",
     tint: "var(--color-primary-tint)",
     border: "var(--color-primary)",
@@ -38,9 +38,9 @@ const PHASES = [
   },
   {
     id: 4,
-    name: "Practice",
-    theme: "Consolidate & sustain",
-    desc: "Consolidate what works. Build maintenance habits. Close the loop without a crash.",
+    name: "Week 4",
+    theme: "Build your repeatable focus system",
+    desc: "Turn your best focus conditions into a weekly routine you can keep.",
     color: "var(--color-accent-dark)",
     tint: "var(--color-accent-tint)",
     border: "var(--color-accent-dark)",
@@ -380,7 +380,7 @@ export function LockedRoadmapPreview() {
             marginBottom: 8,
           }}
         >
-          28-Day Protocol™ · FocusRoute Brain OS™
+          28-Day FocusRoute
         </p>
         <h2
           style={{
@@ -391,11 +391,11 @@ export function LockedRoadmapPreview() {
             letterSpacing: "-0.01em",
           }}
         >
-          Your next premium step is ready.
+          Your next step is ready.
         </h2>
         <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.65 }}>
-          Turn your Brain Profile into consistent action with 28 micro-actions across 4 phases:
-          Map, Stabilize, Build, and Practice.
+          Turn your focus pattern into consistent action with 28 micro-actions across four weeks:
+          start easier, stay with one task, recover from interruptions, and build a repeatable system.
         </p>
       </div>
 
@@ -439,7 +439,7 @@ export function LockedRoadmapPreview() {
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ fontSize: 14, fontWeight: 800, color: "var(--color-text)", marginBottom: 2 }}>
-                Phase {phase.id}: {phase.name}
+                {phase.name} — {phase.theme}
               </p>
               <p style={{ fontSize: 12, color: "var(--color-text-muted)", lineHeight: 1.4 }}>
                 {phase.desc}
@@ -471,7 +471,7 @@ export function LockedRoadmapPreview() {
         }}
       >
         <p style={{ fontSize: 15, fontWeight: 800, color: "var(--color-text)", marginBottom: 8 }}>
-          Unlock the 28-Day Protocol™
+          Unlock the 28-Day FocusRoute
         </p>
         <p
           style={{
@@ -481,8 +481,8 @@ export function LockedRoadmapPreview() {
             marginBottom: 16,
           }}
         >
-          Get your full roadmap with day-by-day micro-actions calibrated to your Brain Profile.
-          Skip or swap days — the protocol supports your pace, not the other way around.
+          Get your full route with day-by-day micro-actions calibrated to your focus pattern.
+          Skip or swap days — the route supports your pace, not the other way around.
         </p>
         <Link
           href="/roadmap"
@@ -499,7 +499,7 @@ export function LockedRoadmapPreview() {
             boxShadow: "var(--shadow-btn-accent)",
           }}
         >
-          Explore the 28-Day Protocol
+          Explore the 28-Day FocusRoute
         </Link>
       </div>
     </div>
@@ -528,13 +528,13 @@ function Disclaimer() {
           marginBottom: 6,
         }}
       >
-        About this protocol
+        About this route
       </p>
       <p style={{ fontSize: 12, color: "var(--color-text-muted)", lineHeight: 1.6 }}>
-        This is a practical self-organisation resource, not a medical programme. It is not a substitute
-        for clinical diagnosis, therapy, or medication guidance. Skip or swap days when life requires
-        it — the protocol is designed to support your pace, not score it. If you work with a
-        therapist, coach, or psychiatrist, this material is intended to complement that support.
+        This is a practical self-organisation resource, not medical or therapeutic advice, and not a
+        substitute for professional care. Skip or swap days when life requires it — the route is
+        designed to support your pace, not score it. If you work with a therapist, coach, or other
+        professional, this material is intended to complement that support.
       </p>
     </div>
   );
@@ -557,7 +557,7 @@ export function RoadmapProtocolView() {
             marginBottom: 8,
           }}
         >
-          28-Day Protocol™ · FocusRoute Brain OS™
+          28-Day FocusRoute
         </p>
         <h2
           style={{
@@ -568,11 +568,12 @@ export function RoadmapProtocolView() {
             letterSpacing: "-0.01em",
           }}
         >
-          28-Day Protocol
+          28-Day FocusRoute
         </h2>
         <p style={{ fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.65, maxWidth: 560 }}>
-          Four phases. One micro-action per day. Tap any day to expand the objective, action, and
-          reflection. Skip or swap — the protocol is here to support your pace, not enforce it.
+          Follow a simple 28-day route to make starting, staying with one task, and getting back on
+          track easier to repeat. One micro-action per day — tap any day to expand the objective,
+          action, and reflection. Skip or swap; the route supports your pace, not the other way around.
         </p>
       </header>
 

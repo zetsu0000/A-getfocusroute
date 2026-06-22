@@ -126,7 +126,7 @@ const DEFAULT_SIG: SigEntry = {
   title: "Attention-driven execution pattern",
   desc: "Your profile reflects a distinct attention and execution style, with strengths and friction points mapped below.",
   profileExplanation:
-    "Your brain processes attention, motivation, and execution through a pattern that differs from the neurotypical model. Some things come easily — deep engagement, pattern recognition, fast responses under pressure — while others like task initiation, sustained routine work, and follow-through require deliberate scaffolding.",
+    "You handle attention, motivation, and execution through a distinct pattern. Some things come easily — deep engagement, pattern recognition, fast responses under pressure — while others like task initiation, sustained routine work, and follow-through require deliberate scaffolding.",
   narrative: [
     "If you've spent years trying to explain why your brain works the way it does — to others, or to yourself — this profile maps what you've been experiencing.",
     "The patterns here aren't excuses. They're descriptions. Understanding them is the first step toward designing conditions that actually fit.",
@@ -215,7 +215,7 @@ function deriveInitiationStyle(answers: QuizAnswer[], initiationScore: number): 
     additions.push("Day-one momentum fades; plan for the re-entry, not just the launch.");
   if (obstacles.includes("method"))
     additions.push(
-      "Ambiguous process is a real blocker — a clear protocol reduces the decision tax before you start.",
+      "Ambiguous process is a real blocker — a clear, written sequence reduces the decision tax before you start.",
     );
   if (obstacles.includes("distraction"))
     additions.push(
@@ -242,7 +242,7 @@ function deriveDistractionRecovery(
       "You recover from disruptions relatively well. A lightweight reset ritual (2–3 min) will sharpen this further and prevent the slow-burn drift that follows unacknowledged interruptions.";
   } else if (recoveryScore >= 42) {
     base =
-      "Recovery from disruptions is inconsistent — sometimes quick, sometimes long. The difference is usually whether you have an explicit re-entry protocol or are relying on willpower alone.";
+      "Recovery from disruptions is inconsistent — sometimes quick, sometimes long. The difference is usually whether you have an explicit re-entry routine or are relying on willpower alone.";
   } else {
     base =
       "Once derailed, getting back on track takes real effort. A named reset ritual — physical step, one breath, re-read of the task's done-test — shortens the recovery window significantly.";
@@ -328,7 +328,7 @@ export function deriveBrainProfile(
   const recoveryScore = RECOVERY_STRENGTH[pick(answers, "mood")] ?? 52;
 
   return {
-    signatureName: savedSignatureName ?? "Brain Profile",
+    signatureName: savedSignatureName ?? "Your Focus Pattern",
     signatureTitle: sig.title,
     signatureDesc: savedSignatureDesc ?? sig.desc,
     radarDimensions,

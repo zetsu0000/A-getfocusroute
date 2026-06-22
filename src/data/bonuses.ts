@@ -11,7 +11,7 @@ export type ExplainScriptBlock = {
 export type ExplainScriptBundle = {
   title: string;
   subtitle: string;
-  /** Opening line(s) for copy — includes Cognitive Signature™ when `signatureName` is provided. */
+  /** Opening line(s) for copy — includes the focus-pattern label when `signatureName` is provided. */
   opener: string;
   openerFollowUp: string;
   blocks: ExplainScriptBlock[];
@@ -19,7 +19,7 @@ export type ExplainScriptBundle = {
 };
 
 /**
- * Builds the Explain-It script with optional FocusRoute Cognitive Signature™ label from saved quiz results.
+ * Builds the Explain My Focus Pattern note with optional FocusRoute focus-pattern label from saved quiz results.
  */
 export function getExplainScriptBundle(
   signatureName: string | null | undefined,
@@ -30,17 +30,17 @@ export function getExplainScriptBundle(
     : `My FocusRoute profile maps how I focus and follow through. That means…`;
 
   const openerFollowUp = sig
-    ? `The label is a pattern shorthand from my self-reported answers—not a diagnosis. It helps me describe momentum, friction, and recovery in plain language.`
-    : `The map is built from my self-reported answers—not a diagnosis. It still helps me describe momentum, friction, and recovery in plain language.`;
+    ? `The label is a pattern shorthand from my self-reported answers—not a medical label. It helps me describe momentum, friction, and recovery in plain language.`
+    : `The map is built from my self-reported answers—not a medical label. It still helps me describe momentum, friction, and recovery in plain language.`;
 
   const sigParagraph = sig
     ? `When I say I'm a ${sig}, I'm naming a tendency pattern I recognize in myself—how I start, stall, recover, and re-focus—not a fixed identity.`
     : `When I talk about my profile, I'm naming tendencies I recognize in myself—how I start, stall, recover, and re-focus—not a fixed identity.`;
 
   return {
-    title: "Explain-It-To-Someone Script",
+    title: "Explain My Focus Pattern",
     subtitle:
-      "A calm template for describing how your brain handles focus and follow-through—without debating, over-explaining, or asking anyone to read your mind.",
+      "A calm template for describing how you handle focus and follow-through—without debating, over-explaining, or asking anyone to read your mind.",
     opener,
     openerFollowUp,
     blocks: [
@@ -315,7 +315,7 @@ export const FOCUS_AUDIO_SESSIONS: FocusAudioSession[] = [
   },
 ];
 
-export const BONUS_LIBRARY_INTRO = {
-  headline: "Bonuses that respect your bandwidth",
-  body: "Structured guides you can print or keep open beside you—calm, premium, and built for real ADHD-shaped days (not perfection scripts).",
+export const FOCUS_TOOLS_INTRO = {
+  headline: "Focus tools that respect your bandwidth",
+  body: "Structured guides you can print or keep open beside you—calm, premium, and built for real, focus-stretched days (not perfection demands).",
 };

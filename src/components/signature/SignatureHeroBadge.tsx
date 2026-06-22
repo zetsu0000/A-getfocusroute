@@ -28,7 +28,7 @@ export function SignatureHeroBadge({
   signatureDesc,
   overallScore,
   scoreLabel,
-  unlockedBadge = "Profile report unlocked",
+  unlockedBadge = "Focus Pattern unlocked",
   style,
 }: Props) {
   const identity = getSignatureIdentity(signatureKey);
@@ -77,7 +77,7 @@ export function SignatureHeroBadge({
         {/* class-index rail */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
           <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(255,255,255,0.42)" }}>
-            Cognitive Signature
+            Focus Pattern
           </span>
           <span style={{ flex: 1, height: 1, background: "linear-gradient(to right, rgba(255,255,255,0.18), rgba(255,255,255,0))" }} />
           <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.22em", textTransform: "uppercase", color: `rgba(${identity.accentRgb},1)`, fontVariantNumeric: "tabular-nums" }}>

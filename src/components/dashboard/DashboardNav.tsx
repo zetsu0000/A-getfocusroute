@@ -130,17 +130,17 @@ export function DashboardNav({
         <NavLink href="/dashboard" label="Overview" active={pathname === "/dashboard"} />
         <NavLink
           href={hasBrainProfileAccess(u) ? "/dashboard/profile" : "/dashboard/upgrade?need=brain_profile"}
-          label="Brain Profile"
+          label="Focus Pattern"
           active={pathname.startsWith("/dashboard/profile")}
         />
         <NavLink
           href={hasRoadmapAccess(u) ? "/dashboard/roadmap" : "/roadmap"}
-          label="28-Day Protocol"
+          label="28-Day FocusRoute"
           active={pathname.startsWith("/dashboard/roadmap")}
         />
         <NavLink
           href={hasBonusesAccess(u) ? "/dashboard/bonuses" : "/dashboard/upgrade?need=bonus_toolkit"}
-          label="Bonuses"
+          label="Focus Tools"
           active={pathname.startsWith("/dashboard/bonuses")}
         />
         <NavLink
